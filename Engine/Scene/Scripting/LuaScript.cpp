@@ -1018,6 +1018,28 @@ void LuaScript::BindEngineAPI()
         return m_Renderer ? m_Renderer->GetRenderSettings().viewDistance : 1000.0f;
     });
 
+    graphics.set_function("GetAntiAliasingSamples", [this]()
+    {
+        if (!m_Renderer) return 1;
+        const RenderSettings& settings = m_Renderer->GetRenderSettings();
+        return settings.antiAliasing ? settings.antiAliasingSamples : 1;
+    });
+
+    graphics.set_function("GetFog", [this]()
+    {
+        return m_Renderer ? m_Renderer->GetRenderSettings().fog : false;
+    });
+
+    graphics.set_function("GetBloom", [this]()
+    {
+        return m_Renderer ? m_Renderer->GetRenderSettings().bloom : false;
+    });
+
+    graphics.set_function("GetShadowQuality", [this]()
+    {
+        return m_Renderer ? m_Renderer->GetRenderSettings().shadowQuality : 0;
+    });
+
     (*m_Environment)["Graphics"] = graphics;
 
     /*
