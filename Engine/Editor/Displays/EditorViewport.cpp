@@ -617,11 +617,9 @@ void Editor::RenderViewport(
 {
 	ImGui::Begin("Viewport");
 
-	m_ViewportPosition =
-		ImGui::GetWindowPos();
-
-	m_ViewportSize =
-		ImGui::GetWindowSize();
+	// m_ViewportPosition/m_ViewportSize represent the actual game image,
+	// not the surrounding ImGui window. They are assigned after the
+	// viewport toolbar when the image rectangle is known.
 
 	ImGui::BeginChild(
 		"ViewportToolbar",
@@ -778,6 +776,11 @@ void Editor::RenderViewport(
 
 	ImVec2 viewportPosition =
 		ImGui::GetCursorScreenPos();
+
+	// Store the exact rectangle used by ImGui::Image. Runtime UI input,
+	// overlays and crosshairs must all use this same coordinate space.
+	m_ViewportPosition = viewportPosition;
+	m_ViewportSize = viewportSize;
 
 	ImTextureID textureID =
 		(ImTextureID)(
