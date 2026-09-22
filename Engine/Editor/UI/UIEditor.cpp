@@ -19,128 +19,75 @@
 void UIEditor::Draw(
     UICanvas& canvas)
 {
-    ImGui::Begin("UI Editor");
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("Widget Blueprint");
+    ImGui::PopStyleVar();
 
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 29, 255));
+    ImGui::BeginChild("WidgetToolbar", ImVec2(0.0f, 42.0f), false);
+    ImGui::SetCursorPos(ImVec2(8.0f, 7.0f));
     DrawToolbar(canvas);
-
-    ImGui::Separator();
-
-    const ImVec2 available =
-        ImGui::GetContentRegionAvail();
-
-    const float hierarchyWidth =
-        240.0f;
-
-    const float inspectorWidth =
-        280.0f;
-
-    const float designerWidth =
-        std::max(
-            100.0f,
-            available.x -
-            hierarchyWidth -
-            inspectorWidth -
-            20.0f
-        );
-
-    ImGui::BeginChild(
-        "UIHierarchy",
-        ImVec2(
-            hierarchyWidth,
-            0.0f
-        ),
-        ImGuiChildFlags_Borders
-    );
-
-    ImGui::TextUnformatted("Hierarchy");
-    ImGui::Separator();
-
-    if (canvas.GetRoot())
-    {
-        DrawHierarchy(
-            *canvas.GetRoot()
-        );
-    }
-
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 
-    ImGui::SameLine();
+    const ImVec2 available = ImGui::GetContentRegionAvail();
+    const float paletteWidth = 170.0f;
+    const float hierarchyWidth = 225.0f;
+    const float inspectorWidth = 300.0f;
+    const float designerWidth = std::max(
+        180.0f, available.x - paletteWidth - hierarchyWidth - inspectorWidth);
 
-    ImGui::BeginChild(
-        "UIDesigner",
-        ImVec2(
-            designerWidth,
-            0.0f
-        ),
-        ImGuiChildFlags_Borders
-    );
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+    ImGui::BeginChild("Palette", ImVec2(paletteWidth, 0.0f), true);
+    ImGui::TextDisabled("PALETTE");
+    ImGui::Separator();
+    ImGui::TextDisabled("Common");
+    if (ImGui::Selectable("Panel")) AddWidget(canvas, UIWidgetType::Panel);
+    if (ImGui::Selectable("Text")) AddWidget(canvas, UIWidgetType::Text);
+    if (ImGui::Selectable("Image")) AddWidget(canvas, UIWidgetType::Image);
+    if (ImGui::Selectable("Button")) AddWidget(canvas, UIWidgetType::Button);
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::TextDisabled("User Interface");
+    ImGui::TextWrapped("Select a container in the Hierarchy, then add a widget from the Palette.");
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
 
+    ImGui::SameLine(0.0f, 0.0f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
+    ImGui::BeginChild("HierarchyPanel", ImVec2(hierarchyWidth, 0.0f), true);
+    ImGui::TextDisabled("HIERARCHY");
+    ImGui::Separator();
+    if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot());
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    ImGui::SameLine(0.0f, 0.0f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(17, 18, 21, 255));
+    ImGui::BeginChild("DesignerPanel", ImVec2(designerWidth, 0.0f), true);
     DrawDesigner(canvas);
-
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 
-    ImGui::SameLine();
-
-    ImGui::BeginChild(
-        "UIInspector",
-        ImVec2(
-            inspectorWidth,
-            0.0f
-        ),
-        ImGuiChildFlags_Borders
-    );
-
-    ImGui::TextUnformatted("Inspector");
+    ImGui::SameLine(0.0f, 0.0f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+    ImGui::BeginChild("DetailsPanel", ImVec2(inspectorWidth, 0.0f), true);
+    ImGui::TextDisabled("DETAILS");
     ImGui::Separator();
-
     if (m_SelectedWidget)
-    {
-        DrawInspector(
-            *m_SelectedWidget
-        );
-    }
+        DrawInspector(*m_SelectedWidget);
     else
-    {
-        ImGui::TextDisabled(
-            "No widget selected."
-        );
-    }
-
+        ImGui::TextDisabled("Select a widget to edit its properties.");
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 
-    /*
-     * Keyboard shortcuts.
-     */
-    if (ImGui::IsWindowFocused(
-        ImGuiFocusedFlags_RootAndChildWindows))
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
-        if (ImGui::IsKeyPressed(
-            ImGuiKey_Delete))
-        {
-            DeleteSelected(canvas);
-        }
-
-        const bool ctrl =
-            ImGui::GetIO().KeyCtrl;
-
-        if (ctrl &&
-            ImGui::IsKeyPressed(
-                ImGuiKey_D))
-        {
-            DuplicateSelected(canvas);
-        }
-
-        if (ImGui::IsKeyPressed(
-            ImGuiKey_F2))
-        {
-            RenameSelected();
-        }
-
-        if (ImGui::IsKeyPressed(
-            ImGuiKey_F))
-        {
-            ResetView();
-        }
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete)) DeleteSelected(canvas);
+        const bool ctrl = ImGui::GetIO().KeyCtrl;
+        if (ctrl && ImGui::IsKeyPressed(ImGuiKey_D)) DuplicateSelected(canvas);
+        if (ImGui::IsKeyPressed(ImGuiKey_F2)) RenameSelected();
+        if (ImGui::IsKeyPressed(ImGuiKey_F)) ResetView();
     }
 
     ImGui::End();
@@ -1067,12 +1014,19 @@ void UIEditor::DrawWidget(
                 text->GetFontSize() *
                 scale;
 
+            // The old preview effectively looked like a bitmap font because
+            // text was scaled down with the canvas and then sampled at tiny
+            // sizes. Keep the requested UI size, but never render below the
+            // editor font's native size. ImGui's atlas then provides the same
+            // smooth Inter face used by the rest of the editor.
+            ImFont* previewFont = ImGui::GetFont();
+            const float previewSize = std::max(
+                previewFont->FontSize,
+                std::max(1.0f, fontSize));
+
             drawList->AddText(
-                ImGui::GetFont(),
-                std::max(
-                    1.0f,
-                    fontSize
-                ),
+                previewFont,
+                previewSize,
                 min,
                 fillColor,
                 textValue
