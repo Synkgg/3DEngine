@@ -155,7 +155,9 @@ static const char* postFragmentShaderSource = R"(
 in vec2 v_UV;
 out vec4 FragColor;
 uniform sampler2D u_Scene;
+uniform sampler2D u_Bloom;
 uniform float u_Exposure;
+uniform float u_BloomStrength;
 
 vec3 ACESFilm(vec3 x)
 {
@@ -170,10 +172,49 @@ vec3 ACESFilm(vec3 x)
 void main()
 {
     vec3 hdr = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
+    vec3 bloom = max(texture(u_Bloom, v_UV).rgb, vec3(0.0));
+    hdr += bloom * u_BloomStrength;
     vec3 mapped = ACESFilm(hdr * u_Exposure);
     // Mild display encoding preserves contrast while lifting dark material detail.
     mapped = pow(mapped, vec3(1.0 / 2.2));
     FragColor = vec4(mapped, 1.0);
+}
+)";
+
+static const char* bloomExtractFragmentShaderSource = R"(
+#version 450 core
+in vec2 v_UV;
+out vec4 FragColor;
+uniform sampler2D u_Scene;
+void main()
+{
+    vec3 color = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
+    float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    float knee = smoothstep(0.85, 1.65, luminance);
+    FragColor = vec4(color * knee, 1.0);
+}
+)";
+
+static const char* bloomBlurFragmentShaderSource = R"(
+#version 450 core
+in vec2 v_UV;
+out vec4 FragColor;
+uniform sampler2D u_Image;
+uniform int u_Horizontal;
+void main()
+{
+    vec2 texel = 1.0 / vec2(textureSize(u_Image, 0));
+    vec3 result = texture(u_Image, v_UV).rgb * 0.227027;
+    vec2 axis = u_Horizontal != 0 ? vec2(texel.x, 0.0) : vec2(0.0, texel.y);
+    result += texture(u_Image, v_UV + axis * 1.0).rgb * 0.1945946;
+    result += texture(u_Image, v_UV - axis * 1.0).rgb * 0.1945946;
+    result += texture(u_Image, v_UV + axis * 2.0).rgb * 0.1216216;
+    result += texture(u_Image, v_UV - axis * 2.0).rgb * 0.1216216;
+    result += texture(u_Image, v_UV + axis * 3.0).rgb * 0.054054;
+    result += texture(u_Image, v_UV - axis * 3.0).rgb * 0.054054;
+    result += texture(u_Image, v_UV + axis * 4.0).rgb * 0.016216;
+    result += texture(u_Image, v_UV - axis * 4.0).rgb * 0.016216;
+    FragColor = vec4(result, 1.0);
 }
 )";
 
@@ -302,9 +343,11 @@ bool Renderer::Initialize(Window& window)
 		return false;
 	}
 
-    if (!m_PostShader.Initialize(postVertexShaderSource, postFragmentShaderSource))
+    if (!m_PostShader.Initialize(postVertexShaderSource, postFragmentShaderSource) ||
+        !m_BloomExtractShader.Initialize(postVertexShaderSource, bloomExtractFragmentShaderSource) ||
+        !m_BloomBlurShader.Initialize(postVertexShaderSource, bloomBlurFragmentShaderSource))
     {
-        Logger::Error("Failed to initialize post-process shader.");
+        Logger::Error("Failed to initialize post-process shaders.");
         return false;
     }
 
@@ -444,6 +487,8 @@ void Renderer::Shutdown()
     m_PostVBO = 0;
     m_PostVAO = 0;
     m_PostShader.Shutdown();
+    m_BloomExtractShader.Shutdown();
+    m_BloomBlurShader.Shutdown();
 	m_SkyShader.Shutdown();
 	m_Grid.Shutdown();
 	m_Shader.Shutdown();
@@ -966,15 +1011,80 @@ bool Renderer::CreatePostProcessTarget()
     const bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if (!complete) { DestroyPostProcessTarget(); return false; }
+
+    glGenFramebuffers(2, m_BloomFramebuffer);
+    glGenTextures(2, m_BloomTexture);
+    for (int i = 0; i < 2; ++i)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_BloomFramebuffer[i]);
+        glBindTexture(GL_TEXTURE_2D, m_BloomTexture[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_BloomTexture[i], 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            DestroyPostProcessTarget();
+            return false;
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return true;
 }
 
 void Renderer::DestroyPostProcessTarget()
 {
+    if (m_BloomTexture[0] || m_BloomTexture[1]) glDeleteTextures(2, m_BloomTexture);
+    if (m_BloomFramebuffer[0] || m_BloomFramebuffer[1]) glDeleteFramebuffers(2, m_BloomFramebuffer);
+    m_BloomTexture[0] = m_BloomTexture[1] = 0;
+    m_BloomFramebuffer[0] = m_BloomFramebuffer[1] = 0;
     if (m_PostColorTexture) glDeleteTextures(1, &m_PostColorTexture);
     if (m_PostFramebuffer) glDeleteFramebuffers(1, &m_PostFramebuffer);
     m_PostColorTexture = 0;
     m_PostFramebuffer = 0;
+}
+
+unsigned int Renderer::RenderBloom()
+{
+    if (!m_RenderSettings.bloom || m_RenderSettings.bloomStrength <= 0.0f ||
+        !m_BloomFramebuffer[0] || !m_BloomFramebuffer[1])
+        return 0;
+
+    glDisable(GL_DEPTH_TEST);
+    glBindVertexArray(m_PostVAO);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_BloomFramebuffer[0]);
+    glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
+    m_BloomExtractShader.Bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetColorTexture());
+    m_BloomExtractShader.SetInt("u_Scene", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    m_BloomExtractShader.Unbind();
+
+    bool horizontal = true;
+    unsigned int sourceTexture = m_BloomTexture[0];
+    for (int pass = 0; pass < 8; ++pass)
+    {
+        const int target = horizontal ? 1 : 0;
+        glBindFramebuffer(GL_FRAMEBUFFER, m_BloomFramebuffer[target]);
+        m_BloomBlurShader.Bind();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sourceTexture);
+        m_BloomBlurShader.SetInt("u_Image", 0);
+        m_BloomBlurShader.SetInt("u_Horizontal", horizontal ? 1 : 0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        m_BloomBlurShader.Unbind();
+        sourceTexture = m_BloomTexture[target];
+        horizontal = !horizontal;
+    }
+
+    glBindVertexArray(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return sourceTexture;
 }
 
 void Renderer::RenderPostProcess()
@@ -983,10 +1093,17 @@ void Renderer::RenderPostProcess()
     glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
     glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
     glDisable(GL_DEPTH_TEST);
+    const unsigned int bloomTexture = RenderBloom();
+    glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
+    glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
     m_PostShader.Bind();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetColorTexture());
     m_PostShader.SetInt("u_Scene", 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, bloomTexture);
+    m_PostShader.SetInt("u_Bloom", 1);
+    m_PostShader.SetFloat("u_BloomStrength", bloomTexture ? m_RenderSettings.bloomStrength : 0.0f);
     m_PostShader.SetFloat("u_Exposure", m_RenderSettings.exposure);
     glBindVertexArray(m_PostVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
