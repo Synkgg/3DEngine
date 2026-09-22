@@ -18,11 +18,14 @@ uniform mat4 u_Transform;
 uniform mat4 u_Model;
 
 out vec3 v_Normal;
+out vec3 v_WorldPosition;
 out vec2 v_UV;
 
 void main()
 {
-    v_Normal = a_Normal;
+    mat3 normalMatrix = transpose(inverse(mat3(u_Model)));
+    v_Normal = normalize(normalMatrix * a_Normal);
+    v_WorldPosition = vec3(u_Model * vec4(a_Position, 1.0));
     v_UV = a_UV;
 
     gl_Position =
@@ -35,6 +38,7 @@ static const char* fragmentShaderSource = R"(
 #version 450 core
 
 in vec3 v_Normal;
+in vec3 v_WorldPosition;
 in vec2 v_UV;
 
 uniform vec4 u_Color;
@@ -45,6 +49,7 @@ uniform int u_UseTexture;
 uniform vec3 u_LightDirection;
 uniform vec3 u_LightColor;
 uniform float u_LightIntensity;
+uniform vec3 u_CameraPosition;
 
 out vec4 FragColor;
 
@@ -62,7 +67,11 @@ void main()
             0.0
         );
 
-    float ambient = 0.25;
+    float ambient = 0.20;
+
+    vec3 viewDirection = normalize(u_CameraPosition - v_WorldPosition);
+    vec3 halfDirection = normalize(lightDirection + viewDirection);
+    float specular = pow(max(dot(normal, halfDirection), 0.0), 32.0) * 0.18;
 
     float brightness =
         ambient +
@@ -82,9 +91,8 @@ void main()
 
     FragColor =
         vec4(
-            baseColor.rgb *
-            u_LightColor *
-            brightness,
+            baseColor.rgb * u_LightColor * brightness +
+            u_LightColor * specular * u_LightIntensity,
             baseColor.a
         );
 }
@@ -491,6 +499,14 @@ void Renderer::DrawMesh(
 	m_Shader.SetFloat(
 		"u_LightIntensity",
 		m_LightIntensity
+	);
+
+	const Vec3 cameraPosition = m_Camera.GetPosition();
+	m_Shader.SetVec3(
+		"u_CameraPosition",
+		cameraPosition.x,
+		cameraPosition.y,
+		cameraPosition.z
 	);
 
 	glDrawElements(
