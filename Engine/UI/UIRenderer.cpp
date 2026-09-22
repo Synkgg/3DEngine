@@ -2,6 +2,8 @@
 
 #include "UIText.h"
 #include "UIImage.h"
+#include "UIButton.h"
+#include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
 
@@ -331,12 +333,63 @@ void UIRenderer::End()
     glEnable(GL_DEPTH_TEST);
 }
 
+bool UIRenderer::ScreenToCanvas(float screenX, float screenY, Vec2& result) const
+{
+    if (m_UIScale <= 0.0f) return false;
+    result.x = (screenX - m_UIOffsetX) / m_UIScale;
+    result.y = (screenY - m_UIOffsetY) / m_UIScale;
+    return result.x >= 0.0f && result.y >= 0.0f &&
+           result.x <= m_LogicalWidth && result.y <= m_LogicalHeight;
+}
+
+void UIRenderer::UpdateInput(UICanvas& canvas, const Input& input)
+{
+    Vec2 mouse;
+    const bool inside = ScreenToCanvas(input.GetMouseX(), input.GetMouseY(), mouse);
+    UIWidget* root = canvas.GetRoot();
+    if (!root) return;
+
+    const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
+    const bool pressed = inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT);
+    const bool released = input.IsMouseButtonReleased(SDL_BUTTON_LEFT);
+
+    for (const auto& child : root->GetChildren())
+        if (child) UpdateButtonInput(*child, canvasRect, mouse, pressed, released);
+}
+
+void UIRenderer::UpdateButtonInput(
+    UIWidget& widget,
+    const UIRect& parentRect,
+    const Vec2& mouse,
+    bool pressed,
+    bool released)
+{
+    const UIRect rect = UILayout::Calculate(widget, parentRect);
+    const bool hit = widget.IsVisible() && widget.IsEnabled() && widget.IsHitTestVisible() &&
+        mouse.x >= rect.x && mouse.x <= rect.x + rect.width &&
+        mouse.y >= rect.y && mouse.y <= rect.y + rect.height;
+
+    if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+    {
+        button->SetHovered(hit);
+        if (pressed) button->SetPressed(hit);
+        if (released)
+        {
+            if (button->IsPressed() && hit) button->SetClicked(true);
+            button->SetPressed(false);
+        }
+    }
+
+    for (const auto& child : widget.GetChildren())
+        if (child) UpdateButtonInput(*child, rect, mouse, pressed, released);
+}
+
 // =============================================================
 // Canvas UI
 // =============================================================
 
 void UIRenderer::RenderCanvas(
-    const UICanvas& canvas,
+    UICanvas& canvas,
     Renderer* renderer)
 {
     const UIWidget* root =
