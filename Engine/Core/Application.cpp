@@ -401,6 +401,22 @@ void Application::Run()
             {
                 m_Editor.StopPlaying();
             }
+
+            // Feed the engine interaction raycast into the runtime HUD. This
+            // stays engine-owned, so every Interactable automatically gets the
+            // same prompt without game-specific distance/raycast Lua.
+            if (m_Runtime.IsRunning())
+            {
+                const std::string& prompt = m_Runtime.GetInteractionPrompt();
+                const bool showPrompt =
+                    !prompt.empty() &&
+                    !m_Runtime.IsPaused() &&
+                    !m_Runtime.WantsCursor();
+
+                m_UICanvas.SetVisible("InteractPrompt", showPrompt);
+                if (showPrompt)
+                    m_UICanvas.SetText("InteractText", prompt);
+            }
         }
 
         // Apply a Stop requested during Runtime::Update in the same frame.
