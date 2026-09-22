@@ -11,6 +11,7 @@ class Scene;
 class Input;
 class Renderer;
 class UICanvas;
+class Runtime;
 
 class LuaScript
 {
@@ -23,7 +24,8 @@ public:
         Input& input,
         Renderer& renderer,
         UICanvas& uiCanvas,
-        sol::state& lua
+        sol::state& lua,
+        Runtime* runtime = nullptr
     );
 
     bool Load(const std::string& filepath);
@@ -53,6 +55,7 @@ private:
     Input* m_Input = nullptr;
     Renderer* m_Renderer = nullptr;
     UICanvas* m_UICanvas = nullptr;
+    Runtime* m_Runtime = nullptr;
 
     float m_DeltaTime = 0.0f;
 };
