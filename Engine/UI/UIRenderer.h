@@ -10,6 +10,7 @@
 
 class Texture2D;
 class UIText;
+class Renderer;
 
 class UIRenderer
 {
@@ -34,7 +35,8 @@ public:
     void End();
 
     void RenderCanvas(
-        const UICanvas& canvas
+        const UICanvas& canvas,
+        Renderer* renderer = nullptr
     );
 
     // ---------------------------------------------------------
@@ -118,12 +120,14 @@ private:
 
     void RenderCanvasWidget(
         const UIWidget& widget,
-        const UIRect& parentRect
+        const UIRect& parentRect,
+        Renderer* renderer
     );
 
     void DrawCanvasWidget(
         const UIWidget& widget,
-        const UIRect& rect
+        const UIRect& rect,
+        Renderer* renderer
     );
 
     void DrawCanvasText(
