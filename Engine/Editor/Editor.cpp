@@ -23,6 +23,7 @@
 #include "Fonts/IconsFontAwesome6.h"
 
 #include <algorithm>
+#include <imgui_internal.h>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -277,11 +278,34 @@ void Editor::Render(
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::Begin("##EditorDockHost", nullptr, dockHostFlags);
     ImGui::PopStyleVar();
+    const ImGuiID dockspaceID = ImGui::GetID("EditorDockSpace");
     ImGui::DockSpace(
-        ImGui::GetID("EditorDockSpace"),
+        dockspaceID,
         ImVec2(0.0f, 0.0f),
         ImGuiDockNodeFlags_PassthruCentralNode
     );
+
+    // First-run workspace mirrors a modern level editor: scene dominates,
+    // hierarchy is narrow, details owns the right rail, assets/console sit low.
+    if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr)
+    {
+        ImGui::DockBuilderRemoveNode(dockspaceID);
+        ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockspaceID, dockSize);
+
+        ImGuiID center = dockspaceID;
+        ImGuiID left = ImGui::DockBuilderSplitNode(center, ImGuiDir_Left, 0.18f, nullptr, &center);
+        ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.22f, nullptr, &center);
+        ImGuiID bottom = ImGui::DockBuilderSplitNode(center, ImGuiDir_Down, 0.30f, nullptr, &center);
+
+        ImGui::DockBuilderDockWindow("Hierarchy", left);
+        ImGui::DockBuilderDockWindow("Details", right);
+        ImGui::DockBuilderDockWindow("Assets", bottom);
+        ImGui::DockBuilderDockWindow("Console", bottom);
+        ImGui::DockBuilderDockWindow("Scene", center);
+        ImGui::DockBuilderFinish(dockspaceID);
+    }
+
     ImGui::End();
 
     RenderHierarchy(
