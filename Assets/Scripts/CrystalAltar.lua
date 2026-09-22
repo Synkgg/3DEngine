@@ -12,5 +12,6 @@ function OnInteract()
     elseif result == "won" then
         UI.SetText("Objective", "COURTYARD RESTORED - YOU WIN!")
         UI.SetVisible("WinScreen", true)
+        Input.SetCursorVisible(true)
     end
 end
