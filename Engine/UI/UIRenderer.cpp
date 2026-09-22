@@ -11,6 +11,11 @@
 
 #include <algorithm>
 #include <string>
+#include <fstream>
+#include <vector>
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#include <imstb_truetype.h>
 
 namespace
 {
@@ -170,11 +175,23 @@ bool UIRenderer::Initialize()
 
     glBindVertexArray(0);
 
+    if (!InitializeFontAtlas())
+    {
+        Shutdown();
+        return false;
+    }
+
     return true;
 }
 
 void UIRenderer::Shutdown()
 {
+    if (m_FontTexture != 0)
+    {
+        glDeleteTextures(1, &m_FontTexture);
+        m_FontTexture = 0;
+    }
+
     if (m_VBO != 0)
     {
         glDeleteBuffers(
@@ -628,144 +645,138 @@ void UIRenderer::DrawCanvasWidget(
     glBindVertexArray(0);
 }
 
+bool UIRenderer::InitializeFontAtlas()
+{
+    std::ifstream file(
+        "Engine/Editor/Fonts/InterVariable.ttf",
+        std::ios::binary | std::ios::ate
+    );
+    if (!file) return false;
+
+    const std::streamsize length = file.tellg();
+    if (length <= 0) return false;
+    file.seekg(0, std::ios::beg);
+
+    std::vector<unsigned char> fontData(static_cast<size_t>(length));
+    if (!file.read(reinterpret_cast<char*>(fontData.data()), length))
+        return false;
+
+    std::vector<unsigned char> bitmap(
+        FontAtlasWidth * FontAtlasHeight, 0);
+
+    stbtt_bakedchar baked[95]{};
+    const int result = stbtt_BakeFontBitmap(
+        fontData.data(), 0, FontBakeSize,
+        bitmap.data(), FontAtlasWidth, FontAtlasHeight,
+        32, 95, baked);
+    if (result <= 0) return false;
+
+    std::vector<unsigned char> rgba(
+        FontAtlasWidth * FontAtlasHeight * 4, 255);
+    for (int i = 0; i < FontAtlasWidth * FontAtlasHeight; ++i)
+        rgba[i * 4 + 3] = bitmap[i];
+
+    glGenTextures(1, &m_FontTexture);
+    glBindTexture(GL_TEXTURE_2D, m_FontTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA8,
+        FontAtlasWidth, FontAtlasHeight, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    for (int i = 0; i < 95; ++i)
+    {
+        FontGlyph& glyph = m_FontGlyphs[i];
+        glyph.x0 = static_cast<float>(baked[i].x0);
+        glyph.y0 = static_cast<float>(baked[i].y0);
+        glyph.x1 = static_cast<float>(baked[i].x1);
+        glyph.y1 = static_cast<float>(baked[i].y1);
+        glyph.xoff = baked[i].xoff;
+        glyph.yoff = baked[i].yoff;
+        glyph.xadvance = baked[i].xadvance;
+    }
+    return true;
+}
+
 void UIRenderer::DrawCanvasText(
     const UIText& text,
     const UIRect& rect)
 {
-    const std::string& value =
-        text.GetText();
+    if (m_FontTexture == 0 || text.GetText().empty()) return;
 
-    if (value.empty())
-    {
-        return;
-    }
+    const float requestedSize = std::max(1.0f, text.GetFontSize());
+    const float scale = requestedSize / FontBakeSize;
+    const Vec4& color = text.GetColor();
 
-    // FontSize is expressed as the intended glyph height in design pixels.
-    // The built-in bitmap glyphs are 7 pixels tall.
-    const float glyphHeight = std::max(1.0f, text.GetFontSize());
-    const float size = glyphHeight / 7.0f;
+    float penX = rect.x;
+    float penY = rect.y + requestedSize;
 
-    const Vec4& color =
-        text.GetColor();
-
-    float x = rect.x;
-    float y = rect.y;
-
-    for (char character : value)
+    for (unsigned char character : text.GetText())
     {
         if (character == '\n')
         {
-            y += glyphHeight * 1.15f;
-            x = rect.x;
+            penX = rect.x;
+            penY += requestedSize * 1.2f;
             continue;
         }
 
-        for (int row = 0; row < 7; ++row)
+        if (character < 32 || character > 126)
+            character = '?';
+
+        const FontGlyph& glyph = m_FontGlyphs[character - 32];
+        const float width = (glyph.x1 - glyph.x0) * scale;
+        const float height = (glyph.y1 - glyph.y0) * scale;
+
+        if (width > 0.0f && height > 0.0f)
         {
-            for (int column = 0; column < 5; ++column)
-            {
-                const unsigned char pixel =
-                    GetGlyphRow(
-                        character,
-                        row
-                    );
-
-                if ((pixel &
-                    (1 << (4 - column))) == 0)
-                {
-                    continue;
-                }
-
-                DrawCanvasTextPixel(
-                    x + column * size,
-                    y + row * size,
-                    size,
-                    color.x,
-                    color.y,
-                    color.z,
-                    color.w
-                );
-            }
+            DrawFontGlyph(
+                penX + glyph.xoff * scale,
+                penY + glyph.yoff * scale,
+                width, height,
+                glyph.x0 / FontAtlasWidth,
+                glyph.y0 / FontAtlasHeight,
+                glyph.x1 / FontAtlasWidth,
+                glyph.y1 / FontAtlasHeight,
+                color);
         }
 
-        x += size * 6.0f;
+        penX += glyph.xadvance * scale;
     }
 }
 
-void UIRenderer::DrawCanvasTextPixel(
-    float x,
-    float y,
-    float size,
-    float red,
-    float green,
-    float blue,
-    float alpha)
+void UIRenderer::DrawFontGlyph(
+    float x, float y, float width, float height,
+    float u0, float v0, float u1, float v1,
+    const Vec4& color)
 {
-    const float vertices[24] =
-    {
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + size,
-        y,
-        1.0f,
-        0.0f,
-
-        x + size,
-        y + size,
-        1.0f,
-        1.0f,
-
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + size,
-        y + size,
-        1.0f,
-        1.0f,
-
-        x,
-        y + size,
-        0.0f,
-        1.0f
+    const float vertices[24] = {
+        x, y, u0, v0,
+        x + width, y, u1, v0,
+        x + width, y + height, u1, v1,
+        x, y, u0, v0,
+        x + width, y + height, u1, v1,
+        x, y + height, u0, v1
     };
 
     glBindVertexArray(m_VAO);
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        m_VBO
-    );
-
-    glBufferSubData(
-        GL_ARRAY_BUFFER,
-        0,
-        sizeof(vertices),
-        vertices
-    );
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
     m_Shader.SetVec4(
-        "u_Color",
-        red,
-        green,
-        blue,
-        alpha
-    );
+        "u_Color", color.x, color.y, color.z, color.w);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_FontTexture);
+    m_Shader.SetInt("u_Texture", 0);
+    m_Shader.SetInt("u_UseTexture", 1);
 
-    m_Shader.SetInt(
-        "u_UseTexture",
-        0
-    );
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glDrawArrays(
-        GL_TRIANGLES,
-        0,
-        6
-    );
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
 }
 
 // =============================================================
