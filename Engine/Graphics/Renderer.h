@@ -29,12 +29,13 @@ struct RenderSettings
     bool antiAliasing = true;
     int antiAliasingSamples = 4;
     bool shadows = true;
-    bool fog = true;
-    bool bloom = true;
+    // Optional post effects stay off until they have dedicated post-process passes.
+    bool fog = false;
+    bool bloom = false;
     float viewDistance = 1000.0f;
     float exposure = 1.0f;
-    float fogDensity = 0.006f;
-    float bloomStrength = 0.12f;
+    float fogDensity = 0.003f;
+    float bloomStrength = 0.0f;
     int shadowQuality = 2;
     float shadowDistance = 80.0f;
 };
