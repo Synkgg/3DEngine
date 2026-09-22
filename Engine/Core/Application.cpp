@@ -343,7 +343,12 @@ void Application::Run()
 
         m_Renderer.BeginFrame();
 
-        m_Renderer.DrawGrid();
+        m_Renderer.DrawSky();
+
+        if (!m_Runtime.IsRunning())
+        {
+            m_Renderer.DrawGrid();
+        }
 
         for (const Entity& entity : m_Scene.GetEntities())
         {
