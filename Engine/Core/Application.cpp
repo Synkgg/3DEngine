@@ -698,12 +698,11 @@ void Application::StartRuntime()
 {
     m_Renderer.GetUIRenderer().Clear();
 
-    // Keep the play test deterministic: the scene's test UI is restored
-    // before scripts receive OnCreate and begin querying named widgets.
-    UISerializer::Load(
-        m_UICanvas,
-        "Assets/UI/UIEditorTest.ui"
-    );
+    // The editor and runtime share the same UICanvas. Do not deserialize over
+    // that live widget tree here: the UI editor may still hold a selected
+    // widget pointer into it, which would become dangling and crash on the
+    // next editor frame. UI assets are loaded when editing/opening them;
+    // Play simply starts from the current in-memory canvas.
 
     m_Runtime.SaveCameraState(m_Renderer);
 
