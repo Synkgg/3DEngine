@@ -6,6 +6,7 @@
 
 #include "../Core/Logger.h"
 #include <iostream>
+#include <algorithm>
 
 static const char* vertexShaderSource = R"(
 #version 450 core
@@ -54,6 +55,10 @@ uniform float u_Metallic;
 uniform float u_Roughness;
 uniform float u_AO;
 uniform float u_Emissive;
+uniform float u_Exposure;
+uniform int u_FogEnabled;
+uniform float u_FogDensity;
+uniform float u_BloomStrength;
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
 uniform int u_PointLightCount;
@@ -115,7 +120,23 @@ void main()
         lighting += baseColor.rgb*u_SpotLights[i].color*max(dot(normal,L),0.0)*u_SpotLights[i].intensity*att*cone;
     }
     lighting += baseColor.rgb * u_Emissive;
-    // Filmic-ish Reinhard tonemap followed by gamma correction.
+
+    if (u_BloomStrength > 0.0)
+    {
+        float luminance = dot(lighting, vec3(0.2126, 0.7152, 0.0722));
+        lighting += lighting * max(luminance - 1.0, 0.0) * u_BloomStrength;
+    }
+
+    if (u_FogEnabled != 0)
+    {
+        float distanceToCamera = length(u_CameraPosition - v_WorldPosition);
+        float fogFactor = 1.0 - exp(-u_FogDensity * u_FogDensity * distanceToCamera * distanceToCamera);
+        vec3 fogColor = vec3(0.58, 0.68, 0.76);
+        lighting = mix(lighting, fogColor, clamp(fogFactor, 0.0, 0.92));
+    }
+
+    lighting *= u_Exposure;
+    // Reinhard tonemap followed by gamma correction.
     lighting = lighting / (lighting + vec3(1.0));
     lighting = pow(lighting, vec3(1.0 / 2.2));
     FragColor = vec4(lighting, baseColor.a);
@@ -540,6 +561,10 @@ void Renderer::DrawMesh(
 	m_Shader.SetFloat("u_Roughness", roughness);
 	m_Shader.SetFloat("u_AO", ambientOcclusion);
 	m_Shader.SetFloat("u_Emissive", emissive);
+	m_Shader.SetFloat("u_Exposure", m_RenderSettings.exposure);
+	m_Shader.SetInt("u_FogEnabled", m_RenderSettings.fog ? 1 : 0);
+	m_Shader.SetFloat("u_FogDensity", m_RenderSettings.fogDensity);
+	m_Shader.SetFloat("u_BloomStrength", m_RenderSettings.bloom ? m_RenderSettings.bloomStrength : 0.0f);
 	m_Shader.SetInt("u_PointLightCount", m_PointLightCount);
 	m_Shader.SetInt("u_SpotLightCount", m_SpotLightCount);
 	for(int i=0;i<m_PointLightCount;i++) {
@@ -804,3 +829,24 @@ Texture2D* Renderer::LoadTexture(
 void Renderer::ClearLocalLights(){ m_PointLightCount=0; m_SpotLightCount=0; }
 void Renderer::AddPointLight(const PointLightData& light){ if(m_PointLightCount<(int)m_PointLights.size()) m_PointLights[m_PointLightCount++]=light; }
 void Renderer::AddSpotLight(const SpotLightData& light){ if(m_SpotLightCount<(int)m_SpotLights.size()) m_SpotLights[m_SpotLightCount++]=light; }
+
+
+void Renderer::SetRenderSettings(const RenderSettings& settings)
+{
+    m_RenderSettings = settings;
+    m_RenderSettings.viewDistance = std::clamp(m_RenderSettings.viewDistance, 25.0f, 10000.0f);
+    m_RenderSettings.exposure = std::clamp(m_RenderSettings.exposure, 0.1f, 5.0f);
+    m_RenderSettings.fogDensity = std::clamp(m_RenderSettings.fogDensity, 0.0f, 0.1f);
+    m_RenderSettings.bloomStrength = std::clamp(m_RenderSettings.bloomStrength, 0.0f, 2.0f);
+    m_Camera.SetFarPlane(m_RenderSettings.viewDistance);
+
+    if (m_RenderSettings.antiAliasing)
+        glEnable(GL_MULTISAMPLE);
+    else
+        glDisable(GL_MULTISAMPLE);
+}
+
+const RenderSettings& Renderer::GetRenderSettings() const
+{
+    return m_RenderSettings;
+}
