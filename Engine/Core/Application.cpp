@@ -31,21 +31,21 @@ Application::Application()
 {
 }
 
-void Application::Initialize()
+bool Application::Initialize()
 {
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         Logger::Error( std::string("Failed to initialize SDL: ") + SDL_GetError());
 
         m_Running = false;
-        return;
+        return false;
     }
 
     if (!m_Window.Initialize())
     {
         SDL_Quit();
         m_Running = false;
-        return;
+        return false;
     }
 
     if (!m_Renderer.Initialize(m_Window))
@@ -53,7 +53,7 @@ void Application::Initialize()
         m_Window.Shutdown();
         SDL_Quit();
         m_Running = false;
-        return;
+        return false;
     }
 
     if (!m_ImGuiLayer.Initialize(
@@ -64,7 +64,7 @@ void Application::Initialize()
         m_Window.Shutdown();
         SDL_Quit();
         m_Running = false;
-        return;
+        return false;
     }
 
     UITest::Run();
@@ -78,6 +78,7 @@ void Application::Initialize()
         );
     }
 
+    return true;
 }
 
 void Application::Run()
