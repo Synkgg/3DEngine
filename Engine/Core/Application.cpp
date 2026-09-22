@@ -278,13 +278,28 @@ void Application::Run()
         if (m_Runtime.IsRunning())
         {
             /*
-             * Play-in-editor must leave the OS cursor available.
-             * The new canvas UI uses absolute mouse coordinates for
-             * hit testing, so relative mouse capture would make menus
-             * impossible to click. Camera/player look can opt into
-             * capture later when the game explicitly requests it.
+             * Runtime starts with the cursor free so menu UI can be clicked.
+             * Once a gameplay scene is active, click the game viewport to
+             * capture the mouse for camera look. Escape releases it again.
              */
-            if (m_RuntimeMouseCaptured)
+            if (!m_RuntimeMouseCaptured &&
+                m_Editor.IsViewportHovered() &&
+                m_Input.IsMouseButtonPressed(SDL_BUTTON_LEFT))
+            {
+                m_Input.SetMouseCapture(
+                    m_Window.GetNativeWindow(),
+                    true
+                );
+
+                m_RuntimeMouseCaptured = true;
+
+                // Flush the click/relative-mode transition so the first
+                // gameplay frame does not receive a large mouse delta.
+                m_Input.Update();
+            }
+
+            if (m_RuntimeMouseCaptured &&
+                m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE))
             {
                 m_Input.SetMouseCapture(
                     m_Window.GetNativeWindow(),
@@ -301,8 +316,7 @@ void Application::Run()
                 false
             );
 
-            m_RuntimeMouseCaptured =
-                false;
+            m_RuntimeMouseCaptured = false;
         }
 
         // Update UI input before Lua. UI.WasClicked() consumes the click
