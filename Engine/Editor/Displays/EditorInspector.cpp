@@ -11,6 +11,7 @@
 #include "../../Scene/Components/LightComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
 #include "../../Scene/Components/TextureComponent.h"
+#include "../../Scene/Components/MaterialComponent.h"
 #include "../../Scene/Components/ScriptComponent.h"
 #include "../../SCene/Components/InteractableComponent.h"
 
@@ -603,9 +604,13 @@ void Editor::RenderInspector(
     if (light != nullptr)
     {
         if (ImGui::CollapsingHeader(
-            "Directional Light",
+            "Light",
             ImGuiTreeNodeFlags_DefaultOpen))
         {
+            int lightType = static_cast<int>(light->type);
+            const char* lightTypes[] = { "Directional", "Point", "Spot" };
+            if (ImGui::Combo("Type", &lightType, lightTypes, 3))
+                light->type = static_cast<LightType>(lightType);
             float colorValues[3] =
             {
                 light->color.x,
@@ -656,6 +661,19 @@ void Editor::RenderInspector(
                 10.0f
             );
 
+            if (light->type != LightType::Directional)
+                ImGui::DragFloat("Range", &light->range, 0.25f, 0.1f, 100.0f);
+
+            if (light->type == LightType::Spot)
+            {
+                ImGui::SliderFloat("Inner Angle", &light->innerAngle, 1.0f, 85.0f);
+                ImGui::SliderFloat("Outer Angle", &light->outerAngle, 1.0f, 89.0f);
+                if (light->outerAngle < light->innerAngle)
+                    light->outerAngle = light->innerAngle;
+            }
+
+            ImGui::Checkbox("Cast Shadows", &light->castShadows);
+
             ImGui::Spacing();
 
             if (ImGui::Button(
@@ -671,6 +689,22 @@ void Editor::RenderInspector(
                     "Removed LightComponent."
                 );
             }
+        }
+    }
+
+    MaterialComponent* material =
+        scene.GetComponent<MaterialComponent>(m_SelectedEntity);
+
+    if (material != nullptr)
+    {
+        if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::SliderFloat("Metallic", &material->metallic, 0.0f, 1.0f);
+            ImGui::SliderFloat("Roughness", &material->roughness, 0.04f, 1.0f);
+            ImGui::SliderFloat("Ambient Occlusion", &material->ambientOcclusion, 0.0f, 1.0f);
+            ImGui::DragFloat("Emissive", &material->emissive, 0.05f, 0.0f, 20.0f);
+            if (ImGui::Button("Remove Material"))
+                scene.RemoveComponent<MaterialComponent>(m_SelectedEntity);
         }
     }
 
@@ -1190,6 +1224,24 @@ void Editor::RenderInspector(
             ImGui::Selectable(
                 "Directional Light"
             );
+            ImGui::EndDisabled();
+        }
+
+        /*
+         * Material
+         */
+        if (material == nullptr)
+        {
+            if (ImGui::Selectable("Material"))
+            {
+                scene.AddComponent<MaterialComponent>(m_SelectedEntity);
+                Logger::Info("Added MaterialComponent.");
+            }
+        }
+        else
+        {
+            ImGui::BeginDisabled();
+            ImGui::Selectable("Material");
             ImGui::EndDisabled();
         }
 
