@@ -939,6 +939,32 @@ void LuaScript::BindEngineAPI()
         m_Renderer->SetRenderSettings(settings);
     });
 
+    graphics.set_function("SetAntiAliasingSamples", [this](int samples)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.antiAliasingSamples = samples;
+        settings.antiAliasing = samples > 1;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetShadowQuality", [this](int quality)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.shadowQuality = quality;
+        settings.shadows = quality > 0;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetShadowDistance", [this](float distance)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.shadowDistance = distance;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
     graphics.set_function("SetFog", [this](bool enabled)
     {
         if (!m_Renderer) return;
