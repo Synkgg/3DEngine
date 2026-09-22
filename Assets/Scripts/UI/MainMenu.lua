@@ -13,10 +13,10 @@ local viewNames = { "LOW", "MEDIUM", "HIGH" }
 local function ApplyGraphics()
     Graphics.SetAntiAliasing(aa)
     Graphics.SetAntiAliasingSamples(aaSamples[aaIndex])
-    Graphics.SetShadowQuality(shadowIndex - 1)
-    Graphics.SetShadowDistance(({ 30.0, 55.0, 90.0, 140.0 })[shadowIndex])
+    -- Shadows and bloom stay disabled until their real render passes exist.
+    Graphics.SetShadowQuality(0)
     Graphics.SetFog(fog)
-    Graphics.SetBloom(bloom)
+    Graphics.SetBloom(false)
     Graphics.SetViewDistance(viewDistances[viewIndex])
     Graphics.SetExposure(1.0)
     Graphics.SetFogDensity(0.003)
@@ -24,7 +24,7 @@ local function ApplyGraphics()
 
     UI.SetText("AAStatus", "ANTI-ALIASING: " .. Graphics.GetAntiAliasingSamples() .. "X")
     UI.SetText("FogStatus", "FOG: " .. (Graphics.GetFog() and "ON" or "OFF"))
-    UI.SetText("BloomStatus", "BLOOM: " .. (Graphics.GetBloom() and "ON" or "OFF") .. " (POST FX PENDING)")
+    UI.SetText("BloomStatus", "BLOOM: UNAVAILABLE")
     UI.SetText("ViewStatus", "VIEW DISTANCE: " .. math.floor(Graphics.GetViewDistance()))
 end
 
@@ -60,8 +60,7 @@ function OnUpdate(deltaTime)
     end
 
     if UI.WasClicked("BloomToggle") then
-        bloom = not bloom
-        ApplyGraphics()
+        UI.SetText("BloomStatus", "BLOOM: UNAVAILABLE")
     end
 
     if UI.WasClicked("ViewToggle") then
