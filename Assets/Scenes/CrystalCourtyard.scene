@@ -1,5 +1,5 @@
 MyEngineScene
-Entities 16
+Entities 19
 Entity 1
 Name GameController
 Position 0 0 0
@@ -108,14 +108,15 @@ Scale 2.5 1.5 2.5
 Mesh 1 1
 Color 1 0.12 0.35 0.55 1
 Texture 0
-Interactable 0
+Interactable 1 1 "Restore the altar"
 Player 0
 CharacterController 0
 Light 0
 Collider 1 1 1 1
-Scripts 0
+Scripts 1
+Script Assets/Scripts/CrystalAltar.lua
 Entity 9
-Name Crystal
+Name AltarCrystal
 Position 0 4 0
 Rotation 0 0 0
 Scale 0.8 1.4 0.8
@@ -227,4 +228,49 @@ CharacterController 0
 Light 1 1 0.94 0.82 -0.45 -1 -0.3 1.25
 Collider 0
 Scripts 0
+Entity 17
+Name EnergyCrystalWest
+Position -13 1.2 -8
+Rotation 0 0 0
+Scale 0.55 1.1 0.55
+Mesh 1 1
+Color 1 0.1 0.75 1 1
+Texture 0
+Interactable 1 1 "Collect energy crystal"
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 1
+Script Assets/Scripts/CrystalPickup.lua
+Entity 18
+Name EnergyCrystalEast
+Position 13 1.2 7
+Rotation 0 0 0
+Scale 0.55 1.1 0.55
+Mesh 1 1
+Color 1 0.25 1 0.65 1
+Texture 0
+Interactable 1 1 "Collect energy crystal"
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 1
+Script Assets/Scripts/CrystalPickup.lua
+Entity 19
+Name EnergyCrystalNorth
+Position 7 1.2 -13
+Rotation 0 0 0
+Scale 0.55 1.1 0.55
+Mesh 1 1
+Color 1 0.75 0.3 1 1
+Texture 0
+Interactable 1 1 "Collect energy crystal"
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 1
+Script Assets/Scripts/CrystalPickup.lua
 HierarchyFolders 0
