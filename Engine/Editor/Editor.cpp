@@ -253,6 +253,37 @@ void Editor::Render(
 
     RenderMainToolbar(renderer, scene, iconFont);
 
+    // Reserve a real command strip above the docking workspace instead of
+    // drawing controls on top of docked panels.
+    ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+    const ImVec2 dockPos(mainViewport->WorkPos.x, mainViewport->WorkPos.y + 54.0f);
+    const ImVec2 dockSize(mainViewport->WorkSize.x, std::max(1.0f, mainViewport->WorkSize.y - 54.0f));
+
+    ImGui::SetNextWindowPos(dockPos);
+    ImGui::SetNextWindowSize(dockSize);
+    ImGui::SetNextWindowViewport(mainViewport->ID);
+
+    const ImGuiWindowFlags dockHostFlags =
+        ImGuiWindowFlags_NoDocking |
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoBringToFrontOnFocus |
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_NoBackground |
+        ImGuiWindowFlags_NoSavedSettings;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("##EditorDockHost", nullptr, dockHostFlags);
+    ImGui::PopStyleVar();
+    ImGui::DockSpace(
+        ImGui::GetID("EditorDockSpace"),
+        ImVec2(0.0f, 0.0f),
+        ImGuiDockNodeFlags_PassthruCentralNode
+    );
+    ImGui::End();
+
     RenderHierarchy(
         scene,
         iconFont
