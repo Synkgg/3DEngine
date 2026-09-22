@@ -9,6 +9,7 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
 #include <ImGuizmo.h>
+#include <cstdio>
 
 ImGuiLayer::ImGuiLayer()
     : m_Initialized(false),
@@ -42,17 +43,24 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
     editorFontConfig.OversampleV = 2;
     editorFontConfig.PixelSnapH = false;
 
-    ImFont* editorFont = io.Fonts->AddFontFromFileTTF(
-        "Engine/Editor/Fonts/InterVariable.ttf",
-        17.0f,
-        &editorFontConfig,
-        io.Fonts->GetGlyphRangesDefault()
-    );
+    ImFont* editorFont = nullptr;
+
+    // ImGui asserts in Debug builds when AddFontFromFileTTF cannot open the
+    // path. Check it ourselves first so launching from out/build also works.
+    if (FILE* fontFile = std::fopen(
+        "Engine/Editor/Fonts/InterVariable.ttf", "rb"))
+    {
+        std::fclose(fontFile);
+        editorFont = io.Fonts->AddFontFromFileTTF(
+            "Engine/Editor/Fonts/InterVariable.ttf",
+            17.0f,
+            &editorFontConfig,
+            io.Fonts->GetGlyphRangesDefault()
+        );
+    }
 
     if (editorFont == nullptr)
-    {
         editorFont = io.Fonts->AddFontDefault();
-    }
 
     io.FontDefault = editorFont;
 
