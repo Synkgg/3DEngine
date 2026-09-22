@@ -1,6 +1,7 @@
 #include "Framebuffer.h"
 #include <glad/gl.h>
 #include <algorithm>
+#include "../Core/Logger.h"
 
 Framebuffer::Framebuffer() = default;
 Framebuffer::~Framebuffer() { Shutdown(); }
@@ -86,19 +87,45 @@ void Framebuffer::Resolve()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Framebuffer::Resize(unsigned int width, unsigned int height)
+bool Framebuffer::Resize(unsigned int width, unsigned int height)
 {
-    if (!width || !height || (width == m_Width && height == m_Height)) return;
-    m_Width=width; m_Height=height; Shutdown();
-    m_Width=width; m_Height=height; CreateTargets();
+    if (!width || !height) return false;
+    if (width == m_Width && height == m_Height) return true;
+
+    const unsigned int oldWidth = m_Width;
+    const unsigned int oldHeight = m_Height;
+    m_Width = width;
+    m_Height = height;
+    Shutdown();
+    m_Width = width;
+    m_Height = height;
+
+    if (CreateTargets()) return true;
+
+    Logger::Error("Failed to resize framebuffer; restoring previous size.");
+    m_Width = oldWidth;
+    m_Height = oldHeight;
+    return CreateTargets();
 }
 
-void Framebuffer::SetSamples(unsigned int samples)
+bool Framebuffer::SetSamples(unsigned int samples)
 {
-    samples=std::clamp(samples,1u,8u);
-    if(samples==m_Samples)return;
-    const unsigned int w=m_Width,h=m_Height; m_Samples=samples; Shutdown();
-    m_Width=w;m_Height=h;CreateTargets();
+    samples = std::clamp(samples, 1u, 8u);
+    if (samples == m_Samples) return true;
+
+    const unsigned int oldSamples = m_Samples;
+    const unsigned int width = m_Width;
+    const unsigned int height = m_Height;
+    m_Samples = samples;
+    Shutdown();
+    m_Width = width;
+    m_Height = height;
+
+    if (CreateTargets()) return true;
+
+    Logger::Error("Failed to change MSAA sample count; restoring previous setting.");
+    m_Samples = oldSamples;
+    return CreateTargets();
 }
 
 void Framebuffer::Shutdown()
