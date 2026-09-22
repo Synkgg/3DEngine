@@ -25,6 +25,8 @@ private:
 
     float m_GridSize = 10.0f;
     float m_Zoom = 1.0f;
+    float m_DesignerScale = 1.0f;
+    ImVec2 m_DesignerCanvasPosition = ImVec2(0.0f, 0.0f);
 
     Vec2 m_DragStartMouse;
     Vec2 m_DragStartPosition;
@@ -109,4 +111,9 @@ private:
     void RenameSelected();
 
     void ResetView();
+
+    UIRect GetAbsoluteRect(
+        const UIWidget& widget,
+        const UIRect& canvasRect
+    ) const;
 };
