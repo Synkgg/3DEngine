@@ -972,7 +972,7 @@ void Editor::RenderViewport(
 		>(m_SelectedEntity)
 		: nullptr;
 
-	if (transform != nullptr)
+	if (!m_Playing && transform != nullptr)
 	{
 		Mat4 model =
 			transform->transform.GetMatrix();
@@ -1075,7 +1075,8 @@ void Editor::RenderViewport(
 		mousePosition.y <=
 		toolbarY + toolbarHeight;
 
-	if (mouseOverViewport &&
+	if (!m_Playing &&
+		mouseOverViewport &&
 		!mouseOverToolbar &&
 		ImGui::IsMouseClicked(
 			ImGuiMouseButton_Left) &&
