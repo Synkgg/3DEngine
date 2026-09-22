@@ -7,13 +7,15 @@
 
 #include "../../Core/Logger.h"
 #include "../../Graphics/Renderer.h"
+#include "../../UI/UICanvas.h"
 
 #include <filesystem>
 
 void LuaScriptSystem::Start(
     Scene& scene,
     Input& input,
-    Renderer& renderer)
+    Renderer& renderer,
+    UICanvas& uiCanvas)
 {
     m_Instances.clear();
 
@@ -101,6 +103,7 @@ void LuaScriptSystem::Start(
                 scene,
                 input,
                 renderer,
+                uiCanvas,
                 *m_Lua
             );
 
