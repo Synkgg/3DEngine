@@ -4,13 +4,18 @@
 
 int main()
 {
-	Logger::Info( "MyEngine starting...");
+    Logger::Info("MyEngine starting...");
 
-	Application app;
+    Application app;
 
-	app.Initialize();
-	app.Run();
-	app.Shutdown();
+    if (!app.Initialize())
+    {
+        Logger::Error("Engine initialization failed. Run loop was not started.");
+        return 1;
+    }
 
-	return 0;
+    app.Run();
+    app.Shutdown();
+
+    return 0;
 }
