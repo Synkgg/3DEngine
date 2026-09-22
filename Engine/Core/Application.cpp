@@ -413,9 +413,17 @@ void Application::Run()
                     !m_Runtime.IsPaused() &&
                     !m_Runtime.WantsCursor();
 
-                m_UICanvas.SetVisible("InteractPrompt", showPrompt);
+                if (UIWidget* promptPanel = m_UICanvas.GetRoot()->Find("InteractPrompt"))
+                    promptPanel->SetVisible(showPrompt);
+
                 if (showPrompt)
-                    m_UICanvas.SetText("InteractText", prompt);
+                {
+                    if (UIWidget* promptWidget = m_UICanvas.GetRoot()->Find("InteractText"))
+                    {
+                        if (UIText* promptText = dynamic_cast<UIText*>(promptWidget))
+                            promptText->SetText(prompt);
+                    }
+                }
             }
         }
 
