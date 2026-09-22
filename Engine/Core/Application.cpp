@@ -12,6 +12,7 @@
 #include "../Scene/Components/LightComponent.h"
 #include "../Scene/Components/ColliderComponent.h"
 #include "../Scene/Components/TextureComponent.h"
+#include "../Scene/Components/MaterialComponent.h"
 
 #include "../Graphics/PrimitiveType.h"
 
@@ -453,6 +454,9 @@ void Application::Run()
                 meshTransform.rotation.z +=
                     mesh->rotation.z;
 
+                MaterialComponent* material =
+                    m_Scene.GetComponent<MaterialComponent>(entity);
+
                 m_Renderer.DrawMesh(
                     meshTransform,
                     mesh->primitive,
@@ -460,7 +464,11 @@ void Application::Run()
                     green,
                     blue,
                     alpha,
-                    texture
+                    texture,
+                    material ? material->metallic : 0.0f,
+                    material ? material->roughness : 0.65f,
+                    material ? material->ambientOcclusion : 1.0f,
+                    material ? material->emissive : 0.0f
                 );
             }
         }
@@ -603,36 +611,44 @@ void Application::StopRuntime()
 
 void Application::UpdateLighting()
 {
-    LightComponent* sceneLight = nullptr;
+    LightComponent* directional = nullptr;
+    m_Renderer.ClearLocalLights();
 
-    for (const Entity& entity :
-        m_Scene.GetEntities())
+    for (const Entity& entity : m_Scene.GetEntities())
     {
-        sceneLight =
-            m_Scene.GetComponent<LightComponent>(
-                entity
-            );
+        LightComponent* light = m_Scene.GetComponent<LightComponent>(entity);
+        TransformComponent* transform = m_Scene.GetComponent<TransformComponent>(entity);
+        if (!light) continue;
 
-        if (sceneLight != nullptr)
+        if (light->type == LightType::Directional && directional == nullptr)
         {
-            break;
+            directional = light;
+        }
+        else if (light->type == LightType::Point && transform)
+        {
+            PointLightData data;
+            data.position = transform->transform.position;
+            data.color = light->color;
+            data.intensity = light->intensity;
+            data.range = light->range;
+            m_Renderer.AddPointLight(data);
+        }
+        else if (light->type == LightType::Spot && transform)
+        {
+            SpotLightData data;
+            data.position = transform->transform.position;
+            data.direction = light->direction;
+            data.color = light->color;
+            data.intensity = light->intensity;
+            data.range = light->range;
+            data.innerCos = std::cos(light->innerAngle * 0.0174532925f);
+            data.outerCos = std::cos(light->outerAngle * 0.0174532925f);
+            m_Renderer.AddSpotLight(data);
         }
     }
 
-    if (sceneLight != nullptr)
-    {
-        m_Renderer.SetDirectionalLight(
-            sceneLight->direction,
-            sceneLight->color,
-            sceneLight->intensity
-        );
-    }
+    if (directional)
+        m_Renderer.SetDirectionalLight(directional->direction, directional->color, directional->intensity);
     else
-    {
-        m_Renderer.SetDirectionalLight(
-            Vec3(-0.5f, -1.0f, -0.5f),
-            Vec3(1.0f, 1.0f, 1.0f),
-            1.0f
-        );
-    }
+        m_Renderer.SetDirectionalLight(Vec3(-0.5f,-1.0f,-0.5f), Vec3(1.0f,0.95f,0.88f), 1.0f);
 }
