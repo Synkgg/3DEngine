@@ -42,13 +42,10 @@ void LuaScriptSystem::Start(
         }
     );
 
-    if (!LoadGlobalScript(
-        "Assets\\Scripts\\Systems\\InventoryManager.lua"))
-    {
-        Logger::Error(
-            "Failed to load InventoryManager.lua."
-        );
-    }
+    // Optional game-wide state for the Crystal Courtyard demo.
+    // Unlike the removed InventoryManager dependency, this file exists in
+    // the project and gives entity scripts a small shared Lua state table.
+    LoadGlobalScript("Assets/Scripts/Systems/CrystalGame.lua");
 
     namespace fs =
         std::filesystem;
