@@ -149,12 +149,14 @@ void Application::Run()
 
         m_Input.Update();
 
-        // Escape is the editor-level emergency stop for Play mode. Runtime
-        // pause menus use the same key first, but a second Escape while paused
-        // stops Play mode so the editor is never trapped in runtime.
+        // Escape is also the editor-level exit from menu-style runtime
+        // states. Gameplay owns Escape for its pause menu; once paused, a
+        // second Escape stops Play mode. A runtime state that already wants
+        // the cursor (for example MainMenu) has no gameplay capture to pause,
+        // so Escape stops Play mode immediately.
         if (m_Runtime.IsRunning() &&
-            m_Runtime.IsPaused() &&
-            m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE))
+            m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE) &&
+            (m_Runtime.IsPaused() || m_Runtime.WantsCursor()))
         {
             m_Editor.StopPlaying();
         }
