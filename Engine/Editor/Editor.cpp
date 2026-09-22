@@ -144,15 +144,6 @@ void Editor::Render(
 
     if (ImGui::BeginMainMenuBar())
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.64f, 0.50f, 1.00f, 1.00f));
-        ImGui::TextUnformatted("VORTEK");
-        ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::TextDisabled("STUDIO");
-        ImGui::SameLine();
-        ImGui::TextDisabled("  /  ");
-        ImGui::SameLine();
-
         if (ImGui::BeginMenu("File"))
         {
             /*
