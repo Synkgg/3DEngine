@@ -5,10 +5,12 @@
 #include "UIText.h"
 #include "UIWidgetFactory.h"
 
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
 #include <sstream>
+#include <vector>
 
 namespace
 {
@@ -44,6 +46,14 @@ namespace
 
 bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
 {
+    const std::filesystem::path outputPath(filepath);
+    if (outputPath.has_parent_path())
+    {
+        std::error_code error;
+        std::filesystem::create_directories(outputPath.parent_path(), error);
+        if (error) return false;
+    }
+
     std::ofstream out(filepath);
     if (!out) return false;
 
