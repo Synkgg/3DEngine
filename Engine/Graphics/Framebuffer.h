@@ -10,8 +10,8 @@ public:
     void Bind();
     void Unbind();
     void Resolve();
-    void Resize(unsigned int width, unsigned int height);
-    void SetSamples(unsigned int samples);
+    bool Resize(unsigned int width, unsigned int height);
+    bool SetSamples(unsigned int samples);
     void Shutdown();
 
     unsigned int GetColorTexture() const;
