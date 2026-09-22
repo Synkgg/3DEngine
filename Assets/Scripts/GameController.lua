@@ -2,6 +2,11 @@ local inventoryOpen = false
 local paused = false
 local pauseSettingsOpen = false
 local aa = true
+local aaIndex = 3
+local aaSamples = { 1, 2, 4, 8 }
+local aaNames = { "OFF", "2X", "4X", "8X" }
+local shadowIndex = 3
+local shadowNames = { "OFF", "LOW", "MEDIUM", "HIGH" }
 local fog = true
 local bloom = true
 local viewIndex = 3
@@ -9,7 +14,7 @@ local viewDistances = { 250.0, 600.0, 1500.0 }
 local viewNames = { "LOW", "MEDIUM", "HIGH" }
 
 local function RefreshGraphicsLabels()
-    UI.SetText("PauseAAStatus", "ANTI-ALIASING: " .. (aa and "ON" or "OFF"))
+    UI.SetText("PauseAAStatus", "ANTI-ALIASING: " .. aaNames[aaIndex])
     UI.SetText("PauseFogStatus", "FOG: " .. (fog and "ON" or "OFF"))
     UI.SetText("PauseBloomStatus", "BLOOM: " .. (bloom and "ON" or "OFF"))
     UI.SetText("PauseViewStatus", "VIEW DISTANCE: " .. viewNames[viewIndex])
@@ -17,6 +22,9 @@ end
 
 local function ApplyGraphics()
     Graphics.SetAntiAliasing(aa)
+    Graphics.SetAntiAliasingSamples(aaSamples[aaIndex])
+    Graphics.SetShadowQuality(shadowIndex - 1)
+    Graphics.SetShadowDistance(({ 30.0, 55.0, 90.0, 140.0 })[shadowIndex])
     Graphics.SetFog(fog)
     Graphics.SetBloom(bloom)
     Graphics.SetViewDistance(viewDistances[viewIndex])
@@ -91,7 +99,11 @@ function OnUpdate(deltaTime)
             UI.SetVisible("PauseMenu", true)
         end
 
-        if UI.WasClicked("PauseAAToggle") then aa = not aa; ApplyGraphics() end
+        if UI.WasClicked("PauseAAToggle") then
+            aaIndex = aaIndex % #aaSamples + 1
+            aa = aaSamples[aaIndex] > 1
+            ApplyGraphics()
+        end
         if UI.WasClicked("PauseFogToggle") then fog = not fog; ApplyGraphics() end
         if UI.WasClicked("PauseBloomToggle") then bloom = not bloom; ApplyGraphics() end
         if UI.WasClicked("PauseViewToggle") then
