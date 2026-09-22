@@ -14,10 +14,10 @@ local viewDistances = { 250.0, 600.0, 1500.0 }
 local viewNames = { "LOW", "MEDIUM", "HIGH" }
 
 local function RefreshGraphicsLabels()
-    UI.SetText("PauseAAStatus", "ANTI-ALIASING: " .. aaNames[aaIndex])
-    UI.SetText("PauseFogStatus", "FOG: " .. (fog and "ON" or "OFF"))
-    UI.SetText("PauseBloomStatus", "BLOOM: " .. (bloom and "ON" or "OFF"))
-    UI.SetText("PauseViewStatus", "VIEW DISTANCE: " .. viewNames[viewIndex])
+    UI.SetText("PauseAAStatus", "ANTI-ALIASING: " .. Graphics.GetAntiAliasingSamples() .. "X")
+    UI.SetText("PauseFogStatus", "FOG: " .. (Graphics.GetFog() and "ON" or "OFF"))
+    UI.SetText("PauseBloomStatus", "BLOOM: " .. (Graphics.GetBloom() and "ON" or "OFF") .. " (POST FX PENDING)")
+    UI.SetText("PauseViewStatus", "VIEW DISTANCE: " .. math.floor(Graphics.GetViewDistance()))
 end
 
 local function ApplyGraphics()
