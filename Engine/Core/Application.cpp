@@ -16,6 +16,7 @@
 #include "../Core/Logger.h"
 
 #include "../UI/UITest.h"
+#include "../UI/UISerializer.h"
 
 Application::Application()
     : m_Running(false),
@@ -68,9 +69,14 @@ void Application::Initialize()
 
     UITest::Run();
 
-    UITest::SetupCanvas(
-        m_UICanvas
-    );
+    if (!UISerializer::Load(
+        m_UICanvas,
+        "Assets/UI/UIEditorTest.ui"))
+    {
+        UITest::SetupCanvas(
+            m_UICanvas
+        );
+    }
 
 }
 
