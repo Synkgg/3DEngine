@@ -9,6 +9,7 @@
 #include "../../UI/UIWidget.h"
 #include "../../UI/UIText.h"
 #include "../../UI/UIButton.h"
+#include "../../UI/UISerializer.h"
 
 #include "../Scene.h"
 #include "../Components/TransformComponent.h"
@@ -879,6 +880,24 @@ void LuaScript::BindEngineAPI()
      * UI - edits the same widget tree used by the editor and renderer.
      */
     sol::table ui = m_Lua->create_table();
+
+    ui.set_function("Load", [this](const std::string& path)
+    {
+        if (!m_UICanvas) return false;
+        return UISerializer::Load(*m_UICanvas, path);
+    });
+
+    ui.set_function("Clear", [this]()
+    {
+        if (!m_UICanvas) return;
+        m_UICanvas->Clear();
+    });
+
+    ui.set_function("IsLoaded", [this](const std::string& name)
+    {
+        return m_UICanvas && m_UICanvas->GetRoot() &&
+            m_UICanvas->GetRoot()->Find(name) != nullptr;
+    });
 
     ui.set_function("SetVisible", [this](const std::string& name, bool visible)
     {
