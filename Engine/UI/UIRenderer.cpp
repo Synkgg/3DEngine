@@ -555,32 +555,32 @@ void UIRenderer::DrawCanvasWidget(
         rect.x,
         rect.y,
         0.0f,
-        0.0f,
+        1.0f,
 
         rect.x + rect.width,
         rect.y,
         1.0f,
-        0.0f,
+        1.0f,
 
         rect.x + rect.width,
         rect.y + rect.height,
         1.0f,
-        1.0f,
+        0.0f,
 
         rect.x,
         rect.y,
         0.0f,
-        0.0f,
+        1.0f,
 
         rect.x + rect.width,
         rect.y + rect.height,
         1.0f,
-        1.0f,
+        0.0f,
 
         rect.x,
         rect.y + rect.height,
         0.0f,
-        1.0f
+        0.0f
     };
 
     glBindVertexArray(m_VAO);
