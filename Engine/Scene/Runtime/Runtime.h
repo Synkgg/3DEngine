@@ -45,6 +45,8 @@ public:
 
     const std::string& GetInteractionPrompt() const;
 
+    bool RequestSceneLoad(const std::string& path);
+
 private:
     bool m_Running = false;
 
@@ -61,4 +63,9 @@ private:
     Vec3 m_SnapshotCameraPosition{};
     float m_SnapshotCameraYaw = 0.0f;
     float m_SnapshotCameraPitch = 0.0f;
+
+    std::string m_PendingScenePath;
+    Renderer* m_Renderer = nullptr;
+    Input* m_Input = nullptr;
+    UICanvas* m_UICanvas = nullptr;
 };
