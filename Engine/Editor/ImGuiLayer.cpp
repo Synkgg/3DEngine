@@ -34,18 +34,26 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
 
     ImGui::StyleColorsDark();
 
-    // ImGui's default ProggyClean font is compiled into Dear ImGui, so the
-    // editor has a real embedded font with no external font-file dependency.
+    // Inter is bundled with the engine and loaded into the ImGui atlas.
+    // It gives the editor the smooth modern UI typography used by the
+    // runtime canvas instead of ImGui's pixel-oriented default font.
     ImFontConfig editorFontConfig{};
-    editorFontConfig.SizePixels = 18.0f;
-    editorFontConfig.OversampleH = 2;
+    editorFontConfig.OversampleH = 3;
     editorFontConfig.OversampleV = 2;
-    ImFont* editorFont = io.Fonts->AddFontDefault(&editorFontConfig);
+    editorFontConfig.PixelSnapH = false;
+
+    ImFont* editorFont = io.Fonts->AddFontFromFileTTF(
+        "Engine/Editor/Fonts/InterVariable.ttf",
+        17.0f,
+        &editorFontConfig,
+        io.Fonts->GetGlyphRangesDefault()
+    );
+
     if (editorFont == nullptr)
     {
-        ImGui::DestroyContext();
-        return false;
+        editorFont = io.Fonts->AddFontDefault();
     }
+
     io.FontDefault = editorFont;
 
     ImFontConfig fontConfig{};
