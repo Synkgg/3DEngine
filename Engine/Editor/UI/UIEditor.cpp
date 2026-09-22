@@ -1100,50 +1100,9 @@ void UIEditor::DrawWidget(
             4.0f
         );
 
-        if (widget.GetType() ==
-            UIWidgetType::Button)
-        {
-            UIButton* button =
-                dynamic_cast<UIButton*>(
-                    &widget
-                    );
+        // Buttons are visual containers. Their widget name is editor metadata,
+        // not visible UI text. Add a UIText child when the button needs a label.
 
-            if (button)
-            {
-                const char* label =
-                    widget.GetName().c_str();
-
-                const ImVec2 textSize =
-                    ImGui::CalcTextSize(
-                        label
-                    );
-
-                drawList->AddText(
-                    ImVec2(
-                        min.x +
-                        (max.x -
-                            min.x -
-                            textSize.x) *
-                        0.5f,
-
-                        min.y +
-                        (max.y -
-                            min.y -
-                            textSize.y) *
-                        0.5f
-                    ),
-
-                    IM_COL32(
-                        255,
-                        255,
-                        255,
-                        255
-                    ),
-
-                    label
-                );
-            }
-        }
     }
 
     /*
