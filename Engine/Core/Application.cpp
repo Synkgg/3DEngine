@@ -698,7 +698,8 @@ void Application::StartRuntime()
     m_Runtime.Start(
         m_Scene,
         m_Renderer,
-        m_Input
+        m_Input,
+        m_UICanvas
     );
 }
 
