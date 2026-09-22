@@ -279,7 +279,8 @@ void Application::Run()
         {
             const bool gameplayScene =
                 m_Runtime.GetCurrentScenePath() ==
-                "Assets/Scenes/CrystalCourtyard.scene";
+                "Assets/Scenes/CrystalCourtyard.scene" &&
+                !m_Runtime.WantsCursor();
 
             // Menu scenes keep the cursor free for canvas buttons.
             // Gameplay captures automatically after the menu has switched
