@@ -1,6 +1,8 @@
 #include "Application.h"
 #include <SDL3/SDL.h>
 #include <iostream>
+#include <cfloat>
+#include <imgui.h>
 
 #include "../Scene/Entity.h"
 
@@ -89,7 +91,24 @@ void Application::Run()
 
         while (SDL_PollEvent(&event))
         {
-            m_ImGuiLayer.ProcessEvent(&event);
+            // While gameplay owns relative mouse input, do not feed mouse
+            // motion/buttons/wheel into Dear ImGui. SDL relative mode hides
+            // the OS cursor, but ImGui otherwise keeps integrating those
+            // events into its own virtual mouse position.
+            const bool runtimeOwnsMouse =
+                m_Runtime.IsRunning() &&
+                m_RuntimeMouseCaptured;
+
+            const bool mouseEvent =
+                event.type == SDL_EVENT_MOUSE_MOTION ||
+                event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+                event.type == SDL_EVENT_MOUSE_BUTTON_UP ||
+                event.type == SDL_EVENT_MOUSE_WHEEL;
+
+            if (!(runtimeOwnsMouse && mouseEvent))
+            {
+                m_ImGuiLayer.ProcessEvent(&event);
+            }
 
             if (event.type == SDL_EVENT_QUIT)
             {
@@ -136,6 +155,20 @@ void Application::Run()
         }
 
         m_ImGuiLayer.BeginFrame();
+
+        // ImGui's SDL backend can still query the mouse every frame even when
+        // motion events are filtered. Disable mouse interaction completely
+        // while the game owns the cursor, then restore it for menus/editor.
+        ImGuiIO& imguiIO = ImGui::GetIO();
+        if (m_Runtime.IsRunning() && m_RuntimeMouseCaptured)
+        {
+            imguiIO.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+            imguiIO.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+        }
+        else
+        {
+            imguiIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+        }
 
         m_UIEditor.Draw(m_UICanvas, m_Renderer);
 
