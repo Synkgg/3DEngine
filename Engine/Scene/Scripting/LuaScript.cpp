@@ -904,6 +904,17 @@ void LuaScript::BindEngineAPI()
         return m_Runtime->RequestSceneLoad(path);
     });
 
+    sceneApi.set_function("SetPaused", [this](bool paused)
+    {
+        if (!m_Runtime) return;
+        m_Runtime->SetPaused(paused);
+    });
+
+    sceneApi.set_function("IsPaused", [this]()
+    {
+        return m_Runtime ? m_Runtime->IsPaused() : false;
+    });
+
     (*m_Environment)["Scene"] = sceneApi;
 
     /*
