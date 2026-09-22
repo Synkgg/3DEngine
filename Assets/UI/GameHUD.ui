@@ -1,0 +1,9 @@
+VORTEK_UI 1
+1920 1080
+0 0 "HUD" 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0
+1 1 "Objective" 42 38 700 45 0 0 0 0 0 0 1 1 1 1 1 1 0 1 "EXPLORE THE CRYSTAL COURTYARD" 26
+1 1 "Controls" 42 88 760 38 0 0 0 0 0 0 0.65 0.72 0.82 1 1 1 0 1 "WASD move | SPACE jump | TAB inventory | M menu" 19
+0 0 "Inventory" 0 0 600 430 0.5 0.5 0.5 0.5 0.5 0.5 0.045 0.055 0.075 0.98 0 1 1 20
+1 1 "InventoryTitle" 70 55 460 55 0 0 0 0 0 0 0.25 0.7 1 1 1 1 0 21 "INVENTORY" 36
+1 1 "InventoryText" 70 145 460 100 0 0 0 0 0 0 0.82 0.86 0.92 1 1 1 0 21 "Explorer Pack\nCrystal Key: 1\nMap Fragment: 1" 23
+1 1 "InventoryHelp" 70 330 460 40 0 0 0 0 0 0 0.55 0.64 0.74 1 1 1 0 21 "TAB TO CLOSE" 18
