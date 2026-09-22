@@ -81,16 +81,20 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
         iconRanges
     );
 
+    // OpenGL3 must be initialized before SDL3. The SDL3 backend queries
+    // platform-interface state that expects the renderer backend data to
+    // already exist with this ImGui version.
+    if (!ImGui_ImplOpenGL3_Init("#version 450"))
+    {
+        ImGui::DestroyContext();
+        return false;
+    }
+
     if (!ImGui_ImplSDL3_InitForOpenGL(
         window.GetNativeWindow(),
         context))
     {
-        return false;
-    }
-
-    if (!ImGui_ImplOpenGL3_Init("#version 450"))
-    {
-        ImGui_ImplSDL3_Shutdown();
+        ImGui_ImplOpenGL3_Shutdown();
         ImGui::DestroyContext();
         return false;
     }
