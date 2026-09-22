@@ -309,3 +309,13 @@ void Camera::Reset()
     m_Yaw = DefaultYaw;
     m_Pitch = DefaultPitch;
 }
+
+void Camera::SetFarPlane(float farPlane)
+{
+    m_FarPlane = std::clamp(farPlane, 25.0f, 10000.0f);
+}
+
+float Camera::GetFarPlane() const
+{
+    return m_FarPlane;
+}
