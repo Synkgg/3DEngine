@@ -149,6 +149,15 @@ void Application::Run()
 
         m_Input.Update();
 
+        // Escape is the editor-level emergency stop for Play mode. Runtime
+        // pause menus use the same key first, but a second Escape while paused
+        // stops Play mode so the editor is never trapped in runtime.
+        if (m_Runtime.IsRunning() &&
+            m_Runtime.IsPaused() &&
+            m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE))
+        {
+            m_Editor.StopPlaying();
+        }
 
         m_ImGuiLayer.BeginFrame();
 
