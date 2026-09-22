@@ -82,22 +82,21 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
         iconRanges
     );
 
-    // OpenGL3 must be initialized before SDL3. The SDL3 backend queries
-    // platform-interface state that expects the renderer backend data to
-    // already exist with this ImGui version.
-    if (!ImGui_ImplOpenGL3_Init("#version 450"))
-    {
-        Logger::Error("ImGui OpenGL3 backend initialization failed.");
-        ImGui::DestroyContext();
-        return false;
-    }
-
+    // Platform backend first, then renderer backend. This is the order
+    // expected by Dear ImGui's SDL3/OpenGL3 examples and backend lifecycle.
     if (!ImGui_ImplSDL3_InitForOpenGL(
         window.GetNativeWindow(),
         context))
     {
         Logger::Error("ImGui SDL3 backend initialization failed.");
-        ImGui_ImplOpenGL3_Shutdown();
+        ImGui::DestroyContext();
+        return false;
+    }
+
+    if (!ImGui_ImplOpenGL3_Init("#version 450"))
+    {
+        Logger::Error("ImGui OpenGL3 backend initialization failed.");
+        ImGui_ImplSDL3_Shutdown();
         ImGui::DestroyContext();
         return false;
     }
