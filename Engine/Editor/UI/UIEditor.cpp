@@ -25,6 +25,7 @@
 bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
 {
     m_SelectedWidget = nullptr;
+    m_Visible = true;
 
     if (!UISerializer::Load(canvas, path))
         return false;
@@ -34,10 +35,25 @@ bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
     return true;
 }
 
+void UIEditor::SetVisible(bool visible)
+{
+    m_Visible = visible;
+    if (!visible)
+    {
+        m_SelectedWidget = nullptr;
+        m_Dragging = false;
+        m_Resizing = false;
+        m_ResizeHandle = -1;
+    }
+}
+
 void UIEditor::Draw(
     UICanvas& canvas,
     Renderer& renderer)
 {
+    if (!m_Visible)
+        return;
+
     m_Renderer = &renderer;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
