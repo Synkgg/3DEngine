@@ -698,6 +698,13 @@ void Application::StartRuntime()
 {
     m_Renderer.GetUIRenderer().Clear();
 
+    // Keep the play test deterministic: the scene's test UI is restored
+    // before scripts receive OnCreate and begin querying named widgets.
+    UISerializer::Load(
+        m_UICanvas,
+        "Assets/UI/UIEditorTest.ui"
+    );
+
     m_Runtime.SaveCameraState(m_Renderer);
 
     m_Runtime.Start(
