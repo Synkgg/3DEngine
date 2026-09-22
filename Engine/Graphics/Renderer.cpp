@@ -82,7 +82,8 @@ void main()
             0.0
         );
 
-    float ambient = 0.16 * u_AO;
+    // Keep the original renderer's neutral 0.25 ambient baseline.
+    float ambient = 0.25 * u_AO;
 
     vec3 viewDirection = normalize(u_CameraPosition - v_WorldPosition);
     vec3 halfDirection = normalize(lightDirection + viewDirection);
@@ -121,25 +122,22 @@ void main()
     }
     lighting += baseColor.rgb * u_Emissive;
 
-    if (u_BloomStrength > 0.0)
-    {
-        float luminance = dot(lighting, vec3(0.2126, 0.7152, 0.0722));
-        lighting += lighting * max(luminance - 1.0, 0.0) * u_BloomStrength;
-    }
-
     if (u_FogEnabled != 0)
     {
         float distanceToCamera = length(u_CameraPosition - v_WorldPosition);
-        float fogFactor = 1.0 - exp(-u_FogDensity * u_FogDensity * distanceToCamera * distanceToCamera);
-        vec3 fogColor = vec3(0.58, 0.68, 0.76);
-        lighting = mix(lighting, fogColor, clamp(fogFactor, 0.0, 0.92));
+        // Gentle linear-distance fog. This deliberately avoids the old
+        // exponential wash that tinted most of the scene blue-gray.
+        float fogStart = max(25.0, 0.55 * 1000.0);
+        float fogEnd = max(fogStart + 1.0, 1000.0);
+        float fogFactor = smoothstep(fogStart, fogEnd, distanceToCamera);
+        vec3 fogColor = vec3(0.64, 0.72, 0.76);
+        lighting = mix(lighting, fogColor, fogFactor * clamp(u_FogDensity * 40.0, 0.0, 1.0));
     }
 
+    // Keep mesh lighting in linear HDR space. Exposure/tone mapping/bloom
+    // belong in a dedicated final post-process pass, not in every material.
     lighting *= u_Exposure;
-    // Reinhard tonemap followed by gamma correction.
-    lighting = lighting / (lighting + vec3(1.0));
-    lighting = pow(lighting, vec3(1.0 / 2.2));
-    FragColor = vec4(lighting, baseColor.a);
+    FragColor = vec4(max(lighting, vec3(0.0)), baseColor.a);
 }
 )";
 
@@ -565,7 +563,9 @@ void Renderer::DrawMesh(
 	m_Shader.SetFloat("u_Exposure", m_RenderSettings.exposure);
 	m_Shader.SetInt("u_FogEnabled", m_RenderSettings.fog ? 1 : 0);
 	m_Shader.SetFloat("u_FogDensity", m_RenderSettings.fogDensity);
-	m_Shader.SetFloat("u_BloomStrength", m_RenderSettings.bloom ? m_RenderSettings.bloomStrength : 0.0f);
+	// Bloom is intentionally not performed in the material shader. The setting
+	// remains available for the upcoming post-process pipeline.
+	m_Shader.SetFloat("u_BloomStrength", 0.0f);
 	m_Shader.SetInt("u_PointLightCount", m_PointLightCount);
 	m_Shader.SetInt("u_SpotLightCount", m_SpotLightCount);
 	for(int i=0;i<m_PointLightCount;i++) {
