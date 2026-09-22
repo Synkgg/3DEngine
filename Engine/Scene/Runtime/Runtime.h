@@ -49,6 +49,8 @@ public:
     const std::string& GetCurrentScenePath() const;
     bool WantsCursor() const;
     void SetWantsCursor(bool wantsCursor);
+    bool IsPaused() const;
+    void SetPaused(bool paused);
 
 private:
     bool m_Running = false;
@@ -70,6 +72,7 @@ private:
     std::string m_PendingScenePath;
     std::string m_CurrentScenePath;
     bool m_WantsCursor = false;
+    bool m_Paused = false;
     Renderer* m_Renderer = nullptr;
     Input* m_Input = nullptr;
     UICanvas* m_UICanvas = nullptr;
