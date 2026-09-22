@@ -4,16 +4,22 @@
 #include "../../UI/UILayout.h"
 
 #include <imgui.h>
+#include <string>
+
+class Renderer;
 
 class UIEditor
 {
 public:
     void Draw(
-        UICanvas& canvas
+        UICanvas& canvas,
+        Renderer& renderer
     );
 
 private:
     UIWidget* m_SelectedWidget = nullptr;
+    Renderer* m_Renderer = nullptr;
+    std::string m_UIAssetPath = "Assets/UI/Main.ui";
 
     bool m_Dragging = false;
     bool m_Resizing = false;
