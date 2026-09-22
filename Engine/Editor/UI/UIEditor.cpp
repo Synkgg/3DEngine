@@ -684,6 +684,8 @@ void UIEditor::DrawDesigner(
             scale
         );
 
+    m_DesignerScale = scale;
+
     /*
      * Actual displayed canvas size.
      */
@@ -706,6 +708,8 @@ void UIEditor::DrawDesigner(
             canvasPixelSize.y) *
         0.5f
     );
+
+    m_DesignerCanvasPosition = canvasPosition;
 
     ImDrawList* drawList =
         ImGui::GetWindowDrawList();
@@ -851,17 +855,10 @@ void UIEditor::DrawDesigner(
             {
                 UIRect rootRect;
 
-                rootRect.x =
-                    canvasPosition.x;
-
-                rootRect.y =
-                    canvasPosition.y;
-
-                rootRect.width =
-                    canvasSize.x;
-
-                rootRect.height =
-                    canvasSize.y;
+                rootRect.x = 0.0f;
+                rootRect.y = 0.0f;
+                rootRect.width = canvasSize.x;
+                rootRect.height = canvasSize.y;
 
                 DrawWidget(
                     *child,
@@ -899,39 +896,15 @@ void UIEditor::DrawDesigner(
 
         if (m_SelectedWidget)
         {
-            UIRect parentRect;
-
-            if (m_SelectedWidget->GetParent())
-            {
-                const UIRect parentCalculated =
-                    UILayout::Calculate(
-                        *m_SelectedWidget->GetParent(),
-                        UIRect{
-                            0.0f,
-                            0.0f,
-                            canvasSize.x,
-                            canvasSize.y
-                        }
-                    );
-
-                parentRect =
-                    parentCalculated;
-            }
-            else
-            {
-                parentRect =
+            const UIRect selectedRect =
+                GetAbsoluteRect(
+                    *m_SelectedWidget,
                     UIRect{
                         0.0f,
                         0.0f,
                         canvasSize.x,
                         canvasSize.y
-                };
-            }
-
-            const UIRect selectedRect =
-                UILayout::Calculate(
-                    *m_SelectedWidget,
-                    parentRect
+                    }
                 );
 
             if (!m_Dragging &&
@@ -1303,49 +1276,7 @@ void UIEditor::BeginDrag(
 void UIEditor::UpdateDrag(
     UIWidget& widget)
 {
-    /*
-     * Find the actual displayed canvas scale.
-     *
-     * The designer is responsible for fitting
-     * the 1920x1080 design canvas into the
-     * available ImGui region.
-     */
-    ImVec2 availableSize =
-        ImGui::GetContentRegionAvail();
-
-    const Vec2 canvasSize =
-        widget.GetParent()
-        ? widget.GetParent()->GetSize()
-        : Vec2(
-            1920.0f,
-            1080.0f
-        );
-
-    const float scaleX =
-        canvasSize.x > 0.0f
-        ? availableSize.x /
-        canvasSize.x
-        : 1.0f;
-
-    const float scaleY =
-        canvasSize.y > 0.0f
-        ? availableSize.y /
-        canvasSize.y
-        : 1.0f;
-
-    float scale =
-        std::min(
-            scaleX,
-            scaleY
-        );
-
-    scale *= m_Zoom;
-
-    scale =
-        std::max(
-            0.05f,
-            scale
-        );
+    const float scale = std::max(0.05f, m_DesignerScale);
 
     const ImVec2 mouse =
         ImGui::GetMousePos();
@@ -1413,42 +1344,7 @@ void UIEditor::BeginResize(
 void UIEditor::UpdateResize(
     UIWidget& widget)
 {
-    ImVec2 availableSize =
-        ImGui::GetContentRegionAvail();
-
-    const Vec2 canvasSize =
-        widget.GetParent()
-        ? widget.GetParent()->GetSize()
-        : Vec2(
-            1920.0f,
-            1080.0f
-        );
-
-    const float scaleX =
-        canvasSize.x > 0.0f
-        ? availableSize.x /
-        canvasSize.x
-        : 1.0f;
-
-    const float scaleY =
-        canvasSize.y > 0.0f
-        ? availableSize.y /
-        canvasSize.y
-        : 1.0f;
-
-    float scale =
-        std::min(
-            scaleX,
-            scaleY
-        );
-
-    scale *= m_Zoom;
-
-    scale =
-        std::max(
-            0.05f,
-            scale
-        );
+    const float scale = std::max(0.05f, m_DesignerScale);
 
     const ImVec2 mouse =
         ImGui::GetMousePos();
@@ -1890,4 +1786,16 @@ void UIEditor::ResetView()
 {
     m_Zoom =
         1.0f;
+}
+
+UIRect UIEditor::GetAbsoluteRect(
+    const UIWidget& widget,
+    const UIRect& canvasRect) const
+{
+    const UIWidget* parent = widget.GetParent();
+    if (parent == nullptr || parent->GetParent() == nullptr)
+        return UILayout::Calculate(widget, canvasRect);
+
+    const UIRect parentRect = GetAbsoluteRect(*parent, canvasRect);
+    return UILayout::Calculate(widget, parentRect);
 }
