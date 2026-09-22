@@ -8,6 +8,9 @@ struct Vec2
 {
     float x = 0.0f;
     float y = 0.0f;
+
+    Vec2() = default;
+    Vec2(float xValue, float yValue) : x(xValue), y(yValue) {}
 };
 
 struct Vec4
@@ -16,6 +19,24 @@ struct Vec4
     float y = 1.0f;
     float z = 1.0f;
     float w = 1.0f;
+
+    Vec4() = default;
+    Vec4(float xValue, float yValue, float zValue, float wValue)
+        : x(xValue), y(yValue), z(zValue), w(wValue) {}
+};
+
+struct UIAnchors
+{
+    Vec2 minimum = Vec2(0.0f, 0.0f);
+    Vec2 maximum = Vec2(0.0f, 0.0f);
+};
+
+struct UIOffsets
+{
+    float left = 0.0f;
+    float top = 0.0f;
+    float right = 100.0f;
+    float bottom = 100.0f;
 };
 
 enum class UIWidgetType
@@ -46,6 +67,11 @@ public:
     Vec2 GetAnchor() const;
     void SetAnchor(const Vec2& anchor);
 
+    Vec2 GetAnchorMinimum() const;
+    Vec2 GetAnchorMaximum() const;
+    void SetAnchors(const Vec2& minimum, const Vec2& maximum);
+    bool IsStretched() const;
+
     Vec2 GetPivot() const;
     void SetPivot(const Vec2& pivot);
 
@@ -55,38 +81,37 @@ public:
     bool IsVisible() const;
     void SetVisible(bool visible);
 
+    bool IsEnabled() const;
+    void SetEnabled(bool enabled);
+
+    bool IsHitTestVisible() const;
+    void SetHitTestVisible(bool enabled);
+
+    int GetZOrder() const;
+    void SetZOrder(int zOrder);
+
     UIWidget* GetParent() const;
+    const std::vector<std::unique_ptr<UIWidget>>& GetChildren() const;
 
-    const std::vector<std::unique_ptr<UIWidget>>&
-        GetChildren() const;
-
-    UIWidget* AddChild(
-        std::unique_ptr<UIWidget> child);
-
+    UIWidget* AddChild(std::unique_ptr<UIWidget> child);
     void RemoveChild(UIWidget* child);
+    UIWidget* Find(const std::string& name);
+    const UIWidget* Find(const std::string& name) const;
 
 private:
     UIWidgetType m_Type;
-
     std::string m_Name;
 
-    Vec2 m_Position =
-        Vec2(0.0f, 0.0f);
-
-    Vec2 m_Size =
-        Vec2(100.0f, 100.0f);
-
-    Vec2 m_Anchor =
-        Vec2(0.0f, 0.0f);
-
-    Vec2 m_Pivot =
-        Vec2(0.0f, 0.0f);
-
+    UIAnchors m_Anchors;
+    UIOffsets m_Offsets;
+    Vec2 m_Pivot = Vec2(0.0f, 0.0f);
     Vec4 m_Color;
 
     bool m_Visible = true;
+    bool m_Enabled = true;
+    bool m_HitTestVisible = true;
+    int m_ZOrder = 0;
 
     UIWidget* m_Parent = nullptr;
-
     std::vector<std::unique_ptr<UIWidget>> m_Children;
 };
