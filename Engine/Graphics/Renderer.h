@@ -31,11 +31,11 @@ struct RenderSettings
     bool shadows = true;
     // Optional post effects stay off until they have dedicated post-process passes.
     bool fog = false;
-    bool bloom = false;
+    bool bloom = true;
     float viewDistance = 1000.0f;
     float exposure = 1.0f;
     float fogDensity = 0.003f;
-    float bloomStrength = 0.0f;
+    float bloomStrength = 0.32f;
     int shadowQuality = 2;
     float shadowDistance = 80.0f;
 };
