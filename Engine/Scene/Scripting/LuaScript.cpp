@@ -8,6 +8,7 @@
 #include "../../UI/UICanvas.h"
 #include "../../UI/UIWidget.h"
 #include "../../UI/UIText.h"
+#include "../../UI/UIButton.h"
 
 #include "../Scene.h"
 #include "../Components/TransformComponent.h"
@@ -923,6 +924,22 @@ void LuaScript::BindEngineAPI()
         if (!widget) return false;
         widget->SetPosition(Vec2(x, y));
         return true;
+    });
+
+    ui.set_function("WasClicked", [this](const std::string& name)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        UIButton* button = widget ? dynamic_cast<UIButton*>(widget) : nullptr;
+        return button ? button->ConsumeClick() : false;
+    });
+
+    ui.set_function("IsHovered", [this](const std::string& name)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        UIButton* button = widget ? dynamic_cast<UIButton*>(widget) : nullptr;
+        return button ? button->IsHovered() : false;
     });
 
     (*m_Environment)["UI"] = ui;
