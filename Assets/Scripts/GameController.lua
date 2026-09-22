@@ -8,6 +8,7 @@ local function RefreshGameUI()
     if CrystalGame.won then
         UI.SetText("Objective", "COURTYARD RESTORED - YOU WIN!")
         UI.SetVisible("WinScreen", true)
+        Input.SetCursorVisible(true)
     elseif CrystalGame.collected >= CrystalGame.required then
         UI.SetText("Objective", "RETURN TO THE CENTER ALTAR AND PRESS E")
     else
@@ -21,6 +22,7 @@ function OnCreate()
     UI.Load("Assets/UI/GameHUD.ui")
     UI.SetVisible("Inventory", false)
     UI.SetVisible("WinScreen", false)
+    Input.SetCursorVisible(false)
     RefreshGameUI()
 end
 
