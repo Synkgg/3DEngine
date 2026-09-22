@@ -83,22 +83,25 @@ void Runtime::Update(
         const std::string nextScene = m_PendingScenePath;
         m_PendingScenePath.clear();
 
-        // Stop the old scene only after its Lua callback has returned.
+        // Validate the next scene in isolation first. A bad path or malformed
+        // scene must never destroy the currently running world.
+        Scene loadedScene;
+        std::vector<HierarchyFolder> ignoredFolders;
+        SceneSerializer serializer(loadedScene);
+
+        if (!serializer.Load(nextScene, ignoredFolders))
+        {
+            Logger::Error("Failed to switch runtime scene: " + nextScene);
+            return;
+        }
+
         m_LuaScriptSystem.Stop();
         m_ScriptSystem.Stop();
 
         if (m_UICanvas)
             m_UICanvas->Clear();
 
-        std::vector<HierarchyFolder> ignoredFolders;
-        SceneSerializer serializer(scene);
-
-        if (!serializer.Load(nextScene, ignoredFolders))
-        {
-            Logger::Error("Failed to switch runtime scene: " + nextScene);
-            m_Running = false;
-            return;
-        }
+        scene = loadedScene;
 
         if (m_Renderer && m_Input && m_UICanvas)
         {
