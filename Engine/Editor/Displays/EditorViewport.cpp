@@ -625,8 +625,8 @@ void Editor::RenderViewport(
 	// the rest of the editor stays visually quiet and the scene remains primary.
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 5.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 0.0f));
-	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.030f, 0.027f, 0.035f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.13f, 0.10f, 0.16f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.125f, 0.130f, 0.138f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.205f, 0.215f, 0.228f, 1.0f));
 	ImGui::BeginChild("ViewportToolbar", ImVec2(0.0f, 42.0f), ImGuiChildFlags_Borders);
 
 	ImGui::TextDisabled("PERSPECTIVE");
@@ -641,9 +641,9 @@ void Editor::RenderViewport(
 
 	if (!m_Playing)
 	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.31f, 0.16f, 0.48f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.43f, 0.23f, 0.64f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.55f, 0.31f, 0.78f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.12f, 0.38f, 0.56f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.15f, 0.49f, 0.70f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.18f, 0.58f, 0.82f, 1.0f));
 		if (ImGui::Button("  PLAY  ", ImVec2(108.0f, 30.0f)))
 		{
 			m_Playing = true;
@@ -801,32 +801,22 @@ void Editor::RenderViewport(
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ChildBg,
-		ImVec4(
-			0.035f,
-			0.038f,
-			0.055f,
-			0.92f
-		)
+		ImVec4(0.105f, 0.110f, 0.118f, 0.94f)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_Button,
-		ImVec4(
-			0.08f,
-			0.085f,
-			0.12f,
-			0.90f
-		)
+		ImVec4(0.155f, 0.162f, 0.172f, 0.94f)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonHovered,
-		ImVec4(0.09f, 0.22f, 0.28f, 0.95f)
+		ImVec4(0.18f, 0.205f, 0.225f, 0.96f)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonActive,
-		ImVec4(0.22f, 0.62f, 0.78f, 0.95f)
+		ImVec4(0.12f, 0.45f, 0.66f, 0.96f)
 	);
 
 	ImGui::BeginChild(
@@ -853,7 +843,7 @@ void Editor::RenderViewport(
 			{
 				ImGui::PushStyleColor(
 					ImGuiCol_Button,
-					ImVec4(0.12f, 0.34f, 0.43f, 0.95f)
+					ImVec4(0.12f, 0.35f, 0.52f, 0.96f)
 				);
 			}
 
