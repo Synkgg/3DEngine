@@ -5,6 +5,9 @@
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
+#include "../../UI/UICanvas.h"
+#include "../../UI/UIWidget.h"
+#include "../../UI/UIText.h"
 
 #include "../Scene.h"
 #include "../Components/TransformComponent.h"
@@ -22,12 +25,14 @@ void LuaScript::Initialize(
     Scene& scene,
     Input& input,
     Renderer& renderer,
+    UICanvas& uiCanvas,
     sol::state& lua)
 {
     m_Entity = entity;
     m_Scene = &scene;
     m_Input = &input;
     m_Renderer = &renderer;
+    m_UICanvas = &uiCanvas;
     m_Lua = &lua;
 
     m_Environment =
@@ -868,6 +873,59 @@ void LuaScript::BindEngineAPI()
 
     (*m_Environment)["Camera"] =
         camera;
+
+    /*
+     * UI - edits the same widget tree used by the editor and renderer.
+     */
+    sol::table ui = m_Lua->create_table();
+
+    ui.set_function("SetVisible", [this](const std::string& name, bool visible)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetVisible(visible);
+        return true;
+    });
+
+    ui.set_function("SetEnabled", [this](const std::string& name, bool enabled)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetEnabled(enabled);
+        return true;
+    });
+
+    ui.set_function("SetText", [this](const std::string& name, const std::string& value)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        UIText* text = widget ? dynamic_cast<UIText*>(widget) : nullptr;
+        if (!text) return false;
+        text->SetText(value);
+        return true;
+    });
+
+    ui.set_function("SetColor", [this](const std::string& name, float r, float g, float b, float a)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetColor(Vec4(r, g, b, a));
+        return true;
+    });
+
+    ui.set_function("SetPosition", [this](const std::string& name, float x, float y)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetPosition(Vec2(x, y));
+        return true;
+    });
+
+    (*m_Environment)["UI"] = ui;
 
     /*
      * Character Controller
