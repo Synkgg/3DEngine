@@ -1,6 +1,7 @@
 #include "ImGuiLayer.h"
 
 #include "../Platform/SDL/Window.h"
+#include "../Core/Logger.h"
 
 #include "Fonts/FontAwesome.h"
 #include "Fonts/IconsFontAwesome6.h"
@@ -86,6 +87,7 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
     // already exist with this ImGui version.
     if (!ImGui_ImplOpenGL3_Init("#version 450"))
     {
+        Logger::Error("ImGui OpenGL3 backend initialization failed.");
         ImGui::DestroyContext();
         return false;
     }
@@ -94,6 +96,7 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
         window.GetNativeWindow(),
         context))
     {
+        Logger::Error("ImGui SDL3 backend initialization failed.");
         ImGui_ImplOpenGL3_Shutdown();
         ImGui::DestroyContext();
         return false;
