@@ -1,0 +1,21 @@
+VORTEK_UI 1
+1920 1080
+0 0 "HUD" 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0
+0 0 "MainMenu" 0 0 640 560 0.5 0.5 0.5 0.5 0.5 0.5 0.035 0.045 0.065 0.97 1 1 1 10
+1 1 "GameTitle" 80 55 480 70 0 0 0 0 0 0 0.2 0.75 1 1 1 1 0 11 "VORTEK CRYSTAL RUN" 44
+1 1 "Instructions" 75 145 500 90 0 0 0 0 0 0 0.75 0.8 0.88 1 1 1 0 11 "Collect 3 crystals with E. TAB opens inventory." 22
+1 3 "StartButton" 90 285 460 78 0 0 0 0 0 0 0.05 0.38 0.72 1 1 1 1 12
+2 1 "StartLabel" 155 22 180 40 0 0 0 0 0 0 1 1 1 1 1 1 0 13 "START GAME" 28
+1 1 "MenuStatus" 90 405 460 50 0 0 0 0 0 0 0.55 0.65 0.75 1 1 1 0 11 "Press START GAME" 20
+0 0 "GameHUD" 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 1 0 20
+1 1 "ObjectiveText" 45 40 650 50 0 0 0 0 0 0 1 1 1 1 1 1 0 21 "CRYSTALS: 0 / 3" 28
+1 1 "HintText" 45 92 800 40 0 0 0 0 0 0 0.65 0.72 0.8 1 1 1 0 21 "Press E to collect. TAB: Inventory" 20
+0 0 "Inventory" 0 0 560 430 0.5 0.5 0.5 0.5 0.5 0.5 0.035 0.045 0.065 0.98 0 1 1 30
+1 1 "InventoryTitle" 65 50 430 55 0 0 0 0 0 0 0.2 0.75 1 1 1 1 0 31 "INVENTORY" 36
+1 1 "InventoryCount" 65 145 430 55 0 0 0 0 0 0 1 1 1 1 1 1 0 31 "Crystals: 0 / 3" 26
+1 1 "InventoryHelp" 65 245 430 70 0 0 0 0 0 0 0.65 0.72 0.8 1 1 1 0 31 "Press TAB to close" 20
+0 0 "WinScreen" 0 0 680 470 0.5 0.5 0.5 0.5 0.5 0.5 0.035 0.045 0.065 0.98 0 1 1 40
+1 1 "WinTitle" 90 75 500 70 0 0 0 0 0 0 0.3 1 0.55 1 1 1 0 41 "YOU WIN!" 48
+1 1 "WinText" 90 175 500 80 0 0 0 0 0 0 0.8 0.85 0.9 1 1 1 0 41 "All 3 crystals collected." 25
+1 3 "RestartButton" 110 315 460 72 0 0 0 0 0 0 0.05 0.38 0.72 1 1 1 1 42
+2 1 "RestartLabel" 150 20 180 40 0 0 0 0 0 0 1 1 1 1 1 1 0 43 "PLAY AGAIN" 27
