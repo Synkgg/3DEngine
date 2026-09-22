@@ -141,7 +141,7 @@ void Application::Run()
 
         m_ImGuiLayer.BeginFrame();
 
-        m_UIEditor.Draw(m_UICanvas);
+        m_UIEditor.Draw(m_UICanvas, m_Renderer);
 
         m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
 
