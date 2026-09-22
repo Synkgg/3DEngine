@@ -907,6 +907,83 @@ void LuaScript::BindEngineAPI()
     (*m_Environment)["Scene"] = sceneApi;
 
     /*
+     * Graphics settings - intentionally exposed as a small stable API so
+     * runtime menus do not need to know about OpenGL implementation details.
+     */
+    sol::table graphics = m_Lua->create_table();
+
+    graphics.set_function("SetAntiAliasing", [this](bool enabled)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.antiAliasing = enabled;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetShadows", [this](bool enabled)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.shadows = enabled;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetFog", [this](bool enabled)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.fog = enabled;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetBloom", [this](bool enabled)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.bloom = enabled;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetViewDistance", [this](float distance)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.viewDistance = distance;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetExposure", [this](float exposure)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.exposure = exposure;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetFogDensity", [this](float density)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.fogDensity = density;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("SetBloomStrength", [this](float strength)
+    {
+        if (!m_Renderer) return;
+        RenderSettings settings = m_Renderer->GetRenderSettings();
+        settings.bloomStrength = strength;
+        m_Renderer->SetRenderSettings(settings);
+    });
+
+    graphics.set_function("GetViewDistance", [this]()
+    {
+        return m_Renderer ? m_Renderer->GetRenderSettings().viewDistance : 1000.0f;
+    });
+
+    (*m_Environment)["Graphics"] = graphics;
+
+    /*
      * UI - edits the same widget tree used by the editor and renderer.
      */
     sol::table ui = m_Lua->create_table();
