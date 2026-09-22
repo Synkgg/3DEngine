@@ -624,14 +624,11 @@ void Editor::RenderViewport(
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.045f, 0.049f, 0.070f, 1.0f));
 	ImGui::BeginChild(
 		"ViewportToolbar",
-		ImVec2(0.0f, 44.0f),
+		ImVec2(0.0f, 34.0f),
 		ImGuiChildFlags_Borders
 	);
 
-	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 4.0f);
 	ImGui::TextDisabled("SCENE");
-	ImGui::SameLine();
-	ImGui::TextDisabled("  |  ");
 	ImGui::SameLine();
 
 	const char* buttonText =
@@ -865,22 +862,12 @@ void Editor::RenderViewport(
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonHovered,
-		ImVec4(
-			0.155f,
-			0.125f,
-			0.245f,
-			0.95f
-		)
+		ImVec4(0.09f, 0.22f, 0.28f, 0.95f)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonActive,
-		ImVec4(
-			0.52f,
-			0.40f,
-			1.00f,
-			0.95f
-		)
+		ImVec4(0.22f, 0.62f, 0.78f, 0.95f)
 	);
 
 	ImGui::BeginChild(
@@ -907,12 +894,7 @@ void Editor::RenderViewport(
 			{
 				ImGui::PushStyleColor(
 					ImGuiCol_Button,
-					ImVec4(
-						0.285f,
-						0.175f,
-						0.510f,
-						0.95f
-					)
+					ImVec4(0.12f, 0.34f, 0.43f, 0.95f)
 				);
 			}
 
