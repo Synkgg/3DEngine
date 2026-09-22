@@ -145,6 +145,17 @@ void Application::Run()
 
         m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
 
+        const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
+        if (!openedUIAsset.empty())
+        {
+            if (!m_UIEditor.OpenAsset(m_UICanvas, openedUIAsset))
+            {
+                Logger::Error(
+                    std::string("Failed to open UI asset: ") +
+                    openedUIAsset);
+            }
+        }
+
         if (m_Editor.IsPlaying() &&
             !m_Runtime.IsRunning())
         {
