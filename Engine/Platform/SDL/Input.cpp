@@ -7,6 +7,9 @@ Input::Input()
     m_MouseDeltaX(0.0f),
     m_MouseDeltaY(0.0f),
     m_MouseButtons(0),
+    m_PreviousMouseButtons(0),
+    m_MouseX(0.0f),
+    m_MouseY(0.0f),
     m_MouseCaptured(false)
 {
 }
@@ -30,9 +33,10 @@ void Input::Update()
         }
     }
 
+    m_PreviousMouseButtons = m_MouseButtons;
     m_MouseButtons = SDL_GetMouseState(
-        nullptr,
-        nullptr
+        &m_MouseX,
+        &m_MouseY
     );
 
     if (m_MouseCaptured)
@@ -74,6 +78,21 @@ bool Input::IsMouseButtonDown(Uint8 button) const
 {
     return (m_MouseButtons & SDL_BUTTON_MASK(button)) != 0;
 }
+
+bool Input::IsMouseButtonPressed(Uint8 button) const
+{
+    const SDL_MouseButtonFlags mask = SDL_BUTTON_MASK(button);
+    return (m_MouseButtons & mask) != 0 && (m_PreviousMouseButtons & mask) == 0;
+}
+
+bool Input::IsMouseButtonReleased(Uint8 button) const
+{
+    const SDL_MouseButtonFlags mask = SDL_BUTTON_MASK(button);
+    return (m_MouseButtons & mask) == 0 && (m_PreviousMouseButtons & mask) != 0;
+}
+
+float Input::GetMouseX() const { return m_MouseX; }
+float Input::GetMouseY() const { return m_MouseY; }
 
 void Input::SetMouseCapture(SDL_Window* window, bool captured)
 {
