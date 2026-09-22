@@ -620,6 +620,9 @@ void Application::Shutdown()
 
 void Application::StartRuntime()
 {
+    // Play mode temporarily hides the Widget Blueprint. Do not implicitly
+    // reopen it when runtime stops; only opening a .ui asset should do that.
+    m_UIEditor.SetVisible(false);
     m_Renderer.GetUIRenderer().Clear();
 
     // Runtime UI starts empty every time. Lua decides which UI asset is active.
