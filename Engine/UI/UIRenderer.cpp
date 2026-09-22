@@ -1,6 +1,8 @@
 #include "UIRenderer.h"
 
 #include "UIText.h"
+#include "UIImage.h"
+#include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
 
 #include <glad/gl.h>
@@ -334,7 +336,8 @@ void UIRenderer::End()
 // =============================================================
 
 void UIRenderer::RenderCanvas(
-    const UICanvas& canvas)
+    const UICanvas& canvas,
+    Renderer* renderer)
 {
     const UIWidget* root =
         canvas.GetRoot();
@@ -365,7 +368,8 @@ void UIRenderer::RenderCanvas(
         {
             RenderCanvasWidget(
                 *child,
-                canvasRect
+                canvasRect,
+                renderer
             );
         }
     }
@@ -373,7 +377,8 @@ void UIRenderer::RenderCanvas(
 
 void UIRenderer::RenderCanvasWidget(
     const UIWidget& widget,
-    const UIRect& parentRect)
+    const UIRect& parentRect,
+    Renderer* renderer)
 {
     if (!widget.IsVisible())
     {
@@ -406,7 +411,8 @@ void UIRenderer::RenderCanvasWidget(
     {
         DrawCanvasWidget(
             widget,
-            rect
+            rect,
+            renderer
         );
     }
 
@@ -417,7 +423,8 @@ void UIRenderer::RenderCanvasWidget(
         {
             RenderCanvasWidget(
                 *child,
-                rect
+                rect,
+                renderer
             );
         }
     }
@@ -425,7 +432,8 @@ void UIRenderer::RenderCanvasWidget(
 
 void UIRenderer::DrawCanvasWidget(
     const UIWidget& widget,
-    const UIRect& rect)
+    const UIRect& rect,
+    Renderer* renderer)
 {
     const float vertices[24] =
     {
@@ -485,16 +493,33 @@ void UIRenderer::DrawCanvasWidget(
         color.w
     );
 
-    m_Shader.SetInt(
-        "u_UseTexture",
-        0
-    );
+    Texture2D* texture = nullptr;
 
-    glDrawArrays(
-        GL_TRIANGLES,
-        0,
-        6
-    );
+    if (renderer != nullptr)
+    {
+        if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
+        {
+            if (!image->GetTexturePath().empty())
+                texture = renderer->LoadTexture(image->GetTexturePath());
+        }
+    }
+
+    if (texture != nullptr)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetID());
+        m_Shader.SetInt("u_Texture", 0);
+        m_Shader.SetInt("u_UseTexture", 1);
+    }
+    else
+    {
+        m_Shader.SetInt("u_UseTexture", 0);
+    }
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    if (texture != nullptr)
+        glBindTexture(GL_TEXTURE_2D, 0);
 
     glBindVertexArray(0);
 }
