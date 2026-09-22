@@ -47,6 +47,8 @@ public:
 
     bool RequestSceneLoad(const std::string& path);
     const std::string& GetCurrentScenePath() const;
+    bool WantsCursor() const;
+    void SetWantsCursor(bool wantsCursor);
 
 private:
     bool m_Running = false;
@@ -67,6 +69,7 @@ private:
 
     std::string m_PendingScenePath;
     std::string m_CurrentScenePath;
+    bool m_WantsCursor = false;
     Renderer* m_Renderer = nullptr;
     Input* m_Input = nullptr;
     UICanvas* m_UICanvas = nullptr;
