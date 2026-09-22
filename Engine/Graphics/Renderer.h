@@ -125,12 +125,16 @@ private:
     Shader m_GridShader;
     Shader m_SkyShader;
     Shader m_PostShader;
+    Shader m_BloomExtractShader;
+    Shader m_BloomBlurShader;
     unsigned int m_SkyVAO = 0;
     unsigned int m_SkyVBO = 0;
     unsigned int m_PostVAO = 0;
     unsigned int m_PostVBO = 0;
     unsigned int m_PostFramebuffer = 0;
     unsigned int m_PostColorTexture = 0;
+    unsigned int m_BloomFramebuffer[2]{ 0, 0 };
+    unsigned int m_BloomTexture[2]{ 0, 0 };
 
     std::unique_ptr<Mesh> m_CubeMesh;
     std::unique_ptr<Mesh> m_PlaneMesh;
@@ -162,4 +166,5 @@ private:
     bool CreatePostProcessTarget();
     void DestroyPostProcessTarget();
     void RenderPostProcess();
+    unsigned int RenderBloom();
 };
