@@ -128,8 +128,6 @@ void ImGuiLayer::BeginFrame()
     ImGui::NewFrame();
 
     ImGuizmo::BeginFrame();
-
-    ImGui::DockSpaceOverViewport();
 }
 void ImGuiLayer::EndFrame()
 {
