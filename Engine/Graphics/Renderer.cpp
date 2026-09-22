@@ -417,6 +417,7 @@ void Renderer::BeginFrame()
 
 void Renderer::EndScene()
 {
+	m_Framebuffer.Resolve();
 	m_Framebuffer.Unbind();
 }
 
@@ -838,12 +839,18 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     m_RenderSettings.exposure = std::clamp(m_RenderSettings.exposure, 0.1f, 5.0f);
     m_RenderSettings.fogDensity = std::clamp(m_RenderSettings.fogDensity, 0.0f, 0.1f);
     m_RenderSettings.bloomStrength = std::clamp(m_RenderSettings.bloomStrength, 0.0f, 2.0f);
+    m_RenderSettings.antiAliasingSamples = std::clamp(m_RenderSettings.antiAliasingSamples, 1, 8);
+    m_RenderSettings.shadowQuality = std::clamp(m_RenderSettings.shadowQuality, 0, 3);
+    m_RenderSettings.shadowDistance = std::clamp(m_RenderSettings.shadowDistance, 10.0f, 500.0f);
     m_Camera.SetFarPlane(m_RenderSettings.viewDistance);
 
-    if (m_RenderSettings.antiAliasing)
-        glEnable(GL_MULTISAMPLE);
-    else
-        glDisable(GL_MULTISAMPLE);
+    const unsigned int samples = m_RenderSettings.antiAliasing
+        ? static_cast<unsigned int>(m_RenderSettings.antiAliasingSamples) : 1u;
+    if (m_Framebuffer.GetSamples() != samples)
+        m_Framebuffer.SetSamples(samples);
+
+    if (samples > 1) glEnable(GL_MULTISAMPLE);
+    else glDisable(GL_MULTISAMPLE);
 }
 
 const RenderSettings& Renderer::GetRenderSettings() const
