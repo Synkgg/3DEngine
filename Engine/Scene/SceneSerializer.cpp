@@ -14,6 +14,7 @@
 #include "Components/LightComponent.h"
 #include "Components/ColliderComponent.h"
 #include "Components/TextureComponent.h"
+#include "Components/MaterialComponent.h"
 #include "Components/ScriptComponent.h"
 #include "Components/InteractableComponent.h"
 
@@ -469,6 +470,21 @@ bool SceneSerializer::Save(
             file << "Texture 0\n";
         }
 
+        MaterialComponent* material =
+            m_Scene.GetComponent<MaterialComponent>(entity);
+        if (material != nullptr)
+        {
+            file << "Material 1 "
+                << material->metallic << " "
+                << material->roughness << " "
+                << material->ambientOcclusion << " "
+                << material->emissive << '\n';
+        }
+        else
+        {
+            file << "Material 0\n";
+        }
+
         /*
          * Interactable
          */
@@ -546,14 +562,11 @@ bool SceneSerializer::Save(
         if (light != nullptr)
         {
             file << "Light 1 "
-                << light->color.x << " "
-                << light->color.y << " "
-                << light->color.z << " "
-                << light->direction.x << " "
-                << light->direction.y << " "
-                << light->direction.z << " "
-                << light->intensity
-                << '\n';
+                << light->color.x << " " << light->color.y << " " << light->color.z << " "
+                << light->direction.x << " " << light->direction.y << " " << light->direction.z << " "
+                << light->intensity << " " << static_cast<int>(light->type) << " "
+                << light->range << " " << light->innerAngle << " " << light->outerAngle << " "
+                << (light->castShadows ? 1 : 0) << '\n';
         }
         else
         {
@@ -1138,6 +1151,35 @@ bool SceneSerializer::Load(
         }
 
         /*
+         * Material - optional for backwards compatibility.
+         */
+        {
+            const std::streampos materialPosition = file.tellg();
+            if (std::getline(file, line))
+            {
+                if (line.rfind("Material ", 0) == 0)
+                {
+                    std::istringstream materialLine(line);
+                    std::string token; int hasMaterial = 0;
+                    materialLine >> token >> hasMaterial;
+                    if (hasMaterial == 1)
+                    {
+                        MaterialComponent material;
+                        materialLine >> material.metallic >> material.roughness
+                            >> material.ambientOcclusion >> material.emissive;
+                        if (materialLine.fail()) return false;
+                        m_Scene.AddComponent<MaterialComponent>(entity, material);
+                    }
+                }
+                else
+                {
+                    file.clear();
+                    file.seekg(materialPosition);
+                }
+            }
+        }
+
+        /*
          * Interactable
          *
          * Optional for older scene files.
@@ -1453,6 +1495,19 @@ bool SceneSerializer::Load(
                     light.direction.y >>
                     light.direction.z >>
                     light.intensity;
+
+                int lightType = 0;
+                int castShadows = 1;
+                if (lightLine >> lightType >> light.range >> light.innerAngle >> light.outerAngle >> castShadows)
+                {
+                    if (lightType >= 0 && lightType <= 2)
+                        light.type = static_cast<LightType>(lightType);
+                    light.castShadows = castShadows != 0;
+                }
+                else
+                {
+                    lightLine.clear();
+                }
 
                 if (lightLine.fail())
                 {
