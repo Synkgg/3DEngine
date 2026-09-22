@@ -43,17 +43,17 @@ end
 
 local function RefreshGameUI()
     if not CrystalGame then return end
-    UI.SetText("CrystalCount", "ENERGY CRYSTALS: " .. CrystalGame.collected .. " / " .. CrystalGame.required)
+    UI.SetText("CrystalCount", "ENERGY CRYSTALS  //  " .. CrystalGame.collected .. " / " .. CrystalGame.required)
 
     if CrystalGame.won then
-        UI.SetText("Objective", "COURTYARD RESTORED - YOU WIN!")
+        UI.SetText("Objective", "COURTYARD RESTORED // MISSION COMPLETE")
         UI.SetVisible("WinScreen", true)
         Scene.SetPaused(true)
         Input.SetCursorVisible(true)
     elseif CrystalGame.collected >= CrystalGame.required then
-        UI.SetText("Objective", "RETURN TO THE CENTER ALTAR AND PRESS E")
+        UI.SetText("Objective", "RETURN TO THE CENTER ALTAR // PRESS E")
     else
-        UI.SetText("Objective", "FIND 3 ENERGY CRYSTALS - LOOK AT ONE AND PRESS E")
+        UI.SetText("Objective", "FIND 3 ENERGY CRYSTALS // LOOK AT ONE AND PRESS E")
     end
     CrystalGame.uiDirty = false
 end
