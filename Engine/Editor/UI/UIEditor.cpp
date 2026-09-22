@@ -22,6 +22,18 @@
 #include <cctype>
 #include <cstdint>
 
+bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
+{
+    m_SelectedWidget = nullptr;
+
+    if (!UISerializer::Load(canvas, path))
+        return false;
+
+    m_UIAssetPath = std::filesystem::path(path).generic_string();
+    ResetView();
+    return true;
+}
+
 void UIEditor::Draw(
     UICanvas& canvas,
     Renderer& renderer)
