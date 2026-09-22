@@ -50,6 +50,16 @@ uniform vec3 u_LightDirection;
 uniform vec3 u_LightColor;
 uniform float u_LightIntensity;
 uniform vec3 u_CameraPosition;
+uniform float u_Metallic;
+uniform float u_Roughness;
+uniform float u_AO;
+uniform float u_Emissive;
+struct PointLight { vec3 position; vec3 color; float intensity; float range; };
+struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
+uniform int u_PointLightCount;
+uniform int u_SpotLightCount;
+uniform PointLight u_PointLights[8];
+uniform SpotLight u_SpotLights[4];
 
 out vec4 FragColor;
 
@@ -67,11 +77,13 @@ void main()
             0.0
         );
 
-    float ambient = 0.20;
+    float ambient = 0.16 * u_AO;
 
     vec3 viewDirection = normalize(u_CameraPosition - v_WorldPosition);
     vec3 halfDirection = normalize(lightDirection + viewDirection);
-    float specular = pow(max(dot(normal, halfDirection), 0.0), 32.0) * 0.18;
+    float shininess = mix(128.0, 4.0, clamp(u_Roughness, 0.0, 1.0));
+    float specularStrength = mix(0.04, 1.0, clamp(u_Metallic, 0.0, 1.0));
+    float specular = pow(max(dot(normal, halfDirection), 0.0), shininess) * specularStrength;
 
     float brightness =
         ambient +
@@ -89,12 +101,24 @@ void main()
             );
     }
 
-    FragColor =
-        vec4(
-            baseColor.rgb * u_LightColor * brightness +
-            u_LightColor * specular * u_LightIntensity,
-            baseColor.a
-        );
+    vec3 lighting = baseColor.rgb * u_LightColor * brightness + u_LightColor * specular * u_LightIntensity;
+    for(int i=0;i<u_PointLightCount;i++) {
+        vec3 toLight=u_PointLights[i].position-v_WorldPosition; float d=length(toLight);
+        vec3 L=normalize(toLight); float att=pow(clamp(1.0-d/u_PointLights[i].range,0.0,1.0),2.0);
+        float ndl=max(dot(normal,L),0.0);
+        lighting += baseColor.rgb*u_PointLights[i].color*ndl*u_PointLights[i].intensity*att;
+    }
+    for(int i=0;i<u_SpotLightCount;i++) {
+        vec3 toLight=u_SpotLights[i].position-v_WorldPosition; float d=length(toLight); vec3 L=normalize(toLight);
+        float cone=smoothstep(u_SpotLights[i].outerCos,u_SpotLights[i].innerCos,dot(-L,normalize(u_SpotLights[i].direction)));
+        float att=pow(clamp(1.0-d/u_SpotLights[i].range,0.0,1.0),2.0);
+        lighting += baseColor.rgb*u_SpotLights[i].color*max(dot(normal,L),0.0)*u_SpotLights[i].intensity*att*cone;
+    }
+    lighting += baseColor.rgb * u_Emissive;
+    // Filmic-ish Reinhard tonemap followed by gamma correction.
+    lighting = lighting / (lighting + vec3(1.0));
+    lighting = pow(lighting, vec3(1.0 / 2.2));
+    FragColor = vec4(lighting, baseColor.a);
 }
 )";
 
@@ -395,7 +419,11 @@ void Renderer::DrawMesh(
 	float green,
 	float blue,
 	float alpha,
-	const Texture2D* texture)
+	const Texture2D* texture,
+	float metallic,
+	float roughness,
+	float ambientOcclusion,
+	float emissive)
 {
 	Mesh* mesh = nullptr;
 
@@ -508,6 +536,26 @@ void Renderer::DrawMesh(
 		cameraPosition.y,
 		cameraPosition.z
 	);
+	m_Shader.SetFloat("u_Metallic", metallic);
+	m_Shader.SetFloat("u_Roughness", roughness);
+	m_Shader.SetFloat("u_AO", ambientOcclusion);
+	m_Shader.SetFloat("u_Emissive", emissive);
+	m_Shader.SetInt("u_PointLightCount", m_PointLightCount);
+	m_Shader.SetInt("u_SpotLightCount", m_SpotLightCount);
+	for(int i=0;i<m_PointLightCount;i++) {
+		std::string b="u_PointLights["+std::to_string(i)+"]";
+		m_Shader.SetVec3((b+".position").c_str(),m_PointLights[i].position.x,m_PointLights[i].position.y,m_PointLights[i].position.z);
+		m_Shader.SetVec3((b+".color").c_str(),m_PointLights[i].color.x,m_PointLights[i].color.y,m_PointLights[i].color.z);
+		m_Shader.SetFloat((b+".intensity").c_str(),m_PointLights[i].intensity); m_Shader.SetFloat((b+".range").c_str(),m_PointLights[i].range);
+	}
+	for(int i=0;i<m_SpotLightCount;i++) {
+		std::string b="u_SpotLights["+std::to_string(i)+"]";
+		m_Shader.SetVec3((b+".position").c_str(),m_SpotLights[i].position.x,m_SpotLights[i].position.y,m_SpotLights[i].position.z);
+		m_Shader.SetVec3((b+".direction").c_str(),m_SpotLights[i].direction.x,m_SpotLights[i].direction.y,m_SpotLights[i].direction.z);
+		m_Shader.SetVec3((b+".color").c_str(),m_SpotLights[i].color.x,m_SpotLights[i].color.y,m_SpotLights[i].color.z);
+		m_Shader.SetFloat((b+".intensity").c_str(),m_SpotLights[i].intensity);m_Shader.SetFloat((b+".range").c_str(),m_SpotLights[i].range);
+		m_Shader.SetFloat((b+".innerCos").c_str(),m_SpotLights[i].innerCos);m_Shader.SetFloat((b+".outerCos").c_str(),m_SpotLights[i].outerCos);
+	}
 
 	glDrawElements(
 		GL_TRIANGLES,
@@ -752,3 +800,7 @@ Texture2D* Renderer::LoadTexture(
 		filepath
 	);
 }
+
+void Renderer::ClearLocalLights(){ m_PointLightCount=0; m_SpotLightCount=0; }
+void Renderer::AddPointLight(const PointLightData& light){ if(m_PointLightCount<(int)m_PointLights.size()) m_PointLights[m_PointLightCount++]=light; }
+void Renderer::AddSpotLight(const SpotLightData& light){ if(m_SpotLightCount<(int)m_SpotLights.size()) m_SpotLights[m_SpotLightCount++]=light; }
