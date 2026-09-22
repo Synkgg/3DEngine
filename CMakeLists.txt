@@ -14,10 +14,17 @@ include(FetchContent)
 #
 # SDL3
 #
-add_subdirectory(
-    vendor/SDL
-    EXCLUDE_FROM_ALL
+# SDL is not checked into vendor/. Fetch the pinned SDL3 release just like
+# Lua and sol2 so a fresh clone/configure works without a manual dependency.
+#
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG release-3.2.20
+    GIT_SHALLOW TRUE
 )
+
+FetchContent_MakeAvailable(SDL3)
 
 #
 # Lua 5.4
