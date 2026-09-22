@@ -99,7 +99,10 @@ namespace
 void Editor::RenderInspector(
     Scene& scene)
 {
-    ImGui::Begin("Inspector");
+    ImGui::Begin("Details");
+
+    ImGui::TextDisabled("DETAILS");
+    ImGui::Separator();
 
     if (!m_SelectedEntity.IsValid())
     {
