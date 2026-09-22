@@ -652,7 +652,7 @@ void UIRenderer::DrawCanvasWidget(
 bool UIRenderer::InitializeFontAtlas()
 {
     std::ifstream file(
-        "Engine/Editor/Fonts/InterVariable.ttf",
+        "Assets/Fonts/InterVariable.ttf",
         std::ios::binary | std::ios::ate
     );
     if (!file) return false;
