@@ -5,8 +5,8 @@ local requiredCrystals = 3
 local eWasDown = false
 
 local function updateHud()
-    UI.SetText("ObjectiveText", "CRYSTALS: " .. crystals .. " / " .. requiredCrystals)
-    UI.SetText("InventoryCount", "Crystals: " .. crystals .. " / " .. requiredCrystals)
+    UI.SetText("ObjectiveText", "CRYSTALS  //  " .. crystals .. " / " .. requiredCrystals)
+    UI.SetText("InventoryCount", "CRYSTALS  //  " .. crystals .. " / " .. requiredCrystals)
 end
 
 local function beginGame()
