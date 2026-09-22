@@ -679,6 +679,19 @@ void LuaScript::BindEngineAPI()
         }
     );
 
+    input.set_function(
+        "SetCursorVisible",
+        [this](bool visible)
+        {
+            if (m_Runtime == nullptr)
+            {
+                return;
+            }
+
+            m_Runtime->SetWantsCursor(visible);
+        }
+    );
+
     (*m_Environment)["Input"] =
         input;
 
