@@ -27,6 +27,7 @@ struct PointLightData { Vec3 position; Vec3 color; float intensity=1.0f; float r
 struct RenderSettings
 {
     bool antiAliasing = true;
+    int antiAliasingSamples = 4;
     bool shadows = true;
     bool fog = true;
     bool bloom = true;
@@ -34,6 +35,8 @@ struct RenderSettings
     float exposure = 1.0f;
     float fogDensity = 0.006f;
     float bloomStrength = 0.12f;
+    int shadowQuality = 2;
+    float shadowDistance = 80.0f;
 };
 
 struct SpotLightData { Vec3 position; Vec3 direction; Vec3 color; float intensity=1.0f; float range=15.0f; float innerCos=0.92f; float outerCos=0.82f; };
