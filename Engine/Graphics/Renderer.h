@@ -53,6 +53,8 @@ public:
 
     void BeginFrame();
     void EndScene();
+    void BeginOverlay();
+    void EndOverlay();
     void EndFrame();
 
     void SetClearColor(float red, float green, float blue, float alpha);
