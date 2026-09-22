@@ -15,7 +15,8 @@ void LuaScriptSystem::Start(
     Scene& scene,
     Input& input,
     Renderer& renderer,
-    UICanvas& uiCanvas)
+    UICanvas& uiCanvas,
+    Runtime* runtime)
 {
     m_Instances.clear();
 
@@ -102,7 +103,8 @@ void LuaScriptSystem::Start(
                 input,
                 renderer,
                 uiCanvas,
-                *m_Lua
+                *m_Lua,
+                runtime
             );
 
             if (!script->Load(
