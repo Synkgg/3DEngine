@@ -4,8 +4,8 @@ local aaSamples = { 1, 2, 4, 8 }
 local aaNames = { "OFF", "2X", "4X", "8X" }
 local shadowIndex = 3
 local shadowNames = { "OFF", "LOW", "MEDIUM", "HIGH" }
-local fog = true
-local bloom = true
+local fog = false
+local bloom = false
 local viewIndex = 3
 local viewDistances = { 250.0, 600.0, 1500.0 }
 local viewNames = { "LOW", "MEDIUM", "HIGH" }
@@ -19,8 +19,8 @@ local function ApplyGraphics()
     Graphics.SetBloom(bloom)
     Graphics.SetViewDistance(viewDistances[viewIndex])
     Graphics.SetExposure(1.0)
-    Graphics.SetFogDensity(0.006)
-    Graphics.SetBloomStrength(0.12)
+    Graphics.SetFogDensity(0.003)
+    Graphics.SetBloomStrength(0.0)
 
     UI.SetText("AAStatus", "ANTI-ALIASING: " .. aaNames[aaIndex])
     UI.SetText("FogStatus", "FOG: " .. (fog and "ON" or "OFF"))
