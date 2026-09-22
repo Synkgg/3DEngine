@@ -11,6 +11,7 @@
 class Texture2D;
 class UIText;
 class Renderer;
+class Input;
 
 class UIRenderer
 {
@@ -35,9 +36,16 @@ public:
     void End();
 
     void RenderCanvas(
-        const UICanvas& canvas,
+        UICanvas& canvas,
         Renderer* renderer = nullptr
     );
+
+    void UpdateInput(
+        UICanvas& canvas,
+        const Input& input
+    );
+
+    bool ScreenToCanvas(float screenX, float screenY, Vec2& result) const;
 
     // ---------------------------------------------------------
     // Runtime / scripted UI
@@ -197,6 +205,8 @@ private:
         const std::string& id,
         const TextElement& element
     );
+
+    void UpdateButtonInput(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse, bool pressed, bool released);
 
     bool GetAbsolutePosition(
         const std::string& id,
