@@ -37,6 +37,8 @@ public:
     bool IsPlaying() const;
     void StopPlaying();
 
+    std::string ConsumeOpenedUIAsset();
+
 private:
     Entity CreatePrimitiveEntity(
         Scene& scene,
@@ -102,6 +104,7 @@ private:
 
     std::string m_ContentBrowserPath;
     std::string m_SelectedAssetPath;
+    std::string m_PendingUIAssetPath;
 
     char m_ContentBrowserSearchBuffer[256]{};
 
