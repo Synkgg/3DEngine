@@ -59,6 +59,7 @@ uniform float u_Exposure;
 uniform int u_FogEnabled;
 uniform float u_FogDensity;
 uniform float u_BloomStrength;
+uniform float u_ViewDistance;
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
 uniform int u_PointLightCount;
@@ -127,17 +128,38 @@ void main()
         float distanceToCamera = length(u_CameraPosition - v_WorldPosition);
         // Gentle linear-distance fog. This deliberately avoids the old
         // exponential wash that tinted most of the scene blue-gray.
-        float fogStart = max(25.0, 0.55 * 1000.0);
-        float fogEnd = max(fogStart + 1.0, 1000.0);
+        float fogStart = max(25.0, 0.55 * u_ViewDistance);
+        float fogEnd = max(fogStart + 1.0, u_ViewDistance);
         float fogFactor = smoothstep(fogStart, fogEnd, distanceToCamera);
         vec3 fogColor = vec3(0.64, 0.72, 0.76);
         lighting = mix(lighting, fogColor, fogFactor * clamp(u_FogDensity * 40.0, 0.0, 1.0));
     }
 
-    // Keep mesh lighting in linear HDR space. Exposure/tone mapping/bloom
-    // belong in a dedicated final post-process pass, not in every material.
-    lighting *= u_Exposure;
+    // Materials output linear HDR. Exposure and display encoding happen once
+    // in the final post-process pass.
     FragColor = vec4(max(lighting, vec3(0.0)), baseColor.a);
+}
+)";
+
+static const char* postVertexShaderSource = R"(
+#version 450 core
+layout(location = 0) in vec2 a_Position;
+out vec2 v_UV;
+void main() { v_UV = a_Position * 0.5 + 0.5; gl_Position = vec4(a_Position, 0.0, 1.0); }
+)";
+
+static const char* postFragmentShaderSource = R"(
+#version 450 core
+in vec2 v_UV;
+out vec4 FragColor;
+uniform sampler2D u_Scene;
+uniform float u_Exposure;
+void main()
+{
+    vec3 hdr = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
+    vec3 mapped = vec3(1.0) - exp(-hdr * u_Exposure);
+    mapped = pow(mapped, vec3(1.0 / 2.2));
+    FragColor = vec4(mapped, 1.0);
 }
 )";
 
@@ -262,6 +284,28 @@ bool Renderer::Initialize(Window& window)
 		return false;
 	}
 
+    if (!m_PostShader.Initialize(postVertexShaderSource, postFragmentShaderSource))
+    {
+        Logger::Error("Failed to initialize post-process shader.");
+        return false;
+    }
+
+    const float postTriangle[] = { -1.0f, -1.0f, 3.0f, -1.0f, -1.0f, 3.0f };
+    glGenVertexArrays(1, &m_PostVAO);
+    glGenBuffers(1, &m_PostVBO);
+    glBindVertexArray(m_PostVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_PostVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(postTriangle), postTriangle, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glBindVertexArray(0);
+
+    if (!CreatePostProcessTarget())
+    {
+        Logger::Error("Failed to initialize post-process framebuffer.");
+        return false;
+    }
+
 	if (!m_Grid.Initialize())
 	{
 		Logger::Error("Failed to initialize grid.");
@@ -376,6 +420,12 @@ void Renderer::Shutdown()
 	if (m_SkyVAO) glDeleteVertexArrays(1, &m_SkyVAO);
 	m_SkyVBO = 0;
 	m_SkyVAO = 0;
+    DestroyPostProcessTarget();
+    if (m_PostVBO) glDeleteBuffers(1, &m_PostVBO);
+    if (m_PostVAO) glDeleteVertexArrays(1, &m_PostVAO);
+    m_PostVBO = 0;
+    m_PostVAO = 0;
+    m_PostShader.Shutdown();
 	m_SkyShader.Shutdown();
 	m_Grid.Shutdown();
 	m_Shader.Shutdown();
@@ -415,8 +465,9 @@ void Renderer::BeginFrame()
 
 void Renderer::EndScene()
 {
-	m_Framebuffer.Resolve();
-	m_Framebuffer.Unbind();
+    m_Framebuffer.Resolve();
+    m_Framebuffer.Unbind();
+    RenderPostProcess();
 }
 
 void Renderer::EndFrame()
@@ -563,6 +614,7 @@ void Renderer::DrawMesh(
 	m_Shader.SetFloat("u_Exposure", m_RenderSettings.exposure);
 	m_Shader.SetInt("u_FogEnabled", m_RenderSettings.fog ? 1 : 0);
 	m_Shader.SetFloat("u_FogDensity", m_RenderSettings.fogDensity);
+    m_Shader.SetFloat("u_ViewDistance", m_RenderSettings.viewDistance);
 	// Bloom is intentionally not performed in the material shader. The setting
 	// remains available for the upcoming post-process pipeline.
 	m_Shader.SetFloat("u_BloomStrength", 0.0f);
@@ -609,7 +661,7 @@ SDL_GLContext Renderer::GetContext() const
 
 unsigned int Renderer::GetViewportTexture() const
 {
-	return m_Framebuffer.GetColorTexture();
+	return m_PostColorTexture ? m_PostColorTexture : m_Framebuffer.GetColorTexture();
 }
 
 void Renderer::ResizeViewport(
@@ -630,7 +682,15 @@ void Renderer::ResizeViewport(
 	m_ViewportWidth = width;
 	m_ViewportHeight = height;
 
-	m_Framebuffer.Resize(width, height);
+    if (!m_Framebuffer.Resize(width, height))
+    {
+        Logger::Error("Viewport framebuffer resize failed.");
+    }
+    DestroyPostProcessTarget();
+    if (!CreatePostProcessTarget())
+    {
+        Logger::Error("Post-process framebuffer resize failed.");
+    }
 
 	m_Camera.SetAspectRatio(
 		static_cast<float>(width) /
@@ -846,8 +906,13 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
 
     const unsigned int samples = m_RenderSettings.antiAliasing
         ? static_cast<unsigned int>(m_RenderSettings.antiAliasingSamples) : 1u;
-    if (m_Framebuffer.GetSamples() != samples)
-        m_Framebuffer.SetSamples(samples);
+    if (m_Framebuffer.GetSamples() != samples &&
+        !m_Framebuffer.SetSamples(samples))
+    {
+        Logger::Error("Failed to apply anti-aliasing sample count.");
+        m_RenderSettings.antiAliasing = m_Framebuffer.GetSamples() > 1;
+        m_RenderSettings.antiAliasingSamples = static_cast<int>(m_Framebuffer.GetSamples());
+    }
 
     if (samples > 1) glEnable(GL_MULTISAMPLE);
     else glDisable(GL_MULTISAMPLE);
@@ -856,4 +921,52 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
 const RenderSettings& Renderer::GetRenderSettings() const
 {
     return m_RenderSettings;
+}
+
+
+bool Renderer::CreatePostProcessTarget()
+{
+    if (m_ViewportWidth == 0 || m_ViewportHeight == 0) return false;
+    glGenFramebuffers(1, &m_PostFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
+    glGenTextures(1, &m_PostColorTexture);
+    glBindTexture(GL_TEXTURE_2D, m_PostColorTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_PostColorTexture, 0);
+    const bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (!complete) { DestroyPostProcessTarget(); return false; }
+    return true;
+}
+
+void Renderer::DestroyPostProcessTarget()
+{
+    if (m_PostColorTexture) glDeleteTextures(1, &m_PostColorTexture);
+    if (m_PostFramebuffer) glDeleteFramebuffers(1, &m_PostFramebuffer);
+    m_PostColorTexture = 0;
+    m_PostFramebuffer = 0;
+}
+
+void Renderer::RenderPostProcess()
+{
+    if (!m_PostFramebuffer || !m_PostColorTexture || !m_PostVAO) return;
+    glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
+    glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
+    glDisable(GL_DEPTH_TEST);
+    m_PostShader.Bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetColorTexture());
+    m_PostShader.SetInt("u_Scene", 0);
+    m_PostShader.SetFloat("u_Exposure", m_RenderSettings.exposure);
+    glBindVertexArray(m_PostVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    m_PostShader.Unbind();
+    glEnable(GL_DEPTH_TEST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
