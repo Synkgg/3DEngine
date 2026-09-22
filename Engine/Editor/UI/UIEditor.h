@@ -17,9 +17,11 @@ public:
     );
 
     bool OpenAsset(UICanvas& canvas, const std::string& path);
+    void SetVisible(bool visible);
 
 private:
     UIWidget* m_SelectedWidget = nullptr;
+    bool m_Visible = false;
     Renderer* m_Renderer = nullptr;
     std::string m_UIAssetPath = "Assets/UI/Main.ui";
 
