@@ -42,13 +42,11 @@ void LuaScriptSystem::Start(
         }
     );
 
-    // Optional game-wide state for the Crystal Courtyard demo.
-    // Unlike the removed InventoryManager dependency, this file exists in
-    // the project and gives entity scripts a small shared Lua state table.
-    LoadGlobalScript("Assets/Scripts/Systems/CrystalGame.lua");
-
-    namespace fs =
-        std::filesystem;
+    // Optional project-level shared Lua services. Missing files are allowed:
+    // individual scenes should not depend on a hard-coded demo system.
+    namespace fs = std::filesystem;
+    if (fs::exists(fs::current_path() / "Assets/Scripts/Systems/CrystalGame.lua"))
+        LoadGlobalScript("Assets/Scripts/Systems/CrystalGame.lua");
 
     for (const Entity& entity :
         scene.GetEntities())
