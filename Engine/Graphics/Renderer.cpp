@@ -90,6 +90,27 @@ void main()
 }
 )";
 
+static const char* skyVertexShaderSource = R"(
+#version 450 core
+layout(location = 0) in vec2 a_Position;
+out vec2 v_UV;
+void main() { v_UV = a_Position * 0.5 + 0.5; gl_Position = vec4(a_Position, 1.0, 1.0); }
+)";
+static const char* skyFragmentShaderSource = R"(
+#version 450 core
+in vec2 v_UV;
+out vec4 FragColor;
+void main() {
+    float h = clamp(v_UV.y, 0.0, 1.0);
+    vec3 horizon = vec3(0.64, 0.72, 0.76);
+    vec3 zenith = vec3(0.10, 0.27, 0.50);
+    vec3 sky = mix(horizon, zenith, smoothstep(0.0, 0.9, h));
+    float glow = pow(max(0.0, 1.0 - length(v_UV - vec2(0.74, 0.70)) * 2.5), 5.0);
+    sky += vec3(1.0, 0.68, 0.34) * glow * 0.24;
+    FragColor = vec4(sky, 1.0);
+}
+)";
+
 static const char* gridVertexShaderSource = R"(
 #version 450 core
 
@@ -196,6 +217,22 @@ bool Renderer::Initialize(Window& window)
 		return false;
 	}
 
+	if (!m_SkyShader.Initialize(skyVertexShaderSource, skyFragmentShaderSource))
+	{
+		Logger::Error("Failed to initialize sky shader.");
+		return false;
+	}
+
+	const float skyTriangle[] = { -1.0f, -1.0f, 3.0f, -1.0f, -1.0f, 3.0f };
+	glGenVertexArrays(1, &m_SkyVAO);
+	glGenBuffers(1, &m_SkyVBO);
+	glBindVertexArray(m_SkyVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_SkyVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyTriangle), skyTriangle, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+	glBindVertexArray(0);
+
 	if (!m_DebugRenderer.Initialize())
 	{
 		Logger::Error(
@@ -284,6 +321,11 @@ void Renderer::Shutdown()
 	m_SphereMesh.reset();
 	m_CylinderMesh.reset();
 
+	if (m_SkyVBO) glDeleteBuffers(1, &m_SkyVBO);
+	if (m_SkyVAO) glDeleteVertexArrays(1, &m_SkyVAO);
+	m_SkyVBO = 0;
+	m_SkyVAO = 0;
+	m_SkyShader.Shutdown();
 	m_Grid.Shutdown();
 	m_Shader.Shutdown();
 	m_GridShader.Shutdown();
@@ -533,6 +575,18 @@ void Renderer::MoveCamera(
 void Renderer::ResetCamera()
 {
 	m_Camera.Reset();
+}
+
+void Renderer::DrawSky()
+{
+	if (m_SkyVAO == 0) return;
+	glDisable(GL_DEPTH_TEST);
+	m_SkyShader.Bind();
+	glBindVertexArray(m_SkyVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glBindVertexArray(0);
+	m_SkyShader.Unbind();
+	glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::DrawGrid()
