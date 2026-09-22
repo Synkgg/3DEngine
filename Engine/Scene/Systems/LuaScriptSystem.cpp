@@ -65,11 +65,9 @@ void LuaScriptSystem::Start(
             continue;
         }
 
-        std::vector<ScriptInstance>& instances =
-            m_Instances[
-                entity.GetID()
-            ];
-
+        // Do not keep a reference into m_Instances while Lua OnCreate runs.
+        // OnCreate is allowed to touch engine state, and retaining a reference
+        // across callbacks makes this startup path unnecessarily fragile.
         for (const std::string& scriptPath :
             scriptComponent->scriptNames)
         {
@@ -126,7 +124,7 @@ void LuaScriptSystem::Start(
             instance.script =
                 std::move(script);
 
-            instances.push_back(
+            m_Instances[entity.GetID()].push_back(
                 std::move(instance)
             );
 
