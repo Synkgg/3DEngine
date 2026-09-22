@@ -22,7 +22,7 @@ class Application
 public:
     Application();
 
-    void Initialize();
+    bool Initialize();
     void Run();
     void Shutdown();
 

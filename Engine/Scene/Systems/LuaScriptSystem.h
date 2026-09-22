@@ -13,6 +13,7 @@
 class Scene;
 class Input;
 class Renderer;
+class UICanvas;
 
 class LuaScriptSystem
 {
@@ -20,7 +21,8 @@ public:
     void Start(
         Scene& scene,
         Input& input,
-        Renderer& renderer
+        Renderer& renderer,
+        UICanvas& uiCanvas
     );
 
     void Update(

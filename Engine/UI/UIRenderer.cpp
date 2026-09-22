@@ -1,12 +1,22 @@
 #include "UIRenderer.h"
 
 #include "UIText.h"
+#include "UIImage.h"
+#include "UIButton.h"
+#include "../Platform/SDL/Input.h"
+#include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
+#include "../Core/Logger.h"
 
 #include <glad/gl.h>
 
 #include <algorithm>
 #include <string>
+#include <fstream>
+#include <vector>
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#include <imstb_truetype.h>
 
 namespace
 {
@@ -166,11 +176,26 @@ bool UIRenderer::Initialize()
 
     glBindVertexArray(0);
 
+    // The runtime font is optional at renderer startup. Visual UI must still
+    // initialize even when the editor is launched from a build directory
+    // where the source-tree font path is unavailable.
+    if (!InitializeFontAtlas())
+    {
+        Logger::Warning(
+            "Inter runtime font could not be loaded; UI renderer will continue without canvas text.");
+    }
+
     return true;
 }
 
 void UIRenderer::Shutdown()
 {
+    if (m_FontTexture != 0)
+    {
+        glDeleteTextures(1, &m_FontTexture);
+        m_FontTexture = 0;
+    }
+
     if (m_VBO != 0)
     {
         glDeleteBuffers(
@@ -329,12 +354,105 @@ void UIRenderer::End()
     glEnable(GL_DEPTH_TEST);
 }
 
+bool UIRenderer::ViewportToCanvas(
+    float mouseX,
+    float mouseY,
+    float viewportWidth,
+    float viewportHeight,
+    Vec2& result) const
+{
+    if (viewportWidth <= 0.0f || viewportHeight <= 0.0f ||
+        m_LogicalWidth <= 0.0f || m_LogicalHeight <= 0.0f)
+        return false;
+
+    const float scale = std::min(
+        viewportWidth / m_LogicalWidth,
+        viewportHeight / m_LogicalHeight);
+
+    if (scale <= 0.0f) return false;
+
+    const float offsetX = (viewportWidth - m_LogicalWidth * scale) * 0.5f;
+    const float offsetY = (viewportHeight - m_LogicalHeight * scale) * 0.5f;
+
+    result.x = (mouseX - offsetX) / scale;
+    result.y = (mouseY - offsetY) / scale;
+
+    return mouseX >= offsetX &&
+           mouseY >= offsetY &&
+           mouseX <= offsetX + m_LogicalWidth * scale &&
+           mouseY <= offsetY + m_LogicalHeight * scale;
+}
+
+void UIRenderer::UpdateInput(
+    UICanvas& canvas,
+    const Input& input,
+    float viewportX,
+    float viewportY,
+    float viewportWidth,
+    float viewportHeight)
+{
+    UIWidget* root = canvas.GetRoot();
+    if (!root) return;
+
+    Vec2 mouse;
+    const float localX = input.GetMouseX() - viewportX;
+    const float localY = input.GetMouseY() - viewportY;
+    const bool inside = ViewportToCanvas(
+        localX, localY, viewportWidth, viewportHeight, mouse);
+
+    const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
+    const bool pressed = inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT);
+    // A release outside still has to clear a previously pressed button.
+    const bool released = input.IsMouseButtonReleased(SDL_BUTTON_LEFT);
+
+    for (const auto& child : root->GetChildren())
+        if (child) UpdateButtonInput(*child, canvasRect, mouse, pressed, released);
+}
+
+void UIRenderer::UpdateButtonInput(
+    UIWidget& widget,
+    const UIRect& parentRect,
+    const Vec2& mouse,
+    bool pressed,
+    bool released)
+{
+    if (!widget.IsVisible() || !widget.IsEnabled())
+    {
+        if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+        {
+            button->SetHovered(false);
+            button->SetPressed(false);
+        }
+        return;
+    }
+
+    const UIRect rect = UILayout::Calculate(widget, parentRect);
+    const bool hit = widget.IsHitTestVisible() &&
+        mouse.x >= rect.x && mouse.x <= rect.x + rect.width &&
+        mouse.y >= rect.y && mouse.y <= rect.y + rect.height;
+
+    if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+    {
+        button->SetHovered(hit);
+        if (pressed) button->SetPressed(hit);
+        if (released)
+        {
+            if (button->IsPressed() && hit) button->SetClicked(true);
+            button->SetPressed(false);
+        }
+    }
+
+    for (const auto& child : widget.GetChildren())
+        if (child) UpdateButtonInput(*child, rect, mouse, pressed, released);
+}
+
 // =============================================================
 // Canvas UI
 // =============================================================
 
 void UIRenderer::RenderCanvas(
-    const UICanvas& canvas)
+    UICanvas& canvas,
+    Renderer* renderer)
 {
     const UIWidget* root =
         canvas.GetRoot();
@@ -365,7 +483,8 @@ void UIRenderer::RenderCanvas(
         {
             RenderCanvasWidget(
                 *child,
-                canvasRect
+                canvasRect,
+                renderer
             );
         }
     }
@@ -373,7 +492,8 @@ void UIRenderer::RenderCanvas(
 
 void UIRenderer::RenderCanvasWidget(
     const UIWidget& widget,
-    const UIRect& parentRect)
+    const UIRect& parentRect,
+    Renderer* renderer)
 {
     if (!widget.IsVisible())
     {
@@ -406,7 +526,8 @@ void UIRenderer::RenderCanvasWidget(
     {
         DrawCanvasWidget(
             widget,
-            rect
+            rect,
+            renderer
         );
     }
 
@@ -417,7 +538,8 @@ void UIRenderer::RenderCanvasWidget(
         {
             RenderCanvasWidget(
                 *child,
-                rect
+                rect,
+                renderer
             );
         }
     }
@@ -425,39 +547,40 @@ void UIRenderer::RenderCanvasWidget(
 
 void UIRenderer::DrawCanvasWidget(
     const UIWidget& widget,
-    const UIRect& rect)
+    const UIRect& rect,
+    Renderer* renderer)
 {
     const float vertices[24] =
     {
         rect.x,
         rect.y,
         0.0f,
-        0.0f,
+        1.0f,
 
         rect.x + rect.width,
         rect.y,
         1.0f,
-        0.0f,
+        1.0f,
 
         rect.x + rect.width,
         rect.y + rect.height,
         1.0f,
-        1.0f,
+        0.0f,
 
         rect.x,
         rect.y,
         0.0f,
-        0.0f,
+        1.0f,
 
         rect.x + rect.width,
         rect.y + rect.height,
         1.0f,
-        1.0f,
+        0.0f,
 
         rect.x,
         rect.y + rect.height,
         0.0f,
-        1.0f
+        0.0f
     };
 
     glBindVertexArray(m_VAO);
@@ -474,8 +597,18 @@ void UIRenderer::DrawCanvasWidget(
         vertices
     );
 
-    const Vec4& color =
-        widget.GetColor();
+    Vec4 color = widget.GetColor();
+
+    if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
+    {
+        const float multiplier =
+            button->IsPressed() ? 0.72f :
+            (button->IsHovered() ? 1.12f : 1.0f);
+
+        color.x = std::clamp(color.x * multiplier, 0.0f, 1.0f);
+        color.y = std::clamp(color.y * multiplier, 0.0f, 1.0f);
+        color.z = std::clamp(color.z * multiplier, 0.0f, 1.0f);
+    }
 
     m_Shader.SetVec4(
         "u_Color",
@@ -485,156 +618,169 @@ void UIRenderer::DrawCanvasWidget(
         color.w
     );
 
-    m_Shader.SetInt(
-        "u_UseTexture",
-        0
-    );
+    Texture2D* texture = nullptr;
 
-    glDrawArrays(
-        GL_TRIANGLES,
-        0,
-        6
-    );
+    if (renderer != nullptr)
+    {
+        if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
+        {
+            if (!image->GetTexturePath().empty())
+                texture = renderer->LoadTexture(image->GetTexturePath());
+        }
+    }
+
+    if (texture != nullptr)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetID());
+        m_Shader.SetInt("u_Texture", 0);
+        m_Shader.SetInt("u_UseTexture", 1);
+    }
+    else
+    {
+        m_Shader.SetInt("u_UseTexture", 0);
+    }
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    if (texture != nullptr)
+        glBindTexture(GL_TEXTURE_2D, 0);
 
     glBindVertexArray(0);
+}
+
+bool UIRenderer::InitializeFontAtlas()
+{
+    std::ifstream file(
+        "Assets/Fonts/InterVariable.ttf",
+        std::ios::binary | std::ios::ate
+    );
+    if (!file) return false;
+
+    const std::streamsize length = file.tellg();
+    if (length <= 0) return false;
+    file.seekg(0, std::ios::beg);
+
+    std::vector<unsigned char> fontData(static_cast<size_t>(length));
+    if (!file.read(reinterpret_cast<char*>(fontData.data()), length))
+        return false;
+
+    std::vector<unsigned char> bitmap(
+        FontAtlasWidth * FontAtlasHeight, 0);
+
+    stbtt_bakedchar baked[95]{};
+    const int result = stbtt_BakeFontBitmap(
+        fontData.data(), 0, FontBakeSize,
+        bitmap.data(), FontAtlasWidth, FontAtlasHeight,
+        32, 95, baked);
+    if (result <= 0) return false;
+
+    std::vector<unsigned char> rgba(
+        FontAtlasWidth * FontAtlasHeight * 4, 255);
+    for (int i = 0; i < FontAtlasWidth * FontAtlasHeight; ++i)
+        rgba[i * 4 + 3] = bitmap[i];
+
+    glGenTextures(1, &m_FontTexture);
+    glBindTexture(GL_TEXTURE_2D, m_FontTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA8,
+        FontAtlasWidth, FontAtlasHeight, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    for (int i = 0; i < 95; ++i)
+    {
+        FontGlyph& glyph = m_FontGlyphs[i];
+        glyph.x0 = static_cast<float>(baked[i].x0);
+        glyph.y0 = static_cast<float>(baked[i].y0);
+        glyph.x1 = static_cast<float>(baked[i].x1);
+        glyph.y1 = static_cast<float>(baked[i].y1);
+        glyph.xoff = baked[i].xoff;
+        glyph.yoff = baked[i].yoff;
+        glyph.xadvance = baked[i].xadvance;
+    }
+    return true;
 }
 
 void UIRenderer::DrawCanvasText(
     const UIText& text,
     const UIRect& rect)
 {
-    const std::string& value =
-        text.GetText();
+    if (m_FontTexture == 0 || text.GetText().empty()) return;
 
-    if (value.empty())
-    {
-        return;
-    }
+    const float requestedSize = std::max(1.0f, text.GetFontSize());
+    const float scale = requestedSize / FontBakeSize;
+    const Vec4& color = text.GetColor();
 
-    const float size =
-        text.GetFontSize();
+    float penX = rect.x;
+    float penY = rect.y + requestedSize;
 
-    const Vec4& color =
-        text.GetColor();
-
-    float x = rect.x;
-    float y = rect.y;
-
-    for (char character : value)
+    for (unsigned char character : text.GetText())
     {
         if (character == '\n')
         {
-            y += size * 8.0f;
-            x = rect.x;
+            penX = rect.x;
+            penY += requestedSize * 1.2f;
             continue;
         }
 
-        for (int row = 0; row < 7; ++row)
+        if (character < 32 || character > 126)
+            character = '?';
+
+        const FontGlyph& glyph = m_FontGlyphs[character - 32];
+        const float width = (glyph.x1 - glyph.x0) * scale;
+        const float height = (glyph.y1 - glyph.y0) * scale;
+
+        if (width > 0.0f && height > 0.0f)
         {
-            for (int column = 0; column < 5; ++column)
-            {
-                const unsigned char pixel =
-                    GetGlyphRow(
-                        character,
-                        row
-                    );
-
-                if ((pixel &
-                    (1 << (4 - column))) == 0)
-                {
-                    continue;
-                }
-
-                DrawCanvasTextPixel(
-                    x + column * size,
-                    y + row * size,
-                    size,
-                    color.x,
-                    color.y,
-                    color.z,
-                    color.w
-                );
-            }
+            DrawFontGlyph(
+                penX + glyph.xoff * scale,
+                penY + glyph.yoff * scale,
+                width, height,
+                glyph.x0 / FontAtlasWidth,
+                glyph.y0 / FontAtlasHeight,
+                glyph.x1 / FontAtlasWidth,
+                glyph.y1 / FontAtlasHeight,
+                color);
         }
 
-        x += size * 6.0f;
+        penX += glyph.xadvance * scale;
     }
 }
 
-void UIRenderer::DrawCanvasTextPixel(
-    float x,
-    float y,
-    float size,
-    float red,
-    float green,
-    float blue,
-    float alpha)
+void UIRenderer::DrawFontGlyph(
+    float x, float y, float width, float height,
+    float u0, float v0, float u1, float v1,
+    const Vec4& color)
 {
-    const float vertices[24] =
-    {
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + size,
-        y,
-        1.0f,
-        0.0f,
-
-        x + size,
-        y + size,
-        1.0f,
-        1.0f,
-
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + size,
-        y + size,
-        1.0f,
-        1.0f,
-
-        x,
-        y + size,
-        0.0f,
-        1.0f
+    const float vertices[24] = {
+        x, y, u0, v0,
+        x + width, y, u1, v0,
+        x + width, y + height, u1, v1,
+        x, y, u0, v0,
+        x + width, y + height, u1, v1,
+        x, y + height, u0, v1
     };
 
     glBindVertexArray(m_VAO);
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        m_VBO
-    );
-
-    glBufferSubData(
-        GL_ARRAY_BUFFER,
-        0,
-        sizeof(vertices),
-        vertices
-    );
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
     m_Shader.SetVec4(
-        "u_Color",
-        red,
-        green,
-        blue,
-        alpha
-    );
+        "u_Color", color.x, color.y, color.z, color.w);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_FontTexture);
+    m_Shader.SetInt("u_Texture", 0);
+    m_Shader.SetInt("u_UseTexture", 1);
 
-    m_Shader.SetInt(
-        "u_UseTexture",
-        0
-    );
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glDrawArrays(
-        GL_TRIANGLES,
-        0,
-        6
-    );
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
 }
 
 // =============================================================

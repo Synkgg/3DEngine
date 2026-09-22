@@ -6,6 +6,9 @@
 #include "../../UI/UIText.h"
 #include "../../UI/UIImage.h"
 #include "../../UI/UIButton.h"
+#include "../../UI/UISerializer.h"
+#include "../../Graphics/Renderer.h"
+#include "../../Graphics/Texture2D.h"
 
 #include <imgui.h>
 
@@ -14,132 +17,98 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <filesystem>
+#include <vector>
+#include <cctype>
+#include <cstdint>
+
+bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
+{
+    m_SelectedWidget = nullptr;
+
+    if (!UISerializer::Load(canvas, path))
+        return false;
+
+    m_UIAssetPath = std::filesystem::path(path).generic_string();
+    ResetView();
+    return true;
+}
 
 void UIEditor::Draw(
-    UICanvas& canvas)
+    UICanvas& canvas,
+    Renderer& renderer)
 {
-    ImGui::Begin("UI Editor");
+    m_Renderer = &renderer;
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("Widget Blueprint");
+    ImGui::PopStyleVar();
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 29, 255));
+    ImGui::BeginChild("WidgetToolbar", ImVec2(0.0f, 42.0f), false);
+    ImGui::SetCursorPos(ImVec2(8.0f, 7.0f));
     DrawToolbar(canvas);
-
-    ImGui::Separator();
-
-    const ImVec2 available =
-        ImGui::GetContentRegionAvail();
-
-    const float hierarchyWidth =
-        240.0f;
-
-    const float inspectorWidth =
-        280.0f;
-
-    const float designerWidth =
-        std::max(
-            100.0f,
-            available.x -
-            hierarchyWidth -
-            inspectorWidth -
-            20.0f
-        );
-
-    ImGui::BeginChild(
-        "UIHierarchy",
-        ImVec2(
-            hierarchyWidth,
-            0.0f
-        ),
-        ImGuiChildFlags_Borders
-    );
-
-    ImGui::TextUnformatted("Hierarchy");
-    ImGui::Separator();
-
-    if (canvas.GetRoot())
-    {
-        DrawHierarchy(
-            *canvas.GetRoot()
-        );
-    }
-
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 
-    ImGui::SameLine();
+    const ImVec2 available = ImGui::GetContentRegionAvail();
+    const float paletteWidth = 170.0f;
+    const float hierarchyWidth = 225.0f;
+    const float inspectorWidth = 300.0f;
+    const float designerWidth = std::max(
+        180.0f, available.x - paletteWidth - hierarchyWidth - inspectorWidth);
 
-    ImGui::BeginChild(
-        "UIDesigner",
-        ImVec2(
-            designerWidth,
-            0.0f
-        ),
-        ImGuiChildFlags_Borders
-    );
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+    ImGui::BeginChild("Palette", ImVec2(paletteWidth, 0.0f), true);
+    ImGui::TextDisabled("PALETTE");
+    ImGui::Separator();
+    ImGui::TextDisabled("Common");
+    if (ImGui::Selectable("Panel")) AddWidget(canvas, UIWidgetType::Panel);
+    if (ImGui::Selectable("Text")) AddWidget(canvas, UIWidgetType::Text);
+    if (ImGui::Selectable("Image")) AddWidget(canvas, UIWidgetType::Image);
+    if (ImGui::Selectable("Button")) AddWidget(canvas, UIWidgetType::Button);
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::TextDisabled("User Interface");
+    ImGui::TextWrapped("Select a container in the Hierarchy, then add a widget from the Palette.");
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
 
+    ImGui::SameLine(0.0f, 0.0f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
+    ImGui::BeginChild("HierarchyPanel", ImVec2(hierarchyWidth, 0.0f), true);
+    ImGui::TextDisabled("HIERARCHY");
+    ImGui::Separator();
+    if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot());
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    ImGui::SameLine(0.0f, 0.0f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(17, 18, 21, 255));
+    ImGui::BeginChild("DesignerPanel", ImVec2(designerWidth, 0.0f), true);
     DrawDesigner(canvas);
-
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 
-    ImGui::SameLine();
-
-    ImGui::BeginChild(
-        "UIInspector",
-        ImVec2(
-            inspectorWidth,
-            0.0f
-        ),
-        ImGuiChildFlags_Borders
-    );
-
-    ImGui::TextUnformatted("Inspector");
+    ImGui::SameLine(0.0f, 0.0f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+    ImGui::BeginChild("DetailsPanel", ImVec2(inspectorWidth, 0.0f), true);
+    ImGui::TextDisabled("DETAILS");
     ImGui::Separator();
-
     if (m_SelectedWidget)
-    {
-        DrawInspector(
-            *m_SelectedWidget
-        );
-    }
+        DrawInspector(*m_SelectedWidget);
     else
-    {
-        ImGui::TextDisabled(
-            "No widget selected."
-        );
-    }
-
+        ImGui::TextDisabled("Select a widget to edit its properties.");
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 
-    /*
-     * Keyboard shortcuts.
-     */
-    if (ImGui::IsWindowFocused(
-        ImGuiFocusedFlags_RootAndChildWindows))
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
-        if (ImGui::IsKeyPressed(
-            ImGuiKey_Delete))
-        {
-            DeleteSelected(canvas);
-        }
-
-        const bool ctrl =
-            ImGui::GetIO().KeyCtrl;
-
-        if (ctrl &&
-            ImGui::IsKeyPressed(
-                ImGuiKey_D))
-        {
-            DuplicateSelected(canvas);
-        }
-
-        if (ImGui::IsKeyPressed(
-            ImGuiKey_F2))
-        {
-            RenameSelected();
-        }
-
-        if (ImGui::IsKeyPressed(
-            ImGuiKey_F))
-        {
-            ResetView();
-        }
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete)) DeleteSelected(canvas);
+        const bool ctrl = ImGui::GetIO().KeyCtrl;
+        if (ctrl && ImGui::IsKeyPressed(ImGuiKey_D)) DuplicateSelected(canvas);
+        if (ImGui::IsKeyPressed(ImGuiKey_F2)) RenameSelected();
+        if (ImGui::IsKeyPressed(ImGuiKey_F)) ResetView();
     }
 
     ImGui::End();
@@ -270,33 +239,41 @@ void UIEditor::DrawInspector(
         );
     }
 
-    Vec2 anchor =
-        widget.GetAnchor();
+    Vec2 anchorMin = widget.GetAnchorMinimum();
+    Vec2 anchorMax = widget.GetAnchorMaximum();
 
-    if (ImGui::DragFloat2(
-        "Anchor",
-        &anchor.x,
-        0.01f,
-        0.0f,
-        1.0f))
+    if (ImGui::DragFloat2("Anchor Min", &anchorMin.x, 0.01f, 0.0f, 1.0f))
     {
-        anchor.x =
-            std::clamp(
-                anchor.x,
-                0.0f,
-                1.0f
-            );
+        anchorMin.x = std::clamp(anchorMin.x, 0.0f, 1.0f);
+        anchorMin.y = std::clamp(anchorMin.y, 0.0f, 1.0f);
+        anchorMax.x = std::max(anchorMax.x, anchorMin.x);
+        anchorMax.y = std::max(anchorMax.y, anchorMin.y);
+        widget.SetAnchors(anchorMin, anchorMax);
+    }
 
-        anchor.y =
-            std::clamp(
-                anchor.y,
-                0.0f,
-                1.0f
-            );
+    if (ImGui::DragFloat2("Anchor Max", &anchorMax.x, 0.01f, 0.0f, 1.0f))
+    {
+        anchorMax.x = std::clamp(anchorMax.x, anchorMin.x, 1.0f);
+        anchorMax.y = std::clamp(anchorMax.y, anchorMin.y, 1.0f);
+        widget.SetAnchors(anchorMin, anchorMax);
+    }
 
-        widget.SetAnchor(
-            anchor
-        );
+    if (ImGui::Button("Top Left"))
+    {
+        widget.SetAnchor(Vec2(0.0f, 0.0f));
+        widget.SetPivot(Vec2(0.0f, 0.0f));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Center"))
+    {
+        widget.SetAnchor(Vec2(0.5f, 0.5f));
+        widget.SetPivot(Vec2(0.5f, 0.5f));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Fill"))
+    {
+        widget.SetAnchors(Vec2(0.0f, 0.0f), Vec2(1.0f, 1.0f));
+        widget.SetPivot(Vec2(0.0f, 0.0f));
     }
 
     Vec2 pivot =
@@ -352,6 +329,18 @@ void UIEditor::DrawInspector(
         );
     }
 
+    bool enabled = widget.IsEnabled();
+    if (ImGui::Checkbox("Enabled", &enabled))
+        widget.SetEnabled(enabled);
+
+    bool hitTest = widget.IsHitTestVisible();
+    if (ImGui::Checkbox("Hit Test Visible", &hitTest))
+        widget.SetHitTestVisible(hitTest);
+
+    int zOrder = widget.GetZOrder();
+    if (ImGui::DragInt("Z Order", &zOrder, 1.0f, -1000, 1000))
+        widget.SetZOrder(zOrder);
+
     ImGui::Separator();
 
     if (UIText* text =
@@ -398,31 +387,54 @@ void UIEditor::DrawInspector(
     }
 
     if (UIImage* image =
-        dynamic_cast<UIImage*>(
-            &widget))
+        dynamic_cast<UIImage*>(&widget))
     {
-        ImGui::TextUnformatted(
-            "Image"
-        );
+        ImGui::Spacing();
+        ImGui::SeparatorText("Appearance");
+        ImGui::TextDisabled("Brush / Image");
 
-        char textureBuffer[1024];
+        const std::string& currentPath = image->GetTexturePath();
+        ImGui::TextWrapped("%s",
+            currentPath.empty() ? "No image selected" : currentPath.c_str());
 
-        std::snprintf(
-            textureBuffer,
-            sizeof(textureBuffer),
-            "%s",
-            image->GetTexturePath().c_str()
-        );
+        if (ImGui::Button("Choose Image...", ImVec2(-1.0f, 0.0f)))
+            ImGui::OpenPopup("SelectUIImage");
 
-        if (ImGui::InputText(
-            "Texture",
-            textureBuffer,
-            sizeof(textureBuffer)))
+        if (ImGui::BeginPopup("SelectUIImage"))
         {
-            image->SetTexturePath(
-                textureBuffer
-            );
+            ImGui::TextDisabled("TEXTURES");
+            ImGui::Separator();
+
+            std::error_code ec;
+            const std::filesystem::path root("Assets");
+            if (std::filesystem::exists(root, ec))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+                {
+                    if (ec) break;
+                    if (!entry.is_regular_file()) continue;
+
+                    std::string ext = entry.path().extension().string();
+                    std::transform(ext.begin(), ext.end(), ext.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+                    if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" &&
+                        ext != ".bmp" && ext != ".tga")
+                        continue;
+
+                    const std::string path = entry.path().generic_string();
+                    if (ImGui::Selectable(path.c_str(), path == currentPath))
+                    {
+                        image->SetTexturePath(path);
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+            }
+            ImGui::EndPopup();
         }
+
+        if (!currentPath.empty() && ImGui::Button("Clear Image"))
+            image->SetTexturePath("");
     }
 
     if (UIButton* button =
@@ -458,126 +470,71 @@ void UIEditor::DrawInspector(
 void UIEditor::DrawToolbar(
     UICanvas& canvas)
 {
-    if (ImGui::Button(
-        "Panel"))
+    if (ImGui::Button("Open UI..."))
+        ImGui::OpenPopup("SelectUIAsset");
+
+    ImGui::SameLine();
+    if (ImGui::Button("Save"))
+        UISerializer::Save(canvas, m_UIAssetPath);
+
+    ImGui::SameLine();
+    ImGui::TextDisabled("%s", m_UIAssetPath.c_str());
+
+    ImGui::SameLine();
+    ImGui::Dummy(ImVec2(18.0f, 0.0f));
+    ImGui::SameLine();
+
+    if (ImGui::Button("Duplicate")) DuplicateSelected(canvas);
+    ImGui::SameLine();
+    if (ImGui::Button("Delete")) DeleteSelected(canvas);
+    ImGui::SameLine();
+    if (ImGui::Button("Rename")) RenameSelected();
+    ImGui::SameLine();
+    if (ImGui::Button("Frame")) ResetView();
+
+    ImGui::SameLine();
+    ImGui::Dummy(ImVec2(18.0f, 0.0f));
+    ImGui::SameLine();
+    ImGui::Checkbox("Grid", &m_ShowGrid);
+    ImGui::SameLine();
+    ImGui::Checkbox("Snap", &m_SnapToGrid);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(60.0f);
+    ImGui::DragFloat("##GridSize", &m_GridSize, 1.0f, 1.0f, 200.0f, "%.0f");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(85.0f);
+    ImGui::SliderFloat("##Zoom", &m_Zoom, 0.25f, 2.0f, "%.2fx");
+
+    if (ImGui::BeginPopup("SelectUIAsset"))
     {
-        AddWidget(
-            canvas,
-            UIWidgetType::Panel
-        );
+        ImGui::TextDisabled("UI ASSETS");
+        ImGui::Separator();
+        std::error_code ec;
+        const std::filesystem::path root("Assets/UI");
+        if (std::filesystem::exists(root, ec))
+        {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+            {
+                if (ec) break;
+                if (!entry.is_regular_file()) continue;
+                if (entry.path().extension() != ".ui") continue;
+
+                const std::string path = entry.path().generic_string();
+                if (ImGui::Selectable(path.c_str(), path == m_UIAssetPath))
+                {
+                    m_SelectedWidget = nullptr;
+                    if (UISerializer::Load(canvas, path))
+                        m_UIAssetPath = path;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        }
+        else
+        {
+            ImGui::TextDisabled("No Assets/UI folder found.");
+        }
+        ImGui::EndPopup();
     }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Text"))
-    {
-        AddWidget(
-            canvas,
-            UIWidgetType::Text
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Image"))
-    {
-        AddWidget(
-            canvas,
-            UIWidgetType::Image
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Button"))
-    {
-        AddWidget(
-            canvas,
-            UIWidgetType::Button
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Duplicate"))
-    {
-        DuplicateSelected(
-            canvas
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Delete"))
-    {
-        DeleteSelected(
-            canvas
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Rename"))
-    {
-        RenameSelected();
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Reset"))
-    {
-        ResetView();
-    }
-
-    ImGui::SameLine();
-
-    ImGui::Checkbox(
-        "Grid",
-        &m_ShowGrid
-    );
-
-    ImGui::SameLine();
-
-    ImGui::Checkbox(
-        "Snap",
-        &m_SnapToGrid
-    );
-
-    ImGui::SameLine();
-
-    ImGui::SetNextItemWidth(
-        80.0f
-    );
-
-    ImGui::DragFloat(
-        "Grid Size",
-        &m_GridSize,
-        1.0f,
-        1.0f,
-        200.0f,
-        "%.0f"
-    );
-
-    ImGui::SameLine();
-
-    ImGui::SetNextItemWidth(
-        90.0f
-    );
-
-    ImGui::SliderFloat(
-        "Zoom",
-        &m_Zoom,
-        0.25f,
-        2.0f,
-        "%.2fx"
-    );
 }
 
 void UIEditor::DrawDesigner(
@@ -644,6 +601,8 @@ void UIEditor::DrawDesigner(
             scale
         );
 
+    m_DesignerScale = scale;
+
     /*
      * Actual displayed canvas size.
      */
@@ -666,6 +625,8 @@ void UIEditor::DrawDesigner(
             canvasPixelSize.y) *
         0.5f
     );
+
+    m_DesignerCanvasPosition = canvasPosition;
 
     ImDrawList* drawList =
         ImGui::GetWindowDrawList();
@@ -811,17 +772,10 @@ void UIEditor::DrawDesigner(
             {
                 UIRect rootRect;
 
-                rootRect.x =
-                    canvasPosition.x;
-
-                rootRect.y =
-                    canvasPosition.y;
-
-                rootRect.width =
-                    canvasSize.x;
-
-                rootRect.height =
-                    canvasSize.y;
+                rootRect.x = 0.0f;
+                rootRect.y = 0.0f;
+                rootRect.width = canvasSize.x;
+                rootRect.height = canvasSize.y;
 
                 DrawWidget(
                     *child,
@@ -859,39 +813,15 @@ void UIEditor::DrawDesigner(
 
         if (m_SelectedWidget)
         {
-            UIRect parentRect;
-
-            if (m_SelectedWidget->GetParent())
-            {
-                const UIRect parentCalculated =
-                    UILayout::Calculate(
-                        *m_SelectedWidget->GetParent(),
-                        UIRect{
-                            0.0f,
-                            0.0f,
-                            canvasSize.x,
-                            canvasSize.y
-                        }
-                    );
-
-                parentRect =
-                    parentCalculated;
-            }
-            else
-            {
-                parentRect =
+            const UIRect selectedRect =
+                GetAbsoluteRect(
+                    *m_SelectedWidget,
                     UIRect{
                         0.0f,
                         0.0f,
                         canvasSize.x,
                         canvasSize.y
-                };
-            }
-
-            const UIRect selectedRect =
-                UILayout::Calculate(
-                    *m_SelectedWidget,
-                    parentRect
+                    }
                 );
 
             if (!m_Dragging &&
@@ -1054,16 +984,48 @@ void UIEditor::DrawWidget(
                 text->GetFontSize() *
                 scale;
 
+            // The old preview effectively looked like a bitmap font because
+            // text was scaled down with the canvas and then sampled at tiny
+            // sizes. Keep the requested UI size, but never render below the
+            // editor font's native size. ImGui's atlas then provides the same
+            // smooth Inter face used by the rest of the editor.
+            ImFont* previewFont = ImGui::GetFont();
+            const float previewSize = std::max(
+                ImGui::GetFontSize(),
+                std::max(1.0f, fontSize));
+
             drawList->AddText(
-                ImGui::GetFont(),
-                std::max(
-                    1.0f,
-                    fontSize
-                ),
+                previewFont,
+                previewSize,
                 min,
                 fillColor,
                 textValue
             );
+        }
+    }
+    else if (widget.GetType() == UIWidgetType::Image)
+    {
+        const UIImage* image = dynamic_cast<const UIImage*>(&widget);
+        Texture2D* texture = nullptr;
+        if (image && m_Renderer && !image->GetTexturePath().empty())
+            texture = m_Renderer->LoadTexture(image->GetTexturePath());
+
+        if (texture && texture->IsLoaded())
+        {
+            drawList->AddImage(
+                (ImTextureID)(intptr_t)texture->GetID(),
+                min,
+                max,
+                ImVec2(0.0f, 1.0f),
+                ImVec2(1.0f, 0.0f),
+                fillColor);
+        }
+        else
+        {
+            drawList->AddRectFilled(min, max, IM_COL32(45, 47, 52, 255), 2.0f);
+            drawList->AddRect(min, max, IM_COL32(100, 105, 115, 255), 2.0f);
+            drawList->AddText(ImVec2(min.x + 8.0f, min.y + 8.0f),
+                IM_COL32(160, 165, 175, 255), "No Image");
         }
     }
     else
@@ -1087,50 +1049,9 @@ void UIEditor::DrawWidget(
             4.0f
         );
 
-        if (widget.GetType() ==
-            UIWidgetType::Button)
-        {
-            UIButton* button =
-                dynamic_cast<UIButton*>(
-                    &widget
-                    );
+        // Buttons are visual containers. Their widget name is editor metadata,
+        // not visible UI text. Add a UIText child when the button needs a label.
 
-            if (button)
-            {
-                const char* label =
-                    widget.GetName().c_str();
-
-                const ImVec2 textSize =
-                    ImGui::CalcTextSize(
-                        label
-                    );
-
-                drawList->AddText(
-                    ImVec2(
-                        min.x +
-                        (max.x -
-                            min.x -
-                            textSize.x) *
-                        0.5f,
-
-                        min.y +
-                        (max.y -
-                            min.y -
-                            textSize.y) *
-                        0.5f
-                    ),
-
-                    IM_COL32(
-                        255,
-                        255,
-                        255,
-                        255
-                    ),
-
-                    label
-                );
-            }
-        }
     }
 
     /*
@@ -1263,49 +1184,7 @@ void UIEditor::BeginDrag(
 void UIEditor::UpdateDrag(
     UIWidget& widget)
 {
-    /*
-     * Find the actual displayed canvas scale.
-     *
-     * The designer is responsible for fitting
-     * the 1920x1080 design canvas into the
-     * available ImGui region.
-     */
-    ImVec2 availableSize =
-        ImGui::GetContentRegionAvail();
-
-    const Vec2 canvasSize =
-        widget.GetParent()
-        ? widget.GetParent()->GetSize()
-        : Vec2(
-            1920.0f,
-            1080.0f
-        );
-
-    const float scaleX =
-        canvasSize.x > 0.0f
-        ? availableSize.x /
-        canvasSize.x
-        : 1.0f;
-
-    const float scaleY =
-        canvasSize.y > 0.0f
-        ? availableSize.y /
-        canvasSize.y
-        : 1.0f;
-
-    float scale =
-        std::min(
-            scaleX,
-            scaleY
-        );
-
-    scale *= m_Zoom;
-
-    scale =
-        std::max(
-            0.05f,
-            scale
-        );
+    const float scale = std::max(0.05f, m_DesignerScale);
 
     const ImVec2 mouse =
         ImGui::GetMousePos();
@@ -1373,42 +1252,7 @@ void UIEditor::BeginResize(
 void UIEditor::UpdateResize(
     UIWidget& widget)
 {
-    ImVec2 availableSize =
-        ImGui::GetContentRegionAvail();
-
-    const Vec2 canvasSize =
-        widget.GetParent()
-        ? widget.GetParent()->GetSize()
-        : Vec2(
-            1920.0f,
-            1080.0f
-        );
-
-    const float scaleX =
-        canvasSize.x > 0.0f
-        ? availableSize.x /
-        canvasSize.x
-        : 1.0f;
-
-    const float scaleY =
-        canvasSize.y > 0.0f
-        ? availableSize.y /
-        canvasSize.y
-        : 1.0f;
-
-    float scale =
-        std::min(
-            scaleX,
-            scaleY
-        );
-
-    scale *= m_Zoom;
-
-    scale =
-        std::max(
-            0.05f,
-            scale
-        );
+    const float scale = std::max(0.05f, m_DesignerScale);
 
     const ImVec2 mouse =
         ImGui::GetMousePos();
@@ -1850,4 +1694,16 @@ void UIEditor::ResetView()
 {
     m_Zoom =
         1.0f;
+}
+
+UIRect UIEditor::GetAbsoluteRect(
+    const UIWidget& widget,
+    const UIRect& canvasRect) const
+{
+    const UIWidget* parent = widget.GetParent();
+    if (parent == nullptr || parent->GetParent() == nullptr)
+        return UILayout::Calculate(widget, canvasRect);
+
+    const UIRect parentRect = GetAbsoluteRect(*parent, canvasRect);
+    return UILayout::Calculate(widget, parentRect);
 }

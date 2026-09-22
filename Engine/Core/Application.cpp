@@ -16,6 +16,7 @@
 #include "../Core/Logger.h"
 
 #include "../UI/UITest.h"
+#include "../UI/UISerializer.h"
 
 Application::Application()
     : m_Running(false),
@@ -30,21 +31,21 @@ Application::Application()
 {
 }
 
-void Application::Initialize()
+bool Application::Initialize()
 {
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         Logger::Error( std::string("Failed to initialize SDL: ") + SDL_GetError());
 
         m_Running = false;
-        return;
+        return false;
     }
 
     if (!m_Window.Initialize())
     {
         SDL_Quit();
         m_Running = false;
-        return;
+        return false;
     }
 
     if (!m_Renderer.Initialize(m_Window))
@@ -52,7 +53,7 @@ void Application::Initialize()
         m_Window.Shutdown();
         SDL_Quit();
         m_Running = false;
-        return;
+        return false;
     }
 
     if (!m_ImGuiLayer.Initialize(
@@ -63,15 +64,21 @@ void Application::Initialize()
         m_Window.Shutdown();
         SDL_Quit();
         m_Running = false;
-        return;
+        return false;
     }
 
     UITest::Run();
 
-    UITest::SetupCanvas(
-        m_UICanvas
-    );
+    if (!UISerializer::Load(
+        m_UICanvas,
+        "Assets/UI/UIEditorTest.ui"))
+    {
+        UITest::SetupCanvas(
+            m_UICanvas
+        );
+    }
 
+    return true;
 }
 
 void Application::Run()
@@ -134,9 +141,20 @@ void Application::Run()
 
         m_ImGuiLayer.BeginFrame();
 
-        m_UIEditor.Draw(m_UICanvas);
+        m_UIEditor.Draw(m_UICanvas, m_Renderer);
 
         m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
+
+        const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
+        if (!openedUIAsset.empty())
+        {
+            if (!m_UIEditor.OpenAsset(m_UICanvas, openedUIAsset))
+            {
+                Logger::Error(
+                    std::string("Failed to open UI asset: ") +
+                    openedUIAsset);
+            }
+        }
 
         if (m_Editor.IsPlaying() &&
             !m_Runtime.IsRunning())
@@ -263,37 +281,21 @@ void Application::Run()
 
         if (m_Runtime.IsRunning())
         {
-            const bool uiWantsMouse =
-                m_Renderer
-                .GetUIRenderer()
-                .IsMouseInteractionEnabled();
-
-            const bool shouldCaptureMouse =
-                !uiWantsMouse;
-
-            if (shouldCaptureMouse &&
-                !m_RuntimeMouseCaptured)
-            {
-                m_Input.SetMouseCapture(
-                    m_Window.GetNativeWindow(),
-                    true
-                );
-
-                m_RuntimeMouseCaptured =
-                    true;
-
-                m_Input.Update();
-            }
-            else if (!shouldCaptureMouse &&
-                m_RuntimeMouseCaptured)
+            /*
+             * Play-in-editor must leave the OS cursor available.
+             * The new canvas UI uses absolute mouse coordinates for
+             * hit testing, so relative mouse capture would make menus
+             * impossible to click. Camera/player look can opt into
+             * capture later when the game explicitly requests it.
+             */
+            if (m_RuntimeMouseCaptured)
             {
                 m_Input.SetMouseCapture(
                     m_Window.GetNativeWindow(),
                     false
                 );
 
-                m_RuntimeMouseCaptured =
-                    false;
+                m_RuntimeMouseCaptured = false;
             }
         }
         else if (m_RuntimeMouseCaptured)
@@ -307,8 +309,25 @@ void Application::Run()
                 false;
         }
 
+        // Update UI input before Lua. UI.WasClicked() consumes the click
+        // during the runtime update, so hit testing must happen first.
         if (m_Runtime.IsRunning())
         {
+            UIRenderer& ui = m_Renderer.GetUIRenderer();
+            const Vec2 canvasSize = m_UICanvas.GetSize();
+            const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
+            const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
+
+            ui.SetLogicalSize(canvasSize.x, canvasSize.y);
+            ui.UpdateInput(
+                m_UICanvas,
+                m_Input,
+                gameViewportPosition.x,
+                gameViewportPosition.y,
+                gameViewportSize.x,
+                gameViewportSize.y
+            );
+
             m_Runtime.Update(
                 m_Scene,
                 m_Renderer,
@@ -666,7 +685,8 @@ void Application::Run()
             ui.Begin();
 
             ui.RenderCanvas(
-                m_UICanvas
+                m_UICanvas,
+                &m_Renderer
             );
 
             ui.End();
@@ -693,12 +713,19 @@ void Application::StartRuntime()
 {
     m_Renderer.GetUIRenderer().Clear();
 
+    // The editor and runtime share the same UICanvas. Do not deserialize over
+    // that live widget tree here: the UI editor may still hold a selected
+    // widget pointer into it, which would become dangling and crash on the
+    // next editor frame. UI assets are loaded when editing/opening them;
+    // Play simply starts from the current in-memory canvas.
+
     m_Runtime.SaveCameraState(m_Renderer);
 
     m_Runtime.Start(
         m_Scene,
         m_Renderer,
-        m_Input
+        m_Input,
+        m_UICanvas
     );
 }
 

@@ -17,6 +17,7 @@
 
 class Renderer;
 class Input;
+class UICanvas;
 
 class Runtime
 {
@@ -24,7 +25,8 @@ public:
     void Start(
         Scene& scene,
         Renderer& renderer,
-        Input& input
+        Input& input,
+        UICanvas& uiCanvas
     );
 
     void Update(

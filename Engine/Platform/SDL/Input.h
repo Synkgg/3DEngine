@@ -17,6 +17,10 @@ public:
     float GetMouseDeltaY() const;
 
     bool IsMouseButtonDown(Uint8 button) const;
+    bool IsMouseButtonPressed(Uint8 button) const;
+    bool IsMouseButtonReleased(Uint8 button) const;
+    float GetMouseX() const;
+    float GetMouseY() const;
 
     void SetMouseCapture(SDL_Window* window, bool captured);
 
@@ -32,6 +36,9 @@ private:
     float m_MouseDeltaX;
     float m_MouseDeltaY;
     SDL_MouseButtonFlags m_MouseButtons;
+    SDL_MouseButtonFlags m_PreviousMouseButtons;
+    float m_MouseX;
+    float m_MouseY;
 
     bool m_MouseCaptured;
 };

@@ -7,13 +7,15 @@
 
 #include "../../Core/Logger.h"
 #include "../../Graphics/Renderer.h"
+#include "../../UI/UICanvas.h"
 
 #include <filesystem>
 
 void LuaScriptSystem::Start(
     Scene& scene,
     Input& input,
-    Renderer& renderer)
+    Renderer& renderer,
+    UICanvas& uiCanvas)
 {
     m_Instances.clear();
 
@@ -63,11 +65,9 @@ void LuaScriptSystem::Start(
             continue;
         }
 
-        std::vector<ScriptInstance>& instances =
-            m_Instances[
-                entity.GetID()
-            ];
-
+        // Do not keep a reference into m_Instances while Lua OnCreate runs.
+        // OnCreate is allowed to touch engine state, and retaining a reference
+        // across callbacks makes this startup path unnecessarily fragile.
         for (const std::string& scriptPath :
             scriptComponent->scriptNames)
         {
@@ -101,6 +101,7 @@ void LuaScriptSystem::Start(
                 scene,
                 input,
                 renderer,
+                uiCanvas,
                 *m_Lua
             );
 
@@ -123,7 +124,7 @@ void LuaScriptSystem::Start(
             instance.script =
                 std::move(script);
 
-            instances.push_back(
+            m_Instances[entity.GetID()].push_back(
                 std::move(instance)
             );
 

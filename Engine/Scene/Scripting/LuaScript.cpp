@@ -5,6 +5,10 @@
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
+#include "../../UI/UICanvas.h"
+#include "../../UI/UIWidget.h"
+#include "../../UI/UIText.h"
+#include "../../UI/UIButton.h"
 
 #include "../Scene.h"
 #include "../Components/TransformComponent.h"
@@ -22,12 +26,14 @@ void LuaScript::Initialize(
     Scene& scene,
     Input& input,
     Renderer& renderer,
+    UICanvas& uiCanvas,
     sol::state& lua)
 {
     m_Entity = entity;
     m_Scene = &scene;
     m_Input = &input;
     m_Renderer = &renderer;
+    m_UICanvas = &uiCanvas;
     m_Lua = &lua;
 
     m_Environment =
@@ -870,6 +876,75 @@ void LuaScript::BindEngineAPI()
         camera;
 
     /*
+     * UI - edits the same widget tree used by the editor and renderer.
+     */
+    sol::table ui = m_Lua->create_table();
+
+    ui.set_function("SetVisible", [this](const std::string& name, bool visible)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetVisible(visible);
+        return true;
+    });
+
+    ui.set_function("SetEnabled", [this](const std::string& name, bool enabled)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetEnabled(enabled);
+        return true;
+    });
+
+    ui.set_function("SetText", [this](const std::string& name, const std::string& value)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        UIText* text = widget ? dynamic_cast<UIText*>(widget) : nullptr;
+        if (!text) return false;
+        text->SetText(value);
+        return true;
+    });
+
+    ui.set_function("SetColor", [this](const std::string& name, float r, float g, float b, float a)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetColor(Vec4(r, g, b, a));
+        return true;
+    });
+
+    ui.set_function("SetPosition", [this](const std::string& name, float x, float y)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return false;
+        widget->SetPosition(Vec2(x, y));
+        return true;
+    });
+
+    ui.set_function("WasClicked", [this](const std::string& name)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        UIButton* button = widget ? dynamic_cast<UIButton*>(widget) : nullptr;
+        return button ? button->ConsumeClick() : false;
+    });
+
+    ui.set_function("IsHovered", [this](const std::string& name)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        UIButton* button = widget ? dynamic_cast<UIButton*>(widget) : nullptr;
+        return button ? button->IsHovered() : false;
+    });
+
+    (*m_Environment)["UI"] = ui;
+
+    /*
      * Character Controller
      */
     sol::table characterController =
@@ -1132,216 +1207,7 @@ void LuaScript::BindEngineAPI()
     (*m_Environment)["Interactable"] =
         interactable;
 
-    /*
- * UI
- */
-    sol::table ui =
-        m_Lua->create_table();
+    // Legacy renderer-driven UI API removed.
+    // UI now refers exclusively to the shared UICanvas widget tree.
 
-    ui.set_function(
-        "SetRect",
-        [this](
-            const std::string& id,
-            float x,
-            float y,
-            float width,
-            float height,
-            float red,
-            float green,
-            float blue,
-            float alpha)
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer().SetRect(
-                id,
-                x,
-                y,
-                width,
-                height,
-                red,
-                green,
-                blue,
-                alpha
-            );
-        }
-    );
-
-    ui.set_function(
-        "SetText",
-        [this](
-            const std::string& id,
-            const std::string& text,
-            float x,
-            float y,
-            float scale,
-            float red,
-            float green,
-            float blue,
-            float alpha)
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer().SetText(
-                id,
-                text,
-                x,
-                y,
-                scale,
-                red,
-                green,
-                blue,
-                alpha
-            );
-        }
-    );
-
-    ui.set_function(
-        "SetImage",
-        [this](
-            const std::string& id,
-            const std::string& path,
-            float x,
-            float y,
-            float width,
-            float height,
-            float red,
-            float green,
-            float blue,
-            float alpha)
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            Texture2D* texture =
-                m_Renderer->LoadTexture(
-                    path
-                );
-
-            if (texture == nullptr ||
-                !texture->IsLoaded())
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer().SetImage(
-                id,
-                texture,
-                x,
-                y,
-                width,
-                height,
-                red,
-                green,
-                blue,
-                alpha
-            );
-        }
-    );
-
-    ui.set_function(
-        "SetVisible",
-        [this](
-            const std::string& id,
-            bool visible)
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer().SetVisible(
-                id,
-                visible
-            );
-        }
-    );
-
-    ui.set_function(
-        "SetParent",
-        [this](
-            const std::string& id,
-            const std::string& parentId)
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer().SetParent(
-                id,
-                parentId
-            );
-        }
-    );
-
-    ui.set_function(
-        "Remove",
-        [this](
-            const std::string& id)
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer().Remove(
-                id
-            );
-        }
-    );
-
-    ui.set_function(
-        "Clear",
-        [this]()
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer().Clear();
-        }
-    );
-
-    ui.set_function(
-        "SetMouseInteractionEnabled",
-        [this](bool enabled)
-        {
-            if (m_Renderer == nullptr)
-            {
-                return;
-            }
-
-            m_Renderer->GetUIRenderer()
-                .SetMouseInteractionEnabled(
-                    enabled
-                );
-        }
-    );
-
-    ui.set_function(
-        "IsMouseInteractionEnabled",
-        [this]()
-        {
-            if (m_Renderer == nullptr)
-            {
-                return false;
-            }
-
-            return m_Renderer->GetUIRenderer()
-                .IsMouseInteractionEnabled();
-        }
-    );
-
-    (*m_Environment)["UI"] =
-        ui;
 }
