@@ -615,17 +615,24 @@ void Editor::RenderViewport(
 	Renderer& renderer,
 	Scene& scene)
 {
-	ImGui::Begin("Viewport");
+	ImGui::Begin("Scene");
 
 	// m_ViewportPosition/m_ViewportSize represent the actual game image,
 	// not the surrounding ImGui window. They are assigned after the
 	// viewport toolbar when the image rectangle is known.
 
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.045f, 0.049f, 0.070f, 1.0f));
 	ImGui::BeginChild(
 		"ViewportToolbar",
-		ImVec2(0.0f, 36.0f),
+		ImVec2(0.0f, 44.0f),
 		ImGuiChildFlags_Borders
 	);
+
+	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 4.0f);
+	ImGui::TextDisabled("SCENE");
+	ImGui::SameLine();
+	ImGui::TextDisabled("  |  ");
+	ImGui::SameLine();
 
 	const char* buttonText =
 		m_Playing ? "Stop" : "Play";
@@ -716,6 +723,7 @@ void Editor::RenderViewport(
 	}
 
 	ImGui::EndChild();
+	ImGui::PopStyleColor();
 
 	m_ViewportHovered =
 		ImGui::IsWindowHovered();
@@ -838,39 +846,39 @@ void Editor::RenderViewport(
 	ImGui::PushStyleColor(
 		ImGuiCol_ChildBg,
 		ImVec4(
-			0.05f,
-			0.06f,
-			0.08f,
-			0.75f
+			0.035f,
+			0.038f,
+			0.055f,
+			0.92f
 		)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_Button,
 		ImVec4(
-			0.10f,
+			0.08f,
+			0.085f,
 			0.12f,
-			0.16f,
-			0.65f
+			0.90f
 		)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonHovered,
 		ImVec4(
-			0.18f,
-			0.22f,
-			0.30f,
-			0.85f
+			0.155f,
+			0.125f,
+			0.245f,
+			0.95f
 		)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonActive,
 		ImVec4(
-			0.20f,
-			0.35f,
-			0.55f,
+			0.52f,
+			0.40f,
+			1.00f,
 			0.95f
 		)
 	);
@@ -900,10 +908,10 @@ void Editor::RenderViewport(
 				ImGui::PushStyleColor(
 					ImGuiCol_Button,
 					ImVec4(
-						0.18f,
-						0.32f,
-						0.52f,
-						0.90f
+						0.285f,
+						0.175f,
+						0.510f,
+						0.95f
 					)
 				);
 			}
