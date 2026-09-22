@@ -112,6 +112,7 @@ void Runtime::Update(
             m_ScriptSystem.Start(scene);
         }
 
+        m_CurrentScenePath = nextScene;
         Logger::Info("Runtime scene switched to: " + nextScene);
         return;
     }
@@ -201,4 +202,10 @@ bool Runtime::RequestSceneLoad(const std::string& path)
 
     m_PendingScenePath = path;
     return true;
+}
+
+
+const std::string& Runtime::GetCurrentScenePath() const
+{
+    return m_CurrentScenePath;
 }
