@@ -6,6 +6,7 @@
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
+#include "../Core/Logger.h"
 
 #include <glad/gl.h>
 
@@ -175,10 +176,13 @@ bool UIRenderer::Initialize()
 
     glBindVertexArray(0);
 
+    // The runtime font is optional at renderer startup. Visual UI must still
+    // initialize even when the editor is launched from a build directory
+    // where the source-tree font path is unavailable.
     if (!InitializeFontAtlas())
     {
-        Shutdown();
-        return false;
+        Logger::Warning(
+            "Inter runtime font could not be loaded; UI renderer will continue without canvas text.");
     }
 
     return true;
