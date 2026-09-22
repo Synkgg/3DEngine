@@ -575,8 +575,18 @@ void UIRenderer::DrawCanvasWidget(
         vertices
     );
 
-    const Vec4& color =
-        widget.GetColor();
+    Vec4 color = widget.GetColor();
+
+    if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
+    {
+        const float multiplier =
+            button->IsPressed() ? 0.72f :
+            (button->IsHovered() ? 1.12f : 1.0f);
+
+        color.x = std::clamp(color.x * multiplier, 0.0f, 1.0f);
+        color.y = std::clamp(color.y * multiplier, 0.0f, 1.0f);
+        color.z = std::clamp(color.z * multiplier, 0.0f, 1.0f);
+    }
 
     m_Shader.SetVec4(
         "u_Color",
@@ -629,8 +639,10 @@ void UIRenderer::DrawCanvasText(
         return;
     }
 
-    const float size =
-        text.GetFontSize();
+    // FontSize is expressed as the intended glyph height in design pixels.
+    // The built-in bitmap glyphs are 7 pixels tall.
+    const float glyphHeight = std::max(1.0f, text.GetFontSize());
+    const float size = glyphHeight / 7.0f;
 
     const Vec4& color =
         text.GetColor();
@@ -642,7 +654,7 @@ void UIRenderer::DrawCanvasText(
     {
         if (character == '\n')
         {
-            y += size * 8.0f;
+            y += glyphHeight * 1.15f;
             x = rect.x;
             continue;
         }
