@@ -333,25 +333,55 @@ void UIRenderer::End()
     glEnable(GL_DEPTH_TEST);
 }
 
-bool UIRenderer::ScreenToCanvas(float screenX, float screenY, Vec2& result) const
+bool UIRenderer::ViewportToCanvas(
+    float mouseX,
+    float mouseY,
+    float viewportWidth,
+    float viewportHeight,
+    Vec2& result) const
 {
-    if (m_UIScale <= 0.0f) return false;
-    result.x = (screenX - m_UIOffsetX) / m_UIScale;
-    result.y = (screenY - m_UIOffsetY) / m_UIScale;
-    return result.x >= 0.0f && result.y >= 0.0f &&
-           result.x <= m_LogicalWidth && result.y <= m_LogicalHeight;
+    if (viewportWidth <= 0.0f || viewportHeight <= 0.0f ||
+        m_LogicalWidth <= 0.0f || m_LogicalHeight <= 0.0f)
+        return false;
+
+    const float scale = std::min(
+        viewportWidth / m_LogicalWidth,
+        viewportHeight / m_LogicalHeight);
+
+    if (scale <= 0.0f) return false;
+
+    const float offsetX = (viewportWidth - m_LogicalWidth * scale) * 0.5f;
+    const float offsetY = (viewportHeight - m_LogicalHeight * scale) * 0.5f;
+
+    result.x = (mouseX - offsetX) / scale;
+    result.y = (mouseY - offsetY) / scale;
+
+    return mouseX >= offsetX &&
+           mouseY >= offsetY &&
+           mouseX <= offsetX + m_LogicalWidth * scale &&
+           mouseY <= offsetY + m_LogicalHeight * scale;
 }
 
-void UIRenderer::UpdateInput(UICanvas& canvas, const Input& input)
+void UIRenderer::UpdateInput(
+    UICanvas& canvas,
+    const Input& input,
+    float viewportX,
+    float viewportY,
+    float viewportWidth,
+    float viewportHeight)
 {
-    Vec2 mouse;
-    const bool inside = ScreenToCanvas(input.GetMouseX(), input.GetMouseY(), mouse);
     UIWidget* root = canvas.GetRoot();
     if (!root) return;
 
+    Vec2 mouse;
+    const float localX = input.GetMouseX() - viewportX;
+    const float localY = input.GetMouseY() - viewportY;
+    const bool inside = ViewportToCanvas(
+        localX, localY, viewportWidth, viewportHeight, mouse);
+
     const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
     const bool pressed = inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT);
-    const bool released = input.IsMouseButtonReleased(SDL_BUTTON_LEFT);
+    const bool released = inside && input.IsMouseButtonReleased(SDL_BUTTON_LEFT);
 
     for (const auto& child : root->GetChildren())
         if (child) UpdateButtonInput(*child, canvasRect, mouse, pressed, released);
@@ -364,8 +394,18 @@ void UIRenderer::UpdateButtonInput(
     bool pressed,
     bool released)
 {
+    if (!widget.IsVisible() || !widget.IsEnabled())
+    {
+        if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+        {
+            button->SetHovered(false);
+            button->SetPressed(false);
+        }
+        return;
+    }
+
     const UIRect rect = UILayout::Calculate(widget, parentRect);
-    const bool hit = widget.IsVisible() && widget.IsEnabled() && widget.IsHitTestVisible() &&
+    const bool hit = widget.IsHitTestVisible() &&
         mouse.x >= rect.x && mouse.x <= rect.x + rect.width &&
         mouse.y >= rect.y && mouse.y <= rect.y + rect.height;
 
