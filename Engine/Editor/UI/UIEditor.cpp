@@ -1021,7 +1021,7 @@ void UIEditor::DrawWidget(
             // smooth Inter face used by the rest of the editor.
             ImFont* previewFont = ImGui::GetFont();
             const float previewSize = std::max(
-                previewFont->FontSize,
+                ImGui::GetFontSize(),
                 std::max(1.0f, fontSize));
 
             drawList->AddText(
