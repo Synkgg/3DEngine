@@ -20,6 +20,7 @@
 
 #include "../UI/UITest.h"
 #include "../UI/UISerializer.h"
+#include "../UI/UIText.h"
 
 Application::Application()
     : m_Running(false),
