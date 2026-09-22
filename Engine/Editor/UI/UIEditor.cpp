@@ -7,6 +7,8 @@
 #include "../../UI/UIImage.h"
 #include "../../UI/UIButton.h"
 #include "../../UI/UISerializer.h"
+#include "../../Graphics/Renderer.h"
+#include "../../Graphics/Texture2D.h"
 
 #include <imgui.h>
 
@@ -15,10 +17,17 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <filesystem>
+#include <vector>
+#include <cctype>
+#include <cstdint>
 
 void UIEditor::Draw(
-    UICanvas& canvas)
+    UICanvas& canvas,
+    Renderer& renderer)
 {
+    m_Renderer = &renderer;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::Begin("Widget Blueprint");
     ImGui::PopStyleVar();
@@ -366,31 +375,54 @@ void UIEditor::DrawInspector(
     }
 
     if (UIImage* image =
-        dynamic_cast<UIImage*>(
-            &widget))
+        dynamic_cast<UIImage*>(&widget))
     {
-        ImGui::TextUnformatted(
-            "Image"
-        );
+        ImGui::Spacing();
+        ImGui::SeparatorText("Appearance");
+        ImGui::TextDisabled("Brush / Image");
 
-        char textureBuffer[1024];
+        const std::string& currentPath = image->GetTexturePath();
+        ImGui::TextWrapped("%s",
+            currentPath.empty() ? "No image selected" : currentPath.c_str());
 
-        std::snprintf(
-            textureBuffer,
-            sizeof(textureBuffer),
-            "%s",
-            image->GetTexturePath().c_str()
-        );
+        if (ImGui::Button("Choose Image...", ImVec2(-1.0f, 0.0f)))
+            ImGui::OpenPopup("SelectUIImage");
 
-        if (ImGui::InputText(
-            "Texture",
-            textureBuffer,
-            sizeof(textureBuffer)))
+        if (ImGui::BeginPopup("SelectUIImage"))
         {
-            image->SetTexturePath(
-                textureBuffer
-            );
+            ImGui::TextDisabled("TEXTURES");
+            ImGui::Separator();
+
+            std::error_code ec;
+            const std::filesystem::path root("Assets");
+            if (std::filesystem::exists(root, ec))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+                {
+                    if (ec) break;
+                    if (!entry.is_regular_file()) continue;
+
+                    std::string ext = entry.path().extension().string();
+                    std::transform(ext.begin(), ext.end(), ext.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+                    if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" &&
+                        ext != ".bmp" && ext != ".tga")
+                        continue;
+
+                    const std::string path = entry.path().generic_string();
+                    if (ImGui::Selectable(path.c_str(), path == currentPath))
+                    {
+                        image->SetTexturePath(path);
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+            }
+            ImGui::EndPopup();
         }
+
+        if (!currentPath.empty() && ImGui::Button("Clear Image"))
+            image->SetTexturePath("");
     }
 
     if (UIButton* button =
@@ -426,145 +458,71 @@ void UIEditor::DrawInspector(
 void UIEditor::DrawToolbar(
     UICanvas& canvas)
 {
-    static char uiAssetPath[512] = "Assets/UI/Main.ui";
-
-    ImGui::SetNextItemWidth(220.0f);
-    ImGui::InputText("##UIAssetPath", uiAssetPath, sizeof(uiAssetPath));
-    ImGui::SameLine();
-
-    if (ImGui::Button("Save UI"))
-        UISerializer::Save(canvas, uiAssetPath);
+    if (ImGui::Button("Open UI..."))
+        ImGui::OpenPopup("SelectUIAsset");
 
     ImGui::SameLine();
+    if (ImGui::Button("Save"))
+        UISerializer::Save(canvas, m_UIAssetPath);
 
-    if (ImGui::Button("Open UI"))
+    ImGui::SameLine();
+    ImGui::TextDisabled("%s", m_UIAssetPath.c_str());
+
+    ImGui::SameLine();
+    ImGui::Dummy(ImVec2(18.0f, 0.0f));
+    ImGui::SameLine();
+
+    if (ImGui::Button("Duplicate")) DuplicateSelected(canvas);
+    ImGui::SameLine();
+    if (ImGui::Button("Delete")) DeleteSelected(canvas);
+    ImGui::SameLine();
+    if (ImGui::Button("Rename")) RenameSelected();
+    ImGui::SameLine();
+    if (ImGui::Button("Frame")) ResetView();
+
+    ImGui::SameLine();
+    ImGui::Dummy(ImVec2(18.0f, 0.0f));
+    ImGui::SameLine();
+    ImGui::Checkbox("Grid", &m_ShowGrid);
+    ImGui::SameLine();
+    ImGui::Checkbox("Snap", &m_SnapToGrid);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(60.0f);
+    ImGui::DragFloat("##GridSize", &m_GridSize, 1.0f, 1.0f, 200.0f, "%.0f");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(85.0f);
+    ImGui::SliderFloat("##Zoom", &m_Zoom, 0.25f, 2.0f, "%.2fx");
+
+    if (ImGui::BeginPopup("SelectUIAsset"))
     {
-        m_SelectedWidget = nullptr;
-        UISerializer::Load(canvas, uiAssetPath);
+        ImGui::TextDisabled("UI ASSETS");
+        ImGui::Separator();
+        std::error_code ec;
+        const std::filesystem::path root("Assets/UI");
+        if (std::filesystem::exists(root, ec))
+        {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+            {
+                if (ec) break;
+                if (!entry.is_regular_file()) continue;
+                if (entry.path().extension() != ".ui") continue;
+
+                const std::string path = entry.path().generic_string();
+                if (ImGui::Selectable(path.c_str(), path == m_UIAssetPath))
+                {
+                    m_SelectedWidget = nullptr;
+                    if (UISerializer::Load(canvas, path))
+                        m_UIAssetPath = path;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        }
+        else
+        {
+            ImGui::TextDisabled("No Assets/UI folder found.");
+        }
+        ImGui::EndPopup();
     }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Panel"))
-    {
-        AddWidget(
-            canvas,
-            UIWidgetType::Panel
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Text"))
-    {
-        AddWidget(
-            canvas,
-            UIWidgetType::Text
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Image"))
-    {
-        AddWidget(
-            canvas,
-            UIWidgetType::Image
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Button"))
-    {
-        AddWidget(
-            canvas,
-            UIWidgetType::Button
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Duplicate"))
-    {
-        DuplicateSelected(
-            canvas
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Delete"))
-    {
-        DeleteSelected(
-            canvas
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Rename"))
-    {
-        RenameSelected();
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button(
-        "Reset"))
-    {
-        ResetView();
-    }
-
-    ImGui::SameLine();
-
-    ImGui::Checkbox(
-        "Grid",
-        &m_ShowGrid
-    );
-
-    ImGui::SameLine();
-
-    ImGui::Checkbox(
-        "Snap",
-        &m_SnapToGrid
-    );
-
-    ImGui::SameLine();
-
-    ImGui::SetNextItemWidth(
-        80.0f
-    );
-
-    ImGui::DragFloat(
-        "Grid Size",
-        &m_GridSize,
-        1.0f,
-        1.0f,
-        200.0f,
-        "%.0f"
-    );
-
-    ImGui::SameLine();
-
-    ImGui::SetNextItemWidth(
-        90.0f
-    );
-
-    ImGui::SliderFloat(
-        "Zoom",
-        &m_Zoom,
-        0.25f,
-        2.0f,
-        "%.2fx"
-    );
 }
 
 void UIEditor::DrawDesigner(
@@ -1031,6 +989,31 @@ void UIEditor::DrawWidget(
                 fillColor,
                 textValue
             );
+        }
+    }
+    else if (widget.GetType() == UIWidgetType::Image)
+    {
+        const UIImage* image = dynamic_cast<const UIImage*>(&widget);
+        Texture2D* texture = nullptr;
+        if (image && m_Renderer && !image->GetTexturePath().empty())
+            texture = m_Renderer->LoadTexture(image->GetTexturePath());
+
+        if (texture && texture->IsLoaded())
+        {
+            drawList->AddImage(
+                (ImTextureID)(intptr_t)texture->GetID(),
+                min,
+                max,
+                ImVec2(0.0f, 1.0f),
+                ImVec2(1.0f, 0.0f),
+                fillColor);
+        }
+        else
+        {
+            drawList->AddRectFilled(min, max, IM_COL32(45, 47, 52, 255), 2.0f);
+            drawList->AddRect(min, max, IM_COL32(100, 105, 115, 255), 2.0f);
+            drawList->AddText(ImVec2(min.x + 8.0f, min.y + 8.0f),
+                IM_COL32(160, 165, 175, 255), "No Image");
         }
     }
     else
