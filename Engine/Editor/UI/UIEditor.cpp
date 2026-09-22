@@ -1,0 +1,1853 @@
+#include "UIEditor.h"
+
+#include "../../UI/UIWidget.h"
+#include "../../UI/UIWidgetFactory.h"
+#include "../../UI/UIPanel.h"
+#include "../../UI/UIText.h"
+#include "../../UI/UIImage.h"
+#include "../../UI/UIButton.h"
+
+#include <imgui.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <memory>
+#include <string>
+
+void UIEditor::Draw(
+    UICanvas& canvas)
+{
+    ImGui::Begin("UI Editor");
+
+    DrawToolbar(canvas);
+
+    ImGui::Separator();
+
+    const ImVec2 available =
+        ImGui::GetContentRegionAvail();
+
+    const float hierarchyWidth =
+        240.0f;
+
+    const float inspectorWidth =
+        280.0f;
+
+    const float designerWidth =
+        std::max(
+            100.0f,
+            available.x -
+            hierarchyWidth -
+            inspectorWidth -
+            20.0f
+        );
+
+    ImGui::BeginChild(
+        "UIHierarchy",
+        ImVec2(
+            hierarchyWidth,
+            0.0f
+        ),
+        ImGuiChildFlags_Borders
+    );
+
+    ImGui::TextUnformatted("Hierarchy");
+    ImGui::Separator();
+
+    if (canvas.GetRoot())
+    {
+        DrawHierarchy(
+            *canvas.GetRoot()
+        );
+    }
+
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    ImGui::BeginChild(
+        "UIDesigner",
+        ImVec2(
+            designerWidth,
+            0.0f
+        ),
+        ImGuiChildFlags_Borders
+    );
+
+    DrawDesigner(canvas);
+
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    ImGui::BeginChild(
+        "UIInspector",
+        ImVec2(
+            inspectorWidth,
+            0.0f
+        ),
+        ImGuiChildFlags_Borders
+    );
+
+    ImGui::TextUnformatted("Inspector");
+    ImGui::Separator();
+
+    if (m_SelectedWidget)
+    {
+        DrawInspector(
+            *m_SelectedWidget
+        );
+    }
+    else
+    {
+        ImGui::TextDisabled(
+            "No widget selected."
+        );
+    }
+
+    ImGui::EndChild();
+
+    /*
+     * Keyboard shortcuts.
+     */
+    if (ImGui::IsWindowFocused(
+        ImGuiFocusedFlags_RootAndChildWindows))
+    {
+        if (ImGui::IsKeyPressed(
+            ImGuiKey_Delete))
+        {
+            DeleteSelected(canvas);
+        }
+
+        const bool ctrl =
+            ImGui::GetIO().KeyCtrl;
+
+        if (ctrl &&
+            ImGui::IsKeyPressed(
+                ImGuiKey_D))
+        {
+            DuplicateSelected(canvas);
+        }
+
+        if (ImGui::IsKeyPressed(
+            ImGuiKey_F2))
+        {
+            RenameSelected();
+        }
+
+        if (ImGui::IsKeyPressed(
+            ImGuiKey_F))
+        {
+            ResetView();
+        }
+    }
+
+    ImGui::End();
+}
+
+void UIEditor::DrawHierarchy(
+    UIWidget& widget)
+{
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_OpenOnArrow |
+        ImGuiTreeNodeFlags_OpenOnDoubleClick;
+
+    if (widget.GetChildren().empty())
+    {
+        flags |=
+            ImGuiTreeNodeFlags_Leaf;
+    }
+
+    if (m_SelectedWidget ==
+        &widget)
+    {
+        flags |=
+            ImGuiTreeNodeFlags_Selected;
+    }
+
+    std::string label =
+        widget.GetName();
+
+    if (label.empty())
+    {
+        label = "Widget";
+    }
+
+    const bool open =
+        ImGui::TreeNodeEx(
+            &widget,
+            flags,
+            "%s",
+            label.c_str()
+        );
+
+    if (ImGui::IsItemClicked(
+        ImGuiMouseButton_Left))
+    {
+        SelectWidget(
+            &widget
+        );
+    }
+
+    if (open)
+    {
+        for (const auto& child :
+            widget.GetChildren())
+        {
+            if (child)
+            {
+                DrawHierarchy(
+                    *child
+                );
+            }
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+void UIEditor::DrawInspector(
+    UIWidget& widget)
+{
+    char nameBuffer[256];
+
+    std::snprintf(
+        nameBuffer,
+        sizeof(nameBuffer),
+        "%s",
+        widget.GetName().c_str()
+    );
+
+    if (ImGui::InputText(
+        "Name",
+        nameBuffer,
+        sizeof(nameBuffer)))
+    {
+        widget.SetName(
+            nameBuffer
+        );
+    }
+
+    ImGui::Separator();
+
+    Vec2 position =
+        widget.GetPosition();
+
+    if (ImGui::DragFloat2(
+        "Position",
+        &position.x,
+        1.0f))
+    {
+        widget.SetPosition(
+            position
+        );
+    }
+
+    Vec2 size =
+        widget.GetSize();
+
+    if (ImGui::DragFloat2(
+        "Size",
+        &size.x,
+        1.0f,
+        1.0f,
+        10000.0f))
+    {
+        size.x =
+            std::max(
+                1.0f,
+                size.x
+            );
+
+        size.y =
+            std::max(
+                1.0f,
+                size.y
+            );
+
+        widget.SetSize(
+            size
+        );
+    }
+
+    Vec2 anchor =
+        widget.GetAnchor();
+
+    if (ImGui::DragFloat2(
+        "Anchor",
+        &anchor.x,
+        0.01f,
+        0.0f,
+        1.0f))
+    {
+        anchor.x =
+            std::clamp(
+                anchor.x,
+                0.0f,
+                1.0f
+            );
+
+        anchor.y =
+            std::clamp(
+                anchor.y,
+                0.0f,
+                1.0f
+            );
+
+        widget.SetAnchor(
+            anchor
+        );
+    }
+
+    Vec2 pivot =
+        widget.GetPivot();
+
+    if (ImGui::DragFloat2(
+        "Pivot",
+        &pivot.x,
+        0.01f,
+        0.0f,
+        1.0f))
+    {
+        pivot.x =
+            std::clamp(
+                pivot.x,
+                0.0f,
+                1.0f
+            );
+
+        pivot.y =
+            std::clamp(
+                pivot.y,
+                0.0f,
+                1.0f
+            );
+
+        widget.SetPivot(
+            pivot
+        );
+    }
+
+    Vec4 color =
+        widget.GetColor();
+
+    if (ImGui::ColorEdit4(
+        "Color",
+        &color.x))
+    {
+        widget.SetColor(
+            color
+        );
+    }
+
+    bool visible =
+        widget.IsVisible();
+
+    if (ImGui::Checkbox(
+        "Visible",
+        &visible))
+    {
+        widget.SetVisible(
+            visible
+        );
+    }
+
+    ImGui::Separator();
+
+    if (UIText* text =
+        dynamic_cast<UIText*>(
+            &widget))
+    {
+        ImGui::TextUnformatted(
+            "Text"
+        );
+
+        char textBuffer[1024];
+
+        std::snprintf(
+            textBuffer,
+            sizeof(textBuffer),
+            "%s",
+            text->GetText().c_str()
+        );
+
+        if (ImGui::InputText(
+            "Content",
+            textBuffer,
+            sizeof(textBuffer)))
+        {
+            text->SetText(
+                textBuffer
+            );
+        }
+
+        float fontSize =
+            text->GetFontSize();
+
+        if (ImGui::DragFloat(
+            "Font Size",
+            &fontSize,
+            0.5f,
+            1.0f,
+            512.0f))
+        {
+            text->SetFontSize(
+                fontSize
+            );
+        }
+    }
+
+    if (UIImage* image =
+        dynamic_cast<UIImage*>(
+            &widget))
+    {
+        ImGui::TextUnformatted(
+            "Image"
+        );
+
+        char textureBuffer[1024];
+
+        std::snprintf(
+            textureBuffer,
+            sizeof(textureBuffer),
+            "%s",
+            image->GetTexturePath().c_str()
+        );
+
+        if (ImGui::InputText(
+            "Texture",
+            textureBuffer,
+            sizeof(textureBuffer)))
+        {
+            image->SetTexturePath(
+                textureBuffer
+            );
+        }
+    }
+
+    if (UIButton* button =
+        dynamic_cast<UIButton*>(
+            &widget))
+    {
+        ImGui::TextUnformatted(
+            "Button State"
+        );
+
+        bool hovered =
+            button->IsHovered();
+
+        bool pressed =
+            button->IsPressed();
+
+        ImGui::BeginDisabled();
+
+        ImGui::Checkbox(
+            "Hovered",
+            &hovered
+        );
+
+        ImGui::Checkbox(
+            "Pressed",
+            &pressed
+        );
+
+        ImGui::EndDisabled();
+    }
+}
+
+void UIEditor::DrawToolbar(
+    UICanvas& canvas)
+{
+    if (ImGui::Button(
+        "Panel"))
+    {
+        AddWidget(
+            canvas,
+            UIWidgetType::Panel
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(
+        "Text"))
+    {
+        AddWidget(
+            canvas,
+            UIWidgetType::Text
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(
+        "Image"))
+    {
+        AddWidget(
+            canvas,
+            UIWidgetType::Image
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(
+        "Button"))
+    {
+        AddWidget(
+            canvas,
+            UIWidgetType::Button
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(
+        "Duplicate"))
+    {
+        DuplicateSelected(
+            canvas
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(
+        "Delete"))
+    {
+        DeleteSelected(
+            canvas
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(
+        "Rename"))
+    {
+        RenameSelected();
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(
+        "Reset"))
+    {
+        ResetView();
+    }
+
+    ImGui::SameLine();
+
+    ImGui::Checkbox(
+        "Grid",
+        &m_ShowGrid
+    );
+
+    ImGui::SameLine();
+
+    ImGui::Checkbox(
+        "Snap",
+        &m_SnapToGrid
+    );
+
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(
+        80.0f
+    );
+
+    ImGui::DragFloat(
+        "Grid Size",
+        &m_GridSize,
+        1.0f,
+        1.0f,
+        200.0f,
+        "%.0f"
+    );
+
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(
+        90.0f
+    );
+
+    ImGui::SliderFloat(
+        "Zoom",
+        &m_Zoom,
+        0.25f,
+        2.0f,
+        "%.2fx"
+    );
+}
+
+void UIEditor::DrawDesigner(
+    UICanvas& canvas)
+{
+    ImGui::Text(
+        "Canvas: %.0f x %.0f",
+        canvas.GetSize().x,
+        canvas.GetSize().y
+    );
+
+    ImGui::Separator();
+
+    const ImVec2 contentMin =
+        ImGui::GetCursorScreenPos();
+
+    const ImVec2 availableSize =
+        ImGui::GetContentRegionAvail();
+
+    if (availableSize.x <= 0.0f ||
+        availableSize.y <= 0.0f)
+    {
+        return;
+    }
+
+    const Vec2 canvasSize =
+        canvas.GetSize();
+
+    /*
+     * Calculate the scale exactly from the
+     * available ImGui viewport, just like
+     * the 3D editor viewport does.
+     */
+    const float scaleX =
+        canvasSize.x > 0.0f
+        ? availableSize.x /
+        canvasSize.x
+        : 1.0f;
+
+    const float scaleY =
+        canvasSize.y > 0.0f
+        ? availableSize.y /
+        canvasSize.y
+        : 1.0f;
+
+    /*
+     * Preserve the canvas aspect ratio.
+     */
+    float scale =
+        std::min(
+            scaleX,
+            scaleY
+        );
+
+    /*
+     * Apply editor zoom after fitting
+     * the canvas into the available area.
+     */
+    scale *= m_Zoom;
+
+    scale =
+        std::max(
+            0.05f,
+            scale
+        );
+
+    /*
+     * Actual displayed canvas size.
+     */
+    const ImVec2 canvasPixelSize(
+        canvasSize.x * scale,
+        canvasSize.y * scale
+    );
+
+    /*
+     * Center the canvas in the designer.
+     */
+    const ImVec2 canvasPosition(
+        contentMin.x +
+        (availableSize.x -
+            canvasPixelSize.x) *
+        0.5f,
+
+        contentMin.y +
+        (availableSize.y -
+            canvasPixelSize.y) *
+        0.5f
+    );
+
+    ImDrawList* drawList =
+        ImGui::GetWindowDrawList();
+
+    /*
+     * Canvas background.
+     */
+    drawList->AddRectFilled(
+        canvasPosition,
+        ImVec2(
+            canvasPosition.x +
+            canvasPixelSize.x,
+
+            canvasPosition.y +
+            canvasPixelSize.y
+        ),
+        IM_COL32(
+            35,
+            38,
+            45,
+            255
+        )
+    );
+
+    /*
+     * Grid.
+     */
+    if (m_ShowGrid)
+    {
+        const float gridSpacing =
+            m_GridSize * scale;
+
+        if (gridSpacing >= 4.0f)
+        {
+            const float right =
+                canvasPosition.x +
+                canvasPixelSize.x;
+
+            const float bottom =
+                canvasPosition.y +
+                canvasPixelSize.y;
+
+            for (
+                float x =
+                canvasPosition.x;
+                x <= right;
+                x += gridSpacing)
+            {
+                drawList->AddLine(
+                    ImVec2(
+                        x,
+                        canvasPosition.y
+                    ),
+                    ImVec2(
+                        x,
+                        bottom
+                    ),
+                    IM_COL32(
+                        255,
+                        255,
+                        255,
+                        20
+                    )
+                );
+            }
+
+            for (
+                float y =
+                canvasPosition.y;
+                y <= bottom;
+                y += gridSpacing)
+            {
+                drawList->AddLine(
+                    ImVec2(
+                        canvasPosition.x,
+                        y
+                    ),
+                    ImVec2(
+                        right,
+                        y
+                    ),
+                    IM_COL32(
+                        255,
+                        255,
+                        255,
+                        20
+                    )
+                );
+            }
+        }
+    }
+
+    /*
+     * Canvas border.
+     */
+    drawList->AddRect(
+        canvasPosition,
+        ImVec2(
+            canvasPosition.x +
+            canvasPixelSize.x,
+
+            canvasPosition.y +
+            canvasPixelSize.y
+        ),
+        IM_COL32(
+            90,
+            100,
+            115,
+            255
+        ),
+        0.0f,
+        0,
+        2.0f
+    );
+
+    /*
+     * Convert mouse position to UI canvas
+     * coordinates using the SAME scale that
+     * was used to display the canvas.
+     */
+    const ImVec2 mouse =
+        ImGui::GetMousePos();
+
+    const bool mouseInsideCanvas =
+        mouse.x >= canvasPosition.x &&
+        mouse.x <=
+        canvasPosition.x +
+        canvasPixelSize.x &&
+        mouse.y >= canvasPosition.y &&
+        mouse.y <=
+        canvasPosition.y +
+        canvasPixelSize.y;
+
+    /*
+     * Draw the widget hierarchy.
+     */
+    if (canvas.GetRoot())
+    {
+        for (const auto& child :
+            canvas.GetRoot()->GetChildren())
+        {
+            if (child)
+            {
+                UIRect rootRect;
+
+                rootRect.x =
+                    canvasPosition.x;
+
+                rootRect.y =
+                    canvasPosition.y;
+
+                rootRect.width =
+                    canvasSize.x;
+
+                rootRect.height =
+                    canvasSize.y;
+
+                DrawWidget(
+                    *child,
+                    rootRect,
+                    canvasPosition,
+                    scale,
+                    drawList
+                );
+            }
+        }
+    }
+
+    /*
+     * Mouse interaction.
+     */
+    if (mouseInsideCanvas)
+    {
+        /*
+         * The mouse is converted into UI design
+         * coordinates here. This is the important
+         * scaling fix.
+         */
+        const float uiMouseX =
+            (mouse.x -
+                canvasPosition.x) /
+            scale;
+
+        const float uiMouseY =
+            (mouse.y -
+                canvasPosition.y) /
+            scale;
+
+        (void)uiMouseX;
+        (void)uiMouseY;
+
+        if (m_SelectedWidget)
+        {
+            UIRect parentRect;
+
+            if (m_SelectedWidget->GetParent())
+            {
+                const UIRect parentCalculated =
+                    UILayout::Calculate(
+                        *m_SelectedWidget->GetParent(),
+                        UIRect{
+                            0.0f,
+                            0.0f,
+                            canvasSize.x,
+                            canvasSize.y
+                        }
+                    );
+
+                parentRect =
+                    parentCalculated;
+            }
+            else
+            {
+                parentRect =
+                    UIRect{
+                        0.0f,
+                        0.0f,
+                        canvasSize.x,
+                        canvasSize.y
+                };
+            }
+
+            const UIRect selectedRect =
+                UILayout::Calculate(
+                    *m_SelectedWidget,
+                    parentRect
+                );
+
+            if (!m_Dragging &&
+                !m_Resizing &&
+                ImGui::IsMouseClicked(
+                    ImGuiMouseButton_Left))
+            {
+                const int handle =
+                    GetResizeHandle(
+                        selectedRect,
+                        mouse,
+                        canvasPosition,
+                        scale
+                    );
+
+                if (handle >= 0)
+                {
+                    BeginResize(
+                        *m_SelectedWidget,
+                        handle
+                    );
+                }
+                else if (
+                    IsMouseInsideRect(
+                        selectedRect,
+                        mouse,
+                        canvasPosition,
+                        scale
+                    ))
+                {
+                    BeginDrag(
+                        *m_SelectedWidget
+                    );
+                }
+            }
+        }
+
+        if (m_Dragging &&
+            m_SelectedWidget)
+        {
+            UpdateDrag(
+                *m_SelectedWidget
+            );
+        }
+
+        if (m_Resizing &&
+            m_SelectedWidget)
+        {
+            UpdateResize(
+                *m_SelectedWidget
+            );
+        }
+
+        if (ImGui::IsMouseReleased(
+            ImGuiMouseButton_Left))
+        {
+            m_Dragging =
+                false;
+
+            m_Resizing =
+                false;
+
+            m_ResizeHandle =
+                -1;
+        }
+    }
+
+    /*
+     * Keep ImGui's item system aware of the
+     * designer region.
+     */
+    ImGui::Dummy(
+        availableSize
+    );
+}
+
+void UIEditor::DrawWidget(
+    UIWidget& widget,
+    const UIRect& parentRect,
+    const ImVec2& canvasPosition,
+    float scale,
+    ImDrawList* drawList)
+{
+    if (!widget.IsVisible())
+    {
+        return;
+    }
+
+    const UIRect rect =
+        UILayout::Calculate(
+            widget,
+            parentRect
+        );
+
+    const ImVec2 min(
+        canvasPosition.x +
+        rect.x * scale,
+
+        canvasPosition.y +
+        rect.y * scale
+    );
+
+    const ImVec2 max(
+        min.x +
+        rect.width * scale,
+
+        min.y +
+        rect.height * scale
+    );
+
+    Vec4 color =
+        widget.GetColor();
+
+    ImU32 fillColor =
+        IM_COL32(
+            static_cast<int>(
+                std::clamp(
+                    color.x,
+                    0.0f,
+                    1.0f
+                ) * 255.0f
+                ),
+
+            static_cast<int>(
+                std::clamp(
+                    color.y,
+                    0.0f,
+                    1.0f
+                ) * 255.0f
+                ),
+
+            static_cast<int>(
+                std::clamp(
+                    color.z,
+                    0.0f,
+                    1.0f
+                ) * 255.0f
+                ),
+
+            static_cast<int>(
+                std::clamp(
+                    color.w,
+                    0.0f,
+                    1.0f
+                ) * 255.0f
+                )
+        );
+
+    if (widget.GetType() ==
+        UIWidgetType::Text)
+    {
+        if (UIText* text =
+            dynamic_cast<UIText*>(
+                &widget))
+        {
+            const char* textValue =
+                text->GetText().c_str();
+
+            const float fontSize =
+                text->GetFontSize() *
+                scale;
+
+            drawList->AddText(
+                ImGui::GetFont(),
+                std::max(
+                    1.0f,
+                    fontSize
+                ),
+                min,
+                fillColor,
+                textValue
+            );
+        }
+    }
+    else
+    {
+        drawList->AddRectFilled(
+            min,
+            max,
+            fillColor,
+            4.0f
+        );
+
+        drawList->AddRect(
+            min,
+            max,
+            IM_COL32(
+                255,
+                255,
+                255,
+                70
+            ),
+            4.0f
+        );
+
+        if (widget.GetType() ==
+            UIWidgetType::Button)
+        {
+            UIButton* button =
+                dynamic_cast<UIButton*>(
+                    &widget
+                    );
+
+            if (button)
+            {
+                const char* label =
+                    widget.GetName().c_str();
+
+                const ImVec2 textSize =
+                    ImGui::CalcTextSize(
+                        label
+                    );
+
+                drawList->AddText(
+                    ImVec2(
+                        min.x +
+                        (max.x -
+                            min.x -
+                            textSize.x) *
+                        0.5f,
+
+                        min.y +
+                        (max.y -
+                            min.y -
+                            textSize.y) *
+                        0.5f
+                    ),
+
+                    IM_COL32(
+                        255,
+                        255,
+                        255,
+                        255
+                    ),
+
+                    label
+                );
+            }
+        }
+    }
+
+    /*
+     * Selection outline and resize handles.
+     */
+    if (m_SelectedWidget ==
+        &widget)
+    {
+        drawList->AddRect(
+            min,
+            max,
+            IM_COL32(
+                77,
+                163,
+                255,
+                255
+            ),
+            0.0f,
+            0,
+            2.0f
+        );
+
+        constexpr float handleSize =
+            6.0f;
+
+        const ImVec2 handles[] =
+        {
+            ImVec2(
+                min.x,
+                min.y
+            ),
+
+            ImVec2(
+                max.x,
+                min.y
+            ),
+
+            ImVec2(
+                min.x,
+                max.y
+            ),
+
+            ImVec2(
+                max.x,
+                max.y
+            )
+        };
+
+        for (const ImVec2& handle :
+            handles)
+        {
+            drawList->AddRectFilled(
+                ImVec2(
+                    handle.x -
+                    handleSize,
+
+                    handle.y -
+                    handleSize
+                ),
+
+                ImVec2(
+                    handle.x +
+                    handleSize,
+
+                    handle.y +
+                    handleSize
+                ),
+
+                IM_COL32(
+                    77,
+                    163,
+                    255,
+                    255
+                )
+            );
+        }
+    }
+
+    for (const auto& child :
+        widget.GetChildren())
+    {
+        if (child)
+        {
+            DrawWidget(
+                *child,
+                rect,
+                canvasPosition,
+                scale,
+                drawList
+            );
+        }
+    }
+}
+
+void UIEditor::SelectWidget(
+    UIWidget* widget)
+{
+    m_SelectedWidget =
+        widget;
+
+    m_Dragging =
+        false;
+
+    m_Resizing =
+        false;
+
+    m_ResizeHandle =
+        -1;
+}
+
+void UIEditor::BeginDrag(
+    UIWidget& widget)
+{
+    m_Dragging =
+        true;
+
+    m_Resizing =
+        false;
+
+    m_DragStartMouse =
+        Vec2(
+            ImGui::GetMousePos().x,
+            ImGui::GetMousePos().y
+        );
+
+    m_DragStartPosition =
+        widget.GetPosition();
+}
+
+void UIEditor::UpdateDrag(
+    UIWidget& widget)
+{
+    /*
+     * Find the actual displayed canvas scale.
+     *
+     * The designer is responsible for fitting
+     * the 1920x1080 design canvas into the
+     * available ImGui region.
+     */
+    ImVec2 availableSize =
+        ImGui::GetContentRegionAvail();
+
+    const Vec2 canvasSize =
+        widget.GetParent()
+        ? widget.GetParent()->GetSize()
+        : Vec2(
+            1920.0f,
+            1080.0f
+        );
+
+    const float scaleX =
+        canvasSize.x > 0.0f
+        ? availableSize.x /
+        canvasSize.x
+        : 1.0f;
+
+    const float scaleY =
+        canvasSize.y > 0.0f
+        ? availableSize.y /
+        canvasSize.y
+        : 1.0f;
+
+    float scale =
+        std::min(
+            scaleX,
+            scaleY
+        );
+
+    scale *= m_Zoom;
+
+    scale =
+        std::max(
+            0.05f,
+            scale
+        );
+
+    const ImVec2 mouse =
+        ImGui::GetMousePos();
+
+    const float deltaX =
+        (mouse.x -
+            m_DragStartMouse.x) /
+        scale;
+
+    const float deltaY =
+        (mouse.y -
+            m_DragStartMouse.y) /
+        scale;
+
+    Vec2 position =
+        m_DragStartPosition;
+
+    position.x += deltaX;
+    position.y += deltaY;
+
+    if (m_SnapToGrid)
+    {
+        position.x =
+            SnapValue(
+                position.x
+            );
+
+        position.y =
+            SnapValue(
+                position.y
+            );
+    }
+
+    widget.SetPosition(
+        position
+    );
+}
+
+void UIEditor::BeginResize(
+    UIWidget& widget,
+    int handle)
+{
+    m_Resizing =
+        true;
+
+    m_Dragging =
+        false;
+
+    m_ResizeHandle =
+        handle;
+
+    m_DragStartMouse =
+        Vec2(
+            ImGui::GetMousePos().x,
+            ImGui::GetMousePos().y
+        );
+
+    m_DragStartPosition =
+        widget.GetPosition();
+
+    m_DragStartSize =
+        widget.GetSize();
+}
+
+void UIEditor::UpdateResize(
+    UIWidget& widget)
+{
+    ImVec2 availableSize =
+        ImGui::GetContentRegionAvail();
+
+    const Vec2 canvasSize =
+        widget.GetParent()
+        ? widget.GetParent()->GetSize()
+        : Vec2(
+            1920.0f,
+            1080.0f
+        );
+
+    const float scaleX =
+        canvasSize.x > 0.0f
+        ? availableSize.x /
+        canvasSize.x
+        : 1.0f;
+
+    const float scaleY =
+        canvasSize.y > 0.0f
+        ? availableSize.y /
+        canvasSize.y
+        : 1.0f;
+
+    float scale =
+        std::min(
+            scaleX,
+            scaleY
+        );
+
+    scale *= m_Zoom;
+
+    scale =
+        std::max(
+            0.05f,
+            scale
+        );
+
+    const ImVec2 mouse =
+        ImGui::GetMousePos();
+
+    const float deltaX =
+        (mouse.x -
+            m_DragStartMouse.x) /
+        scale;
+
+    const float deltaY =
+        (mouse.y -
+            m_DragStartMouse.y) /
+        scale;
+
+    Vec2 position =
+        m_DragStartPosition;
+
+    Vec2 size =
+        m_DragStartSize;
+
+    switch (m_ResizeHandle)
+    {
+    case 0:
+        position.x += deltaX;
+        position.y += deltaY;
+
+        size.x -= deltaX;
+        size.y -= deltaY;
+        break;
+
+    case 1:
+        position.y += deltaY;
+
+        size.x += deltaX;
+        size.y -= deltaY;
+        break;
+
+    case 2:
+        position.x += deltaX;
+
+        size.x -= deltaX;
+        size.y += deltaY;
+        break;
+
+    case 3:
+        size.x += deltaX;
+        size.y += deltaY;
+        break;
+    }
+
+    constexpr float minimumSize =
+        1.0f;
+
+    if (size.x < minimumSize)
+    {
+        size.x =
+            minimumSize;
+    }
+
+    if (size.y < minimumSize)
+    {
+        size.y =
+            minimumSize;
+    }
+
+    if (m_SnapToGrid)
+    {
+        position.x =
+            SnapValue(
+                position.x
+            );
+
+        position.y =
+            SnapValue(
+                position.y
+            );
+
+        size.x =
+            SnapValue(
+                size.x
+            );
+
+        size.y =
+            SnapValue(
+                size.y
+            );
+    }
+
+    widget.SetPosition(
+        position
+    );
+
+    widget.SetSize(
+        size
+    );
+}
+
+int UIEditor::GetResizeHandle(
+    const UIRect& rect,
+    const ImVec2& mouse,
+    const ImVec2& canvasPosition,
+    float scale) const
+{
+    const ImVec2 min(
+        canvasPosition.x +
+        rect.x * scale,
+
+        canvasPosition.y +
+        rect.y * scale
+    );
+
+    const ImVec2 max(
+        min.x +
+        rect.width * scale,
+
+        min.y +
+        rect.height * scale
+    );
+
+    constexpr float handleRadius =
+        10.0f;
+
+    const ImVec2 handles[] =
+    {
+        ImVec2(
+            min.x,
+            min.y
+        ),
+
+        ImVec2(
+            max.x,
+            min.y
+        ),
+
+        ImVec2(
+            min.x,
+            max.y
+        ),
+
+        ImVec2(
+            max.x,
+            max.y
+        )
+    };
+
+    for (int i = 0; i < 4; ++i)
+    {
+        const float dx =
+            mouse.x -
+            handles[i].x;
+
+        const float dy =
+            mouse.y -
+            handles[i].y;
+
+        if (dx * dx +
+            dy * dy <=
+            handleRadius *
+            handleRadius)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+bool UIEditor::IsMouseInsideRect(
+    const UIRect& rect,
+    const ImVec2& mouse,
+    const ImVec2& canvasPosition,
+    float scale) const
+{
+    const float left =
+        canvasPosition.x +
+        rect.x * scale;
+
+    const float top =
+        canvasPosition.y +
+        rect.y * scale;
+
+    const float right =
+        left +
+        rect.width * scale;
+
+    const float bottom =
+        top +
+        rect.height * scale;
+
+    return mouse.x >= left &&
+        mouse.x <= right &&
+        mouse.y >= top &&
+        mouse.y <= bottom;
+}
+
+float UIEditor::SnapValue(
+    float value) const
+{
+    if (m_GridSize <= 0.0f)
+    {
+        return value;
+    }
+
+    return std::round(
+        value /
+        m_GridSize
+    ) *
+        m_GridSize;
+}
+
+void UIEditor::DeleteSelected(
+    UICanvas& canvas)
+{
+    if (!m_SelectedWidget)
+    {
+        return;
+    }
+
+    if (m_SelectedWidget ==
+        canvas.GetRoot())
+    {
+        return;
+    }
+
+    UIWidget* parent =
+        m_SelectedWidget->GetParent();
+
+    if (!parent)
+    {
+        return;
+    }
+
+    parent->RemoveChild(
+        m_SelectedWidget
+    );
+
+    m_SelectedWidget =
+        nullptr;
+
+    m_Dragging =
+        false;
+
+    m_Resizing =
+        false;
+
+    m_ResizeHandle =
+        -1;
+}
+
+void UIEditor::DuplicateSelected(
+    UICanvas& canvas)
+{
+    if (!m_SelectedWidget)
+    {
+        return;
+    }
+
+    UIWidget* parent =
+        m_SelectedWidget->GetParent();
+
+    if (!parent)
+    {
+        parent =
+            canvas.GetRoot();
+    }
+
+    if (!parent)
+    {
+        return;
+    }
+
+    std::unique_ptr<UIWidget> copy =
+        UIWidgetFactory::Create(
+            m_SelectedWidget->GetType()
+        );
+
+    if (!copy)
+    {
+        return;
+    }
+
+    copy->SetName(
+        m_SelectedWidget->GetName() +
+        " Copy"
+    );
+
+    copy->SetPosition(
+        m_SelectedWidget->GetPosition()
+    );
+
+    Vec2 position =
+        copy->GetPosition();
+
+    position.x +=
+        m_GridSize;
+
+    position.y +=
+        m_GridSize;
+
+    copy->SetPosition(
+        position
+    );
+
+    copy->SetSize(
+        m_SelectedWidget->GetSize()
+    );
+
+    copy->SetAnchor(
+        m_SelectedWidget->GetAnchor()
+    );
+
+    copy->SetPivot(
+        m_SelectedWidget->GetPivot()
+    );
+
+    copy->SetColor(
+        m_SelectedWidget->GetColor()
+    );
+
+    copy->SetVisible(
+        m_SelectedWidget->IsVisible()
+    );
+
+    if (UIText* sourceText =
+        dynamic_cast<UIText*>(
+            m_SelectedWidget))
+    {
+        if (UIText* destinationText =
+            dynamic_cast<UIText*>(
+                copy.get()))
+        {
+            destinationText->SetText(
+                sourceText->GetText()
+            );
+
+            destinationText->SetFontSize(
+                sourceText->GetFontSize()
+            );
+        }
+    }
+
+    if (UIImage* sourceImage =
+        dynamic_cast<UIImage*>(
+            m_SelectedWidget))
+    {
+        if (UIImage* destinationImage =
+            dynamic_cast<UIImage*>(
+                copy.get()))
+        {
+            destinationImage->SetTexturePath(
+                sourceImage->GetTexturePath()
+            );
+        }
+    }
+
+    UIWidget* newWidget =
+        parent->AddChild(
+            std::move(copy)
+        );
+
+    SelectWidget(
+        newWidget
+    );
+}
+
+void UIEditor::AddWidget(
+    UICanvas& canvas,
+    UIWidgetType type)
+{
+    UIWidget* parent =
+        m_SelectedWidget;
+
+    if (!parent ||
+        parent->GetType() ==
+        UIWidgetType::Text ||
+        parent->GetType() ==
+        UIWidgetType::Image ||
+        parent->GetType() ==
+        UIWidgetType::Button)
+    {
+        parent =
+            canvas.GetRoot();
+    }
+
+    if (!parent)
+    {
+        return;
+    }
+
+    std::unique_ptr<UIWidget> widget =
+        UIWidgetFactory::Create(
+            type
+        );
+
+    if (!widget)
+    {
+        return;
+    }
+
+    Vec2 position(
+        50.0f,
+        50.0f
+    );
+
+    widget->SetPosition(
+        position
+    );
+
+    widget->SetSize(
+        Vec2(
+            200.0f,
+            100.0f
+        )
+    );
+
+    UIWidget* added =
+        parent->AddChild(
+            std::move(widget)
+        );
+
+    SelectWidget(
+        added
+    );
+}
+
+void UIEditor::RenameSelected()
+{
+    if (!m_SelectedWidget)
+    {
+        return;
+    }
+
+    ImGui::OpenPopup(
+        "RenameWidget"
+    );
+}
+
+void UIEditor::ResetView()
+{
+    m_Zoom =
+        1.0f;
+}
