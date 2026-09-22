@@ -621,16 +621,48 @@ void Editor::RenderViewport(
 	// not the surrounding ImGui window. They are assigned after the
 	// viewport toolbar when the image rectangle is known.
 
-	// Compact viewport controls live inside the scene, while Play/Stop now
-	// belongs to the global command bar above the workspace.
-	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.030f, 0.036f, 0.044f, 1.0f));
-	ImGui::BeginChild("ViewportToolbar", ImVec2(0.0f, 34.0f), ImGuiChildFlags_Borders);
+	// Scene-local transport: keep play controls attached to the viewport so
+	// the rest of the editor stays visually quiet and the scene remains primary.
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 5.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 0.0f));
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.030f, 0.027f, 0.035f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.13f, 0.10f, 0.16f, 1.0f));
+	ImGui::BeginChild("ViewportToolbar", ImVec2(0.0f, 42.0f), ImGuiChildFlags_Borders);
 
 	ImGui::TextDisabled("PERSPECTIVE");
 	ImGui::SameLine();
-	ImGui::TextDisabled("  |  LIT  |  ");
+	ImGui::TextDisabled("  /  ");
 	ImGui::SameLine();
-	ImGui::TextDisabled(m_Playing ? "GAME VIEW" : "EDITOR VIEW");
+	ImGui::TextDisabled("LIT");
+
+	const float transportWidth = 108.0f;
+	ImGui::SameLine();
+	ImGui::SetCursorPosX(std::max(ImGui::GetCursorPosX(), (ImGui::GetWindowWidth() - transportWidth) * 0.5f));
+
+	if (!m_Playing)
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.31f, 0.16f, 0.48f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.43f, 0.23f, 0.64f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.55f, 0.31f, 0.78f, 1.0f));
+		if (ImGui::Button("  PLAY  ", ImVec2(108.0f, 30.0f)))
+		{
+			m_Playing = true;
+			m_SelectedEntity = Entity();
+			m_NameEditEntityID = 0;
+			m_NameEditBuffer[0] = '\0';
+			Logger::Info("Play mode started.");
+		}
+		ImGui::PopStyleColor(3);
+	}
+	else
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.52f, 0.12f, 0.18f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.68f, 0.17f, 0.24f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.80f, 0.22f, 0.30f, 1.0f));
+		if (ImGui::Button("  STOP  ", ImVec2(108.0f, 30.0f)))
+			StopPlaying();
+		ImGui::PopStyleColor(3);
+	}
 
 	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
 	{
@@ -646,7 +678,8 @@ void Editor::RenderViewport(
 	}
 
 	ImGui::EndChild();
-	ImGui::PopStyleColor();
+	ImGui::PopStyleColor(2);
+	ImGui::PopStyleVar(2);
 
 	m_ViewportHovered =
 		ImGui::IsWindowHovered();
