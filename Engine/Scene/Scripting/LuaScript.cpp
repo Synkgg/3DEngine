@@ -12,6 +12,7 @@
 #include "../../UI/UISerializer.h"
 
 #include "../Scene.h"
+#include "../Runtime/Runtime.h"
 #include "../Components/TransformComponent.h"
 #include "../Components/CharacterControllerComponent.h"
 #include "../Components/MeshComponent.h"
@@ -28,7 +29,8 @@ void LuaScript::Initialize(
     Input& input,
     Renderer& renderer,
     UICanvas& uiCanvas,
-    sol::state& lua)
+    sol::state& lua,
+    Runtime* runtime)
 {
     m_Entity = entity;
     m_Scene = &scene;
@@ -36,6 +38,7 @@ void LuaScript::Initialize(
     m_Renderer = &renderer;
     m_UICanvas = &uiCanvas;
     m_Lua = &lua;
+    m_Runtime = runtime;
 
     m_Environment =
         std::make_unique<
@@ -875,6 +878,20 @@ void LuaScript::BindEngineAPI()
 
     (*m_Environment)["Camera"] =
         camera;
+
+    /*
+     * Scene - scene changes are queued until the current Lua update finishes.
+     * This avoids destroying the script/scene while its callback is executing.
+     */
+    sol::table sceneApi = m_Lua->create_table();
+
+    sceneApi.set_function("Load", [this](const std::string& path)
+    {
+        if (!m_Runtime || path.empty()) return false;
+        return m_Runtime->RequestSceneLoad(path);
+    });
+
+    (*m_Environment)["Scene"] = sceneApi;
 
     /*
      * UI - edits the same widget tree used by the editor and renderer.
