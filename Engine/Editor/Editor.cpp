@@ -279,6 +279,7 @@ void Editor::Render(
     ImGui::Begin("##EditorDockHost", nullptr, dockHostFlags);
     ImGui::PopStyleVar();
     const ImGuiID dockspaceID = ImGui::GetID("EditorDockSpace");
+    const bool buildDefaultLayout = ImGui::DockBuilderGetNode(dockspaceID) == nullptr;
     ImGui::DockSpace(
         dockspaceID,
         ImVec2(0.0f, 0.0f),
@@ -287,7 +288,7 @@ void Editor::Render(
 
     // First-run workspace mirrors a modern level editor: scene dominates,
     // hierarchy is narrow, details owns the right rail, assets/console sit low.
-    if (ImGui::DockBuilderGetNode(dockspaceID) == nullptr)
+    if (buildDefaultLayout)
     {
         ImGui::DockBuilderRemoveNode(dockspaceID);
         ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_DockSpace);
