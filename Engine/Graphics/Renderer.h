@@ -122,8 +122,13 @@ private:
     Shader m_Shader;
     Shader m_GridShader;
     Shader m_SkyShader;
+    Shader m_PostShader;
     unsigned int m_SkyVAO = 0;
     unsigned int m_SkyVBO = 0;
+    unsigned int m_PostVAO = 0;
+    unsigned int m_PostVBO = 0;
+    unsigned int m_PostFramebuffer = 0;
+    unsigned int m_PostColorTexture = 0;
 
     std::unique_ptr<Mesh> m_CubeMesh;
     std::unique_ptr<Mesh> m_PlaneMesh;
@@ -151,4 +156,8 @@ private:
 
     TextureManager m_TextureManager;
     UIRenderer m_UIRenderer;
+
+    bool CreatePostProcessTarget();
+    void DestroyPostProcessTarget();
+    void RenderPostProcess();
 };
