@@ -149,11 +149,6 @@ void Application::Run()
 
         m_Input.Update();
 
-        if (m_Runtime.IsRunning() &&
-            m_Input.IsKeyDown(SDL_SCANCODE_ESCAPE))
-        {
-            m_Editor.StopPlaying();
-        }
 
         m_ImGuiLayer.BeginFrame();
 
