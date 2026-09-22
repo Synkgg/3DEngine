@@ -55,10 +55,8 @@ uniform float u_Metallic;
 uniform float u_Roughness;
 uniform float u_AO;
 uniform float u_Emissive;
-uniform float u_Exposure;
 uniform int u_FogEnabled;
 uniform float u_FogDensity;
-uniform float u_BloomStrength;
 uniform float u_ViewDistance;
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
@@ -91,6 +89,9 @@ void main()
     float shininess = mix(128.0, 4.0, clamp(u_Roughness, 0.0, 1.0));
     float specularStrength = mix(0.04, 1.0, clamp(u_Metallic, 0.0, 1.0));
     float specular = pow(max(dot(normal, halfDirection), 0.0), shininess) * specularStrength;
+    float fresnel = pow(1.0 - max(dot(normal, viewDirection), 0.0), 5.0);
+    vec3 dielectricF0 = vec3(0.04);
+    vec3 specularColor = mix(dielectricF0, baseColor.rgb, clamp(u_Metallic, 0.0, 1.0));
 
     float brightness =
         ambient +
@@ -108,7 +109,9 @@ void main()
             );
     }
 
-    vec3 lighting = baseColor.rgb * u_LightColor * brightness + u_LightColor * specular * u_LightIntensity;
+    vec3 diffuseColor = baseColor.rgb * (1.0 - clamp(u_Metallic, 0.0, 1.0));
+    vec3 lighting = diffuseColor * u_LightColor * brightness
+        + specularColor * u_LightColor * specular * (1.0 + fresnel) * u_LightIntensity;
     for(int i=0;i<u_PointLightCount;i++) {
         vec3 toLight=u_PointLights[i].position-v_WorldPosition; float d=length(toLight);
         vec3 L=normalize(toLight); float att=pow(clamp(1.0-d/u_PointLights[i].range,0.0,1.0),2.0);
@@ -154,12 +157,23 @@ in vec2 v_UV;
 out vec4 FragColor;
 uniform sampler2D u_Scene;
 uniform float u_Exposure;
+
+vec3 ACESFilm(vec3 x)
+{
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
 void main()
 {
     vec3 hdr = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
-    // Neutral Reinhard keeps the established renderer's mid-tones closer to
-    // their previous appearance while still compressing HDR highlights.
-    vec3 mapped = (hdr * u_Exposure) / (vec3(1.0) + hdr * u_Exposure);
+    vec3 mapped = ACESFilm(hdr * u_Exposure);
+    // Mild display encoding preserves contrast while lifting dark material detail.
+    mapped = pow(mapped, vec3(1.0 / 2.2));
     FragColor = vec4(mapped, 1.0);
 }
 )";
@@ -176,11 +190,15 @@ in vec2 v_UV;
 out vec4 FragColor;
 void main() {
     float h = clamp(v_UV.y, 0.0, 1.0);
-    vec3 horizon = vec3(0.64, 0.72, 0.76);
-    vec3 zenith = vec3(0.10, 0.27, 0.50);
-    vec3 sky = mix(horizon, zenith, smoothstep(0.0, 0.9, h));
-    float glow = pow(max(0.0, 1.0 - length(v_UV - vec2(0.74, 0.70)) * 2.5), 5.0);
-    sky += vec3(1.0, 0.68, 0.34) * glow * 0.24;
+    vec3 horizon = vec3(0.48, 0.58, 0.66);
+    vec3 zenith = vec3(0.035, 0.12, 0.25);
+    vec3 sky = mix(horizon, zenith, smoothstep(0.0, 0.92, h));
+    float sunDistance = length((v_UV - vec2(0.76, 0.68)) * vec2(1.0, 1.35));
+    float sunDisc = pow(max(0.0, 1.0 - sunDistance * 8.0), 18.0);
+    float sunGlow = pow(max(0.0, 1.0 - sunDistance * 1.8), 5.0);
+    sky += vec3(1.0, 0.72, 0.42) * (sunGlow * 0.34 + sunDisc * 1.8);
+    float horizonHaze = 1.0 - smoothstep(0.0, 0.34, abs(v_UV.y - 0.32));
+    sky += vec3(0.18, 0.20, 0.21) * horizonHaze * 0.18;
     FragColor = vec4(sky, 1.0);
 }
 )";
@@ -624,13 +642,9 @@ void Renderer::DrawMesh(
 	m_Shader.SetFloat("u_Roughness", roughness);
 	m_Shader.SetFloat("u_AO", ambientOcclusion);
 	m_Shader.SetFloat("u_Emissive", emissive);
-	m_Shader.SetFloat("u_Exposure", m_RenderSettings.exposure);
 	m_Shader.SetInt("u_FogEnabled", m_RenderSettings.fog ? 1 : 0);
 	m_Shader.SetFloat("u_FogDensity", m_RenderSettings.fogDensity);
     m_Shader.SetFloat("u_ViewDistance", m_RenderSettings.viewDistance);
-	// Bloom is intentionally not performed in the material shader. The setting
-	// remains available for the upcoming post-process pipeline.
-	m_Shader.SetFloat("u_BloomStrength", 0.0f);
 	m_Shader.SetInt("u_PointLightCount", m_PointLightCount);
 	m_Shader.SetInt("u_SpotLightCount", m_SpotLightCount);
 	for(int i=0;i<m_PointLightCount;i++) {
