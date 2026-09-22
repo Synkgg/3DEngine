@@ -14,6 +14,7 @@ class Scene;
 class Input;
 class Renderer;
 class UICanvas;
+class Runtime;
 
 class LuaScriptSystem
 {
@@ -22,7 +23,8 @@ public:
         Scene& scene,
         Input& input,
         Renderer& renderer,
-        UICanvas& uiCanvas
+        UICanvas& uiCanvas,
+        Runtime* runtime = nullptr
     );
 
     void Update(
