@@ -29,6 +29,8 @@ local function ApplyGraphics()
 end
 
 function OnCreate()
+    -- Menu scenes always own a visible/free cursor.
+    Input.SetCursorVisible(true)
     UI.Load("Assets/UI/Main.ui")
     UI.SetVisible("MainMenu", true)
     UI.SetVisible("SettingsPanel", false)
@@ -39,6 +41,8 @@ end
 
 function OnUpdate(deltaTime)
     if UI.WasClicked("PlayButton") then
+        -- Gameplay will capture the cursor as soon as the new scene starts.
+        Input.SetCursorVisible(false)
         Scene.Load("Assets/Scenes/CrystalCourtyard.scene")
         return
     end
