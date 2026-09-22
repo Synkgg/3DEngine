@@ -35,6 +35,7 @@ void Runtime::Start(
     m_UICanvas = &uiCanvas;
     m_PendingScenePath.clear();
     m_WantsCursor = false;
+    m_Paused = false;
 
     m_LuaScriptSystem.Start(
         scene,
@@ -121,23 +122,26 @@ void Runtime::Update(
         return;
     }
 
-    m_CharacterControllerSystem.Update(
-        scene,
-        renderer,
-        input,
-        deltaTime
-    );
+    if (!m_Paused)
+    {
+        m_CharacterControllerSystem.Update(
+            scene,
+            renderer,
+            input,
+            deltaTime
+        );
 
-    m_InteractionSystem.Update(
-        scene,
-        renderer,
-        input,
-        m_LuaScriptSystem
-    );
+        m_InteractionSystem.Update(
+            scene,
+            renderer,
+            input,
+            m_LuaScriptSystem
+        );
 
-    m_CollisionSystem.Update(
-        scene
-    );
+        m_CollisionSystem.Update(
+            scene
+        );
+    }
 }
 
 void Runtime::Stop(Scene& scene)
@@ -222,4 +226,15 @@ bool Runtime::WantsCursor() const
 void Runtime::SetWantsCursor(bool wantsCursor)
 {
     m_WantsCursor = wantsCursor;
+}
+
+
+bool Runtime::IsPaused() const
+{
+    return m_Paused;
+}
+
+void Runtime::SetPaused(bool paused)
+{
+    m_Paused = paused;
 }
