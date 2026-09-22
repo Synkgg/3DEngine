@@ -297,8 +297,25 @@ void Application::Run()
                 false;
         }
 
+        // Update UI input before Lua. UI.WasClicked() consumes the click
+        // during the runtime update, so hit testing must happen first.
         if (m_Runtime.IsRunning())
         {
+            UIRenderer& ui = m_Renderer.GetUIRenderer();
+            const Vec2 canvasSize = m_UICanvas.GetSize();
+            const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
+            const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
+
+            ui.SetLogicalSize(canvasSize.x, canvasSize.y);
+            ui.UpdateInput(
+                m_UICanvas,
+                m_Input,
+                gameViewportPosition.x,
+                gameViewportPosition.y,
+                gameViewportSize.x,
+                gameViewportSize.y
+            );
+
             m_Runtime.Update(
                 m_Scene,
                 m_Renderer,
@@ -654,20 +671,6 @@ void Application::Run()
             );
 
             ui.Begin();
-
-            const ImVec2 gameViewportPosition =
-                m_Editor.GetViewportPosition();
-            const ImVec2 gameViewportSize =
-                m_Editor.GetViewportSize();
-
-            ui.UpdateInput(
-                m_UICanvas,
-                m_Input,
-                gameViewportPosition.x,
-                gameViewportPosition.y,
-                gameViewportSize.x,
-                gameViewportSize.y
-            );
 
             ui.RenderCanvas(
                 m_UICanvas,
