@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <array>
 
 class Texture2D;
 class UIText;
@@ -153,15 +154,18 @@ private:
         const UIRect& rect
     );
 
-    void DrawCanvasTextPixel(
-        float x,
-        float y,
-        float size,
-        float red,
-        float green,
-        float blue,
-        float alpha
+    bool InitializeFontAtlas();
+    void DrawFontGlyph(
+        float x, float y, float width, float height,
+        float u0, float v0, float u1, float v1,
+        const Vec4& color
     );
+
+    struct FontGlyph
+    {
+        float x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+        float xoff = 0, yoff = 0, xadvance = 0;
+    };
 
     // ---------------------------------------------------------
     // Runtime UI
@@ -245,6 +249,11 @@ private:
 
     unsigned int m_VAO = 0;
     unsigned int m_VBO = 0;
+    unsigned int m_FontTexture = 0;
+    static constexpr int FontAtlasWidth = 1024;
+    static constexpr int FontAtlasHeight = 1024;
+    static constexpr float FontBakeSize = 48.0f;
+    std::array<FontGlyph, 95> m_FontGlyphs{};
 
     // Actual framebuffer size.
     unsigned int m_Width = 1;
