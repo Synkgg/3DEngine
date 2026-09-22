@@ -22,10 +22,10 @@ local function ApplyGraphics()
     Graphics.SetFogDensity(0.003)
     Graphics.SetBloomStrength(0.0)
 
-    UI.SetText("AAStatus", "ANTI-ALIASING: " .. aaNames[aaIndex])
-    UI.SetText("FogStatus", "FOG: " .. (fog and "ON" or "OFF"))
-    UI.SetText("BloomStatus", "BLOOM: " .. (bloom and "ON" or "OFF"))
-    UI.SetText("ViewStatus", "VIEW DISTANCE: " .. viewNames[viewIndex])
+    UI.SetText("AAStatus", "ANTI-ALIASING: " .. Graphics.GetAntiAliasingSamples() .. "X")
+    UI.SetText("FogStatus", "FOG: " .. (Graphics.GetFog() and "ON" or "OFF"))
+    UI.SetText("BloomStatus", "BLOOM: " .. (Graphics.GetBloom() and "ON" or "OFF") .. " (POST FX PENDING)")
+    UI.SetText("ViewStatus", "VIEW DISTANCE: " .. math.floor(Graphics.GetViewDistance()))
 end
 
 function OnCreate()
