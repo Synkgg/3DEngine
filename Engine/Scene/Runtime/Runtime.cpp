@@ -1,6 +1,8 @@
 #include "Runtime.h"
 
 #include "../Scene.h"
+#include "../SceneSerializer.h"
+#include "../../Editor/HierarchyFolder.h"
 
 #include "../Scripting/Scripts/RotatorScript.h"
 
@@ -28,12 +30,17 @@ void Runtime::Start(
     m_HasSnapshot = true;
 
     m_Running = true;
+    m_Renderer = &renderer;
+    m_Input = &input;
+    m_UICanvas = &uiCanvas;
+    m_PendingScenePath.clear();
 
     m_LuaScriptSystem.Start(
         scene,
         input,
         renderer,
-        uiCanvas
+        uiCanvas,
+        this
     );
 
     m_ScriptSystem.Register(
@@ -69,6 +76,45 @@ void Runtime::Update(
         scene,
         deltaTime
     );
+
+    if (!m_PendingScenePath.empty())
+    {
+        const std::string nextScene = m_PendingScenePath;
+        m_PendingScenePath.clear();
+
+        // Stop the old scene only after its Lua callback has returned.
+        m_LuaScriptSystem.Stop();
+        m_ScriptSystem.Stop();
+
+        if (m_UICanvas)
+            m_UICanvas->Clear();
+
+        std::vector<HierarchyFolder> ignoredFolders;
+        SceneSerializer serializer(scene);
+
+        if (!serializer.Load(nextScene, ignoredFolders))
+        {
+            Logger::Error("Failed to switch runtime scene: " + nextScene);
+            m_Running = false;
+            return;
+        }
+
+        if (m_Renderer && m_Input && m_UICanvas)
+        {
+            m_LuaScriptSystem.Start(
+                scene,
+                *m_Input,
+                *m_Renderer,
+                *m_UICanvas,
+                this
+            );
+
+            m_ScriptSystem.Start(scene);
+        }
+
+        Logger::Info("Runtime scene switched to: " + nextScene);
+        return;
+    }
 
     m_CharacterControllerSystem.Update(
         scene,
@@ -146,4 +192,13 @@ void Runtime::RestoreCameraState(
 const std::string& Runtime::GetInteractionPrompt() const
 {
     return m_InteractionSystem.GetPrompt();
+}
+
+bool Runtime::RequestSceneLoad(const std::string& path)
+{
+    if (!m_Running || path.empty())
+        return false;
+
+    m_PendingScenePath = path;
+    return true;
 }
