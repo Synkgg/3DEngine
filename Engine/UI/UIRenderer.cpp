@@ -381,7 +381,8 @@ void UIRenderer::UpdateInput(
 
     const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
     const bool pressed = inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT);
-    const bool released = inside && input.IsMouseButtonReleased(SDL_BUTTON_LEFT);
+    // A release outside still has to clear a previously pressed button.
+    const bool released = input.IsMouseButtonReleased(SDL_BUTTON_LEFT);
 
     for (const auto& child : root->GetChildren())
         if (child) UpdateButtonInput(*child, canvasRect, mouse, pressed, released);
