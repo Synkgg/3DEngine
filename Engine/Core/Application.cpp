@@ -149,14 +149,22 @@ void Application::Run()
 
         m_Input.Update();
 
-        // Escape is also the editor-level exit from menu-style runtime
-        // states. Gameplay owns Escape for its pause menu; once paused, a
-        // second Escape stops Play mode. A runtime state that already wants
-        // the cursor (for example MainMenu) has no gameplay capture to pause,
-        // so Escape stops Play mode immediately.
-        if (m_Runtime.IsRunning() &&
-            m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE) &&
-            (m_Runtime.IsPaused() || m_Runtime.WantsCursor()))
+        // Escape must always provide an editor-level way out of Play mode.
+        // A gameplay script can consume the first Escape later in this frame
+        // to open its pause menu, so defer the actual stop decision until
+        // after Runtime::Update. For scenes with no pause script (including
+        // completely blank scenes), Escape stops Play mode immediately.
+        const bool runtimeEscapePressed =
+            m_Runtime.IsRunning() &&
+            m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE);
+
+        const bool stopRuntimeBeforeUpdate =
+            runtimeEscapePressed &&
+            (m_Runtime.IsPaused() ||
+             m_Runtime.WantsCursor() ||
+             m_Scene.GetEntities().empty());
+
+        if (stopRuntimeBeforeUpdate)
         {
             m_Editor.StopPlaying();
         }
@@ -386,6 +394,23 @@ void Application::Run()
                 m_Input,
                 m_Time.GetDeltaTime()
             );
+
+            // If nobody claimed Escape by opening a pause/menu state, treat it
+            // as the editor's Stop shortcut. This makes Escape reliable in
+            // arbitrary scenes instead of depending on game-specific Lua.
+            if (runtimeEscapePressed &&
+                m_Runtime.IsRunning() &&
+                !m_Runtime.IsPaused() &&
+                !m_Runtime.WantsCursor())
+            {
+                m_Editor.StopPlaying();
+            }
+        }
+
+        // Apply a Stop requested during Runtime::Update in the same frame.
+        if (!m_Editor.IsPlaying() && m_Runtime.IsRunning())
+        {
+            StopRuntime();
         }
 
         UpdateLighting();
