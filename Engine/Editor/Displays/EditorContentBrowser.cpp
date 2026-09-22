@@ -353,6 +353,10 @@ void Editor::RenderContentBrowser(
                 !entry.directory &&
                 extension == ".lua";
 
+            const bool isUI =
+                !entry.directory &&
+                extension == ".ui";
+
             ImGui::PushID(
                 entry.path.string().c_str()
             );
@@ -582,6 +586,17 @@ void Editor::RenderContentBrowser(
             }
 
             /*
+             * Open UI asset in the Widget Blueprint editor.
+             */
+            if (isUI &&
+                ImGui::IsItemHovered() &&
+                ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                m_SelectedAssetPath = entry.path.string();
+                m_PendingUIAssetPath = entry.path.string();
+            }
+
+            /*
              * Open image/script.
              */
             if (!entry.directory &&
@@ -739,6 +754,11 @@ void Editor::RenderContentBrowser(
                                 entry.path.string()
                             );
                         }
+                    }
+                    else if (isUI)
+                    {
+                        m_SelectedAssetPath = entry.path.string();
+                        m_PendingUIAssetPath = entry.path.string();
                     }
                     else if (
                         isImage ||
@@ -1711,4 +1731,11 @@ end
 
         ImGui::EndPopup();
     }
+}
+
+std::string Editor::ConsumeOpenedUIAsset()
+{
+    std::string path = std::move(m_PendingUIAssetPath);
+    m_PendingUIAssetPath.clear();
+    return path;
 }
