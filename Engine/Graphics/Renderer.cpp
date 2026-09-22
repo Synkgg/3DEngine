@@ -157,8 +157,9 @@ uniform float u_Exposure;
 void main()
 {
     vec3 hdr = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
-    vec3 mapped = vec3(1.0) - exp(-hdr * u_Exposure);
-    mapped = pow(mapped, vec3(1.0 / 2.2));
+    // Neutral Reinhard keeps the established renderer's mid-tones closer to
+    // their previous appearance while still compressing HDR highlights.
+    vec3 mapped = (hdr * u_Exposure) / (vec3(1.0) + hdr * u_Exposure);
     FragColor = vec4(mapped, 1.0);
 }
 )";
@@ -468,6 +469,18 @@ void Renderer::EndScene()
     m_Framebuffer.Resolve();
     m_Framebuffer.Unbind();
     RenderPostProcess();
+}
+
+void Renderer::BeginOverlay()
+{
+    if (!m_PostFramebuffer) return;
+    glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
+    glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
+}
+
+void Renderer::EndOverlay()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Renderer::EndFrame()
