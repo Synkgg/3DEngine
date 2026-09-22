@@ -277,35 +277,28 @@ void Application::Run()
 
         if (m_Runtime.IsRunning())
         {
-            /*
-             * Runtime starts with the cursor free so menu UI can be clicked.
-             * Once a gameplay scene is active, click the game viewport to
-             * capture the mouse for camera look. Escape releases it again.
-             */
-            if (!m_RuntimeMouseCaptured &&
-                m_Editor.IsViewportHovered() &&
-                m_Input.IsMouseButtonPressed(SDL_BUTTON_LEFT))
+            const bool gameplayScene =
+                m_Runtime.GetCurrentScenePath() ==
+                "Assets/Scenes/CrystalCourtyard.scene";
+
+            // Menu scenes keep the cursor free for canvas buttons.
+            // Gameplay captures automatically after the menu has switched
+            // scenes, so the Play click itself can never steal the mouse.
+            if (gameplayScene && !m_RuntimeMouseCaptured)
             {
                 m_Input.SetMouseCapture(
                     m_Window.GetNativeWindow(),
                     true
                 );
-
                 m_RuntimeMouseCaptured = true;
-
-                // Flush the click/relative-mode transition so the first
-                // gameplay frame does not receive a large mouse delta.
                 m_Input.Update();
             }
-
-            if (m_RuntimeMouseCaptured &&
-                m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE))
+            else if (!gameplayScene && m_RuntimeMouseCaptured)
             {
                 m_Input.SetMouseCapture(
                     m_Window.GetNativeWindow(),
                     false
                 );
-
                 m_RuntimeMouseCaptured = false;
             }
         }
@@ -315,7 +308,6 @@ void Application::Run()
                 m_Window.GetNativeWindow(),
                 false
             );
-
             m_RuntimeMouseCaptured = false;
         }
 
@@ -343,186 +335,6 @@ void Application::Run()
                 m_Renderer,
                 m_Input,
                 m_Time.GetDeltaTime()
-            );
-        }
-
-        if (m_Runtime.IsRunning())
-        {
-            const std::string& prompt =
-                m_Runtime.GetInteractionPrompt();
-
-            if (!prompt.empty())
-            {
-                const ImVec2 viewportPosition =
-                    m_Editor.GetViewportPosition();
-
-                const ImVec2 viewportSize =
-                    m_Editor.GetViewportSize();
-
-                ImDrawList* drawList =
-                    ImGui::GetForegroundDrawList();
-
-                /*
-                 * Exact center of the game viewport.
-                 * This is the same center used by the
-                 * crosshair below.
-                 */
-                const float centerX =
-                    viewportPosition.x +
-                    viewportSize.x * 0.5f;
-
-                const float centerY =
-                    viewportPosition.y +
-                    viewportSize.y * 0.5f;
-
-                /*
-                 * Place the interaction prompt directly
-                 * below the center crosshair.
-                 */
-                const float promptCenterY =
-                    centerY + 40.0f;
-
-                const std::string keyText = "E";
-                const std::string actionText = prompt;
-
-                const float keySize = 32.0f;
-                const float padding = 10.0f;
-                const float spacing = 8.0f;
-
-                const ImVec2 keyTextSize =
-                    ImGui::CalcTextSize(
-                        keyText.c_str()
-                    );
-
-                const ImVec2 actionTextSize =
-                    ImGui::CalcTextSize(
-                        actionText.c_str()
-                    );
-
-                const float totalWidth =
-                    keySize +
-                    spacing +
-                    actionTextSize.x +
-                    padding * 2.0f;
-
-                const float totalHeight =
-                    keySize +
-                    padding * 2.0f;
-
-                const ImVec2 backgroundMin(
-                    centerX - totalWidth * 0.5f,
-
-                    promptCenterY -
-                    totalHeight * 0.5f
-                );
-
-                const ImVec2 backgroundMax(
-                    centerX + totalWidth * 0.5f,
-
-                    promptCenterY +
-                    totalHeight * 0.5f
-                );
-
-                drawList->AddRectFilled(
-                    backgroundMin,
-                    backgroundMax,
-                    IM_COL32(15, 17, 21, 220),
-                    8.0f
-                );
-
-                drawList->AddRect(
-                    backgroundMin,
-                    backgroundMax,
-                    IM_COL32(255, 255, 255, 45),
-                    8.0f,
-                    0,
-                    1.0f
-                );
-
-                const ImVec2 keyMin(
-                    backgroundMin.x + padding,
-                    backgroundMin.y + padding
-                );
-
-                const ImVec2 keyMax(
-                    keyMin.x + keySize,
-                    keyMin.y + keySize
-                );
-
-                drawList->AddRectFilled(
-                    keyMin,
-                    keyMax,
-                    IM_COL32(255, 255, 255, 235),
-                    6.0f
-                );
-
-                const ImVec2 keyTextPosition(
-                    keyMin.x +
-                    (keySize - keyTextSize.x) *
-                    0.5f,
-
-                    keyMin.y +
-                    (keySize - keyTextSize.y) *
-                    0.5f
-                );
-
-                drawList->AddText(
-                    keyTextPosition,
-                    IM_COL32(15, 17, 21, 255),
-                    keyText.c_str()
-                );
-
-                const ImVec2 actionTextPosition(
-                    keyMax.x + spacing,
-
-                    backgroundMin.y +
-                    (totalHeight -
-                        actionTextSize.y) *
-                    0.5f
-                );
-
-                drawList->AddText(
-                    actionTextPosition,
-                    IM_COL32(255, 255, 255, 255),
-                    actionText.c_str()
-                );
-            }
-        }
-
-        if (m_Runtime.IsRunning())
-        {
-            const ImVec2 viewportPosition =
-                m_Editor.GetViewportPosition();
-
-            const ImVec2 viewportSize =
-                m_Editor.GetViewportSize();
-
-            ImDrawList* drawList =
-                ImGui::GetForegroundDrawList();
-
-            const float centerX =
-                viewportPosition.x +
-                viewportSize.x * 0.5f;
-
-            const float centerY =
-                viewportPosition.y +
-                viewportSize.y * 0.5f;
-
-            const float crosshairSize =
-                4.0f;
-
-            drawList->AddCircleFilled(
-                ImVec2(
-                    centerX,
-                    centerY
-                ),
-                crosshairSize,
-                IM_COL32(
-                    255,
-                    255,
-                    255,
-                    220
-                )
             );
         }
 
