@@ -34,6 +34,7 @@ void Runtime::Start(
     m_Input = &input;
     m_UICanvas = &uiCanvas;
     m_PendingScenePath.clear();
+    m_WantsCursor = false;
 
     m_LuaScriptSystem.Start(
         scene,
@@ -208,4 +209,14 @@ bool Runtime::RequestSceneLoad(const std::string& path)
 const std::string& Runtime::GetCurrentScenePath() const
 {
     return m_CurrentScenePath;
+}
+
+bool Runtime::WantsCursor() const
+{
+    return m_WantsCursor;
+}
+
+void Runtime::SetWantsCursor(bool wantsCursor)
+{
+    m_WantsCursor = wantsCursor;
 }
