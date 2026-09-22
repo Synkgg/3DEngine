@@ -439,7 +439,6 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
-
 Entity 30
 Name AltarRingLower
 Position 0 0.42 0
