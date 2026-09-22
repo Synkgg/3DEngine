@@ -34,9 +34,21 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
 
     ImGui::StyleColorsDark();
 
-    io.Fonts->AddFontDefault();
+    // ImGui's default ProggyClean font is compiled into Dear ImGui, so the
+    // editor has a real embedded font with no external font-file dependency.
+    ImFontConfig editorFontConfig{};
+    editorFontConfig.SizePixels = 18.0f;
+    editorFontConfig.OversampleH = 2;
+    editorFontConfig.OversampleV = 2;
+    ImFont* editorFont = io.Fonts->AddFontDefault(&editorFontConfig);
+    if (editorFont == nullptr)
+    {
+        ImGui::DestroyContext();
+        return false;
+    }
+    io.FontDefault = editorFont;
 
-    ImFontConfig fontConfig;
+    ImFontConfig fontConfig{};
     fontConfig.FontDataOwnedByAtlas = false;
 
     static const ImWchar iconRanges[] = {
