@@ -34,8 +34,8 @@ function OnCreate()
     UI.Load("Assets/UI/Main.ui")
     UI.SetVisible("MainMenu", true)
     UI.SetVisible("SettingsPanel", false)
-    UI.SetText("Subtitle", "CRYSTAL COURTYARD")
-    UI.SetText("StatusText", "ENTER THE COURTYARD")
+    UI.SetText("Subtitle", "RESTORE THE DORMANT ALTAR")
+    UI.SetText("StatusText", "SYSTEM READY // ENTER THE COURTYARD")
     ApplyGraphics()
 end
 
