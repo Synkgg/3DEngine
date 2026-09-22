@@ -621,102 +621,28 @@ void Editor::RenderViewport(
 	// not the surrounding ImGui window. They are assigned after the
 	// viewport toolbar when the image rectangle is known.
 
-	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.045f, 0.049f, 0.070f, 1.0f));
-	ImGui::BeginChild(
-		"ViewportToolbar",
-		ImVec2(0.0f, 34.0f),
-		ImGuiChildFlags_Borders
-	);
+	// Compact viewport controls live inside the scene, while Play/Stop now
+	// belongs to the global command bar above the workspace.
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.030f, 0.036f, 0.044f, 1.0f));
+	ImGui::BeginChild("ViewportToolbar", ImVec2(0.0f, 34.0f), ImGuiChildFlags_Borders);
 
-	ImGui::TextDisabled("SCENE");
+	ImGui::TextDisabled("PERSPECTIVE");
 	ImGui::SameLine();
+	ImGui::TextDisabled("  |  LIT  |  ");
+	ImGui::SameLine();
+	ImGui::TextDisabled(m_Playing ? "GAME VIEW" : "EDITOR VIEW");
 
-	const char* buttonText =
-		m_Playing ? "Stop" : "Play";
-
-	const float buttonWidth =
-		ImGui::CalcTextSize(buttonText).x +
-		ImGui::GetStyle().FramePadding.x * 2.0f;
-
-	ImGui::SetCursorPosX(
-		(ImGui::GetContentRegionAvail().x -
-			buttonWidth) * 0.5f
-	);
-
-	if (m_Playing)
+	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
 	{
-		if (ImGui::Button("Stop"))
+		if (ImGui::IsKeyPressed(ImGuiKey_W)) m_GizmoOperation = ImGuizmo::TRANSLATE;
+		if (ImGui::IsKeyPressed(ImGuiKey_E)) m_GizmoOperation = ImGuizmo::ROTATE;
+		if (ImGui::IsKeyPressed(ImGuiKey_R)) m_GizmoOperation = ImGuizmo::SCALE;
+		if (ImGui::IsKeyPressed(ImGuiKey_Escape) && !m_Playing)
 		{
-			m_Playing = false;
-
 			m_SelectedEntity = Entity();
 			m_NameEditEntityID = 0;
 			m_NameEditBuffer[0] = '\0';
-
-			Logger::Info(
-				"Play mode stopped."
-			);
 		}
-	}
-	else
-	{
-		if (ImGui::Button("Play"))
-		{
-			m_Playing = true;
-
-			m_SelectedEntity = Entity();
-			m_NameEditEntityID = 0;
-			m_NameEditBuffer[0] = '\0';
-
-			Logger::Info(
-				"Play mode started."
-			);
-		}
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::IsWindowFocused(
-		ImGuiFocusedFlags_RootAndChildWindows))
-	{
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_W))
-		{
-			m_GizmoOperation =
-				ImGuizmo::TRANSLATE;
-		}
-
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_E))
-		{
-			m_GizmoOperation =
-				ImGuizmo::ROTATE;
-		}
-
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_R))
-		{
-			m_GizmoOperation =
-				ImGuizmo::SCALE;
-		}
-
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_Escape))
-		{
-			m_SelectedEntity =
-				Entity();
-
-			m_NameEditEntityID =
-				0;
-
-			m_NameEditBuffer[0] =
-				'\0';
-		}
-	}
-
-	if (ImGui::Button("Reset Camera"))
-	{
-		renderer.ResetCamera();
 	}
 
 	ImGui::EndChild();
