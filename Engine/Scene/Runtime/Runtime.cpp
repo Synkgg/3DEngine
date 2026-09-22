@@ -6,6 +6,7 @@
 
 #include "../../Graphics/Renderer.h"
 #include "../../Platform/SDL/Input.h"
+#include "../../UI/UICanvas.h"
 
 #include "../../Core/Logger.h"
 
@@ -14,7 +15,8 @@
 void Runtime::Start(
     Scene& scene,
     Renderer& renderer,
-    Input& input
+    Input& input,
+    UICanvas& uiCanvas
 )
 {
     if (m_Running)
@@ -30,7 +32,8 @@ void Runtime::Start(
     m_LuaScriptSystem.Start(
         scene,
         input,
-        renderer
+        renderer,
+        uiCanvas
     );
 
     m_ScriptSystem.Register(
