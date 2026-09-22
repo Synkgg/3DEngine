@@ -263,37 +263,21 @@ void Application::Run()
 
         if (m_Runtime.IsRunning())
         {
-            const bool uiWantsMouse =
-                m_Renderer
-                .GetUIRenderer()
-                .IsMouseInteractionEnabled();
-
-            const bool shouldCaptureMouse =
-                !uiWantsMouse;
-
-            if (shouldCaptureMouse &&
-                !m_RuntimeMouseCaptured)
-            {
-                m_Input.SetMouseCapture(
-                    m_Window.GetNativeWindow(),
-                    true
-                );
-
-                m_RuntimeMouseCaptured =
-                    true;
-
-                m_Input.Update();
-            }
-            else if (!shouldCaptureMouse &&
-                m_RuntimeMouseCaptured)
+            /*
+             * Play-in-editor must leave the OS cursor available.
+             * The new canvas UI uses absolute mouse coordinates for
+             * hit testing, so relative mouse capture would make menus
+             * impossible to click. Camera/player look can opt into
+             * capture later when the game explicitly requests it.
+             */
+            if (m_RuntimeMouseCaptured)
             {
                 m_Input.SetMouseCapture(
                     m_Window.GetNativeWindow(),
                     false
                 );
 
-                m_RuntimeMouseCaptured =
-                    false;
+                m_RuntimeMouseCaptured = false;
             }
         }
         else if (m_RuntimeMouseCaptured)
