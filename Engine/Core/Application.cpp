@@ -664,6 +664,7 @@ void Application::Run()
             );
 
             ui.Begin();
+            ui.UpdateInput(m_UICanvas, m_Input);
 
             ui.RenderCanvas(
                 m_UICanvas,
