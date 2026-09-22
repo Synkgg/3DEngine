@@ -65,6 +65,7 @@ public:
     void ResetCamera();
 
     void DrawGrid();
+    void DrawSky();
 
     Mat4 GetCameraViewMatrix() const;
     Mat4 GetCameraProjectionMatrix() const;
@@ -91,6 +92,9 @@ private:
 
     Shader m_Shader;
     Shader m_GridShader;
+    Shader m_SkyShader;
+    unsigned int m_SkyVAO = 0;
+    unsigned int m_SkyVBO = 0;
 
     std::unique_ptr<Mesh> m_CubeMesh;
     std::unique_ptr<Mesh> m_PlaneMesh;
