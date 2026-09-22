@@ -648,7 +648,20 @@ void Application::Run()
             );
 
             ui.Begin();
-            ui.UpdateInput(m_UICanvas, m_Input);
+
+            const ImVec2 gameViewportPosition =
+                m_Editor.GetViewportPosition();
+            const ImVec2 gameViewportSize =
+                m_Editor.GetViewportSize();
+
+            ui.UpdateInput(
+                m_UICanvas,
+                m_Input,
+                gameViewportPosition.x,
+                gameViewportPosition.y,
+                gameViewportSize.x,
+                gameViewportSize.y
+            );
 
             ui.RenderCanvas(
                 m_UICanvas,
