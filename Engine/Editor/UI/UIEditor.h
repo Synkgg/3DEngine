@@ -30,6 +30,9 @@ private:
 
     bool m_ShowGrid = true;
     bool m_SnapToGrid = true;
+    bool m_ShowPalette = true;
+    bool m_ShowHierarchy = true;
+    bool m_ShowDetails = true;
 
     float m_GridSize = 10.0f;
     float m_Zoom = 1.0f;
