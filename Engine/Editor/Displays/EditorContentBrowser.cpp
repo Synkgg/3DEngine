@@ -77,7 +77,7 @@ void Editor::RenderContentBrowser(
     namespace fs = std::filesystem;
 
     ImGui::Begin(
-        "Content Browser"
+        "Assets"
     );
 
     fs::path currentPath =
@@ -304,7 +304,7 @@ void Editor::RenderContentBrowser(
      * Grid.
      */
     const float itemWidth =
-        120.0f;
+        104.0f;
 
     int columnCount =
         static_cast<int>(
@@ -388,10 +388,7 @@ void Editor::RenderContentBrowser(
                     ImGui::ImageButton(
                         "##thumbnail",
                         textureID,
-                        ImVec2(
-                            82.0f,
-                            82.0f
-                        ),
+                        ImVec2(72.0f, 72.0f),
                         ImVec2(
                             0.0f,
                             1.0f
@@ -413,10 +410,7 @@ void Editor::RenderContentBrowser(
 
                     ImGui::Button(
                         ICON_FA_FILE_IMAGE,
-                        ImVec2(
-                            82.0f,
-                            82.0f
-                        )
+                        ImVec2(72.0f, 72.0f)
                     );
 
                     if (iconFont != nullptr)
@@ -492,10 +486,7 @@ void Editor::RenderContentBrowser(
 
                 ImGui::Button(
                     icon,
-                    ImVec2(
-                        82.0f,
-                        82.0f
-                    )
+                    ImVec2(72.0f, 72.0f)
                 );
 
                 ImGui::PopStyleColor();
