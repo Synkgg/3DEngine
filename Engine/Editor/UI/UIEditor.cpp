@@ -6,6 +6,7 @@
 #include "../../UI/UIText.h"
 #include "../../UI/UIImage.h"
 #include "../../UI/UIButton.h"
+#include "../../UI/UISerializer.h"
 
 #include <imgui.h>
 
@@ -478,6 +479,25 @@ void UIEditor::DrawInspector(
 void UIEditor::DrawToolbar(
     UICanvas& canvas)
 {
+    static char uiAssetPath[512] = "Assets/UI/Main.ui";
+
+    ImGui::SetNextItemWidth(220.0f);
+    ImGui::InputText("##UIAssetPath", uiAssetPath, sizeof(uiAssetPath));
+    ImGui::SameLine();
+
+    if (ImGui::Button("Save UI"))
+        UISerializer::Save(canvas, uiAssetPath);
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Open UI"))
+    {
+        m_SelectedWidget = nullptr;
+        UISerializer::Load(canvas, uiAssetPath);
+    }
+
+    ImGui::SameLine();
+
     if (ImGui::Button(
         "Panel"))
     {
