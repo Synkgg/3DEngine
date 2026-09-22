@@ -185,14 +185,20 @@ void Application::Run()
 
         m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
 
-        const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
-        if (!openedUIAsset.empty())
+        // Never let editor asset-open requests replace the live runtime
+        // canvas. Content-browser clicks can otherwise destroy widgets while
+        // Lua still holds references to them.
+        if (!m_Runtime.IsRunning())
         {
-            if (!m_UIEditor.OpenAsset(m_UICanvas, openedUIAsset))
+            const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
+            if (!openedUIAsset.empty())
             {
-                Logger::Error(
-                    std::string("Failed to open UI asset: ") +
-                    openedUIAsset);
+                if (!m_UIEditor.OpenAsset(m_UICanvas, openedUIAsset))
+                {
+                    Logger::Error(
+                        std::string("Failed to open UI asset: ") +
+                        openedUIAsset);
+                }
             }
         }
 
