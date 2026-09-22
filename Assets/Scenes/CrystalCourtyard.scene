@@ -1,5 +1,5 @@
 MyEngineScene
-Entities 24
+Entities 29
 Entity 1
 Name GameController
 Position 0 0 0
@@ -102,9 +102,9 @@ Collider 1 1 1 1
 Scripts 0
 Entity 8
 Name CenterAltar
-Position 0 0.75 0
+Position 0 0.4 0
 Rotation 0 0 0
-Scale 3 1.5 3
+Scale 3 0.8 3
 Mesh 1 1
 Color 1 0.28 0.29 0.27 1
 Texture 0
@@ -117,7 +117,7 @@ Scripts 1
 Script Assets/Scripts/CrystalAltar.lua
 Entity 9
 Name AltarCrystal
-Position 0 2.15 0
+Position 0 1.35 0
 Rotation 0 0 0
 Scale 0.55 1.1 0.55
 Mesh 1 1
@@ -187,12 +187,12 @@ Light 0
 Collider 1 1 1 1
 Scripts 0
 Entity 14
-Name WestStep
-Position -5 0.25 0
+Name WestWalkway
+Position -4 0.08 0
 Rotation 0 0 0
-Scale 3 0.5 2
+Scale 5 0.16 2.4
 Mesh 1 1
-Color 1 0.36 0.35 0.31 1
+Color 1 0.48 0.46 0.4 1
 Texture 0
 Interactable 0
 Player 0
@@ -201,12 +201,12 @@ Light 0
 Collider 1 1 1 1
 Scripts 0
 Entity 15
-Name EastStep
-Position 5 0.25 0
+Name EastWalkway
+Position 4 0.08 0
 Rotation 0 0 0
-Scale 3 0.5 2
+Scale 5 0.16 2.4
 Mesh 1 1
-Color 1 0.36 0.35 0.31 1
+Color 1 0.48 0.46 0.4 1
 Texture 0
 Interactable 0
 Player 0
@@ -336,6 +336,76 @@ Rotation 0 0 0
 Scale 4 0.12 8
 Mesh 1 1
 Color 1 0.46 0.44 0.38 1
+Texture 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 25
+Name NorthWalkway
+Position 0 0.08 -4
+Rotation 0 0 0
+Scale 2.4 0.16 5
+Mesh 1 1
+Color 1 0.48 0.46 0.4 1
+Texture 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 26
+Name SouthWalkway
+Position 0 0.08 4
+Rotation 0 0 0
+Scale 2.4 0.16 5
+Mesh 1 1
+Color 1 0.48 0.46 0.4 1
+Texture 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 27
+Name GardenNW
+Position -6 0.18 -5
+Rotation 0 0 0
+Scale 4.5 0.35 3.5
+Mesh 1 1
+Color 1 0.16 0.23 0.13 1
+Texture 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 28
+Name GardenNE
+Position 6 0.18 -5
+Rotation 0 0 0
+Scale 4.5 0.35 3.5
+Mesh 1 1
+Color 1 0.17 0.24 0.14 1
+Texture 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 29
+Name AltarBase
+Position 0 0.12 0
+Rotation 0 0 0
+Scale 5 0.24 5
+Mesh 1 3
+Color 1 0.34 0.33 0.29 1
 Texture 0
 Interactable 0
 Player 0
