@@ -46,6 +46,7 @@ public:
     const std::string& GetInteractionPrompt() const;
 
     bool RequestSceneLoad(const std::string& path);
+    const std::string& GetCurrentScenePath() const;
 
 private:
     bool m_Running = false;
@@ -65,6 +66,7 @@ private:
     float m_SnapshotCameraPitch = 0.0f;
 
     std::string m_PendingScenePath;
+    std::string m_CurrentScenePath;
     Renderer* m_Renderer = nullptr;
     Input* m_Input = nullptr;
     UICanvas* m_UICanvas = nullptr;
