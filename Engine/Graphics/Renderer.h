@@ -24,6 +24,18 @@ class Window;
 class Texture2D;
 
 struct PointLightData { Vec3 position; Vec3 color; float intensity=1.0f; float range=10.0f; };
+struct RenderSettings
+{
+    bool antiAliasing = true;
+    bool shadows = true;
+    bool fog = true;
+    bool bloom = true;
+    float viewDistance = 1000.0f;
+    float exposure = 1.0f;
+    float fogDensity = 0.006f;
+    float bloomStrength = 0.12f;
+};
+
 struct SpotLightData { Vec3 position; Vec3 direction; Vec3 color; float intensity=1.0f; float range=15.0f; float innerCos=0.92f; float outerCos=0.82f; };
 
 class Renderer
@@ -83,6 +95,8 @@ public:
     void ClearLocalLights();
     void AddPointLight(const PointLightData& light);
     void AddSpotLight(const SpotLightData& light);
+    void SetRenderSettings(const RenderSettings& settings);
+    const RenderSettings& GetRenderSettings() const;
     void DrawDirectionalLight(const Vec3& position, const Vec3& direction);
     void DrawCollider(const Transform& transform, float width, float height, float depth);
 
@@ -127,6 +141,7 @@ private:
     std::array<SpotLightData, 4> m_SpotLights{};
     int m_PointLightCount = 0;
     int m_SpotLightCount = 0;
+    RenderSettings m_RenderSettings{};
 
     DebugRenderer m_DebugRenderer;
 
