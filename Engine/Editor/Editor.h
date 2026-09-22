@@ -48,11 +48,6 @@ private:
 
     void ApplyEditorStyle();
 
-    void RenderMainToolbar(
-        Renderer& renderer,
-        Scene& scene,
-        ImFont* iconFont
-    );
 
     void RenderHierarchy(
         Scene& scene,
