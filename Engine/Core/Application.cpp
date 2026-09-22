@@ -69,14 +69,10 @@ bool Application::Initialize()
 
     UITest::Run();
 
-    if (!UISerializer::Load(
-        m_UICanvas,
-        "Assets/UI/UIEditorTest.ui"))
-    {
-        UITest::SetupCanvas(
-            m_UICanvas
-        );
-    }
+    // Runtime UI is opt-in. Scenes/scripts explicitly load the UI they need
+    // through UI.Load(), rather than inheriting whichever asset was open in
+    // the Widget Blueprint editor.
+    m_UICanvas.Clear();
 
     return true;
 }
@@ -713,11 +709,9 @@ void Application::StartRuntime()
 {
     m_Renderer.GetUIRenderer().Clear();
 
-    // The editor and runtime share the same UICanvas. Do not deserialize over
-    // that live widget tree here: the UI editor may still hold a selected
-    // widget pointer into it, which would become dangling and crash on the
-    // next editor frame. UI assets are loaded when editing/opening them;
-    // Play simply starts from the current in-memory canvas.
+    // Runtime UI starts empty every time. Lua decides which UI asset is active.
+    // This prevents an editor-opened UI from leaking into every scene.
+    m_UICanvas.Clear();
 
     m_Runtime.SaveCameraState(m_Renderer);
 
