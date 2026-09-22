@@ -216,9 +216,8 @@ void UIEditor::DrawInspector(
     }
 
     ImGui::Spacing();
-    if (!ImGui::CollapsingHeader("Layout", ImGuiTreeNodeFlags_DefaultOpen))
-        goto appearance_section;
-
+    if (ImGui::CollapsingHeader("Layout", ImGuiTreeNodeFlags_DefaultOpen))
+    {
     Vec2 position =
         widget.GetPosition();
 
@@ -325,7 +324,8 @@ void UIEditor::DrawInspector(
         );
     }
 
-appearance_section:
+    }
+
     ImGui::Spacing();
     ImGui::SeparatorText("Appearance");
 
