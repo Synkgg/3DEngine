@@ -90,9 +90,6 @@ void main()
     float specularStrength = mix(0.04, 1.0, clamp(u_Metallic, 0.0, 1.0));
     float specular = pow(max(dot(normal, halfDirection), 0.0), shininess) * specularStrength;
     float fresnel = pow(1.0 - max(dot(normal, viewDirection), 0.0), 5.0);
-    vec3 dielectricF0 = vec3(0.04);
-    vec3 specularColor = mix(dielectricF0, baseColor.rgb, clamp(u_Metallic, 0.0, 1.0));
-
     float brightness =
         ambient +
         diffuse * u_LightIntensity;
@@ -109,6 +106,8 @@ void main()
             );
     }
 
+    vec3 dielectricF0 = vec3(0.04);
+    vec3 specularColor = mix(dielectricF0, baseColor.rgb, clamp(u_Metallic, 0.0, 1.0));
     vec3 diffuseColor = baseColor.rgb * (1.0 - clamp(u_Metallic, 0.0, 1.0));
     vec3 lighting = diffuseColor * u_LightColor * brightness
         + specularColor * u_LightColor * specular * (1.0 + fresnel) * u_LightIntensity;
