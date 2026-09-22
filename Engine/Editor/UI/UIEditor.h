@@ -16,6 +16,8 @@ public:
         Renderer& renderer
     );
 
+    bool OpenAsset(UICanvas& canvas, const std::string& path);
+
 private:
     UIWidget* m_SelectedWidget = nullptr;
     Renderer* m_Renderer = nullptr;
