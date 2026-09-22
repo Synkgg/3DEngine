@@ -10,6 +10,7 @@
 class Scene;
 class Input;
 class Renderer;
+class UICanvas;
 
 class LuaScript
 {
@@ -21,6 +22,7 @@ public:
         Scene& scene,
         Input& input,
         Renderer& renderer,
+        UICanvas& uiCanvas,
         sol::state& lua
     );
 
@@ -50,6 +52,7 @@ private:
     Scene* m_Scene = nullptr;
     Input* m_Input = nullptr;
     Renderer* m_Renderer = nullptr;
+    UICanvas* m_UICanvas = nullptr;
 
     float m_DeltaTime = 0.0f;
 };
