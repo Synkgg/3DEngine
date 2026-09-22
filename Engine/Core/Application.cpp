@@ -571,9 +571,11 @@ void Application::Run()
             }
         }
 
-        /*
-         * Game UI
-         */
+        // Finish the HDR 3D scene first. Runtime UI is intentionally
+        // composited afterward so menu/text/image colors are not tone-mapped,
+        // exposed, fogged, or affected by future bloom.
+        m_Renderer.EndScene();
+
         if (m_Runtime.IsRunning())
         {
             UIRenderer& ui =
@@ -587,6 +589,7 @@ void Application::Run()
                 canvasSize.y
             );
 
+            m_Renderer.BeginOverlay();
             ui.Begin();
 
             ui.RenderCanvas(
@@ -595,9 +598,8 @@ void Application::Run()
             );
 
             ui.End();
+            m_Renderer.EndOverlay();
         }
-
-        m_Renderer.EndScene();
 
         m_ImGuiLayer.EndFrame();
 
