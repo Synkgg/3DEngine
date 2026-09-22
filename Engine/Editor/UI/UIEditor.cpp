@@ -52,55 +52,73 @@ void UIEditor::Draw(
     ImGui::PopStyleColor();
 
     const ImVec2 available = ImGui::GetContentRegionAvail();
-    const float paletteWidth = 170.0f;
-    const float hierarchyWidth = 225.0f;
-    const float inspectorWidth = 300.0f;
-    const float designerWidth = std::max(
-        180.0f, available.x - paletteWidth - hierarchyWidth - inspectorWidth);
+    const bool compact = available.x < 1050.0f;
+    const bool veryCompact = available.x < 760.0f;
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-    ImGui::BeginChild("Palette", ImVec2(paletteWidth, 0.0f), true);
-    ImGui::TextDisabled("PALETTE");
-    ImGui::Separator();
-    ImGui::TextDisabled("Common");
-    if (ImGui::Selectable("Panel")) AddWidget(canvas, UIWidgetType::Panel);
-    if (ImGui::Selectable("Text")) AddWidget(canvas, UIWidgetType::Text);
-    if (ImGui::Selectable("Image")) AddWidget(canvas, UIWidgetType::Image);
-    if (ImGui::Selectable("Button")) AddWidget(canvas, UIWidgetType::Button);
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::TextDisabled("User Interface");
-    ImGui::TextWrapped("Select a container in the Hierarchy, then add a widget from the Palette.");
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
+    // On narrow windows the designer gets priority. Side panels become
+    // optional instead of squeezing a 16:9 canvas into an unusable strip.
+    bool showPalette = m_ShowPalette && !veryCompact;
+    bool showHierarchy = m_ShowHierarchy && !veryCompact;
+    bool showDetails = m_ShowDetails && !compact;
 
-    ImGui::SameLine(0.0f, 0.0f);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
-    ImGui::BeginChild("HierarchyPanel", ImVec2(hierarchyWidth, 0.0f), true);
-    ImGui::TextDisabled("HIERARCHY");
-    ImGui::Separator();
-    if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot());
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
+    float paletteWidth = showPalette ? std::clamp(available.x * 0.14f, 135.0f, 175.0f) : 0.0f;
+    float hierarchyWidth = showHierarchy ? std::clamp(available.x * 0.18f, 165.0f, 225.0f) : 0.0f;
+    float inspectorWidth = showDetails ? std::clamp(available.x * 0.24f, 245.0f, 310.0f) : 0.0f;
 
-    ImGui::SameLine(0.0f, 0.0f);
+    float used = paletteWidth + hierarchyWidth + inspectorWidth;
+    float designerWidth = std::max(280.0f, available.x - used);
+
+    auto sameLine = []() { ImGui::SameLine(0.0f, 0.0f); };
+
+    if (showPalette)
+    {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+        ImGui::BeginChild("Palette", ImVec2(paletteWidth, 0.0f), true);
+        ImGui::TextDisabled("PALETTE");
+        ImGui::Separator();
+        if (ImGui::Selectable("Panel")) AddWidget(canvas, UIWidgetType::Panel);
+        if (ImGui::Selectable("Text")) AddWidget(canvas, UIWidgetType::Text);
+        if (ImGui::Selectable("Image")) AddWidget(canvas, UIWidgetType::Image);
+        if (ImGui::Selectable("Button")) AddWidget(canvas, UIWidgetType::Button);
+        ImGui::Spacing();
+        ImGui::TextDisabled("Add to selected container");
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        sameLine();
+    }
+
+    if (showHierarchy)
+    {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
+        ImGui::BeginChild("HierarchyPanel", ImVec2(hierarchyWidth, 0.0f), true);
+        ImGui::TextDisabled("HIERARCHY");
+        ImGui::Separator();
+        if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot());
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        sameLine();
+    }
+
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(17, 18, 21, 255));
     ImGui::BeginChild("DesignerPanel", ImVec2(designerWidth, 0.0f), true);
     DrawDesigner(canvas);
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    ImGui::SameLine(0.0f, 0.0f);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-    ImGui::BeginChild("DetailsPanel", ImVec2(inspectorWidth, 0.0f), true);
-    ImGui::TextDisabled("DETAILS");
-    ImGui::Separator();
-    if (m_SelectedWidget)
-        DrawInspector(*m_SelectedWidget);
-    else
-        ImGui::TextDisabled("Select a widget to edit its properties.");
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
+    if (showDetails)
+    {
+        sameLine();
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+        ImGui::BeginChild("DetailsPanel", ImVec2(inspectorWidth, 0.0f), true);
+        ImGui::TextDisabled("DETAILS");
+        ImGui::Separator();
+        if (m_SelectedWidget)
+            DrawInspector(*m_SelectedWidget);
+        else
+            ImGui::TextDisabled("Select a widget to edit its properties.");
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+    }
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
@@ -197,7 +215,9 @@ void UIEditor::DrawInspector(
         );
     }
 
-    ImGui::Separator();
+    ImGui::Spacing();
+    if (!ImGui::CollapsingHeader("Layout", ImGuiTreeNodeFlags_DefaultOpen))
+        goto appearance_section;
 
     Vec2 position =
         widget.GetPosition();
@@ -305,6 +325,10 @@ void UIEditor::DrawInspector(
         );
     }
 
+appearance_section:
+    ImGui::Spacing();
+    ImGui::SeparatorText("Appearance");
+
     Vec4 color =
         widget.GetColor();
 
@@ -316,6 +340,9 @@ void UIEditor::DrawInspector(
             color
         );
     }
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Behavior");
 
     bool visible =
         widget.IsVisible();
@@ -340,8 +367,6 @@ void UIEditor::DrawInspector(
     int zOrder = widget.GetZOrder();
     if (ImGui::DragInt("Z Order", &zOrder, 1.0f, -1000, 1000))
         widget.SetZOrder(zOrder);
-
-    ImGui::Separator();
 
     if (UIText* text =
         dynamic_cast<UIText*>(
@@ -470,40 +495,68 @@ void UIEditor::DrawInspector(
 void UIEditor::DrawToolbar(
     UICanvas& canvas)
 {
-    if (ImGui::Button("Open UI..."))
-        ImGui::OpenPopup("SelectUIAsset");
+    const float width = ImGui::GetContentRegionAvail().x;
+    const bool compact = width < 900.0f;
 
+    if (ImGui::Button("Open"))
+        ImGui::OpenPopup("SelectUIAsset");
     ImGui::SameLine();
     if (ImGui::Button("Save"))
         UISerializer::Save(canvas, m_UIAssetPath);
 
-    ImGui::SameLine();
-    ImGui::TextDisabled("%s", m_UIAssetPath.c_str());
+    if (!compact)
+    {
+        ImGui::SameLine();
+        ImGui::TextDisabled("%s",
+            std::filesystem::path(m_UIAssetPath).filename().string().c_str());
+    }
 
     ImGui::SameLine();
-    ImGui::Dummy(ImVec2(18.0f, 0.0f));
-    ImGui::SameLine();
+    if (ImGui::Button("Panels"))
+        ImGui::OpenPopup("UIPanelsPopup");
 
-    if (ImGui::Button("Duplicate")) DuplicateSelected(canvas);
-    ImGui::SameLine();
-    if (ImGui::Button("Delete")) DeleteSelected(canvas);
-    ImGui::SameLine();
-    if (ImGui::Button("Rename")) RenameSelected();
-    ImGui::SameLine();
-    if (ImGui::Button("Frame")) ResetView();
+    if (ImGui::BeginPopup("UIPanelsPopup"))
+    {
+        ImGui::MenuItem("Palette", nullptr, &m_ShowPalette);
+        ImGui::MenuItem("Hierarchy", nullptr, &m_ShowHierarchy);
+        ImGui::MenuItem("Details", nullptr, &m_ShowDetails);
+        ImGui::EndPopup();
+    }
 
     ImGui::SameLine();
-    ImGui::Dummy(ImVec2(18.0f, 0.0f));
+    if (ImGui::Button("Edit"))
+        ImGui::OpenPopup("UIEditPopup");
+
+    if (ImGui::BeginPopup("UIEditPopup"))
+    {
+        if (ImGui::MenuItem("Duplicate", "Ctrl+D")) DuplicateSelected(canvas);
+        if (ImGui::MenuItem("Rename", "F2")) RenameSelected();
+        if (ImGui::MenuItem("Delete", "Del")) DeleteSelected(canvas);
+        ImGui::EndPopup();
+    }
+
     ImGui::SameLine();
-    ImGui::Checkbox("Grid", &m_ShowGrid);
-    ImGui::SameLine();
-    ImGui::Checkbox("Snap", &m_SnapToGrid);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(60.0f);
-    ImGui::DragFloat("##GridSize", &m_GridSize, 1.0f, 1.0f, 200.0f, "%.0f");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(85.0f);
-    ImGui::SliderFloat("##Zoom", &m_Zoom, 0.25f, 2.0f, "%.2fx");
+    if (ImGui::Button("View"))
+        ImGui::OpenPopup("UIViewPopup");
+
+    if (ImGui::BeginPopup("UIViewPopup"))
+    {
+        ImGui::MenuItem("Grid", nullptr, &m_ShowGrid);
+        ImGui::MenuItem("Snap", nullptr, &m_SnapToGrid);
+        if (ImGui::MenuItem("Frame Canvas", "F")) ResetView();
+        ImGui::Separator();
+        ImGui::TextDisabled("Grid size");
+        ImGui::SetNextItemWidth(110.0f);
+        ImGui::DragFloat("##GridSizePopup", &m_GridSize, 1.0f, 1.0f, 200.0f, "%.0f");
+        ImGui::EndPopup();
+    }
+
+    if (!compact)
+    {
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(95.0f);
+        ImGui::SliderFloat("##Zoom", &m_Zoom, 0.25f, 2.0f, "%.2fx");
+    }
 
     if (ImGui::BeginPopup("SelectUIAsset"))
     {
@@ -540,12 +593,9 @@ void UIEditor::DrawToolbar(
 void UIEditor::DrawDesigner(
     UICanvas& canvas)
 {
-    ImGui::Text(
-        "Canvas: %.0f x %.0f",
-        canvas.GetSize().x,
-        canvas.GetSize().y
-    );
-
+    ImGui::TextDisabled("%.0f x %.0f", canvas.GetSize().x, canvas.GetSize().y);
+    ImGui::SameLine();
+    ImGui::TextDisabled("  %.0f%%", m_DesignerScale * 100.0f);
     ImGui::Separator();
 
     const ImVec2 contentMin =
@@ -589,10 +639,8 @@ void UIEditor::DrawDesigner(
             scaleY
         );
 
-    /*
-     * Apply editor zoom after fitting
-     * the canvas into the available area.
-     */
+    // Fit-to-window is the base scale. Manual zoom is relative to that
+    // fit, so shrinking the editor never crops or distorts the canvas.
     scale *= m_Zoom;
 
     scale =
