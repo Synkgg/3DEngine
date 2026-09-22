@@ -666,7 +666,8 @@ void Application::Run()
             ui.Begin();
 
             ui.RenderCanvas(
-                m_UICanvas
+                m_UICanvas,
+                &m_Renderer
             );
 
             ui.End();
