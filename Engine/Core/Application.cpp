@@ -175,7 +175,13 @@ void Application::Run()
             imguiIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         }
 
-        m_UIEditor.Draw(m_UICanvas, m_Renderer);
+        // The runtime owns the shared UI canvas while playing. Drawing the
+        // widget editor against that same tree risks stale selections and
+        // lets editor input compete with game UI.
+        if (!m_Runtime.IsRunning())
+        {
+            m_UIEditor.Draw(m_UICanvas, m_Renderer);
+        }
 
         m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
 
@@ -315,10 +321,7 @@ void Application::Run()
 
         if (m_Runtime.IsRunning())
         {
-            const bool gameplayScene =
-                m_Runtime.GetCurrentScenePath() ==
-                "Assets/Scenes/CrystalCourtyard.scene" &&
-                !m_Runtime.WantsCursor();
+            const bool gameplayScene = !m_Runtime.WantsCursor();
 
             // Menu scenes keep the cursor free for canvas buttons.
             // Gameplay captures automatically after the menu has switched
