@@ -42,10 +42,20 @@ public:
 
     void UpdateInput(
         UICanvas& canvas,
-        const Input& input
+        const Input& input,
+        float viewportX,
+        float viewportY,
+        float viewportWidth,
+        float viewportHeight
     );
 
-    bool ScreenToCanvas(float screenX, float screenY, Vec2& result) const;
+    bool ViewportToCanvas(
+        float mouseX,
+        float mouseY,
+        float viewportWidth,
+        float viewportHeight,
+        Vec2& result
+    ) const;
 
     // ---------------------------------------------------------
     // Runtime / scripted UI
