@@ -270,33 +270,41 @@ void UIEditor::DrawInspector(
         );
     }
 
-    Vec2 anchor =
-        widget.GetAnchor();
+    Vec2 anchorMin = widget.GetAnchorMinimum();
+    Vec2 anchorMax = widget.GetAnchorMaximum();
 
-    if (ImGui::DragFloat2(
-        "Anchor",
-        &anchor.x,
-        0.01f,
-        0.0f,
-        1.0f))
+    if (ImGui::DragFloat2("Anchor Min", &anchorMin.x, 0.01f, 0.0f, 1.0f))
     {
-        anchor.x =
-            std::clamp(
-                anchor.x,
-                0.0f,
-                1.0f
-            );
+        anchorMin.x = std::clamp(anchorMin.x, 0.0f, 1.0f);
+        anchorMin.y = std::clamp(anchorMin.y, 0.0f, 1.0f);
+        anchorMax.x = std::max(anchorMax.x, anchorMin.x);
+        anchorMax.y = std::max(anchorMax.y, anchorMin.y);
+        widget.SetAnchors(anchorMin, anchorMax);
+    }
 
-        anchor.y =
-            std::clamp(
-                anchor.y,
-                0.0f,
-                1.0f
-            );
+    if (ImGui::DragFloat2("Anchor Max", &anchorMax.x, 0.01f, 0.0f, 1.0f))
+    {
+        anchorMax.x = std::clamp(anchorMax.x, anchorMin.x, 1.0f);
+        anchorMax.y = std::clamp(anchorMax.y, anchorMin.y, 1.0f);
+        widget.SetAnchors(anchorMin, anchorMax);
+    }
 
-        widget.SetAnchor(
-            anchor
-        );
+    if (ImGui::Button("Top Left"))
+    {
+        widget.SetAnchor(Vec2(0.0f, 0.0f));
+        widget.SetPivot(Vec2(0.0f, 0.0f));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Center"))
+    {
+        widget.SetAnchor(Vec2(0.5f, 0.5f));
+        widget.SetPivot(Vec2(0.5f, 0.5f));
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Fill"))
+    {
+        widget.SetAnchors(Vec2(0.0f, 0.0f), Vec2(1.0f, 1.0f));
+        widget.SetPivot(Vec2(0.0f, 0.0f));
     }
 
     Vec2 pivot =
@@ -351,6 +359,18 @@ void UIEditor::DrawInspector(
             visible
         );
     }
+
+    bool enabled = widget.IsEnabled();
+    if (ImGui::Checkbox("Enabled", &enabled))
+        widget.SetEnabled(enabled);
+
+    bool hitTest = widget.IsHitTestVisible();
+    if (ImGui::Checkbox("Hit Test Visible", &hitTest))
+        widget.SetHitTestVisible(hitTest);
+
+    int zOrder = widget.GetZOrder();
+    if (ImGui::DragInt("Z Order", &zOrder, 1.0f, -1000, 1000))
+        widget.SetZOrder(zOrder);
 
     ImGui::Separator();
 
