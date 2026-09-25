@@ -2,7 +2,6 @@
 
 #include "Entity.h"
 #include <string>
-#include <unordered_map>
 #include <cstdint>
 
 class Scene;
@@ -20,11 +19,4 @@ public:
     static bool Unpack(Scene& scene, Entity instanceRoot, bool completely = true);
     static void ForgetEntity(const Scene& scene, Entity entity);
     static void ForgetScene(const Scene& scene);
-
-private:
-    struct InstanceInfo
-    {
-        std::string source;
-    };
-    static std::unordered_map<const Scene*, std::unordered_map<std::uint32_t, InstanceInfo>> s_Instances;
 };
