@@ -60,6 +60,7 @@ private:
     );
 
     void RenderInspector(
+        Renderer& renderer,
         Scene& scene
     );
 
@@ -106,6 +107,8 @@ private:
     std::string m_ContentBrowserPath;
     std::string m_SelectedAssetPath;
     std::string m_PendingUIAssetPath;
+    std::string m_MeshPreviewPath;
+    bool m_ShowRenderSettings = false;
 
     char m_ContentBrowserSearchBuffer[256]{};
 
