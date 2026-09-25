@@ -357,6 +357,10 @@ void Editor::RenderContentBrowser(
                 !entry.directory &&
                 extension == ".ui";
 
+            const bool isMesh =
+                !entry.directory &&
+                extension == ".obj";
+
             ImGui::PushID(
                 entry.path.string().c_str()
             );
@@ -457,6 +461,11 @@ void Editor::RenderContentBrowser(
                             1.0f,
                             1.0f
                         );
+                }
+                else if (isMesh)
+                {
+                    icon = ICON_FA_CUBE;
+                    iconColor = ImVec4(0.35f, 0.78f, 0.95f, 1.0f);
                 }
                 else if (isScript)
                 {
@@ -585,6 +594,14 @@ void Editor::RenderContentBrowser(
             {
                 m_SelectedAssetPath = entry.path.string();
                 m_PendingUIAssetPath = entry.path.string();
+            }
+
+            if (isMesh &&
+                ImGui::IsItemHovered() &&
+                ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                m_MeshPreviewPath = fs::relative(entry.path, fs::current_path(), error).generic_string();
+                ImGui::OpenPopup("Mesh Preview");
             }
 
             /*
@@ -895,6 +912,11 @@ void Editor::RenderContentBrowser(
                         "Type: Scene"
                     );
                 }
+                else if (isMesh)
+                {
+                    ImGui::Text("Type: OBJ Mesh");
+                    ImGui::TextDisabled("Double-click to preview");
+                }
                 else if (isScript)
                 {
                     ImGui::Text(
@@ -920,6 +942,31 @@ void Editor::RenderContentBrowser(
         }
 
         ImGui::EndTable();
+    }
+
+    if (!m_MeshPreviewPath.empty())
+    {
+        ImGui::SetNextWindowSize(ImVec2(440.0f, 210.0f), ImGuiCond_Appearing);
+        if (ImGui::BeginPopupModal("Mesh Preview", nullptr, ImGuiWindowFlags_NoResize))
+        {
+            ImGui::TextDisabled("MESH PREVIEW");
+            ImGui::Separator();
+            ImGui::TextWrapped("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
+            ImGui::TextDisabled("%s", m_MeshPreviewPath.c_str());
+            ImGui::Spacing();
+            ImGui::TextWrapped("OBJ model ready for the scene renderer. Drag this asset onto a Mesh component in Details to assign it.");
+            ImGui::Spacing();
+            ImGui::Text("Renderer preview:");
+            ImGui::BulletText("Uses the same cached OBJ loader as scene rendering");
+            ImGui::BulletText("Receives material, lights, bloom and directional shadows");
+            ImGui::Spacing();
+            if (ImGui::Button("Close", ImVec2(100.0f, 0.0f)))
+            {
+                m_MeshPreviewPath.clear();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
     }
 
     /*
