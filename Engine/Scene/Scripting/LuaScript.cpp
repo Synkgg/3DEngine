@@ -847,6 +847,24 @@ void LuaScript::BindEngineAPI()
     );
 
     camera.set_function(
+        "SetRotation",
+        [this](
+            float yaw,
+            float pitch)
+        {
+            if (m_Renderer == nullptr)
+            {
+                return;
+            }
+
+            m_Renderer->SetCameraRotation(
+                yaw,
+                pitch
+            );
+        }
+    );
+
+    camera.set_function(
         "Reset",
         [this]()
         {
