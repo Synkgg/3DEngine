@@ -833,14 +833,11 @@ void UIEditor::DrawDesigner(
      */
     const ImVec2 canvasPosition(
         contentMin.x +
-        (availableSize.x -
-            canvasPixelSize.x) *
-        0.5f,
-
+        (availableSize.x - canvasPixelSize.x) * 0.5f +
+        m_DesignerPan.x,
         contentMin.y +
-        (availableSize.y -
-            canvasPixelSize.y) *
-        0.5f
+        (availableSize.y - canvasPixelSize.y) * 0.5f +
+        m_DesignerPan.y
     );
 
     m_DesignerCanvasPosition = canvasPosition;
@@ -1011,7 +1008,28 @@ void UIEditor::DrawDesigner(
     ImGui::InvisibleButton("##UIDesignerDropTarget", availableSize,
         ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
 
-    if (mouseInsideCanvas)
+    // Pan the zoomed designer with middle mouse, or Space + left mouse.
+    const bool panPressed = ImGui::IsMouseClicked(ImGuiMouseButton_Middle) ||
+        (ImGui::GetIO().KeySpace && ImGui::IsMouseClicked(ImGuiMouseButton_Left));
+    if (ImGui::IsItemHovered() && panPressed)
+    {
+        m_Panning = true;
+        m_PanStartMouse = ImGui::GetMousePos();
+        m_PanStartOffset = m_DesignerPan;
+    }
+    if (m_Panning)
+    {
+        const ImVec2 current = ImGui::GetMousePos();
+        m_DesignerPan = ImVec2(
+            m_PanStartOffset.x + current.x - m_PanStartMouse.x,
+            m_PanStartOffset.y + current.y - m_PanStartMouse.y);
+        if ((!ImGui::IsMouseDown(ImGuiMouseButton_Middle) && !ImGui::GetIO().KeySpace) ||
+            (ImGui::GetIO().KeySpace && !ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+             !ImGui::IsMouseDown(ImGuiMouseButton_Middle)))
+            m_Panning = false;
+    }
+
+    if (mouseInsideCanvas && !m_Panning)
     {
         if (m_SelectedWidget && !m_Dragging && !m_Resizing &&
             ImGui::IsMouseClicked(ImGuiMouseButton_Left))
