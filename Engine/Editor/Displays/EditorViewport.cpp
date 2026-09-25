@@ -2,6 +2,7 @@
 
 #include "../../Graphics/Renderer.h"
 #include "../../Scene/Scene.h"
+#include "../../Scene/PrefabSerializer.h"
 #include "../../Scene/Components/TransformComponent.h"
 #include "../../Scene/Components/MeshComponent.h"
 
@@ -10,6 +11,8 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <filesystem>
+#include <string>
 
 namespace
 {
@@ -764,6 +767,39 @@ void Editor::RenderViewport(
 
 	bool viewportImageHovered =
 		ImGui::IsItemHovered();
+
+	// Asset drops land directly in the scene. Prefabs instantiate as complete
+	// hierarchies; models create a normal mesh entity.
+	if (!m_Playing && ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_FILE"))
+		{
+			const std::string path = static_cast<const char*>(payload->Data);
+			const std::filesystem::path asset(path);
+			const std::string extension = asset.extension().string();
+			Entity created;
+			if (extension == ".prefab")
+				created = PrefabSerializer::Instantiate(scene, path);
+			else if (extension == ".obj")
+			{
+				created = scene.CreateEntity();
+				MeshComponent mesh;
+				mesh.modelPath = path;
+				scene.AddComponent<MeshComponent>(created, mesh);
+			}
+			if (created.IsValid())
+			{
+				if (TransformComponent* droppedTransform = scene.GetComponent<TransformComponent>(created))
+				{
+					const Vec3 origin = renderer.GetCameraPosition();
+					const Vec3 direction = renderer.GetCameraRayDirection(0.0f, 0.0f);
+					droppedTransform->transform.position = origin + direction * 5.0f;
+				}
+				m_SelectedEntity = created;
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
 
 	/*
  * Transform toolbar overlay
