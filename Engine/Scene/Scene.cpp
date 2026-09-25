@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <limits>
 #include <string>
+#include <cmath>
+#include <unordered_set>
 
 Scene::Scene(const Scene& other)
 {
@@ -27,6 +29,8 @@ Scene& Scene::operator=(
 
     m_NextEntityID =
         other.m_NextEntityID;
+
+    m_Parents = other.m_Parents;
 
     m_ComponentStorages.clear();
 
@@ -152,6 +156,14 @@ void Scene::DestroyEntity(
         );
     }
 
+    const std::uint32_t deletedID = entity.GetID();
+    m_Parents.erase(deletedID);
+    for (auto parentIt = m_Parents.begin(); parentIt != m_Parents.end(); )
+    {
+        if (parentIt->second == deletedID) parentIt = m_Parents.erase(parentIt);
+        else ++parentIt;
+    }
+
     m_Entities.erase(it);
 }
 
@@ -170,4 +182,78 @@ void Scene::Clear()
     }
 
     m_NextEntityID = 1;
+    m_Parents.clear();
+}
+
+bool Scene::SetParent(Entity child, Entity parent)
+{
+    if (!child.IsValid() || !parent.IsValid() || child.GetID() == parent.GetID()) return false;
+    if (IsDescendant(parent, child)) return false;
+    m_Parents[child.GetID()] = parent.GetID();
+    return true;
+}
+
+void Scene::ClearParent(Entity child)
+{
+    if (child.IsValid()) m_Parents.erase(child.GetID());
+}
+
+Entity Scene::GetParent(Entity child) const
+{
+    auto it = m_Parents.find(child.GetID());
+    if (it == m_Parents.end()) return Entity();
+    for (const Entity& entity : m_Entities)
+        if (entity.GetID() == it->second) return entity;
+    return Entity();
+}
+
+bool Scene::IsDescendant(Entity entity, Entity possibleAncestor) const
+{
+    if (!entity.IsValid() || !possibleAncestor.IsValid()) return false;
+    std::unordered_set<std::uint32_t> visited;
+    Entity current = GetParent(entity);
+    while (current.IsValid() && visited.insert(current.GetID()).second)
+    {
+        if (current.GetID() == possibleAncestor.GetID()) return true;
+        current = GetParent(current);
+    }
+    return false;
+}
+
+Transform Scene::GetWorldTransform(Entity entity) const
+{
+    const TransformComponent* component = GetComponent<TransformComponent>(entity);
+    Transform result;
+    if (!component) return result;
+    result = component->transform;
+
+    std::vector<const Transform*> chain;
+    Entity current = GetParent(entity);
+    std::unordered_set<std::uint32_t> visited;
+    while (current.IsValid() && visited.insert(current.GetID()).second)
+    {
+        const TransformComponent* parentTransform = GetComponent<TransformComponent>(current);
+        if (!parentTransform) break;
+        chain.push_back(&parentTransform->transform);
+        current = GetParent(current);
+    }
+
+    for (auto it = chain.rbegin(); it != chain.rend(); ++it)
+    {
+        const Transform& p = **it;
+        const float cy = std::cos(p.rotation.y), sy = std::sin(p.rotation.y);
+        const float x = result.position.x * p.scale.x;
+        const float y = result.position.y * p.scale.y;
+        const float z = result.position.z * p.scale.z;
+        result.position.x = p.position.x + x * cy + z * sy;
+        result.position.y = p.position.y + y;
+        result.position.z = p.position.z - x * sy + z * cy;
+        result.rotation.x += p.rotation.x;
+        result.rotation.y += p.rotation.y;
+        result.rotation.z += p.rotation.z;
+        result.scale.x *= p.scale.x;
+        result.scale.y *= p.scale.y;
+        result.scale.z *= p.scale.z;
+    }
+    return result;
 }
