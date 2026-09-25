@@ -951,31 +951,33 @@ void LuaScript::BindEngineAPI()
      * Scene - scene changes are queued until the current Lua update finishes.
      * This avoids destroying the script/scene while its callback is executing.
      */
-    // Object-oriented entity handle for readable project Lua:
-    // local cube = Scene.FindEntity("Cube"); cube:SetPosition(1, 2, 3)
-    m_Lua->new_usertype<LuaEntityHandle>("Entity",
-        sol::constructors<LuaEntityHandle(), LuaEntityHandle(std::uint32_t)>(),
-        "IsValid", [](const LuaEntityHandle& e){ return e.scene && e.scene->FindEntityByID(e.id).IsValid(); },
-        "GetID", [](const LuaEntityHandle& e){ return e.id; },
-        "GetPosition", [this](const LuaEntityHandle& e){ sol::table t=m_Lua->create_table(); Vec3 v; if(e.scene){ if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id)))v=c->transform.position; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; },
-        "GetRotation", [this](const LuaEntityHandle& e){ sol::table t=m_Lua->create_table(); Vec3 v; if(e.scene){ if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id)))v=c->transform.rotation; } constexpr float r=57.2957795f;t["x"]=v.x*r;t["y"]=v.y*r;t["z"]=v.z*r;return t; },
-        "GetScale", [this](const LuaEntityHandle& e){ sol::table t=m_Lua->create_table(); Vec3 v(1,1,1); if(e.scene){ if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id)))v=c->transform.scale; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; },
-        "GetParent", [](const LuaEntityHandle& e){ if(!e.scene)return LuaEntityHandle{}; Entity p=e.scene->GetParent(Entity(e.id)); return LuaEntityHandle{e.scene,p.GetID()}; },
-        "Duplicate", [](const LuaEntityHandle& e,bool children){ if(!e.scene)return LuaEntityHandle{}; Entity copy=e.scene->DuplicateEntity(Entity(e.id),children); return LuaEntityHandle{e.scene,copy.GetID()}; },
-        "HasLight", [](const LuaEntityHandle& e){ return e.scene && e.scene->HasComponent<LightComponent>(Entity(e.id)); },
-        "HasInteractable", [](const LuaEntityHandle& e){ return e.scene && e.scene->HasComponent<InteractableComponent>(Entity(e.id)); },
-        "SetPosition", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.position=Vec3(x,y,z); },
-        "Translate", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.position=c->transform.position+Vec3(x,y,z); },
-        "SetRotation", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; constexpr float d=0.0174532925f; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.rotation=Vec3(x*d,y*d,z*d); },
-        "SetScale", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.scale=Vec3(x,y,z); },
-        "SetParent", [](LuaEntityHandle& e,const LuaEntityHandle& p,bool keepWorld){ return e.scene && p.scene==e.scene && e.scene->SetParent(Entity(e.id),Entity(p.id),keepWorld); },
-        "ClearParent", [](LuaEntityHandle& e,bool keepWorld){ if(e.scene)e.scene->ClearParent(Entity(e.id),keepWorld); },
-        "Destroy", [](LuaEntityHandle& e){ if(e.scene)e.scene->QueueDestroyEntityHierarchy(Entity(e.id)); e.id=0; },
-        "SetInteractableEnabled", [](LuaEntityHandle& e,bool enabled){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<InteractableComponent>(Entity(e.id)))c->enabled=enabled; },
-        "SetInteractablePrompt", [](LuaEntityHandle& e,const std::string& prompt){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<InteractableComponent>(Entity(e.id)))c->prompt=prompt; },
-        "SetLightIntensity", [](LuaEntityHandle& e,float intensity){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<LightComponent>(Entity(e.id)))c->intensity=intensity; },
-        "SetLightColor", [](LuaEntityHandle& e,float r,float g,float b){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<LightComponent>(Entity(e.id)))c->color=Vec3(r,g,b); }
-    );
+    // Object-oriented entity handles are represented as plain Lua tables.
+    // This keeps method lookup local to each script environment and avoids
+    // userdata/metatable conflicts when multiple LuaScript instances bind APIs.
+    auto makeEntityHandle = [this](Scene* scene, std::uint32_t id)
+    {
+        sol::table handle = m_Lua->create_table();
+        handle["id"] = id;
+
+        handle.set_function("IsValid", [scene, id]() { return scene && scene->FindEntityByID(id).IsValid(); });
+        handle.set_function("GetID", [id]() { return id; });
+        handle.set_function("GetPosition", [this, scene, id]() { sol::table t=m_Lua->create_table(); Vec3 v; if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.position; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; });
+        handle.set_function("GetRotation", [this, scene, id]() { sol::table t=m_Lua->create_table(); Vec3 v; if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.rotation; } constexpr float r=57.2957795f;t["x"]=v.x*r;t["y"]=v.y*r;t["z"]=v.z*r;return t; });
+        handle.set_function("GetScale", [this, scene, id]() { sol::table t=m_Lua->create_table(); Vec3 v(1,1,1); if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.scale; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; });
+        handle.set_function("SetPosition", [scene,id](float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.position=Vec3(x,y,z); } });
+        handle.set_function("Translate", [scene,id](float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.position=c->transform.position+Vec3(x,y,z); } });
+        handle.set_function("SetRotation", [scene,id](float x,float y,float z){ if(scene){ constexpr float d=0.0174532925f; if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.rotation=Vec3(x*d,y*d,z*d); } });
+        handle.set_function("SetScale", [scene,id](float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.scale=Vec3(x,y,z); } });
+        handle.set_function("ClearParent", [scene,id](bool keepWorld){ if(scene)scene->ClearParent(Entity(id),keepWorld); });
+        handle.set_function("Destroy", [scene,id](){ if(scene)scene->QueueDestroyEntityHierarchy(Entity(id)); });
+        handle.set_function("SetInteractableEnabled", [scene,id](bool enabled){ if(scene){ if(auto* c=scene->GetComponent<InteractableComponent>(Entity(id)))c->enabled=enabled; } });
+        handle.set_function("SetInteractablePrompt", [scene,id](const std::string& prompt){ if(scene){ if(auto* c=scene->GetComponent<InteractableComponent>(Entity(id)))c->prompt=prompt; } });
+        handle.set_function("SetLightIntensity", [scene,id](float intensity){ if(scene){ if(auto* c=scene->GetComponent<LightComponent>(Entity(id)))c->intensity=intensity; } });
+        handle.set_function("SetLightColor", [scene,id](float r,float g,float b){ if(scene){ if(auto* c=scene->GetComponent<LightComponent>(Entity(id)))c->color=Vec3(r,g,b); } });
+        return handle;
+    };
+
+    (*m_Environment)["self"] = makeEntityHandle(m_Scene, m_Entity.GetID());
 
     sol::table sceneApi = m_Lua->create_table();
 
