@@ -27,6 +27,9 @@
 #include <cctype>
 #include <cstring>
 #include <initializer_list>
+#include <fstream>
+#include <sstream>
+#include <iterator>
 
 namespace
 {
@@ -974,6 +977,79 @@ void Editor::RenderInspector(
                             "%s",
                             script->scriptNames[i].c_str()
                         );
+                    }
+
+                    // Editor-facing Lua properties are declared in the script:
+                    // Properties = { Speed = 2.0, Enabled = true, Target = Entity(0), Label = "..." }
+                    // The Inspector stores per-entity overrides without modifying the Lua source.
+                    {
+                        std::ifstream propertyFile(script->scriptNames[i]);
+                        std::string source((std::istreambuf_iterator<char>(propertyFile)), std::istreambuf_iterator<char>());
+                        const std::size_t propertiesPos = source.find("Properties");
+                        const std::size_t openBrace = propertiesPos == std::string::npos ? std::string::npos : source.find('{', propertiesPos);
+                        const std::size_t closeBrace = openBrace == std::string::npos ? std::string::npos : source.find('}', openBrace);
+                        if (openBrace != std::string::npos && closeBrace != std::string::npos)
+                        {
+                            std::string body = source.substr(openBrace + 1, closeBrace - openBrace - 1);
+                            std::istringstream propertyStream(body);
+                            std::string declaration;
+                            while (std::getline(propertyStream, declaration, ','))
+                            {
+                                const std::size_t equals = declaration.find('=');
+                                if (equals == std::string::npos) continue;
+                                auto trim=[](std::string value){ const auto first=value.find_first_not_of(" \t\r\n"); const auto last=value.find_last_not_of(" \t\r\n"); return first==std::string::npos?std::string():value.substr(first,last-first+1); };
+                                const std::string propertyName=trim(declaration.substr(0,equals));
+                                const std::string defaultValue=trim(declaration.substr(equals+1));
+                                if(propertyName.empty()||defaultValue.empty()) continue;
+                                auto& values=script->properties[script->scriptNames[i]];
+                                auto valueIt=values.find(propertyName);
+                                if(valueIt==values.end())
+                                {
+                                    ScriptPropertyValue value;
+                                    if(defaultValue=="true"||defaultValue=="false"){ value.type=ScriptPropertyType::Boolean; value.value=defaultValue; }
+                                    else if(defaultValue.rfind("Entity(",0)==0){ value.type=ScriptPropertyType::Entity; value.value="0"; }
+                                    else if(defaultValue.front()=='"'||defaultValue.front()=='\''){ value.type=ScriptPropertyType::String; value.value=defaultValue.substr(1,defaultValue.size()>1?defaultValue.size()-2:0); }
+                                    else { value.type=ScriptPropertyType::Number; value.value=defaultValue; }
+                                    valueIt=values.emplace(propertyName,value).first;
+                                }
+                                ScriptPropertyValue& value=valueIt->second;
+                                ImGui::PushID(propertyName.c_str());
+                                if(value.type==ScriptPropertyType::Boolean)
+                                {
+                                    bool v=value.value=="true"||value.value=="1";
+                                    if(ImGui::Checkbox(propertyName.c_str(),&v)) value.value=v?"true":"false";
+                                }
+                                else if(value.type==ScriptPropertyType::Number)
+                                {
+                                    float v=0.0f; try{v=std::stof(value.value);}catch(...){}
+                                    if(ImGui::DragFloat(propertyName.c_str(),&v,0.05f)) value.value=std::to_string(v);
+                                }
+                                else if(value.type==ScriptPropertyType::Entity)
+                                {
+                                    std::uint32_t current=0; try{current=(std::uint32_t)std::stoul(value.value);}catch(...){}
+                                    const Entity currentEntity=scene.FindEntityByID(current);
+                                    const NameComponent* currentName=currentEntity.IsValid()?scene.GetComponent<NameComponent>(currentEntity):nullptr;
+                                    const std::string preview=currentName?currentName->name:"None";
+                                    if(ImGui::BeginCombo(propertyName.c_str(),preview.c_str()))
+                                    {
+                                        if(ImGui::Selectable("None",current==0)) value.value="0";
+                                        for(Entity candidate:scene.GetEntities())
+                                        {
+                                            const NameComponent* candidateName=scene.GetComponent<NameComponent>(candidate);
+                                            if(candidateName && ImGui::Selectable(candidateName->name.c_str(),candidate.GetID()==current))
+                                                value.value=std::to_string(candidate.GetID());
+                                        }
+                                        ImGui::EndCombo();
+                                    }
+                                }
+                                else
+                                {
+                                    char valueBuffer[256]; std::snprintf(valueBuffer,sizeof(valueBuffer),"%s",value.value.c_str());
+                                    if(ImGui::InputText(propertyName.c_str(),valueBuffer,sizeof(valueBuffer))) value.value=valueBuffer;
+                                }
+                                ImGui::PopID();
+                            }
+                        }
                     }
 
                     ImGui::SameLine();
