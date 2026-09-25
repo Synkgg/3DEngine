@@ -21,7 +21,7 @@ Scripts 1
 Script Assets/Scripts/MultiplayerPlayground.lua
 Entity 2
 Name Player
-Position 0 2 0
+Position 0 2 -75
 Rotation 0 3.14159 0
 Scale 1 1 1
 Parent 0
@@ -58,7 +58,7 @@ Entity 4
 Name ArenaFloor
 Position 0 -0.6 0
 Rotation 0 0 0
-Scale 18 1 15
+Scale 100 1 100
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -90,9 +90,9 @@ Collider 1 1 1 1
 Scripts 0
 Entity 6
 Name NorthWall
-Position 0 2 -14
+Position 0 4 -100
 Rotation 0 0 0
-Scale 18 5 1
+Scale 100 8 1
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -107,9 +107,9 @@ Collider 1 1 1 1
 Scripts 0
 Entity 7
 Name SouthWall
-Position 0 2 14
+Position 0 4 100
 Rotation 0 0 0
-Scale 18 5 1
+Scale 100 8 1
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -124,9 +124,9 @@ Collider 1 1 1 1
 Scripts 0
 Entity 8
 Name WestWall
-Position -17 2 0
+Position -100 4 0
 Rotation 0 0 0
-Scale 1 5 15
+Scale 1 8 100
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -141,9 +141,9 @@ Collider 1 1 1 1
 Scripts 0
 Entity 9
 Name EastWall
-Position 17 2 0
+Position 100 4 0
 Rotation 0 0 0
-Scale 1 5 15
+Scale 1 8 100
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -362,9 +362,9 @@ Collider 0
 Scripts 0
 Entity 22
 Name RedGoal
-Position 0 0.25 -10.5
+Position 0 0.25 -78
 Rotation 0 0 0
-Scale 7 0.25 3
+Scale 14 0.25 8
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -379,9 +379,9 @@ Collider 0
 Scripts 0
 Entity 23
 Name BlueGoal
-Position 0 0.25 10.5
+Position 0 0.25 78
 Rotation 0 0 0
-Scale 7 0.25 3
+Scale 14 0.25 8
 Parent 0
 PrefabSource ""
 Mesh 1 1
