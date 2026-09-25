@@ -45,6 +45,8 @@ public:
     bool IsDescendant(Entity entity, Entity possibleAncestor) const;
     Transform GetWorldTransform(Entity entity) const;
     Entity DuplicateEntity(Entity source, bool duplicateChildren = true);
+    Entity CloneEntityTo(Entity source, Scene& destination, bool cloneChildren = true) const;
+    void DestroyEntityHierarchy(Entity root);
 
     const std::vector<Entity>& GetEntities() const
     {
