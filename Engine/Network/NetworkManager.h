@@ -12,6 +12,8 @@ struct NetworkGameState
     int blueScore = 0;
     int roundSeconds = 180;
     float orbX = 0, orbY = 1, orbZ = 0;
+    std::uint32_t carrierID = 0;
+    int winner = 0;
 };
 
 struct NetworkTransformState
@@ -31,7 +33,9 @@ public:
     void Disconnect();
     void SendLocalTransform(const NetworkTransformState& state);
     void SetGameState(const NetworkGameState& state);
+    void SendGameAction(std::uint8_t action);
     const NetworkGameState& GetGameState() const { return m_GameState; }
+    std::vector<std::pair<std::uint32_t, std::uint8_t>> ConsumeGameActions();
     const std::unordered_map<std::uint32_t, NetworkTransformState>& GetRemoteTransforms() const { return m_RemoteTransforms; }
 
     bool IsHost() const { return m_Mode == Mode::Host; }
@@ -63,4 +67,5 @@ private:
     std::uint32_t m_LocalPlayerID=0;
     std::uint32_t m_NextPlayerID=2;
     NetworkGameState m_GameState{};
+    std::vector<std::pair<std::uint32_t, std::uint8_t>> m_GameActions;
 };
