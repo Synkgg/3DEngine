@@ -266,6 +266,21 @@ Entity Scene::FindEntityByName(const std::string& name) const
     return Entity();
 }
 
+Entity Scene::FindEntityByID(std::uint32_t id) const
+{
+    for (const Entity& entity : m_Entities)
+        if (entity.GetID() == id) return entity;
+    return Entity();
+}
+
+std::vector<Entity> Scene::GetRootEntities() const
+{
+    std::vector<Entity> roots;
+    for (const Entity& entity : m_Entities)
+        if (!GetParent(entity).IsValid()) roots.push_back(entity);
+    return roots;
+}
+
 Entity Scene::GetParent(Entity child) const
 {
     auto it = m_Parents.find(child.GetID());
