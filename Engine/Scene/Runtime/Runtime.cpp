@@ -43,7 +43,8 @@ void Runtime::Start(
         input,
         renderer,
         uiCanvas,
-        this
+        this,
+        m_ProjectSettings
     );
 
     m_ScriptSystem.Register(
@@ -112,7 +113,8 @@ void Runtime::Update(
                 *m_Input,
                 *m_Renderer,
                 *m_UICanvas,
-                this
+                this,
+                m_ProjectSettings
             );
 
             m_ScriptSystem.Start(scene);
