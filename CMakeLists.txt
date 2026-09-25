@@ -273,3 +273,7 @@ add_custom_command(
     COMMENT "Syncing Assets for $<CONFIG> runtime"
     VERBATIM
 )
+
+
+# Make the engine executable the startup target for Visual Studio generators.
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3DEngine)
