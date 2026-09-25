@@ -1084,11 +1084,10 @@ void LuaScript::BindEngineAPI()
         return m_Runtime->RequestSceneLoad(path);
     });
 
-    sceneApi.set_function("FindEntity", [this](const std::string& name) -> LuaEntityHandle
+    sceneApi.set_function("FindEntity", [this](const std::string& name)
     {
-        if (!m_Scene) return LuaEntityHandle{};
-        Entity found = m_Scene->FindEntityByName(name);
-        return LuaEntityHandle{ m_Scene, found.GetID() };
+        Entity found = m_Scene ? m_Scene->FindEntityByName(name) : Entity();
+        return makeEntityHandle(m_Scene, found.GetID());
     });
 
     sceneApi.set_function("InstantiatePrefab", [this](const std::string& path, std::uint32_t parentID)
