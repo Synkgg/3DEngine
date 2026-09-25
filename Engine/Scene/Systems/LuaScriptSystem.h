@@ -45,6 +45,8 @@ private:
         std::unique_ptr<LuaScript> script;
     };
 
+    void ProcessPendingDestructions();
+
     bool LoadGlobalScript(
         const std::string& filepath
     );
@@ -55,4 +57,5 @@ private:
     > m_Instances;
 
     std::unique_ptr<sol::state> m_Lua;
+    Scene* m_Scene = nullptr;
 };
