@@ -815,7 +815,42 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
         if (!search.empty()) flags |= ImGuiTreeNodeFlags_DefaultOpen;
 
         ImGui::PushID(static_cast<int>(entity.GetID()));
-        const bool open = ImGui::TreeNodeEx("##EntityNode", flags, "%s", label.c_str());
+
+        // Empty scene-graph entities act as hierarchy folders/groups.
+        const bool isGroup =
+            !scene.HasComponent<MeshComponent>(entity) &&
+            !scene.HasComponent<PlayerComponent>(entity) &&
+            !scene.HasComponent<CharacterControllerComponent>(entity) &&
+            !scene.HasComponent<LightComponent>(entity) &&
+            !scene.HasComponent<ColliderComponent>(entity) &&
+            !scene.HasComponent<TextureComponent>(entity);
+
+        bool open = false;
+        if (isGroup)
+        {
+            const ImVec4 folderColor(1.0f, 0.75f, 0.20f, 1.0f);
+
+            // Draw the icon with the icon font, but keep one invisible TreeNode
+            // as the row's interaction owner.
+            open = ImGui::TreeNodeEx("##EntityNode", flags, "##group");
+            const ImVec2 rowMin = ImGui::GetItemRectMin();
+            const float rowHeight = ImGui::GetItemRectSize().y;
+            ImVec2 textPos(rowMin.x + ImGui::GetTreeNodeToLabelSpacing(), rowMin.y);
+
+            if (iconFont != nullptr)
+            {
+                const float iconSize = ImGui::GetFontSize();
+                ImGui::GetWindowDrawList()->AddText(iconFont, iconSize, textPos,
+                    ImGui::GetColorU32(folderColor), ICON_FA_FOLDER);
+                textPos.x += iconSize + ImGui::GetStyle().ItemInnerSpacing.x;
+            }
+
+            ImGui::GetWindowDrawList()->AddText(textPos, ImGui::GetColorU32(folderColor), label.c_str());
+        }
+        else
+        {
+            open = ImGui::TreeNodeEx("##EntityNode", flags, "%s", label.c_str());
+        }
 
         if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
             m_SelectedEntity = entity;
