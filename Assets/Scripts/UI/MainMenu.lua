@@ -48,6 +48,25 @@ end
 
 function OnUpdate(deltaTime)
     if UI.WasClicked("PlayButton") then Input.SetCursorVisible(false); Scene.Load("Assets/Scenes/Graveyard.scene"); return end
+    if UI.WasClicked("HostButton") then
+        if Network.Host(7777) then
+            UI.SetText("NetworkStatus", "HOSTING / UDP 7777 / WAITING FOR PLAYER")
+        else
+            UI.SetText("NetworkStatus", "HOST FAILED / " .. Network.GetLastError())
+        end
+    end
+    if UI.WasClicked("JoinButton") then
+        if Network.Join("127.0.0.1", 7777) then
+            UI.SetText("NetworkStatus", "JOINING / 127.0.0.1:7777")
+        else
+            UI.SetText("NetworkStatus", "JOIN FAILED / " .. Network.GetLastError())
+        end
+    end
+    if Network.IsHost() and Network.GetPlayerCount() > 1 then
+        UI.SetText("NetworkStatus", "HOST ONLINE / " .. Network.GetPlayerCount() .. " PLAYERS")
+    elseif Network.IsConnected() and not Network.IsHost() then
+        UI.SetText("NetworkStatus", "CLIENT ONLINE / 127.0.0.1:7777")
+    end
     if UI.WasClicked("SettingsButton") then
         loadPending()
         UI.SetText("ApplyLabel", "APPLY & SAVE")
