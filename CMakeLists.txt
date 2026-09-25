@@ -247,6 +247,21 @@ set_target_properties(
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+# SDL3 is a shared library on Windows. Copy the exact runtime DLL produced for
+# the active configuration beside the engine executable so Debug and Release
+# can both be launched directly from Visual Studio or Explorer.
+if (WIN32)
+    add_custom_command(
+        TARGET 3DEngine
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<TARGET_FILE:SDL3::SDL3>"
+                "$<TARGET_FILE_DIR:3DEngine>"
+        COMMENT "Copying SDL3 runtime for $<CONFIG>"
+        VERBATIM
+    )
+endif()
+
 add_custom_command(
     TARGET 3DEngine
     POST_BUILD
