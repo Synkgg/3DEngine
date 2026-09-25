@@ -42,6 +42,7 @@ public:
     bool IsHost() const { return m_Mode == Mode::Host; }
     bool IsConnected() const { return m_Mode != Mode::Offline; }
     bool IsHandshakeComplete() const { return m_Mode == Mode::Host || m_LocalPlayerID != 0; }
+    bool WasKickedByHost();
     std::uint32_t GetLocalPlayerID() const { return m_Mode == Mode::Host ? 1u : m_LocalPlayerID; }
     int GetPlayerCount() const { return m_Mode == Mode::Offline ? 1 : (m_Mode == Mode::Host ? 1 + (int)m_Clients.size() : (m_LocalPlayerID ? 2 : 1)); }
     const std::string& GetLastError() const { return m_LastError; }
@@ -69,4 +70,5 @@ private:
     std::uint32_t m_NextPlayerID=2;
     NetworkGameState m_GameState{};
     std::vector<std::pair<std::uint32_t, std::uint8_t>> m_GameActions;
+    bool m_KickedByHost=false;
 };
