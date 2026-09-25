@@ -63,7 +63,7 @@ function OnUpdate(deltaTime)
   if UI.WasClicked("ResumeButton") then
    paused=false Scene.SetPaused(false) UI.SetVisible("PauseMenu",false) Input.SetCursorVisible(false)
   elseif UI.WasClicked("PauseMainMenuButton") then
-   Scene.SetPaused(false) Scene.Load("Assets/Scenes/MainMenu.scene")
+   Scene.SetPaused(false) Network.Disconnect() Scene.Load("Assets/Scenes/MainMenu.scene")
   end
   return
  end
@@ -76,6 +76,6 @@ function OnUpdate(deltaTime)
 
  if gateOpen then
   if UI.WasClicked("PlayAgainButton") then Scene.SetPaused(false) Scene.Load("Assets/Scenes/Graveyard.scene")
-  elseif UI.WasClicked("MainMenuButton") then Scene.SetPaused(false) Scene.Load("Assets/Scenes/MainMenu.scene") end
+  elseif UI.WasClicked("MainMenuButton") then Scene.SetPaused(false) Network.Disconnect() Scene.Load("Assets/Scenes/MainMenu.scene") end
  end
 end
