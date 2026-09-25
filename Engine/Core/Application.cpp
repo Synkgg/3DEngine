@@ -81,6 +81,7 @@ bool Application::Initialize()
     m_UICanvas.Clear();
     m_Audio.Initialize();
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
+    m_Runtime.SetAudioEngine(&m_Audio);
 
     return true;
 }
