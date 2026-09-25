@@ -17,6 +17,8 @@ public:
     static Mat4 RotationY(float angle);
     static Mat4 RotationZ(float angle);
 
+    static Mat4 Orthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
+
     static Mat4 Perspective(
         float fov,
         float aspect,
