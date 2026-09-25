@@ -126,10 +126,10 @@ Name AltarCrystal
 Position 0 1.35 0
 Rotation 0 0 0
 Scale 0.55 1.1 0.55
-Mesh 1 1
+Mesh 1 0 "Assets/Models/CrystalShard.obj"
 Color 1 0.12 0.68 1.00 1
 Texture 0
-Material 1 0.18 0.22 1 1.8
+Material 1 0.12 0.16 1 3.6
 Interactable 0
 Player 0
 CharacterController 0
@@ -238,7 +238,7 @@ Texture 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1 0.91 0.78 -0.45 -1 -0.25 1.05
+Light 1 1 0.86 0.68 -0.62 -1 -0.38 1.55 0 80 23 35 1
 Collider 0
 Scripts 0
 Entity 17
@@ -246,10 +246,10 @@ Name EnergyCrystalWest
 Position -9 1.0 -3
 Rotation 0 0 0
 Scale 0.55 1.2 0.55
-Mesh 1 1
+Mesh 1 0 "Assets/Models/CrystalShard.obj"
 Color 1 0.08 0.55 1.00 1
 Texture 0
-Material 1 0.18 0.22 1 1.8
+Material 1 0.12 0.16 1 3.6
 Interactable 1 1 "Collect energy crystal"
 Player 0
 CharacterController 0
@@ -262,10 +262,10 @@ Name EnergyCrystalEast
 Position 9 1.0 3
 Rotation 0 0 0
 Scale 0.55 1.2 0.55
-Mesh 1 1
+Mesh 1 0 "Assets/Models/CrystalShard.obj"
 Color 1 0.10 0.78 0.92 1
 Texture 0
-Material 1 0.18 0.22 1 1.8
+Material 1 0.12 0.16 1 3.6
 Interactable 1 1 "Collect energy crystal"
 Player 0
 CharacterController 0
@@ -278,10 +278,10 @@ Name EnergyCrystalNorth
 Position 4 1.0 -9
 Rotation 0 0 0
 Scale 0.55 1.2 0.55
-Mesh 1 1
+Mesh 1 0 "Assets/Models/CrystalShard.obj"
 Color 1 0.42 0.32 1.00 1
 Texture 0
-Material 1 0.18 0.22 1 1.8
+Material 1 0.12 0.16 1 3.6
 Interactable 1 1 "Collect energy crystal"
 Player 0
 CharacterController 0
@@ -477,11 +477,11 @@ Scale 0.24 0.24 0.24
 Mesh 1 2
 Color 1 0.08 0.52 1 1
 Texture 0
-Material 1 0.05 0.16 1 3.2
+Material 1 0.05 0.14 1 4.2
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.08 0.42 1 0 -1 0 2.8 1 7 23 35 0
+Light 1 0.08 0.42 1 0 -1 0 4.0 1 8 23 35 0
 Collider 0
 Scripts 0
 Entity 33
@@ -496,7 +496,7 @@ Material 1 0.05 0.16 1 3.2
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.08 0.8 0.68 0 -1 0 2.8 1 7 23 35 0
+Light 1 0.08 0.8 0.68 0 -1 0 4.0 1 8 23 35 0
 Collider 0
 Scripts 0
 Entity 34
@@ -511,7 +511,7 @@ Material 1 0.05 0.16 1 3.2
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.45 0.18 1 0 -1 0 2.8 1 7 23 35 0
+Light 1 0.45 0.18 1 0 -1 0 4.0 1 8 23 35 0
 Collider 0
 Scripts 0
 Entity 35
@@ -522,11 +522,11 @@ Scale 0.35 0.35 0.35
 Mesh 1 2
 Color 1 0.08 0.62 1 1
 Texture 0
-Material 1 0.05 0.14 1 4
+Material 1 0.05 0.12 1 5.2
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.08 0.52 1 0 -1 0 3.5 1 9 23 35 0
+Light 1 0.08 0.52 1 0 -1 0 5.0 1 11 23 35 0
 Collider 0
 Scripts 0
 Entity 36
@@ -661,7 +661,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1 0.48 0.22 0 -1 0 1.6 1 8 23 35 0
+Light 1 1 0.48 0.22 0 -1 0 2.0 1 9 23 35 0
 Collider 0
 Scripts 0
 Entity 45
@@ -676,7 +676,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1 0.42 0.18 0 -1 0 1.4 1 8 23 35 0
+Light 1 1 0.42 0.18 0 -1 0 1.8 1 9 23 35 0
 Collider 0
 Scripts 0
 Entity 46
@@ -684,7 +684,7 @@ Name GardenStoneNW
 Position -6 0.5 -5
 Rotation 0 0 0
 Scale 2.8 0.65 2.1
-Mesh 1 2
+Mesh 1 0 "Assets/Models/CourtyardRock.obj"
 Color 1 0.24 0.27 0.23 1
 Texture 0
 Material 1 0.02 0.95 0.68 0
@@ -699,7 +699,7 @@ Name GardenStoneNE
 Position 6 0.42 -5
 Rotation 0 0 0
 Scale 2.2 0.55 1.8
-Mesh 1 2
+Mesh 1 0 "Assets/Models/CourtyardRock.obj"
 Color 1 0.23 0.26 0.22 1
 Texture 0
 Material 1 0.02 0.95 0.68 0
@@ -717,7 +717,7 @@ Scale 0.9 0.16 0.9
 Mesh 1 4
 Color 1 0.10 0.62 1 1
 Texture 0
-Material 1 0.15 0.18 1 2.8
+Material 1 0.12 0.14 1 4.0
 Interactable 0
 Player 0
 CharacterController 0
