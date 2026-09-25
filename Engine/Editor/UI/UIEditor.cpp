@@ -1247,13 +1247,31 @@ void UIEditor::DrawWidget(
                 : ImGui::GetIO().Fonts->Fonts.front();
             const float previewSize = std::max(1.0f, fontSize);
 
-            drawList->AddText(
-                previewFont,
-                previewSize,
-                min,
-                fillColor,
-                textValue
-            );
+            // ImDrawList::AddText does not lay out embedded newlines for
+            // our designer preview, so render each saved line explicitly.
+            float lineY = min.y;
+            const float lineHeight = previewSize * 1.2f;
+            std::string line;
+            const std::string& previewText = text->GetText();
+            for (std::size_t i = 0; i <= previewText.size(); ++i)
+            {
+                if (i == previewText.size() || previewText[i] == '\n')
+                {
+                    drawList->AddText(
+                        previewFont,
+                        previewSize,
+                        ImVec2(min.x, lineY),
+                        fillColor,
+                        line.c_str()
+                    );
+                    line.clear();
+                    lineY += lineHeight;
+                }
+                else if (previewText[i] != '\r')
+                {
+                    line += previewText[i];
+                }
+            }
         }
     }
     else if (widget.GetType() == UIWidgetType::Image)
