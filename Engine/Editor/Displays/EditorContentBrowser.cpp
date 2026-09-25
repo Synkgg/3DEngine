@@ -6,6 +6,7 @@
 #include "../../Core/Logger.h"
 #include "../../Scene/Scene.h"
 #include "../../Scene/SceneSerializer.h"
+#include "../../Scene/PrefabSerializer.h"
 
 #include "../Fonts/IconsFontAwesome6.h"
 
@@ -376,6 +377,10 @@ void Editor::RenderContentBrowser(
                 !entry.directory &&
                 extension == ".obj";
 
+            const bool isPrefab =
+                !entry.directory &&
+                extension == ".prefab";
+
             ImGui::PushID(
                 entry.path.string().c_str()
             );
@@ -500,10 +505,10 @@ void Editor::RenderContentBrowser(
                             1.0f
                         );
                 }
-                else if (isMesh)
+                else if (isMesh || isPrefab)
                 {
                     icon = ICON_FA_CUBE;
-                    iconColor = ImVec4(0.35f, 0.78f, 0.95f, 1.0f);
+                    iconColor = isPrefab ? ImVec4(0.35f, 0.9f, 0.55f, 1.0f) : ImVec4(0.35f, 0.78f, 0.95f, 1.0f);
                 }
                 else if (isScript)
                 {
@@ -620,6 +625,18 @@ void Editor::RenderContentBrowser(
                         ) +
                         entry.path.string()
                     );
+                }
+            }
+
+            if (isPrefab &&
+                ImGui::IsItemHovered() &&
+                ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                Entity instance = PrefabSerializer::Instantiate(scene, entry.path.string());
+                if (instance.IsValid())
+                {
+                    m_SelectedEntity = instance;
+                    Logger::Info("Instantiated prefab: " + entry.path.filename().string());
                 }
             }
 
@@ -799,6 +816,11 @@ void Editor::RenderContentBrowser(
                                 entry.path.string()
                             );
                         }
+                    }
+                    else if (isPrefab)
+                    {
+                        Entity instance = PrefabSerializer::Instantiate(scene, entry.path.string());
+                        if (instance.IsValid()) m_SelectedEntity = instance;
                     }
                     else if (isUI)
                     {
