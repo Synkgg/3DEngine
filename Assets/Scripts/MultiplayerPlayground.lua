@@ -9,6 +9,43 @@ local pickupRadius = 2.4
 local scoreLimit = 5
 local restartTimer = 0.0
 local actionCooldown = 0.0
+local paused = false
+local aaSamples = {1,2,4,8}
+local viewDistances = {220.0,500.0,1000.0}
+local aaIndex, viewIndex = 1, 1
+local pauseFog, pauseBloom = false, false
+
+local function nearestIndex(values,current)
+    local best,distance=1,math.abs(values[1]-current)
+    for i=2,#values do local d=math.abs(values[i]-current);if d<distance then best,distance=i,d end end
+    return best
+end
+
+local function refreshPauseSettings()
+    aaIndex=nearestIndex(aaSamples,Graphics.GetAntiAliasingSamples())
+    viewIndex=nearestIndex(viewDistances,Graphics.GetViewDistance())
+    pauseFog=Graphics.GetFog();pauseBloom=Graphics.GetBloom()
+    UI.SetText("PauseAAValue",aaSamples[aaIndex]==1 and "OFF" or aaSamples[aaIndex].."X")
+    UI.SetText("PauseFogValue",pauseFog and "ENABLED" or "DISABLED")
+    UI.SetText("PauseBloomValue",pauseBloom and "ENABLED" or "DISABLED")
+    UI.SetText("PauseViewValue",tostring(math.floor(viewDistances[viewIndex])))
+end
+
+local function setPaused(value)
+    paused=value
+    Scene.SetPaused(value)
+    UI.SetVisible("PauseMenu",value)
+    Input.SetCursorVisible(value)
+    if value then refreshPauseSettings() end
+end
+
+local function savePauseSettings()
+    Graphics.SetAntiAliasingSamples(aaSamples[aaIndex])
+    Graphics.SetFog(pauseFog)
+    Graphics.SetBloom(pauseBloom)
+    Graphics.SetViewDistance(viewDistances[viewIndex])
+    Graphics.Save()
+end
 
 local function dist2(p, x, y, z)
     local dx,dy,dz=p.x-x,p.y-y,p.z-z
@@ -62,11 +99,11 @@ local function updateHUD()
     if winner ~= 0 then
         UI.SetText("Objective",(winner==1 and "RED" or "BLUE").." WINS // NEW ROUND STARTING")
     elseif carrierID == id then
-        UI.SetText("Objective","YOU HAVE THE CORE // RUN TO A GOAL // E TO DROP")
+        UI.SetText("Objective","STEP 3: YOU HAVE THE CORE // RUN TO A GLOWING END ZONE // E DROPS")
     elseif carrierID ~= 0 then
-        UI.SetText("Objective","PLAYER "..tostring(carrierID).." HAS THE CORE")
+        UI.SetText("Objective","CORE TAKEN BY PLAYER "..tostring(carrierID).." // CHASE THEM OR WAIT FOR A DROP")
     else
-        UI.SetText("Objective","GET CLOSE TO THE CORE // PRESS E TO PICK UP")
+        UI.SetText("Objective","STEP 1: FIND GOLD CORE AT CENTER // STEP 2: GET CLOSE + PRESS E")
     end
 end
 
@@ -74,6 +111,7 @@ function OnCreate()
     UI.Load("Assets/UI/MultiplayerPlayground.ui")
     Input.SetCursorVisible(false)
     Scene.SetPaused(false)
+    UI.SetVisible("PauseMenu",false)
     if Network.IsHost() then
         Network.SetCoreRushState(0,0,180,orbX,orbY,orbZ,0,0)
     end
@@ -83,6 +121,23 @@ function OnUpdate(dt)
     hudTimer=hudTimer+dt
     sendTimer=sendTimer+dt
     actionCooldown=math.max(0,actionCooldown-dt)
+
+    if Input.IsKeyPressed("Escape") then
+        setPaused(not paused)
+        return
+    end
+
+    if paused then
+        if UI.WasClicked("ResumeButton") then setPaused(false); return end
+        if UI.WasClicked("PauseAAButton") then aaIndex=aaIndex%#aaSamples+1;savePauseSettings();refreshPauseSettings() end
+        if UI.WasClicked("PauseFogButton") then pauseFog=not pauseFog;savePauseSettings();refreshPauseSettings() end
+        if UI.WasClicked("PauseBloomButton") then pauseBloom=not pauseBloom;savePauseSettings();refreshPauseSettings() end
+        if UI.WasClicked("PauseViewButton") then viewIndex=viewIndex%#viewDistances+1;savePauseSettings();refreshPauseSettings() end
+        if UI.WasClicked("PauseMenuButton") then
+            Scene.SetPaused(false);Network.Disconnect();Scene.Load("Assets/Scenes/MainMenu.scene");return
+        end
+        return
+    end
 
     if Input.IsKeyPressed("E") and actionCooldown<=0 then
         actionCooldown=0.25
@@ -132,9 +187,4 @@ function OnUpdate(dt)
 
     if hudTimer>=0.1 then hudTimer=0;updateHUD() end
 
-    if Input.IsKeyPressed("Escape") then
-        Scene.SetPaused(false)
-        Network.Disconnect()
-        Scene.Load("Assets/Scenes/MainMenu.scene")
-    end
 end
