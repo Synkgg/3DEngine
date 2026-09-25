@@ -762,6 +762,20 @@ namespace
                     ImGui::EndPopup();
                 }
 
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY"))
+                    {
+                        const std::uint32_t childID = *static_cast<const std::uint32_t*>(payload->Data);
+                        Entity child;
+                        for (const Entity& candidate : scene.GetEntities())
+                            if (candidate.GetID() == childID) { child = candidate; break; }
+                        if (child.IsValid() && scene.SetParent(child, entityToRender))
+                            Logger::Info("Parented entity " + std::to_string(childID) + " to " + std::to_string(entityToRender.GetID()));
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
                 /*
                  * Drag entity.
                  */
