@@ -34,8 +34,8 @@ function OnCreate()
     UI.Load("Assets/UI/Main.ui")
     UI.SetVisible("MainMenu", true)
     UI.SetVisible("SettingsPanel", false)
-    Camera.SetPosition(-1.5, 2.2, 7.5)
-    Camera.SetRotation(-0.12, -0.06)
+    -- Keep the renderer's original menu framing; the scene composition is built around it.
+    Camera.Reset()
     ApplyGraphics()
 end
 
