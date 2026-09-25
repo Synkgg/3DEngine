@@ -11,6 +11,7 @@
 
 class Texture2D;
 class UIText;
+class UIButton;
 class Renderer;
 class Input;
 
