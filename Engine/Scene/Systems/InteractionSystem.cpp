@@ -182,9 +182,7 @@ void InteractionSystem::Update(
         }
 
         TransformComponent* transform =
-            scene.GetComponent<
-            TransformComponent
-            >(entity);
+            scene.GetComponent<TransformComponent>(entity);
 
         ColliderComponent* collider =
             scene.GetComponent<
@@ -197,8 +195,8 @@ void InteractionSystem::Update(
             continue;
         }
 
-        const Vec3 scale =
-            transform->transform.scale;
+        const Transform worldTransform = scene.GetWorldTransform(entity);
+        const Vec3 scale = worldTransform.scale;
 
         const Vec3 halfExtents(
             collider->width *
@@ -219,7 +217,7 @@ void InteractionSystem::Update(
         if (!RayIntersectsAABB(
             rayOrigin,
             rayDirection,
-            transform->transform.position,
+            worldTransform.position,
             halfExtents,
             distance))
         {
