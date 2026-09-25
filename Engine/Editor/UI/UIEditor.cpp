@@ -517,25 +517,16 @@ void UIEditor::DrawInspector(
             text->GetText().c_str()
         );
 
-        // Multiline editor: Enter commits focus naturally, while Shift+Enter
-        // inserts a newline into the text value.
+        // Keep the widget synchronized with ImGui's multiline buffer on
+        // every edit. InputTextMultiline already inserts real newline
+        // characters, so those newlines are then preserved by UISerializer.
         if (ImGui::InputTextMultiline(
             "Content",
             textBuffer,
             sizeof(textBuffer),
-            ImVec2(-1.0f, 92.0f),
-            ImGuiInputTextFlags_EnterReturnsTrue))
+            ImVec2(-1.0f, 92.0f)))
         {
             text->SetText(textBuffer);
-        }
-
-        if (ImGui::IsItemActive() &&
-            ImGui::GetIO().KeyShift &&
-            ImGui::IsKeyPressed(ImGuiKey_Enter))
-        {
-            std::string value = text->GetText();
-            value += '\n';
-            text->SetText(value);
         }
 
         float fontSize =
