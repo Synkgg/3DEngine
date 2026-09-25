@@ -16,6 +16,7 @@ local viewDistances = {220.0,500.0,1000.0}
 local aaIndex, viewIndex = 1, 1
 local pauseFog, pauseBloom = false, false
 local settingsOpen = false
+local spawnedAtBase = false
 
 local function teamFor(id)
     if id == 0 then return "WAITING" end
@@ -159,6 +160,10 @@ function OnCreate()
     UI.SetVisible("InteractPrompt",false)
     UI.SetVisible("InteractPlate",false)
     moveLocalPlayerToBase()
+    spawnedAtBase = Network.GetLocalPlayerID() ~= 0
+    UI.SetVisible("StartMatchButton",Network.IsHost())
+    UI.SetVisible("RestartMatchButton",false)
+    Input.SetCursorVisible(Network.IsHost())
     if Network.IsHost() then
         -- The engine sandbox does not expose Lua's os library. math.random is sufficient here.
         resetCore()
@@ -188,9 +193,19 @@ function OnUpdate(dt)
         return
     end
 
-    if Network.IsHost() and UI.WasClicked("StartMatchButton") then
+    -- Clients may not have their player ID yet during OnCreate. Spawn them
+    -- at their own base as soon as the handshake assigns an ID.
+    if not spawnedAtBase and Network.GetLocalPlayerID() ~= 0 then
+        moveLocalPlayerToBase()
+        spawnedAtBase=true
+    end
+
+    -- The host can click START MATCH, or press Enter as a keyboard fallback.
+    if Network.IsHost() and matchStarted==0 and
+       (UI.WasClicked("StartMatchButton") or Input.IsKeyPressed("Enter") or Input.IsKeyPressed("Return")) then
         resetRound()
         moveLocalPlayerToBase()
+        Input.SetCursorVisible(false)
     end
 
     if Network.IsHost() and UI.WasClicked("RestartMatchButton") then
@@ -215,9 +230,9 @@ function OnUpdate(dt)
                 if p.valid then
                     orbX,orbY,orbZ=p.x,p.y+1.35,p.z
                     local team=teamFor(carrierID)
-                    if team=="RED" and p.z < -70.0 then
+                    if team=="RED" and p.z < -25.0 then
                         redScore=redScore+1; resetCore()
-                    elseif team=="BLUE" and p.z > 70.0 then
+                    elseif team=="BLUE" and p.z > 25.0 then
                         blueScore=blueScore+1; resetCore()
                     end
                 else
@@ -247,8 +262,10 @@ function OnUpdate(dt)
     local orb=Scene.FindEntity("CoreOrb")
     if orb.id ~= 0 then Scene.SetPosition(orb.id,orbX,orbY,orbZ) end
 
-    UI.SetVisible("StartMatchButton",Network.IsHost() and matchStarted==0)
-    UI.SetVisible("RestartMatchButton",Network.IsHost() and (winner~=0 or roundTime<=0))
+    local hostLobby=Network.IsHost() and matchStarted==0 and winner==0
+    UI.SetVisible("StartMatchButton",hostLobby)
+    UI.SetVisible("RestartMatchButton",Network.IsHost() and winner~=0)
+    if not paused then Input.SetCursorVisible(hostLobby) end
     if hudTimer>=0.1 then hudTimer=0;updateHUD() end
 
 end
