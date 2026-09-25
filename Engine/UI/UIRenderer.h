@@ -14,6 +14,7 @@ class UIText;
 class UIButton;
 class Renderer;
 class Input;
+class AudioEngine;
 
 class UIRenderer
 {
@@ -132,6 +133,7 @@ public:
     );
 
     bool IsMouseInteractionEnabled() const;
+    void SetAudioEngine(AudioEngine* audio) { m_Audio = audio; }
 
 private:
     // ---------------------------------------------------------
@@ -287,4 +289,5 @@ private:
 
     bool m_MouseInteractionEnabled = false;
     UIButton* m_PressedCanvasButton = nullptr;
+    AudioEngine* m_Audio = nullptr;
 };
