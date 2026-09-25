@@ -12,6 +12,7 @@
 class Texture2D;
 class UIText;
 class UIButton;
+class UITextInput;
 class Renderer;
 class Input;
 class AudioEngine;
@@ -156,6 +157,7 @@ private:
         const UIText& text,
         const UIRect& rect
     );
+    void DrawTextInput(const UITextInput& input, const UIRect& rect);
 
     bool InitializeFontAtlas();
     void DrawFontGlyph(
@@ -225,6 +227,7 @@ private:
 
     void ResetButtonInput(UIWidget& widget);
     UIButton* FindTopButton(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
+    UITextInput* FindTopTextInput(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
 
     bool GetAbsolutePosition(
         const std::string& id,
@@ -289,5 +292,6 @@ private:
 
     bool m_MouseInteractionEnabled = false;
     UIButton* m_PressedCanvasButton = nullptr;
+    UITextInput* m_FocusedTextInput = nullptr;
     AudioEngine* m_Audio = nullptr;
 };
