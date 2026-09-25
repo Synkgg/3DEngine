@@ -78,6 +78,7 @@ local function refreshExtraSettings()
     UI.SetText("InvertValue","INVERT Y: "..(invertY and "ON" or "OFF")); UI.SetText("SprintModeValue","SPRINT: "..(sprintToggle and "TOGGLE" or "HOLD"))
     UI.SetText("CameraBobValue","CAMERA BOB: "..(cameraBob and "ON" or "OFF")); UI.SetText("MasterVolumeValue","MASTER: "..math.floor(volumeValues[masterIndex]*100).."%")
     UI.SetText("SFXVolumeValue","SFX: "..math.floor(volumeValues[sfxIndex]*100).."%"); UI.SetText("UIVolumeValue","UI VOLUME: "..math.floor(volumeValues[uiVolumeIndex]*100).."%")
+    UI.SetValue("MasterVolumeSlider",volumeValues[masterIndex]); UI.SetValue("SFXVolumeSlider",volumeValues[sfxIndex]); UI.SetValue("UIVolumeSlider",volumeValues[uiVolumeIndex])
     UI.SetText("ShowFPSValue","SHOW FPS: "..(showFPS and "ON" or "OFF")); UI.SetVisible("FPSCounter",showFPS)
 end
 
@@ -240,9 +241,11 @@ function OnUpdate(dt)
         if UI.WasClicked("InvertButton") then invertY=not invertY;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
         if UI.WasClicked("SprintModeButton") then sprintToggle=not sprintToggle;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
         if UI.WasClicked("CameraBobButton") then cameraBob=not cameraBob;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("MasterVolumeButton") then masterIndex=masterIndex%#volumeValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("SFXVolumeButton") then sfxIndex=sfxIndex%#volumeValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("UIVolumeButton") then uiVolumeIndex=uiVolumeIndex%#volumeValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        local master=UI.GetValue("MasterVolumeSlider"); local sfx=UI.GetValue("SFXVolumeSlider"); local uiVol=UI.GetValue("UIVolumeSlider")
+        masterIndex=nearestIndex(volumeValues,master); sfxIndex=nearestIndex(volumeValues,sfx); uiVolumeIndex=nearestIndex(volumeValues,uiVol)
+        Audio.SetMasterVolume(master); Audio.SetSFXVolume(sfx); Audio.SetUIVolume(uiVol)
+        UI.SetText("MasterVolumeValue","MASTER: "..math.floor(master*100+0.5).."%")
+        UI.SetText("SFXVolumeValue","SFX: "..math.floor(sfx*100+0.5).."%"); UI.SetText("UIVolumeValue","UI VOLUME: "..math.floor(uiVol*100+0.5).."%")
         if UI.WasClicked("ShowFPSButton") then showFPS=not showFPS;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
         if UI.WasClicked("PauseMenuButton") then Scene.SetPaused(false);Network.Disconnect();Scene.Load("Assets/Scenes/MainMenu.scene");return end
         return
