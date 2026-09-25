@@ -194,6 +194,21 @@ void main()
 }
 )";
 
+static const char* modelPreviewVertexShaderSource = R"(
+#version 450 core
+layout(location=0) in vec3 a_Position;
+layout(location=1) in vec3 a_Normal;
+uniform mat4 u_MVP;
+out vec3 v_Normal;
+void main(){ v_Normal=a_Normal; gl_Position=u_MVP*vec4(a_Position,1.0); }
+)";
+static const char* modelPreviewFragmentShaderSource = R"(
+#version 450 core
+in vec3 v_Normal;
+out vec4 FragColor;
+void main(){ vec3 n=normalize(v_Normal); float d=max(dot(n,normalize(vec3(-0.45,0.75,0.55))),0.0); vec3 b=vec3(0.58,0.62,0.68); FragColor=vec4(b*(0.30+d*0.78),1.0); }
+)";
+
 static const char* shadowVertexShaderSource = R"(
 #version 450 core
 layout(location = 0) in vec3 a_Position;
@@ -486,6 +501,12 @@ bool Renderer::Initialize(Window& window)
 		return false;
 	}
 
+    if (!m_ModelPreviewShader.Initialize(modelPreviewVertexShaderSource, modelPreviewFragmentShaderSource))
+    {
+        Logger::Error("Failed to initialize model preview shader.");
+        return false;
+    }
+
 	m_CubeMesh =
 		PrimitiveMesh::CreateCube();
 
@@ -550,6 +571,8 @@ void Renderer::Shutdown()
 {
 	m_DebugRenderer.Shutdown();
 	m_UIRenderer.Shutdown();
+    DestroyModelPreviewTarget();
+    m_ModelPreviewShader.Shutdown();
 
 	m_CubeMesh.reset();
 	m_PlaneMesh.reset();
@@ -663,6 +686,47 @@ Mesh* Renderer::GetModelMesh(const std::string& modelPath)
     Mesh* result = loaded.get();
     m_ModelCache.emplace(modelPath, std::move(loaded));
     return result;
+}
+
+bool Renderer::EnsureModelPreviewTarget(unsigned int width, unsigned int height)
+{
+    width=std::max(1u,width); height=std::max(1u,height);
+    if(m_ModelPreviewFramebuffer && m_ModelPreviewWidth==width && m_ModelPreviewHeight==height) return true;
+    DestroyModelPreviewTarget();
+    glGenFramebuffers(1,&m_ModelPreviewFramebuffer); glBindFramebuffer(GL_FRAMEBUFFER,m_ModelPreviewFramebuffer);
+    glGenTextures(1,&m_ModelPreviewTexture); glBindTexture(GL_TEXTURE_2D,m_ModelPreviewTexture);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,(GLsizei)width,(GLsizei)height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,m_ModelPreviewTexture,0);
+    glGenRenderbuffers(1,&m_ModelPreviewDepth); glBindRenderbuffer(GL_RENDERBUFFER,m_ModelPreviewDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,(GLsizei)width,(GLsizei)height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,m_ModelPreviewDepth);
+    bool ok=glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE; glBindFramebuffer(GL_FRAMEBUFFER,0);
+    if(!ok){DestroyModelPreviewTarget();return false;} m_ModelPreviewWidth=width;m_ModelPreviewHeight=height;return true;
+}
+void Renderer::DestroyModelPreviewTarget()
+{
+    if(m_ModelPreviewDepth)glDeleteRenderbuffers(1,&m_ModelPreviewDepth);
+    if(m_ModelPreviewTexture)glDeleteTextures(1,&m_ModelPreviewTexture);
+    if(m_ModelPreviewFramebuffer)glDeleteFramebuffers(1,&m_ModelPreviewFramebuffer);
+    m_ModelPreviewDepth=m_ModelPreviewTexture=m_ModelPreviewFramebuffer=0;m_ModelPreviewWidth=m_ModelPreviewHeight=0;
+}
+unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int width,unsigned int height)
+{
+    Mesh* mesh=GetModelMesh(path); if(!mesh||mesh->GetVertices().empty()||!EnsureModelPreviewTarget(width,height))return 0;
+    const auto& v=mesh->GetVertices(); Vec3 mn(v[0].position[0],v[0].position[1],v[0].position[2]),mx=mn;
+    for(const Vertex& x:v){mn.x=std::min(mn.x,x.position[0]);mn.y=std::min(mn.y,x.position[1]);mn.z=std::min(mn.z,x.position[2]);mx.x=std::max(mx.x,x.position[0]);mx.y=std::max(mx.y,x.position[1]);mx.z=std::max(mx.z,x.position[2]);}
+    Vec3 center((mn.x+mx.x)*.5f,(mn.y+mx.y)*.5f,(mn.z+mx.z)*.5f);
+    float radius=std::max(.1f,std::max(mx.x-mn.x,std::max(mx.y-mn.y,mx.z-mn.z))*.5f),dist=radius*3.1f;
+    Mat4 view=Mat4::LookAt(Vec3(center.x+dist*.78f,center.y+dist*.58f,center.z+dist),center,Vec3(0,1,0));
+    Mat4 proj=Mat4::Perspective(45.f*.0174532925f,(float)width/(float)height,.01f,dist+radius*4.f);
+    Mat4 mvp=proj*view;
+    GLint oldFbo=0,oldVp[4]{};glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&oldFbo);glGetIntegerv(GL_VIEWPORT,oldVp);
+    glBindFramebuffer(GL_FRAMEBUFFER,m_ModelPreviewFramebuffer);glViewport(0,0,(GLsizei)width,(GLsizei)height);glEnable(GL_DEPTH_TEST);
+    glClearColor(.075f,.082f,.095f,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    m_ModelPreviewShader.Bind();m_ModelPreviewShader.SetMat4("u_MVP",mvp);mesh->Bind();
+    glDrawElements(GL_TRIANGLES,(GLsizei)mesh->GetIndexCount(),GL_UNSIGNED_INT,nullptr);mesh->Unbind();m_ModelPreviewShader.Unbind();
+    glBindFramebuffer(GL_FRAMEBUFFER,(GLuint)oldFbo);glViewport(oldVp[0],oldVp[1],oldVp[2],oldVp[3]);return m_ModelPreviewTexture;
 }
 
 void Renderer::DrawMeshInternal(
