@@ -69,9 +69,25 @@ local function playerPosition(id)
     return Network.GetRemotePlayerPosition(id)
 end
 
+local function randomCorePosition()
+    -- Keep the core inside a 75-unit radius around midfield.
+    local angle=math.random()*math.pi*2.0
+    local radius=math.sqrt(math.random())*75.0
+    return math.cos(angle)*radius,1.25,math.sin(angle)*radius
+end
+
 local function resetCore()
-    orbX,orbY,orbZ=0.0,1.25,0.0
+    orbX,orbY,orbZ=randomCorePosition()
     carrierID=0
+end
+
+local function moveLocalPlayerToBase()
+    local id=Network.GetLocalPlayerID()
+    if id==0 then return end
+    local player=Scene.FindEntity("Player")
+    if player.id==0 then return end
+    local z=(teamFor(id)=="RED") and -75.0 or 75.0
+    Scene.SetPosition(player.id,0.0,2.0,z)
 end
 
 local function resetRound()
@@ -124,7 +140,7 @@ local function updateHUD()
     elseif carrierID ~= 0 then
         UI.SetText("Objective","PLAYER "..tostring(carrierID).." HAS THE CORE // STOP THEM")
     else
-        UI.SetText("Objective","GO TO THE GOLD CORE IN THE CENTER // PRESS E TO PICK IT UP")
+        UI.SetText("Objective","FIND THE GOLD CORE // IT SPAWNS RANDOMLY AROUND MIDFIELD // PRESS E")
     end
 end
 
@@ -134,7 +150,10 @@ function OnCreate()
     Scene.SetPaused(false)
     UI.SetVisible("PauseMenu",false)
     UI.SetVisible("InteractPrompt",false)
+    moveLocalPlayerToBase()
     if Network.IsHost() then
+        math.randomseed(os.time())
+        resetCore()
         Network.SetCoreRushState(0,0,180,orbX,orbY,orbZ,0,0)
     end
 end
@@ -176,9 +195,9 @@ function OnUpdate(dt)
                 if p.valid then
                     orbX,orbY,orbZ=p.x,p.y+1.35,p.z
                     local team=teamFor(carrierID)
-                    if team=="RED" and p.z > 8.5 then
+                    if team=="RED" and p.z > 70.0 then
                         redScore=redScore+1; resetCore()
-                    elseif team=="BLUE" and p.z < -8.5 then
+                    elseif team=="BLUE" and p.z < -70.0 then
                         blueScore=blueScore+1; resetCore()
                     end
                 else
