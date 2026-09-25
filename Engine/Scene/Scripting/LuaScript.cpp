@@ -1243,8 +1243,28 @@ void LuaScript::BindEngineAPI()
         sol::table result=m_Lua->create_table();
         NetworkGameState state=m_Runtime ? m_Runtime->GetNetwork().GetGameState() : NetworkGameState{};
         result["revision"]=state.revision; result["redScore"]=state.redScore; result["blueScore"]=state.blueScore;
-        result["roundSeconds"]=state.roundSeconds; result["orbX"]=state.orbX; result["orbY"]=state.orbY; result["orbZ"]=state.orbZ;
+        result["roundSeconds"]=state.roundSeconds; result["orbX"]=state.orbX; result["orbY"]=state.orbY; result["orbZ"]=state.orbZ;\n        result["carrierID"]=state.carrierID; result["winner"]=state.winner;
         return result;
+    });
+    network.set_function("SetCoreRushState", [this](int redScore, int blueScore, int roundSeconds, float orbX, float orbY, float orbZ, std::uint32_t carrierID, int winner)
+    {
+        if (!m_Runtime || !m_Runtime->GetNetwork().IsHost()) return false;
+        NetworkGameState state=m_Runtime->GetNetwork().GetGameState(); ++state.revision;
+        state.redScore=redScore; state.blueScore=blueScore; state.roundSeconds=roundSeconds;
+        state.orbX=orbX; state.orbY=orbY; state.orbZ=orbZ; state.carrierID=carrierID; state.winner=winner;
+        m_Runtime->GetNetwork().SetGameState(state); return true;
+    });
+    network.set_function("SendGameAction", [this](int action) { if(m_Runtime)m_Runtime->GetNetwork().SendGameAction(static_cast<std::uint8_t>(action)); });
+    network.set_function("ConsumeGameActions", [this]()
+    {
+        sol::table result=m_Lua->create_table(); if(!m_Runtime)return result; int index=1;
+        for(const auto& action:m_Runtime->GetNetwork().ConsumeGameActions()){sol::table item=m_Lua->create_table();item["playerID"]=action.first;item["action"]=action.second;result[index++]=item;} return result;
+    });
+    network.set_function("GetRemotePlayerPosition", [this](std::uint32_t playerID)
+    {
+        sol::table result=m_Lua->create_table(); NetworkTransformState state{}; bool found=false;
+        if(m_Runtime){auto it=m_Runtime->GetNetwork().GetRemoteTransforms().find(playerID);if(it!=m_Runtime->GetNetwork().GetRemoteTransforms().end()){state=it->second;found=true;}}
+        result["valid"]=found;result["x"]=state.x;result["y"]=state.y;result["z"]=state.z;return result;
     });
     (*m_Environment)["Network"] = network;
 
