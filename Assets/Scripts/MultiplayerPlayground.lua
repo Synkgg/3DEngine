@@ -5,6 +5,7 @@ local redScore, blueScore = 0, 0
 local orbX, orbY, orbZ = 0.0, 1.25, 0.0
 local carrierID = 0
 local winner = 0
+local matchStarted = 0
 local pickupRadius = 2.4
 local scoreLimit = 5
 local restartTimer = 0.0
@@ -73,7 +74,7 @@ local function randomCorePosition()
     -- Keep the core inside a 75-unit radius around midfield.
     local angle=math.random()*math.pi*2.0
     local radius=math.sqrt(math.random())*75.0
-    return math.cos(angle)*radius,1.25,math.sin(angle)*radius
+    return math.cos(angle)*radius,0.65,math.sin(angle)*radius
 end
 
 local function resetCore()
@@ -94,6 +95,7 @@ local function resetRound()
     redScore,blueScore=0,0
     roundTime=180.0
     winner=0
+    matchStarted=1
     restartTimer=0.0
     resetCore()
 end
@@ -105,6 +107,7 @@ local function pullState()
     orbX,orbY,orbZ=s.orbX,s.orbY,s.orbZ
     carrierID=s.carrierID
     winner=s.winner
+    matchStarted=s.matchStarted or 0
 end
 
 local function processAction(playerID, action)
@@ -119,7 +122,7 @@ end
 local function updateHUD()
     local id=Network.GetLocalPlayerID()
     local team=teamFor(id)
-    UI.SetText("Status","YOU ARE "..team.." TEAM  //  PLAYER "..tostring(id).."  //  "..tostring(Network.GetPlayerCount()).." PLAYERS")
+    UI.SetText("Status","YOU ARE "..team.." TEAM  //  YOUR BASE: "..team.."  //  PLAYER "..tostring(id).."  //  "..tostring(Network.GetPlayerCount()).." PLAYERS")
     UI.SetText("Score","RED "..tostring(redScore).."   //   "..tostring(math.max(0,math.floor(roundTime))).." SEC   //   BLUE "..tostring(blueScore))
 
     local p=playerPosition(id)
@@ -135,8 +138,10 @@ local function updateHUD()
     if winner ~= 0 then
         UI.SetText("Objective",(winner==1 and "RED" or "BLUE").." TEAM WINS!")
     elseif carrierID == id then
-        local target=(team=="RED") and "BLUE GOAL" or "RED GOAL"
-        UI.SetText("Objective","YOU HAVE THE CORE -> RUN INTO THE "..target.." TO SCORE")
+        local target=(team=="RED") and "RED BASE" or "BLUE BASE"
+        UI.SetText("Objective","YOU HAVE THE CORE -> RETURN TO YOUR "..target.." TO SCORE")
+    elseif matchStarted==0 then
+        UI.SetText("Objective",Network.IsHost() and "WAIT FOR YOUR FRIEND // PRESS START MATCH WHEN READY" or "WAITING FOR HOST TO START THE MATCH")
     elseif carrierID ~= 0 then
         UI.SetText("Objective","PLAYER "..tostring(carrierID).." HAS THE CORE // STOP THEM")
     else
@@ -154,7 +159,7 @@ function OnCreate()
     if Network.IsHost() then
         -- The engine sandbox does not expose Lua's os library. math.random is sufficient here.
         resetCore()
-        Network.SetCoreRushState(0,0,180,orbX,orbY,orbZ,0,0)
+        Network.SetCoreRushState(0,0,180,orbX,orbY,orbZ,0,0,0)
     end
 end
 
@@ -180,13 +185,25 @@ function OnUpdate(dt)
         return
     end
 
-    if Input.IsKeyPressed("E") and actionCooldown<=0 then
+    if Network.IsHost() and UI.WasClicked("StartMatchButton") then
+        resetRound()
+        moveLocalPlayerToBase()
+    end
+
+    if Network.IsHost() and UI.WasClicked("RestartMatchButton") then
+        resetRound()
+        moveLocalPlayerToBase()
+    end
+
+    if matchStarted==1 and Input.IsKeyPressed("E") and actionCooldown<=0 then
         actionCooldown=0.25
         if carrierID==Network.GetLocalPlayerID() then Network.SendGameAction(2) else Network.SendGameAction(1) end
     end
 
     if Network.IsHost() then
-        if winner==0 then
+        if matchStarted==0 then
+            -- Lobby: wait for the host to explicitly start.
+        elseif winner==0 then
             roundTime=math.max(0,roundTime-dt)
             for _,a in ipairs(Network.ConsumeGameActions()) do processAction(a.playerID,a.action) end
 
@@ -195,9 +212,9 @@ function OnUpdate(dt)
                 if p.valid then
                     orbX,orbY,orbZ=p.x,p.y+1.35,p.z
                     local team=teamFor(carrierID)
-                    if team=="RED" and p.z > 70.0 then
+                    if team=="RED" and p.z < -70.0 then
                         redScore=redScore+1; resetCore()
-                    elseif team=="BLUE" and p.z < -70.0 then
+                    elseif team=="BLUE" and p.z > 70.0 then
                         blueScore=blueScore+1; resetCore()
                     end
                 else
@@ -213,12 +230,12 @@ function OnUpdate(dt)
             end
         else
             restartTimer=restartTimer-dt
-            if restartTimer<=0 then resetRound() end
+            if restartTimer<=0 then matchStarted=0 end
         end
 
         if sendTimer>=0.05 then
             sendTimer=0
-            Network.SetCoreRushState(redScore,blueScore,math.ceil(roundTime),orbX,orbY,orbZ,carrierID,winner)
+            Network.SetCoreRushState(redScore,blueScore,math.ceil(roundTime),orbX,orbY,orbZ,carrierID,winner,matchStarted)
         end
     else
         pullState()
@@ -227,6 +244,8 @@ function OnUpdate(dt)
     local orb=Scene.FindEntity("CoreOrb")
     if orb.id ~= 0 then Scene.SetPosition(orb.id,orbX,orbY,orbZ) end
 
+    UI.SetVisible("StartMatchButton",Network.IsHost() and matchStarted==0)
+    UI.SetVisible("RestartMatchButton",Network.IsHost() and (winner~=0 or roundTime<=0))
     if hudTimer>=0.1 then hudTimer=0;updateHUD() end
 
 end
