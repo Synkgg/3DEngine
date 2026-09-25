@@ -4,10 +4,10 @@ local aaSamples = { 1, 2, 4, 8 }
 local aaNames = { "OFF", "2X", "4X", "8X" }
 local shadowIndex = 3
 local shadowNames = { "OFF", "LOW", "MEDIUM", "HIGH" }
-local fog = false
+local fog = true
 local bloom = false
-local viewIndex = 3
-local viewDistances = { 250.0, 600.0, 1500.0 }
+local viewIndex = 1
+local viewDistances = { 220.0, 500.0, 1000.0 }
 local viewNames = { "LOW", "MEDIUM", "HIGH" }
 
 local function ApplyGraphics()
@@ -18,8 +18,8 @@ local function ApplyGraphics()
     Graphics.SetFog(fog)
     Graphics.SetBloom(false)
     Graphics.SetViewDistance(viewDistances[viewIndex])
-    Graphics.SetExposure(1.0)
-    Graphics.SetFogDensity(0.003)
+    Graphics.SetExposure(0.55)
+    Graphics.SetFogDensity(0.012)
     Graphics.SetBloomStrength(0.0)
 
     UI.SetText("AAStatus", "ANTI-ALIASING: " .. Graphics.GetAntiAliasingSamples() .. "X")
@@ -34,8 +34,8 @@ function OnCreate()
     UI.Load("Assets/UI/Main.ui")
     UI.SetVisible("MainMenu", true)
     UI.SetVisible("SettingsPanel", false)
-    UI.SetText("Subtitle", "RESTORE THE DORMANT ALTAR")
-    UI.SetText("StatusText", "SYSTEM READY // ENTER THE COURTYARD")
+    UI.SetText("Subtitle", "Find the keys. Keep the lantern close.")
+    UI.SetText("StatusText", "03 KEYS // 01 GATE")
     ApplyGraphics()
 end
 
