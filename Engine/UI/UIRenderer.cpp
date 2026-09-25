@@ -737,7 +737,16 @@ void UIRenderer::DrawCanvasText(
 
     const float requestedSize = std::max(1.0f, text.GetFontSize());
     const float scale = requestedSize / FontBakeSize;
-    const Vec4& color = text.GetColor();
+    Vec4 color = text.GetColor();
+    for (const UIWidget* parent = text.GetParent(); parent; parent = parent->GetParent())
+    {
+        const UIButton* button = dynamic_cast<const UIButton*>(parent);
+        if (button && button->GetAffectChildText())
+        {
+            color = button->GetCurrentTextColor();
+            break;
+        }
+    }
 
     float penX = rect.x;
     float penY = rect.y + requestedSize;
