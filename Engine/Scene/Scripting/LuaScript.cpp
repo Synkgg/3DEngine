@@ -135,7 +135,8 @@ bool LuaScript::Load(
                     properties[name] = (property.value == "1" || property.value == "true");
                     break;
                 case ScriptPropertyType::Entity:
-                    try { properties[name] = static_cast<std::uint32_t>(std::stoul(property.value)); } catch (...) { properties[name] = std::uint32_t(0); }
+                    try { properties[name] = LuaEntityHandle{m_Scene, static_cast<std::uint32_t>(std::stoul(property.value))}; }
+                    catch (...) { properties[name] = LuaEntityHandle{m_Scene, 0}; }
                     break;
                 case ScriptPropertyType::String:
                 default:
@@ -931,9 +932,8 @@ void LuaScript::BindEngineAPI()
      */
     // Object-oriented entity handle for readable project Lua:
     // local cube = Scene.FindEntity("Cube"); cube:SetPosition(1, 2, 3)
-    struct LuaEntityHandle { Scene* scene=nullptr; std::uint32_t id=0; };
     m_Lua->new_usertype<LuaEntityHandle>("Entity",
-        sol::constructors<LuaEntityHandle()>(),
+        sol::constructors<LuaEntityHandle(), LuaEntityHandle(std::uint32_t)>(),
         "IsValid", [](const LuaEntityHandle& e){ return e.scene && e.scene->FindEntityByID(e.id).IsValid(); },
         "GetID", [](const LuaEntityHandle& e){ return e.id; },
         "GetPosition", [this](const LuaEntityHandle& e){ sol::table t=m_Lua->create_table(); Vec3 v; if(e.scene){ if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id)))v=c->transform.position; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; },
