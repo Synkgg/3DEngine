@@ -7,6 +7,7 @@
 #include "../Core/Logger.h"
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 static const char* vertexShaderSource = R"(
 #version 450 core
@@ -64,6 +65,7 @@ uniform float u_FogDensity;
 uniform float u_ViewDistance;
 uniform sampler2D u_ShadowMap;
 uniform int u_ShadowsEnabled;
+uniform int u_ShadowPCFRadius;
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
 uniform int u_PointLightCount;
@@ -88,16 +90,20 @@ float CalculateShadow(vec4 lightSpacePosition, vec3 normal, vec3 lightDirection)
     float bias = max(0.0007 * (1.0 - dot(normal, lightDirection)), 0.00018);
     vec2 texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));
     float shadow = 0.0;
-    int radius = 2;
-    for (int x = -radius; x <= radius; ++x)
+    int radius = clamp(u_ShadowPCFRadius, 1, 3);
+    float samples = 0.0;
+    for (int x = -3; x <= 3; ++x)
     {
-        for (int y = -radius; y <= radius; ++y)
+        for (int y = -3; y <= 3; ++y)
         {
+            if (abs(x) > radius || abs(y) > radius)
+                continue;
             float closest = texture(u_ShadowMap, projected.xy + vec2(x, y) * texel).r;
             shadow += projected.z - bias > closest ? 1.0 : 0.0;
+            samples += 1.0;
         }
     }
-    return shadow / 25.0;
+    return shadow / max(samples, 1.0);
 }
 
 void main()
@@ -731,6 +737,7 @@ void Renderer::DrawMesh(
 	);
     m_Shader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrix);
     m_Shader.SetInt("u_ShadowsEnabled", (m_RenderSettings.shadows && m_ShadowMapReady) ? 1 : 0);
+    m_Shader.SetInt("u_ShadowPCFRadius", std::clamp(m_RenderSettings.shadowQuality + 1, 1, 3));
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTexture);
     m_Shader.SetInt("u_ShadowMap", 1);
@@ -1053,7 +1060,9 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     m_RenderSettings.antiAliasingSamples = std::clamp(m_RenderSettings.antiAliasingSamples, 1, 8);
     m_RenderSettings.shadowQuality = std::clamp(m_RenderSettings.shadowQuality, 0, 3);
     m_RenderSettings.shadowDistance = std::clamp(m_RenderSettings.shadowDistance, 10.0f, 500.0f);
-    const unsigned int desiredShadowSize = 1024u << static_cast<unsigned int>(m_RenderSettings.shadowQuality);
+    const unsigned int desiredShadowSize =
+        m_RenderSettings.shadowQuality <= 0 ? 1024u :
+        m_RenderSettings.shadowQuality == 1 ? 2048u : 4096u;
     if (desiredShadowSize != m_ShadowMapSize)
     {
         m_ShadowMapSize = desiredShadowSize;
