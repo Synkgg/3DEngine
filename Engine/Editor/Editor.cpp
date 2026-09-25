@@ -290,23 +290,6 @@ void Editor::Render(
             ImGui::EndMenu();
         }
 
-        // Keep the primary runtime control permanently visible beside the menus.
-        ImGui::Separator();
-        if (!m_Playing)
-        {
-            if (ImGui::Button("PLAY"))
-            {
-                m_Playing = true;
-                m_SelectedEntity = Entity();
-                m_NameEditEntityID = 0;
-                m_NameEditBuffer[0] = '\0';
-                Logger::Info("Play mode started.");
-            }
-        }
-        else if (ImGui::Button("STOP"))
-        {
-            StopPlaying();
-        }
 
         ImGui::EndMainMenuBar();
     }
