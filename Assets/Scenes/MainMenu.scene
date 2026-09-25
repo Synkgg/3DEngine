@@ -1,5 +1,5 @@
 MyEngineScene
-Entities 1
+Entities 9
 Entity 1
 Name MainMenuController
 Position 0 0 0
@@ -15,4 +15,134 @@ Light 0
 Collider 0
 Scripts 1
 Script Assets/Scripts/UI/MainMenu.lua
-HierarchyFolders 0
+Entity 2
+Name MenuGround
+Position 0 -1 -8
+Rotation 0 0 0
+Scale 24 1 24
+Mesh 1 1
+Color 1 0.055 0.07 0.055 1
+Texture 0
+Material 1 0.01 0.98 0.5 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 3
+Name MenuMausoleum
+Position 5 -1 -14
+Rotation 0 -0.18 0
+Scale 2.2 2.2 2.2
+Mesh 1 0 "Assets/Models/Graveyard/Mausoleum.obj"
+Color 1 0.12 0.14 0.13 1
+Texture 0
+Material 1 0.02 0.92 0.6 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 4
+Name MenuAngel
+Position -5 -1 -10
+Rotation 0 0.25 0
+Scale 1.5 1.5 1.5
+Mesh 1 0 "Assets/Models/Graveyard/AngelMonument.obj"
+Color 1 0.14 0.15 0.14 1
+Texture 0
+Material 1 0.02 0.94 0.55 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 5
+Name MenuTree
+Position 11 -1 -13
+Rotation 0 -0.4 0
+Scale 2 2.4 2
+Mesh 1 0 "Assets/Models/Graveyard/DeadTree.obj"
+Color 1 0.055 0.045 0.035 1
+Texture 0
+Material 1 0.01 0.98 0.45 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 6
+Name MenuGraveA
+Position -1 -1 -8
+Rotation 0 .08 0
+Scale 1 1 1
+Mesh 1 0 "Assets/Models/Graveyard/CrossGrave.obj"
+Color 1 0.13 0.15 0.13 1
+Texture 0
+Material 1 0.02 0.94 0.55 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 7
+Name MenuGraveB
+Position 2 -1 -9
+Rotation 0 -.1 0
+Scale .9 .9 .9
+Mesh 1 0 "Assets/Models/Graveyard/LowHeadstone.obj"
+Color 1 0.12 0.14 0.12 1
+Texture 0
+Material 1 0.02 0.94 0.55 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 8
+Name MenuMoon
+Position 0 12 -10
+Rotation 0 0 0
+Scale 1 1 1
+Mesh 0
+Color 0
+Texture 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.06 0.08 0.13 0 -1 0 0.18 0 50 23 35 0
+Collider 0
+Scripts 0
+Entity 9
+Name MenuWarmLight
+Position -3 2 -5
+Rotation 0 0 0
+Scale 1 1 1
+Mesh 0
+Color 0
+Texture 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.38 0.18 0.06 0 -1 0 0.65 1 7 23 35 0
+Collider 0
+Scripts 0
+HierarchyFolders 3
+Folder "Menu Controller" 1
+Entities 1 1
+Children 0
+EndFolder
+Folder "Cemetery Backdrop" 1
+Entities 6 2 3 4 5 6 7
+Children 0
+EndFolder
+Folder "Menu Lighting" 1
+Entities 2 8 9
+Children 0
+EndFolder
