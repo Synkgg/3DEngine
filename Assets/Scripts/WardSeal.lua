@@ -13,8 +13,5 @@ end
 function OnInteract()
  if collected then return end
  collected=true
-
- -- Disable interaction immediately, then hide the actual rendered object.
- self:SetInteractableEnabled(false)
- self:SetScale(0.0,0.0,0.0)
+ self:Destroy()
 end
