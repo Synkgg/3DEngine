@@ -6,6 +6,8 @@
 #include <sol/sol.hpp>
 
 #include "../Entity.h"
+#include "../Components/ScriptComponent.h"
+#include <unordered_map>
 
 class Scene;
 class Input;
@@ -28,7 +30,7 @@ public:
         Runtime* runtime = nullptr
     );
 
-    bool Load(const std::string& filepath);
+    bool Load(const std::string& filepath, const std::unordered_map<std::string, ScriptPropertyValue>* propertyOverrides = nullptr);
     bool Create();
     bool Update(float deltaTime);
 
