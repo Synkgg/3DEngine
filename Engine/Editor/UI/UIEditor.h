@@ -47,6 +47,10 @@ private:
     float m_Zoom = 1.0f;
     float m_DesignerScale = 1.0f;
     ImVec2 m_DesignerCanvasPosition = ImVec2(0.0f, 0.0f);
+    ImVec2 m_DesignerPan = ImVec2(0.0f, 0.0f);
+    ImVec2 m_PanStartMouse = ImVec2(0.0f, 0.0f);
+    ImVec2 m_PanStartOffset = ImVec2(0.0f, 0.0f);
+    bool m_Panning = false;
 
     Vec2 m_DragStartMouse;
     Vec2 m_DragStartPosition;
