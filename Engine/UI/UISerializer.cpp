@@ -4,6 +4,7 @@
 #include "UIImage.h"
 #include "UIText.h"
 #include "UITextInput.h"
+#include "UISlider.h"
 #include "UIWidgetFactory.h"
 
 #include <filesystem>
@@ -68,6 +69,13 @@ namespace
         else if (const UITextInput* input = dynamic_cast<const UITextInput*>(&widget))
             out << ' ' << std::quoted(input->GetText()) << ' ' << std::quoted(input->GetPlaceholder())
                 << ' ' << input->GetFontSize() << ' ' << input->GetMaxLength() << ' ' << input->IsPassword();
+        else if (const UISlider* slider = dynamic_cast<const UISlider*>(&widget))
+        {
+            const Vec4 fill=slider->GetFillColor(), handle=slider->GetHandleColor();
+            out << ' ' << slider->GetValue()
+                << ' ' << fill.x << ' ' << fill.y << ' ' << fill.z << ' ' << fill.w
+                << ' ' << handle.x << ' ' << handle.y << ' ' << handle.z << ' ' << handle.w;
+        }
         else if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
             out << ' ' << std::quoted(image->GetTexturePath());
         else if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
@@ -109,7 +117,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 5\n";
+    out << "VORTEK_UI 6\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -128,7 +136,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     std::string magic;
     int version = 0;
     in >> magic >> version;
-    if (magic != "VORTEK_UI" || version < 1 || version > 5) return false;
+    if (magic != "VORTEK_UI" || version < 1 || version > 6) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -163,7 +171,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             >> visible >> enabled >> hitTest >> zOrder;
         if(version>=3) row >> gradient >> gradientColor.x >> gradientColor.y >> gradientColor.z >> gradientColor.w >> gradientDirection;
 
-        if (!row || typeValue < 0 || typeValue > static_cast<int>(UIWidgetType::TextInput))
+        if (!row || typeValue < 0 || typeValue > static_cast<int>(UIWidgetType::Slider))
             return false;
 
         std::unique_ptr<UIWidget> widget =
@@ -204,6 +212,15 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             input->SetFontSize(fontSize);
             input->SetMaxLength(maxLength);
             input->SetPassword(password);
+        }
+        else if (UISlider* slider = dynamic_cast<UISlider*>(widget.get()))
+        {
+            if (version < 6) return false;
+            float value=1.0f; Vec4 fill,handle;
+            row >> value >> fill.x >> fill.y >> fill.z >> fill.w
+                >> handle.x >> handle.y >> handle.z >> handle.w;
+            if (!row) return false;
+            slider->SetValue(value); slider->SetFillColor(fill); slider->SetHandleColor(handle);
         }
         else if (UIImage* image = dynamic_cast<UIImage*>(widget.get()))
         {
