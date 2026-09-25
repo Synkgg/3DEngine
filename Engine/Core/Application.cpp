@@ -71,7 +71,9 @@ bool Application::Initialize()
         return false;
     }
 
+#ifdef ENGINE_DEBUG
     UITest::Run();
+#endif
 
     // Runtime UI is opt-in. Scenes/scripts explicitly load the UI they need
     // through UI.Load(), rather than inheriting whichever asset was open in
