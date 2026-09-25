@@ -14,6 +14,7 @@ public:
     virtual void Remove(Entity entity) = 0;
     virtual void Clear() = 0;
     virtual void Copy(Entity source, Entity destination) = 0;
+    virtual void CopyTo(Entity source, IComponentStorage& destinationStorage, Entity destination) const = 0;
 
     virtual std::unique_ptr<IComponentStorage>
         Clone() const = 0;
@@ -96,6 +97,14 @@ public:
         const auto it = m_Components.find(source.GetID());
         if (it != m_Components.end() && destination.IsValid())
             m_Components[destination.GetID()] = it->second;
+    }
+
+    void CopyTo(Entity source, IComponentStorage& destinationStorage, Entity destination) const override
+    {
+        const auto it = m_Components.find(source.GetID());
+        if (it == m_Components.end() || !destination.IsValid()) return;
+        auto* typedDestination = dynamic_cast<ComponentStorage<T>*>(&destinationStorage);
+        if (typedDestination) typedDestination->Add(destination, it->second);
     }
 
     // PUT Clone() HERE
