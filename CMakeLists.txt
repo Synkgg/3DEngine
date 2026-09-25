@@ -219,6 +219,7 @@ if (WIN32)
 
         ole32
         shell32
+        ws2_32
     )
 endif()
 
