@@ -1010,7 +1010,7 @@ void UIEditor::DrawDesigner(
 
     // Pan the zoomed designer with middle mouse, or Space + left mouse.
     const bool panPressed = ImGui::IsMouseClicked(ImGuiMouseButton_Middle) ||
-        (ImGui::GetIO().KeySpace && ImGui::IsMouseClicked(ImGuiMouseButton_Left));
+        (ImGui::IsKeyDown(ImGuiKey_Space) && ImGui::IsMouseClicked(ImGuiMouseButton_Left));
     if (ImGui::IsItemHovered() && panPressed)
     {
         m_Panning = true;
@@ -1023,8 +1023,8 @@ void UIEditor::DrawDesigner(
         m_DesignerPan = ImVec2(
             m_PanStartOffset.x + current.x - m_PanStartMouse.x,
             m_PanStartOffset.y + current.y - m_PanStartMouse.y);
-        if ((!ImGui::IsMouseDown(ImGuiMouseButton_Middle) && !ImGui::GetIO().KeySpace) ||
-            (ImGui::GetIO().KeySpace && !ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+        if ((!ImGui::IsMouseDown(ImGuiMouseButton_Middle) && !ImGui::IsKeyDown(ImGuiKey_Space)) ||
+            (ImGui::IsKeyDown(ImGuiKey_Space) && !ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
              !ImGui::IsMouseDown(ImGuiMouseButton_Middle)))
             m_Panning = false;
     }
