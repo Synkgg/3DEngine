@@ -1227,6 +1227,25 @@ void LuaScript::BindEngineAPI()
     network.set_function("IsConnected", [this]() { return m_Runtime && m_Runtime->GetNetwork().IsConnected(); });
     network.set_function("GetPlayerCount", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetPlayerCount() : 1; });
     network.set_function("GetLastError", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetLastError() : std::string(); });
+    network.set_function("GetLocalPlayerID", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetLocalPlayerID() : std::uint32_t(0); });
+    network.set_function("SetGameState", [this](int redScore, int blueScore, int roundSeconds, float orbX, float orbY, float orbZ)
+    {
+        if (!m_Runtime || !m_Runtime->GetNetwork().IsHost()) return false;
+        NetworkGameState state = m_Runtime->GetNetwork().GetGameState();
+        ++state.revision;
+        state.redScore=redScore; state.blueScore=blueScore; state.roundSeconds=roundSeconds;
+        state.orbX=orbX; state.orbY=orbY; state.orbZ=orbZ;
+        m_Runtime->GetNetwork().SetGameState(state);
+        return true;
+    });
+    network.set_function("GetGameState", [this]()
+    {
+        sol::table result=m_Lua->create_table();
+        NetworkGameState state=m_Runtime ? m_Runtime->GetNetwork().GetGameState() : NetworkGameState{};
+        result["revision"]=state.revision; result["redScore"]=state.redScore; result["blueScore"]=state.blueScore;
+        result["roundSeconds"]=state.roundSeconds; result["orbX"]=state.orbX; result["orbY"]=state.orbY; result["orbZ"]=state.orbZ;
+        return result;
+    });
     (*m_Environment)["Network"] = network;
 
     /*
