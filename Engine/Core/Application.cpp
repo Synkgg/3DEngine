@@ -371,6 +371,13 @@ void Application::Run()
         if (m_Runtime.IsRunning())
         {
             UIRenderer& ui = m_Renderer.GetUIRenderer();
+
+            // Runtime canvas buttons must participate in hit testing whenever
+            // the game exposes the cursor (menus, pause screens, inventory,
+            // etc.). UIRenderer defaults this off so the UI editor cannot
+            // accidentally consume editor clicks.
+            ui.SetMouseInteractionEnabled(m_Runtime.WantsCursor());
+
             const Vec2 canvasSize = m_UICanvas.GetSize();
             const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
             const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
