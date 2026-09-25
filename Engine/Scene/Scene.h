@@ -8,6 +8,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include <unordered_set>
 
 class Scene
 {
@@ -31,6 +32,12 @@ public:
     );
 
     void Clear();
+
+    bool SetParent(Entity child, Entity parent);
+    void ClearParent(Entity child);
+    Entity GetParent(Entity child) const;
+    bool IsDescendant(Entity entity, Entity possibleAncestor) const;
+    Transform GetWorldTransform(Entity entity) const;
 
     const std::vector<Entity>& GetEntities() const
     {
@@ -176,6 +183,8 @@ private:
     std::vector<Entity> m_Entities;
 
     std::uint32_t m_NextEntityID = 1;
+
+    std::unordered_map<std::uint32_t, std::uint32_t> m_Parents;
 
     std::unordered_map<
         std::type_index,
