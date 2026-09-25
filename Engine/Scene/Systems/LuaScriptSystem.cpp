@@ -29,7 +29,8 @@ void LuaScriptSystem::Start(
         sol::lib::base,
         sol::lib::math,
         sol::lib::table,
-        sol::lib::string
+        sol::lib::string,
+        sol::lib::package
     );
 
     m_Lua->set_function(
@@ -42,11 +43,12 @@ void LuaScriptSystem::Start(
         }
     );
 
-    // Optional project-level shared Lua services. Missing files are allowed:
-    // individual scenes should not depend on a hard-coded demo system.
-    namespace fs = std::filesystem;
-    if (fs::exists(fs::current_path() / "Assets/Scripts/Systems/CrystalGame.lua"))
-        LoadGlobalScript("Assets/Scripts/Systems/CrystalGame.lua");
+    // Project/game modules are loaded explicitly by authored Lua through require().
+    // The engine must never know the name of a particular game or game script.
+    sol::table package = (*m_Lua)["package"];
+    std::string packagePath = package["path"].get_or(std::string());
+    packagePath += ";./?.lua;./?/init.lua";
+    package["path"] = packagePath;
 
     for (const Entity& entity :
         scene.GetEntities())
