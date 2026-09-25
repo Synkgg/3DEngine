@@ -5,6 +5,8 @@
 
 #include <imgui.h>
 #include <string>
+#include <vector>
+#include <memory>
 
 class Renderer;
 
@@ -35,6 +37,11 @@ private:
     bool m_ShowPalette = true;
     bool m_ShowHierarchy = true;
     bool m_ShowDetails = true;
+    bool m_ShowWidgetBounds = true;
+    char m_HierarchySearch[96]{};
+    std::vector<std::string> m_UndoStack;
+    std::vector<std::string> m_RedoStack;
+    static constexpr std::size_t MaxHistory = 64;
 
     float m_GridSize = 10.0f;
     float m_Zoom = 1.0f;
@@ -46,7 +53,8 @@ private:
     Vec2 m_DragStartSize;
 
     void DrawHierarchy(
-        UIWidget& widget
+        UIWidget& widget,
+        const std::string& search = ""
     );
 
     void DrawInspector(
@@ -122,6 +130,15 @@ private:
     );
 
     void RenameSelected();
+
+    void NudgeSelected(float x, float y);
+    void AlignSelected(UICanvas& canvas, int mode);
+    void PushHistory(UICanvas& canvas);
+    void Undo(UICanvas& canvas);
+    void Redo(UICanvas& canvas);
+    std::string CaptureCanvas(UICanvas& canvas) const;
+    bool RestoreCanvas(UICanvas& canvas, const std::string& snapshot);
+    std::unique_ptr<UIWidget> CloneWidget(const UIWidget& source) const;
 
     void ResetView();
 
