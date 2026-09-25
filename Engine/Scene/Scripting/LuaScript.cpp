@@ -10,6 +10,7 @@
 #include "../../UI/UIWidget.h"
 #include "../../UI/UIText.h"
 #include "../../UI/UIButton.h"
+#include "../../UI/UITextInput.h"
 #include "../../UI/UISerializer.h"
 
 #include <filesystem>
@@ -1405,10 +1406,28 @@ void LuaScript::BindEngineAPI()
     {
         if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
         UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
-        UIText* text = widget ? dynamic_cast<UIText*>(widget) : nullptr;
-        if (!text) return false;
-        text->SetText(value);
-        return true;
+        if (!widget) return false;
+        if (UIText* text = dynamic_cast<UIText*>(widget)) { text->SetText(value); return true; }
+        if (UITextInput* input = dynamic_cast<UITextInput*>(widget)) { input->SetText(value); return true; }
+        return false;
+    });
+
+    ui.set_function("GetText", [this](const std::string& name)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return std::string();
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        if (!widget) return std::string();
+        if (UIText* text = dynamic_cast<UIText*>(widget)) return text->GetText();
+        if (UITextInput* input = dynamic_cast<UITextInput*>(widget)) return input->GetText();
+        return std::string();
+    });
+
+    ui.set_function("IsFocused", [this](const std::string& name)
+    {
+        if (!m_UICanvas || !m_UICanvas->GetRoot()) return false;
+        UIWidget* widget = m_UICanvas->GetRoot()->Find(name);
+        UITextInput* input = widget ? dynamic_cast<UITextInput*>(widget) : nullptr;
+        return input ? input->IsFocused() : false;
     });
 
     ui.set_function("SetColor", [this](const std::string& name, float r, float g, float b, float a)
