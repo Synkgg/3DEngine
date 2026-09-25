@@ -648,34 +648,8 @@ void Editor::RenderViewport(
 	ImGui::SetNextItemWidth(86.0f);
 	ImGui::DragFloat("Speed", &m_EditorCameraSpeed, 0.25f, 0.5f, 40.0f, "%.1f");
 
-	const float transportWidth = 108.0f;
-	ImGui::SameLine();
-	ImGui::SetCursorPosX(std::max(ImGui::GetCursorPosX(), (ImGui::GetWindowWidth() - transportWidth) * 0.5f));
-
-	if (!m_Playing)
-	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.12f, 0.38f, 0.56f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.15f, 0.49f, 0.70f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.18f, 0.58f, 0.82f, 1.0f));
-		if (ImGui::Button("  PLAY  ", ImVec2(108.0f, 30.0f)))
-		{
-			m_Playing = true;
-			m_SelectedEntity = Entity();
-			m_NameEditEntityID = 0;
-			m_NameEditBuffer[0] = '\0';
-			Logger::Info("Play mode started.");
-		}
-		ImGui::PopStyleColor(3);
-	}
-	else
-	{
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.52f, 0.12f, 0.18f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.68f, 0.17f, 0.24f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.80f, 0.22f, 0.30f, 1.0f));
-		if (ImGui::Button("  STOP  ", ImVec2(108.0f, 30.0f)))
-			StopPlaying();
-		ImGui::PopStyleColor(3);
-	}
+	// Play/Stop lives in the application menu bar so it remains visible even
+	// when the Scene panel is narrow, docked, or covered by another tab.
 
 	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
 	{
