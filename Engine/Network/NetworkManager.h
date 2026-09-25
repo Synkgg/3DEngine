@@ -14,6 +14,7 @@ struct NetworkGameState
     float orbX = 0, orbY = 1, orbZ = 0;
     std::uint32_t carrierID = 0;
     int winner = 0;
+    int matchStarted = 0;
 };
 
 struct NetworkTransformState
