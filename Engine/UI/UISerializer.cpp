@@ -3,6 +3,7 @@
 #include "UIButton.h"
 #include "UIImage.h"
 #include "UIText.h"
+#include "UITextInput.h"
 #include "UIWidgetFactory.h"
 
 #include <filesystem>
@@ -35,6 +36,9 @@ namespace
 
         if (const UIText* text = dynamic_cast<const UIText*>(&widget))
             out << ' ' << std::quoted(text->GetText()) << ' ' << text->GetFontSize();
+        else if (const UITextInput* input = dynamic_cast<const UITextInput*>(&widget))
+            out << ' ' << std::quoted(input->GetText()) << ' ' << std::quoted(input->GetPlaceholder())
+                << ' ' << input->GetFontSize() << ' ' << input->GetMaxLength() << ' ' << input->IsPassword();
         else if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
             out << ' ' << std::quoted(image->GetTexturePath());
         else if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
@@ -76,7 +80,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 4\n";
+    out << "VORTEK_UI 5\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -95,7 +99,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     std::string magic;
     int version = 0;
     in >> magic >> version;
-    if (magic != "VORTEK_UI" || version < 1 || version > 4) return false;
+    if (magic != "VORTEK_UI" || version < 1 || version > 5) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -130,7 +134,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             >> visible >> enabled >> hitTest >> zOrder;
         if(version>=3) row >> gradient >> gradientColor.x >> gradientColor.y >> gradientColor.z >> gradientColor.w >> gradientDirection;
 
-        if (!row || typeValue < 0 || typeValue > static_cast<int>(UIWidgetType::Button))
+        if (!row || typeValue < 0 || typeValue > static_cast<int>(UIWidgetType::TextInput))
             return false;
 
         std::unique_ptr<UIWidget> widget =
@@ -156,6 +160,21 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             row >> std::quoted(value) >> fontSize;
             text->SetText(value);
             text->SetFontSize(fontSize);
+        }
+        else if (UITextInput* input = dynamic_cast<UITextInput*>(widget.get()))
+        {
+            if (version < 5) return false;
+            std::string value, placeholder;
+            float fontSize = 18.0f;
+            std::size_t maxLength = 256;
+            bool password = false;
+            row >> std::quoted(value) >> std::quoted(placeholder) >> fontSize >> maxLength >> password;
+            if (!row) return false;
+            input->SetText(value);
+            input->SetPlaceholder(placeholder);
+            input->SetFontSize(fontSize);
+            input->SetMaxLength(maxLength);
+            input->SetPassword(password);
         }
         else if (UIImage* image = dynamic_cast<UIImage*>(widget.get()))
         {
