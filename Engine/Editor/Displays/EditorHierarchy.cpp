@@ -832,9 +832,10 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
 
             // Draw the icon with the icon font, but keep one invisible TreeNode
             // as the row's interaction owner.
-            open = ImGui::TreeNodeEx("##EntityNode", flags, "##group");
+            // "##" in the formatted label still gets rendered by TreeNodeEx,
+            // so use an empty visible label and draw the folder contents ourselves.
+            open = ImGui::TreeNodeEx("##EntityNode", flags, "%s", "");
             const ImVec2 rowMin = ImGui::GetItemRectMin();
-            const float rowHeight = ImGui::GetItemRectSize().y;
             ImVec2 textPos(rowMin.x + ImGui::GetTreeNodeToLabelSpacing(), rowMin.y);
 
             if (iconFont != nullptr)
