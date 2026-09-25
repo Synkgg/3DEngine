@@ -180,7 +180,6 @@ void Scene::DestroyEntity(
 
 void Scene::Clear()
 {
-    m_Environment = SceneEnvironment();
     m_Entities.clear();
 
     /*
