@@ -14,20 +14,6 @@
 
 #include <memory>
 
-namespace
-{
-    void ApplySceneEnvironment(const Scene& scene, Renderer& renderer)
-    {
-        const SceneEnvironment& e=scene.GetEnvironment();
-        RenderSettings settings=renderer.GetRenderSettings();
-        settings.antiAliasing=e.antiAliasing; settings.antiAliasingSamples=e.antiAliasingSamples;
-        settings.shadows=e.shadows; settings.fog=e.fog; settings.bloom=e.bloom;
-        settings.viewDistance=e.viewDistance; settings.exposure=e.exposure;
-        settings.fogDensity=e.fogDensity; settings.bloomStrength=e.bloomStrength;
-        settings.shadowQuality=e.shadowQuality; settings.shadowDistance=e.shadowDistance;
-        renderer.SetRenderSettings(settings);
-    }
-}
 
 void Runtime::Start(
     Scene& scene,
@@ -51,7 +37,6 @@ void Runtime::Start(
     m_PendingScenePath.clear();
     m_WantsCursor = false;
     m_Paused = false;
-    ApplySceneEnvironment(scene, renderer);
 
     m_LuaScriptSystem.Start(
         scene,
@@ -119,7 +104,6 @@ void Runtime::Update(
             m_UICanvas->Clear();
 
         scene = loadedScene;
-        ApplySceneEnvironment(scene, renderer);
 
         if (m_Renderer && m_Input && m_UICanvas)
         {
