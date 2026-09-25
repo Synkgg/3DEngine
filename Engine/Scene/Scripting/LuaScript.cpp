@@ -967,7 +967,7 @@ void LuaScript::BindEngineAPI()
         "SetScale", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.scale=Vec3(x,y,z); },
         "SetParent", [](LuaEntityHandle& e,const LuaEntityHandle& p,bool keepWorld){ return e.scene && p.scene==e.scene && e.scene->SetParent(Entity(e.id),Entity(p.id),keepWorld); },
         "ClearParent", [](LuaEntityHandle& e,bool keepWorld){ if(e.scene)e.scene->ClearParent(Entity(e.id),keepWorld); },
-        "Destroy", [](LuaEntityHandle& e){ if(e.scene)e.scene->DestroyEntityHierarchy(Entity(e.id)); e.id=0; },
+        "Destroy", [](LuaEntityHandle& e){ if(e.scene)e.scene->QueueDestroyEntityHierarchy(Entity(e.id)); e.id=0; },
         "SetInteractableEnabled", [](LuaEntityHandle& e,bool enabled){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<InteractableComponent>(Entity(e.id)))c->enabled=enabled; },
         "SetInteractablePrompt", [](LuaEntityHandle& e,const std::string& prompt){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<InteractableComponent>(Entity(e.id)))c->prompt=prompt; },
         "SetLightIntensity", [](LuaEntityHandle& e,float intensity){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<LightComponent>(Entity(e.id)))c->intensity=intensity; },
