@@ -142,6 +142,26 @@ void Editor::Render(
         m_StyleInitialized = true;
     }
 
+    // The scene owns environment settings; keep the editor preview renderer in sync.
+    {
+        const SceneEnvironment& e=scene.GetEnvironment();
+        const RenderSettings& current=renderer.GetRenderSettings();
+        if(current.antiAliasing!=e.antiAliasing || current.antiAliasingSamples!=e.antiAliasingSamples ||
+           current.shadows!=e.shadows || current.fog!=e.fog || current.bloom!=e.bloom ||
+           current.viewDistance!=e.viewDistance || current.exposure!=e.exposure ||
+           current.fogDensity!=e.fogDensity || current.bloomStrength!=e.bloomStrength ||
+           current.shadowQuality!=e.shadowQuality || current.shadowDistance!=e.shadowDistance)
+        {
+            RenderSettings settings=current;
+            settings.antiAliasing=e.antiAliasing; settings.antiAliasingSamples=e.antiAliasingSamples;
+            settings.shadows=e.shadows; settings.fog=e.fog; settings.bloom=e.bloom;
+            settings.viewDistance=e.viewDistance; settings.exposure=e.exposure;
+            settings.fogDensity=e.fogDensity; settings.bloomStrength=e.bloomStrength;
+            settings.shadowQuality=e.shadowQuality; settings.shadowDistance=e.shadowDistance;
+            renderer.SetRenderSettings(settings);
+        }
+    }
+
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
