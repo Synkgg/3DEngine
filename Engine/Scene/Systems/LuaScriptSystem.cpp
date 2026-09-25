@@ -11,6 +11,8 @@
 
 #include <filesystem>
 
+namespace fs = std::filesystem;
+
 void LuaScriptSystem::Start(
     Scene& scene,
     Input& input,
