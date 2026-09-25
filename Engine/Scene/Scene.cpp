@@ -333,29 +333,16 @@ Entity Scene::DuplicateEntity(Entity source, bool duplicateChildren)
     Entity duplicate = CreateEntity();
     if (!duplicate.IsValid()) return Entity();
 
-    if (const TransformComponent* value = GetComponent<TransformComponent>(source))
-        if (TransformComponent* target = GetComponent<TransformComponent>(duplicate))
-            target->transform = value->transform;
+    // ComponentStorage owns the copy operation, so new component types are
+    // automatically included without teaching the editor about them.
+    for (auto& [type, storage] : m_ComponentStorages)
+        storage->Copy(source, duplicate);
 
-    if (const NameComponent* value = GetComponent<NameComponent>(source))
-        if (NameComponent* target = GetComponent<NameComponent>(duplicate))
-            target->name = value->name + " Copy";
-
-#define COPY_COMPONENT(Type) \
-    if (const Type* value = GetComponent<Type>(source)) AddComponent<Type>(duplicate, *value)
-
-    COPY_COMPONENT(MeshComponent);
-    COPY_COMPONENT(ColorComponent);
-    COPY_COMPONENT(PlayerComponent);
-    COPY_COMPONENT(CharacterControllerComponent);
-    COPY_COMPONENT(LightComponent);
-    COPY_COMPONENT(ColliderComponent);
-    COPY_COMPONENT(TextureComponent);
-    COPY_COMPONENT(MaterialComponent);
-    COPY_COMPONENT(InteractableComponent);
-    COPY_COMPONENT(ScriptComponent);
-
-#undef COPY_COMPONENT
+    if (const NameComponent* sourceName = GetComponent<NameComponent>(source))
+    {
+        if (NameComponent* duplicateName = GetComponent<NameComponent>(duplicate))
+            duplicateName->name = sourceName->name + " Copy";
+    }
 
     Entity sourceParent = GetParent(source);
     if (sourceParent.IsValid()) SetParent(duplicate, sourceParent, false);
