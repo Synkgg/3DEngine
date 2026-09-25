@@ -3,8 +3,6 @@ local viewDistances = { 220.0, 500.0, 1000.0 }
 local aaIndex, viewIndex = 1, 1
 local pendingFog, pendingBloom = false, false
 local joinAddress = "127.0.0.1"
-local editingAddress = false
-
 local function sanitizeAddress(value)
     local cleaned = string.gsub(value or "", "[^0-9%.]", "")
     return string.sub(cleaned, 1, 15)
@@ -57,7 +55,7 @@ function OnCreate()
     UI.SetVisible("SettingsPanel", false)
     Camera.Reset()
     loadPending()
-    UI.SetText("AddressText", "IP: " .. joinAddress)
+    UI.SetText("AddressField", joinAddress)
 end
 
 function OnUpdate(deltaTime)
@@ -68,47 +66,22 @@ function OnUpdate(deltaTime)
         return
     end
 
-    if UI.WasClicked("AddressField") then editingAddress = true end
-    if editingAddress then
-        local changed = false
-        local ctrl = Input.IsKeyDown("Left Ctrl") or Input.IsKeyDown("Right Ctrl")
-
-        if ctrl and Input.IsKeyPressed("V") then
-            local pasted = sanitizeAddress(Input.GetClipboardText())
-            if pasted ~= "" then
-                joinAddress = pasted
-                changed = true
-            end
-        elseif ctrl and Input.IsKeyPressed("C") then
-            Input.SetClipboardText(joinAddress)
-        else
-            for i = 0, 9 do
-                local key = tostring(i)
-                if Input.IsKeyPressed(key) and #joinAddress < 15 then
-                    joinAddress = joinAddress .. key
-                    changed = true
-                end
-            end
-            if (Input.IsKeyPressed(".") or Input.IsKeyPressed("Period")) and #joinAddress < 15 then
-                joinAddress = joinAddress .. "."
-                changed = true
-            end
-            if Input.IsKeyPressed("Backspace") and #joinAddress > 0 then
-                joinAddress = string.sub(joinAddress, 1, #joinAddress - 1)
-                changed = true
-            end
+    -- The native TextInput owns typing, cursor movement, selection and clipboard.
+    -- Mirror its value into the saved multiplayer address while it is focused.
+    if UI.IsFocused("AddressField") then
+        local editedAddress = sanitizeAddress(UI.GetText("AddressField"))
+        if editedAddress ~= UI.GetText("AddressField") then
+            UI.SetText("AddressField", editedAddress)
         end
-
-        if changed then saveAddress() end
-        if Input.IsKeyPressed("Return") or Input.IsKeyPressed("Escape") then
-            editingAddress = false
+        if editedAddress ~= joinAddress then
+            joinAddress = editedAddress
             saveAddress()
         end
-        UI.SetText("AddressText", "IP: " .. joinAddress .. (editingAddress and " _" or ""))
     end
 
     if UI.WasClicked("HostButton") then
-        editingAddress = false
+        joinAddress = sanitizeAddress(UI.GetText("AddressField"))
+        saveAddress()
         if Network.Host(7777) then
             Input.SetCursorVisible(false)
             Scene.Load("Assets/Scenes/MultiplayerPlayground.scene")
@@ -119,7 +92,8 @@ function OnUpdate(deltaTime)
     end
 
     if UI.WasClicked("JoinButton") then
-        editingAddress = false
+        joinAddress = sanitizeAddress(UI.GetText("AddressField"))
+        saveAddress()
         if joinAddress == "" then
             UI.SetText("NetworkStatus", "ENTER A HOST IP ADDRESS")
         elseif Network.Join(joinAddress, 7777) then
