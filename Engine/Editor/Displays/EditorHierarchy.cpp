@@ -1047,218 +1047,18 @@ void Editor::RenderHierarchy(
             if (ImGui::MenuItem(
                 "Duplicate"))
             {
-                Entity duplicate =
-                    scene.CreateEntity();
-
-                /*
-                 * Transform.
-                 */
-                TransformComponent*
-                    sourceTransform =
-                    scene.GetComponent<
-                    TransformComponent
-                    >(entity);
-
-                TransformComponent*
-                    duplicateTransform =
-                    scene.GetComponent<
-                    TransformComponent
-                    >(duplicate);
-
-                if (sourceTransform != nullptr &&
-                    duplicateTransform != nullptr)
+                Entity duplicate = scene.DuplicateEntity(entity, true);
+                if (duplicate.IsValid())
                 {
-                    duplicateTransform->transform =
-                        sourceTransform->transform;
+                    if (TransformComponent* transform = scene.GetComponent<TransformComponent>(duplicate))
+                        transform->transform.position.x += 1.0f;
 
-                    duplicateTransform->
-                        transform.position.x +=
-                        1.0f;
+                    if (NameComponent* duplicateName = scene.GetComponent<NameComponent>(duplicate))
+                        duplicateName->name = MakeUniqueName(scene, duplicateName->name, duplicate);
+
+                    m_SelectedEntity = duplicate;
+                    Logger::Info("Duplicated entity hierarchy " + std::to_string(entity.GetID()));
                 }
-
-                /*
-                 * Mesh.
-                 */
-                MeshComponent* sourceMesh =
-                    scene.GetComponent<
-                    MeshComponent
-                    >(entity);
-
-                if (sourceMesh != nullptr)
-                {
-                    scene.AddComponent<
-                        MeshComponent
-                    >(
-                        duplicate,
-                        *sourceMesh
-                    );
-                }
-
-                /*
-                 * Color.
-                 */
-                ColorComponent* sourceColor =
-                    scene.GetComponent<
-                    ColorComponent
-                    >(entity);
-
-                if (sourceColor != nullptr)
-                {
-                    scene.AddComponent<
-                        ColorComponent
-                    >(
-                        duplicate,
-                        *sourceColor
-                    );
-                }
-
-                /*
-                 * Player.
-                 */
-                PlayerComponent* sourcePlayer =
-                    scene.GetComponent<
-                    PlayerComponent
-                    >(entity);
-
-                if (sourcePlayer != nullptr)
-                {
-                    scene.AddComponent<
-                        PlayerComponent
-                    >(
-                        duplicate,
-                        *sourcePlayer
-                    );
-                }
-
-                /*
-                 * Character Controller.
-                 */
-                CharacterControllerComponent*
-                    sourceController =
-                    scene.GetComponent<
-                    CharacterControllerComponent
-                    >(entity);
-
-                if (sourceController != nullptr)
-                {
-                    scene.AddComponent<
-                        CharacterControllerComponent
-                    >(
-                        duplicate,
-                        *sourceController
-                    );
-                }
-
-                /*
-                 * Light.
-                 */
-                LightComponent* sourceLight =
-                    scene.GetComponent<
-                    LightComponent
-                    >(entity);
-
-                if (sourceLight != nullptr)
-                {
-                    scene.AddComponent<
-                        LightComponent
-                    >(
-                        duplicate,
-                        *sourceLight
-                    );
-                }
-
-                /*
-                 * Collider.
-                 */
-                ColliderComponent* sourceCollider =
-                    scene.GetComponent<
-                    ColliderComponent
-                    >(entity);
-
-                if (sourceCollider != nullptr)
-                {
-                    scene.AddComponent<
-                        ColliderComponent
-                    >(
-                        duplicate,
-                        *sourceCollider
-                    );
-                }
-
-                /*
-                 * Texture.
-                 */
-                TextureComponent* sourceTexture =
-                    scene.GetComponent<
-                    TextureComponent
-                    >(entity);
-
-                if (sourceTexture != nullptr)
-                {
-                    scene.AddComponent<
-                        TextureComponent
-                    >(
-                        duplicate,
-                        *sourceTexture
-                    );
-                }
-
-                /*
-                 * Name.
-                 */
-                NameComponent* sourceName =
-                    scene.GetComponent<
-                    NameComponent
-                    >(entity);
-
-                NameComponent* duplicateName =
-                    scene.GetComponent<
-                    NameComponent
-                    >(duplicate);
-
-                if (duplicateName != nullptr)
-                {
-                    std::string baseName =
-                        sourceName != nullptr &&
-                        !sourceName->name.empty()
-                        ? sourceName->name + " Copy"
-                        : "Entity Copy";
-
-                    duplicateName->name =
-                        MakeUniqueName(
-                            scene,
-                            baseName,
-                            duplicate
-                        );
-                }
-
-                /*
-                 * Preserve folder membership.
-                 */
-                HierarchyFolder* sourceFolder =
-                    FindFolderContainingEntity(
-                        m_HierarchyFolders,
-                        entity.GetID()
-                    );
-
-                if (sourceFolder != nullptr)
-                {
-                    sourceFolder->entities.push_back(
-                        duplicate.GetID()
-                    );
-                }
-
-                m_SelectedEntity =
-                    duplicate;
-
-                Logger::Info(
-                    std::string(
-                        "Duplicated Entity "
-                    ) +
-                    std::to_string(
-                        entity.GetID()
-                    )
-                );
             }
 
             /*
@@ -1347,6 +1147,10 @@ void Editor::RenderHierarchy(
                     m_HierarchyFolders,
                     entityID
                 );
+
+                Entity dropped = scene.FindEntityByID(entityID);
+                if (dropped.IsValid())
+                    scene.ClearParent(dropped, true);
             }
         }
 
