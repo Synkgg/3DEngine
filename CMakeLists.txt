@@ -208,3 +208,21 @@ endif()
 #        "/ENTRY:mainCRTStartup"
 #    )
 #endif()
+
+#
+# Runtime assets
+#
+# Keep the executable's working directory self-contained. This runs after
+# every successful build and only copies files that are new or changed.
+#
+add_custom_command(
+    TARGET 3DEngine
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:3DEngine>/Assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
+            "$<TARGET_FILE_DIR:3DEngine>/Assets"
+    COMMENT "Syncing Assets to runtime output directory"
+    VERBATIM
+)
