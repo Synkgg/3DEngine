@@ -136,6 +136,66 @@ namespace
         return assets;
     }
 
+    bool DrawAssetPicker(
+        const char* label,
+        std::string& value,
+        std::initializer_list<const char*> extensions)
+    {
+        const std::vector<std::filesystem::path> assets = FindAssets(extensions);
+        const std::string preview = value.empty()
+            ? "None"
+            : std::filesystem::path(value).filename().string();
+
+        bool changed = false;
+        if (ImGui::BeginCombo(label, preview.c_str()))
+        {
+            static char search[128] = {};
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputTextWithHint("##AssetSearch", "Search assets...", search, sizeof(search));
+            ImGui::Separator();
+
+            if (ImGui::Selectable("None", value.empty()))
+            {
+                value.clear();
+                changed = true;
+            }
+
+            std::string query = search;
+            std::transform(query.begin(), query.end(), query.begin(),
+                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+            for (const auto& path : assets)
+            {
+                std::error_code error;
+                const std::string assetPath =
+                    std::filesystem::relative(path, std::filesystem::current_path(), error).generic_string();
+                std::string searchable = assetPath;
+                std::transform(searchable.begin(), searchable.end(), searchable.begin(),
+                    [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                if (!query.empty() && searchable.find(query) == std::string::npos)
+                    continue;
+
+                const bool selected = value == assetPath;
+                ImGui::PushID(assetPath.c_str());
+                if (ImGui::Selectable(path.filename().string().c_str(), selected))
+                {
+                    value = assetPath;
+                    changed = true;
+                    ImGui::CloseCurrentPopup();
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", assetPath.c_str());
+                ImGui::PopID();
+            }
+
+            if (assets.empty())
+                ImGui::TextDisabled("No matching assets under Assets.");
+
+            ImGui::EndCombo();
+        }
+        return changed;
+    }
+
 }
 
 void Editor::RenderInspector(
@@ -349,41 +409,14 @@ void Editor::RenderInspector(
             ImGui::Separator();
             ImGui::TextDisabled("External Model");
 
-            const std::vector<std::filesystem::path> modelAssets =
-                FindAssets({ ".obj" });
-
-            const std::string modelPreview = mesh->modelPath.empty()
-                ? "None"
-                : std::filesystem::path(mesh->modelPath).filename().string();
-
-            if (ImGui::BeginCombo("Model", modelPreview.c_str()))
+            if (DrawAssetPicker("Model", mesh->modelPath, { ".obj" }))
             {
-                if (ImGui::Selectable("None", mesh->modelPath.empty()))
-                    mesh->modelPath.clear();
-
-                for (const auto& path : modelAssets)
+                if (!mesh->modelPath.empty())
                 {
-                    std::error_code relativeError;
-                    const std::string assetPath =
-                        std::filesystem::relative(path, std::filesystem::current_path(), relativeError).generic_string();
-                    const bool selected = mesh->modelPath == assetPath;
-
-                    ImGui::PushID(assetPath.c_str());
-                    if (ImGui::Selectable(path.filename().string().c_str(), selected))
-                    {
-                        mesh->modelPath = assetPath;
-                        mesh->primitive = PrimitiveType::None;
-                        Logger::Info(std::string("Assigned model: ") + mesh->modelPath);
-                    }
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("%s", assetPath.c_str());
-                    ImGui::PopID();
+                    mesh->primitive = PrimitiveType::None;
+                    Logger::Info(std::string("Assigned model: ") + mesh->modelPath);
                 }
-                ImGui::EndCombo();
             }
-
-            if (modelAssets.empty())
-                ImGui::TextDisabled("No .obj models found under Assets.");
 
             ImGui::Separator();
 
@@ -501,40 +534,12 @@ void Editor::RenderInspector(
             "Texture",
             ImGuiTreeNodeFlags_DefaultOpen))
         {
-            const std::vector<std::filesystem::path> textureAssets =
-                FindAssets({ ".png", ".jpg", ".jpeg", ".bmp" });
-
-            std::string texturePreview = texture->path.empty()
-                ? "None"
-                : std::filesystem::path(texture->path).filename().string();
-
-            if (ImGui::BeginCombo("Asset", texturePreview.c_str()))
+            if (DrawAssetPicker("Asset", texture->path,
+                { ".png", ".jpg", ".jpeg", ".bmp", ".tga" }))
             {
-                if (ImGui::Selectable("None", texture->path.empty()))
-                    texture->path.clear();
-
-                for (const auto& path : textureAssets)
-                {
-                    std::error_code relativeError;
-                    const std::string assetPath =
-                        std::filesystem::relative(path, std::filesystem::current_path(), relativeError).generic_string();
-                    const bool selected = texture->path == assetPath;
-
-                    ImGui::PushID(assetPath.c_str());
-                    if (ImGui::Selectable(path.filename().string().c_str(), selected))
-                    {
-                        texture->path = assetPath;
-                        Logger::Info(std::string("Assigned texture: ") + texture->path);
-                    }
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("%s", assetPath.c_str());
-                    ImGui::PopID();
-                }
-                ImGui::EndCombo();
+                if (!texture->path.empty())
+                    Logger::Info(std::string("Assigned texture: ") + texture->path);
             }
-
-            if (textureAssets.empty())
-                ImGui::TextDisabled("No texture assets found under Assets.");
 
             ImGui::Spacing();
 
