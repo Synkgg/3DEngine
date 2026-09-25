@@ -12,6 +12,7 @@
 #include "../../Scene/Scene.h"
 
 #include "../../Math/Vec3.h"
+#include "../../Network/NetworkManager.h"
 
 #include <string>
 
@@ -55,6 +56,7 @@ public:
     void SetPaused(bool paused);
     void SetAudioEngine(AudioEngine* audio) { m_Audio = audio; }
     void SetProjectSettings(ProjectSettings* settings) { m_ProjectSettings = settings; }
+    NetworkManager& GetNetwork() { return m_Network; }
 
 private:
     bool m_Running = false;
@@ -82,4 +84,5 @@ private:
     UICanvas* m_UICanvas = nullptr;
     AudioEngine* m_Audio = nullptr;
     ProjectSettings* m_ProjectSettings = nullptr;
+    NetworkManager m_Network;
 };
