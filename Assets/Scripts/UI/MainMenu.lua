@@ -34,8 +34,8 @@ function OnCreate()
     UI.Load("Assets/UI/Main.ui")
     UI.SetVisible("MainMenu", true)
     UI.SetVisible("SettingsPanel", false)
-    UI.SetText("Subtitle", "Find the keys. Keep the lantern close.")
-    UI.SetText("StatusText", "03 KEYS // 01 GATE")
+    UI.SetText("Subtitle", "Recover the seals. Break the mausoleum ward.")
+    UI.SetText("StatusText", "03 SEALS // 01 WARD")
     ApplyGraphics()
 end
 
@@ -43,7 +43,7 @@ function OnUpdate(deltaTime)
     if UI.WasClicked("PlayButton") then
         -- Gameplay will capture the cursor as soon as the new scene starts.
         Input.SetCursorVisible(false)
-        Scene.Load("Assets/Scenes/CrystalCourtyard.scene")
+        Scene.Load("Assets/Scenes/Graveyard.scene")
         return
     end
 
