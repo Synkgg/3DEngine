@@ -66,6 +66,9 @@ namespace
         in vec2 v_UV;
 
         uniform vec4 u_Color;
+        uniform vec4 u_GradientColor;
+        uniform int u_UseGradient;
+        uniform int u_GradientDirection;
         uniform sampler2D u_Texture;
         uniform int u_UseTexture;
 
@@ -73,15 +76,17 @@ namespace
 
         void main()
         {
+            float gradientT = u_GradientDirection == 1 ? v_UV.x : v_UV.y;
+            vec4 baseColor = u_UseGradient != 0 ? mix(u_Color, u_GradientColor, gradientT) : u_Color;
             if (u_UseTexture != 0)
             {
                 FragColor =
                     texture(u_Texture, v_UV) *
-                    u_Color;
+                    baseColor;
             }
             else
             {
-                FragColor = u_Color;
+                FragColor = baseColor;
             }
         }
     )";
@@ -645,6 +650,11 @@ void UIRenderer::DrawCanvasWidget(
         color.w
     );
 
+    const Vec4 gradientColor = widget.GetGradientColor();
+    m_Shader.SetVec4("u_GradientColor", gradientColor.x, gradientColor.y, gradientColor.z, gradientColor.w);
+    m_Shader.SetInt("u_UseGradient", widget.HasGradient() ? 1 : 0);
+    m_Shader.SetInt("u_GradientDirection", widget.GetGradientDirection() == UIGradientDirection::Horizontal ? 1 : 0);
+
     Texture2D* texture = nullptr;
 
     if (renderer != nullptr)
@@ -808,6 +818,7 @@ void UIRenderer::DrawFontGlyph(
 
     m_Shader.SetVec4(
         "u_Color", color.x, color.y, color.z, color.w);
+    m_Shader.SetInt("u_UseGradient", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_FontTexture);
     m_Shader.SetInt("u_Texture", 0);
