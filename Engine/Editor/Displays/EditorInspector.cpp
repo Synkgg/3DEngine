@@ -274,7 +274,7 @@ void Editor::RenderInspector(
             ImGui::Text("Parent: %s", parentName ? parentName->name.c_str() : "(Unnamed)");
             ImGui::SameLine();
             if (ImGui::SmallButton("Clear Parent"))
-                scene.ClearParent(m_SelectedEntity, true)
+                scene.ClearParent(m_SelectedEntity, true);
         }
         else
         {
