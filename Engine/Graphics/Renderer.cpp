@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "../Platform/SDL/Window.h"
 #include "PrimitiveMesh.h"
+#include "ModelLoader.h"
 #include "Texture2D.h"
 #include "../Scene/Components/TextureComponent.h"
 
@@ -554,6 +555,7 @@ void Renderer::Shutdown()
 	m_PlaneMesh.reset();
 	m_SphereMesh.reset();
 	m_CylinderMesh.reset();
+    m_ModelCache.clear();
 
 	if (m_SkyVBO) glDeleteBuffers(1, &m_SkyVBO);
 	if (m_SkyVAO) glDeleteVertexArrays(1, &m_SkyVAO);
@@ -638,49 +640,38 @@ void Renderer::SetClearColor(float red, float green, float blue, float alpha)
 	m_ClearColor[3] = alpha;
 }
 
-void Renderer::DrawMesh(
-	const Transform& transform,
-	PrimitiveType primitive,
-	float red,
-	float green,
-	float blue,
-	float alpha,
-	const Texture2D* texture,
-	float metallic,
-	float roughness,
-	float ambientOcclusion,
-	float emissive)
+Mesh* Renderer::GetPrimitiveMesh(PrimitiveType primitive)
 {
-	Mesh* mesh = nullptr;
+    switch (primitive)
+    {
+    case PrimitiveType::Cube: return m_CubeMesh.get();
+    case PrimitiveType::Plane: return m_PlaneMesh.get();
+    case PrimitiveType::Sphere: return m_SphereMesh.get();
+    case PrimitiveType::Cylinder: return m_CylinderMesh.get();
+    default: return nullptr;
+    }
+}
 
-	switch (primitive)
-	{
-	case PrimitiveType::None:
-		return;
+Mesh* Renderer::GetModelMesh(const std::string& modelPath)
+{
+    if (modelPath.empty()) return nullptr;
+    auto it = m_ModelCache.find(modelPath);
+    if (it != m_ModelCache.end()) return it->second.get();
 
-	case PrimitiveType::Cube:
-		mesh = m_CubeMesh.get();
-		break;
+    std::unique_ptr<Mesh> loaded = ModelLoader::LoadOBJ(modelPath);
+    if (!loaded) return nullptr;
+    Mesh* result = loaded.get();
+    m_ModelCache.emplace(modelPath, std::move(loaded));
+    return result;
+}
 
-	case PrimitiveType::Plane:
-		mesh = m_PlaneMesh.get();
-		break;
-
-	case PrimitiveType::Sphere:
-		mesh = m_SphereMesh.get();
-		break;
-
-	case PrimitiveType::Cylinder:
-		mesh = m_CylinderMesh.get();
-		break;
-	}
-
-	if (mesh == nullptr)
-	{
-		return;
-	}
-
-	Mat4 model =
+void Renderer::DrawMeshInternal(
+    Mesh* mesh, const Transform& transform,
+    float red, float green, float blue, float alpha,
+    const Texture2D* texture, float metallic, float roughness,
+    float ambientOcclusion, float emissive)
+{
+    if (!mesh) return;	Mat4 model =
 		transform.GetMatrix();
 
 	Mat4 view =
@@ -810,6 +801,34 @@ void Renderer::DrawMesh(
 
 	m_Shader.Unbind();
 	mesh->Unbind();
+
+}
+
+void Renderer::DrawMesh(
+	const Transform& transform,
+	PrimitiveType primitive,
+	float red,
+	float green,
+	float blue,
+	float alpha,
+	const Texture2D* texture,
+	float metallic,
+	float roughness,
+	float ambientOcclusion,
+	float emissive)
+{
+    DrawMeshInternal(GetPrimitiveMesh(primitive), transform, red, green, blue, alpha,
+        texture, metallic, roughness, ambientOcclusion, emissive);
+}
+
+void Renderer::DrawModel(
+    const Transform& transform, const std::string& modelPath,
+    float red, float green, float blue, float alpha,
+    const Texture2D* texture, float metallic, float roughness,
+    float ambientOcclusion, float emissive)
+{
+    DrawMeshInternal(GetModelMesh(modelPath), transform, red, green, blue, alpha,
+        texture, metallic, roughness, ambientOcclusion, emissive);
 }
 
 SDL_GLContext Renderer::GetContext() const
@@ -1159,17 +1178,23 @@ void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitiv
     if (!m_RenderSettings.shadows || !m_ShadowFramebuffer)
         return;
 
-    Mesh* mesh = nullptr;
-    switch (primitive)
-    {
-    case PrimitiveType::Cube: mesh = m_CubeMesh.get(); break;
-    case PrimitiveType::Plane: mesh = m_PlaneMesh.get(); break;
-    case PrimitiveType::Sphere: mesh = m_SphereMesh.get(); break;
-    case PrimitiveType::Cylinder: mesh = m_CylinderMesh.get(); break;
-    default: return;
-    }
+    Mesh* mesh = GetPrimitiveMesh(primitive);
     if (!mesh) return;
 
+    mesh->Bind();
+    m_ShadowShader.Bind();
+    m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
+    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrix);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
+    m_ShadowShader.Unbind();
+    mesh->Unbind();
+}
+
+void Renderer::DrawShadowModel(const Transform& transform, const std::string& modelPath)
+{
+    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer) return;
+    Mesh* mesh = GetModelMesh(modelPath);
+    if (!mesh) return;
     mesh->Bind();
     m_ShadowShader.Bind();
     m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
