@@ -1,6 +1,6 @@
 MyEngineScene
-Environment 1 4 1 1 1 320 1.0 0.002 0.18 2 110
-Entities 23
+Environment 1 4 1 1 1 180 0.82 0.004 0.28 2 105
+Entities 25
 Entity 1
 Name PlaygroundController
 Position 0 0 0
@@ -21,7 +21,7 @@ Scripts 1
 Script Assets/Scripts/MultiplayerPlayground.lua
 Entity 2
 Name Player
-Position 0 1.2 -18
+Position 0 1.2 -12
 Rotation 0 3.14159 0
 Scale 1 1 1
 Parent 0
@@ -41,7 +41,7 @@ Entity 3
 Name PlayerBody
 Position 0 -0.35 0
 Rotation 0 0 0
-Scale 0.55 0.9 0.35
+Scale 0.62 0.82 0.38
 Parent 2
 PrefabSource ""
 Mesh 1 4 "" 1
@@ -58,13 +58,13 @@ Entity 4
 Name ArenaFloor
 Position 0 -0.6 0
 Rotation 0 0 0
-Scale 45 1 35
+Scale 28 1 22
 Parent 0
 PrefabSource ""
 Mesh 1 1
-Color 1 0.12 0.52 0.16 1
+Color 1 0.055 0.22 0.075 1
 Texture 0
-Material 1 0.02 0.72 0.7 0
+Material 1 0.01 0.92 0.48 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -75,11 +75,11 @@ Entity 5
 Name CenterCircle
 Position 0 0.15 0
 Rotation 0 0 0
-Scale 6 0.25 6
+Scale 4 0.18 4
 Parent 0
 PrefabSource ""
 Mesh 1 1
-Color 1 0.18 0.62 0.20 1
+Color 1 0.09 0.32 0.10 1
 Texture 0
 Material 1 0.08 0.35 0.8 0.1
 Interactable 0
@@ -90,9 +90,9 @@ Collider 1 1 1 1
 Scripts 0
 Entity 6
 Name NorthWall
-Position 0 2 -34
+Position 0 2 -21
 Rotation 0 0 0
-Scale 45 5 1
+Scale 28 5 1
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -107,7 +107,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 7
 Name SouthWall
-Position 0 2 34
+Position 0 2 21
 Rotation 0 0 0
 Scale 45 5 1
 Parent 0
@@ -124,9 +124,9 @@ Collider 1 1 1 1
 Scripts 0
 Entity 8
 Name WestWall
-Position -44 2 0
+Position -27 2 0
 Rotation 0 0 0
-Scale 1 5 35
+Scale 1 5 22
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -141,7 +141,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 9
 Name EastWall
-Position 44 2 0
+Position 27 2 0
 Rotation 0 0 0
 Scale 1 5 35
 Parent 0
@@ -158,7 +158,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 10
 Name JumpBoxA
-Position -30 0.25 -20
+Position -18 0.25 -10
 Rotation 0 0.2 0
 Scale 1 0.5 1
 Parent 0
@@ -175,7 +175,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 11
 Name JumpBoxB
-Position -20 0.25 -20
+Position -10 0.25 -10
 Rotation 0 -0.2 0
 Scale 1 0.5 1
 Parent 0
@@ -192,7 +192,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 12
 Name BallA
-Position -10 0.25 -20
+Position -6 0.35 7
 Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
@@ -209,7 +209,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 13
 Name BallB
-Position 10 0.25 20
+Position 6 0.35 -7
 Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
@@ -226,7 +226,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 14
 Name PillarA
-Position 20 0.25 20
+Position 10 0.25 10
 Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
@@ -243,7 +243,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 15
 Name PillarB
-Position 30 0.25 20
+Position 18 0.25 10
 Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
@@ -260,7 +260,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 16
 Name RampStepA
-Position -30 0.25 0
+Position -18 0.25 0
 Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
@@ -277,7 +277,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 17
 Name RampStepB
-Position 0 0.25 0
+Position 0 0.25 7
 Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
@@ -294,7 +294,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 18
 Name RampStepC
-Position 30 0.25 0
+Position 18 0.25 0
 Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
@@ -323,7 +323,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.52 0.66 1 -0.35 -1 -0.25 1.15 0 100 23 35 0
+Light 1 0.72 0.78 0.70 -0.35 -1 -0.25 0.62 0 80 23 35 0
 Collider 0
 Scripts 0
 Entity 20
@@ -340,7 +340,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.10 0.48 1 0 -1 0 2.2 1 30 23 35 0
+Light 1 0.18 0.32 0.20 0 -1 0 0.55 1 18 23 35 0
 Collider 0
 Scripts 0
 Entity 21
@@ -362,9 +362,9 @@ Collider 0
 Scripts 0
 Entity 22
 Name RedGoal
-Position 0 0.35 -27
+Position 0 0.25 -16.5
 Rotation 0 0 0
-Scale 12 0.35 7
+Scale 9 0.25 4.5
 Parent 0
 PrefabSource ""
 Mesh 1 1
@@ -379,7 +379,7 @@ Collider 0
 Scripts 0
 Entity 23
 Name BlueGoal
-Position 0 0.35 27
+Position 0 0.25 16.5
 Rotation 0 0 0
 Scale 12 0.35 7
 Parent 0
@@ -388,6 +388,40 @@ Mesh 1 1
 Color 1 0.10 0.38 1 0.72
 Texture 0
 Material 1 0.08 0.30 0.95 0.28
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 24
+Name PlayerHead
+Position 0 0.72 0
+Rotation 0 0 0
+Scale 0.42 0.42 0.42
+Parent 2
+PrefabSource ""
+Mesh 1 2
+Color 1 0.08 0.18 0.28 1
+Texture 0
+Material 1 0.12 0.38 0.75 0.12
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 25
+Name PlayerVisor
+Position 0 0.74 -0.35
+Rotation 0 0 0
+Scale 0.34 0.16 0.08
+Parent 2
+PrefabSource ""
+Mesh 1 1
+Color 1 0.20 0.85 1.0 1
+Texture 0
+Material 1 0.45 0.22 0.9 0.45
 Interactable 0
 Player 0
 CharacterController 0
