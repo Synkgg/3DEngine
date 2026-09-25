@@ -37,7 +37,7 @@ Application::Application()
 
 bool Application::Initialize()
 {
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
         Logger::Error( std::string("Failed to initialize SDL: ") + SDL_GetError());
 
@@ -79,6 +79,8 @@ bool Application::Initialize()
     // through UI.Load(), rather than inheriting whichever asset was open in
     // the Widget Blueprint editor.
     m_UICanvas.Clear();
+    m_Audio.Initialize();
+    m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
 
     return true;
 }
@@ -92,6 +94,7 @@ void Application::Run()
     while (m_Running)
     {
         m_Time.Update();
+        m_Audio.Update();
 
         while (SDL_PollEvent(&event))
         {
@@ -657,6 +660,7 @@ void Application::Run()
 
 void Application::Shutdown()
 {
+    m_Audio.Shutdown();
     m_ImGuiLayer.Shutdown();
     m_Renderer.Shutdown();
     m_Window.Shutdown();
