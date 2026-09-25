@@ -19,6 +19,7 @@ class Renderer;
 class Input;
 class UICanvas;
 class AudioEngine;
+class ProjectSettings;
 
 class Runtime
 {
@@ -53,6 +54,7 @@ public:
     bool IsPaused() const;
     void SetPaused(bool paused);
     void SetAudioEngine(AudioEngine* audio) { m_Audio = audio; }
+    void SetProjectSettings(ProjectSettings* settings) { m_ProjectSettings = settings; }
 
 private:
     bool m_Running = false;
@@ -79,4 +81,5 @@ private:
     Input* m_Input = nullptr;
     UICanvas* m_UICanvas = nullptr;
     AudioEngine* m_Audio = nullptr;
+    ProjectSettings* m_ProjectSettings = nullptr;
 };
