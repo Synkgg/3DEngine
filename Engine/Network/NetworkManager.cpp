@@ -21,7 +21,7 @@ using SocketHandle=SOCKET; constexpr SocketHandle InvalidSocket=INVALID_SOCKET;
 using SocketHandle=int; constexpr SocketHandle InvalidSocket=-1;
 #endif
 constexpr std::uint32_t Magic=0x4B545256; // VRTK
-enum : std::uint8_t { Hello=1, Welcome=2, Transform=3 };
+enum : std::uint8_t { Hello=1, Welcome=2, Transform=3, Goodbye=4 };
 #pragma pack(push,1)
 struct PacketHeader { std::uint32_t magic; std::uint8_t type; };
 struct WelcomePacket { PacketHeader header; std::uint32_t playerID; };
@@ -77,13 +77,21 @@ void NetworkManager::Update(){
    WelcomePacket w{{Magic,Welcome},it->playerID};sendto(s,reinterpret_cast<const char*>(&w),sizeof(w),0,reinterpret_cast<sockaddr*>(&from),len);
   }else if(m_Mode==Mode::Client&&h.type==Welcome&&n>=(int)sizeof(WelcomePacket)){
    WelcomePacket w{};std::memcpy(&w,b,sizeof(w));if(m_LocalPlayerID==0)Logger::Info("Network: joined as player "+std::to_string(w.playerID)+".");m_LocalPlayerID=w.playerID;
+  }else if(m_Mode==Mode::Host&&h.type==Goodbye){
+   auto it=std::find_if(m_Clients.begin(),m_Clients.end(),[&](const Endpoint&e){return e.address==from.sin_addr.s_addr&&e.port==ntohs(from.sin_port);});
+   if(it!=m_Clients.end()){const std::uint32_t playerID=it->playerID;m_RemoteTransforms.erase(playerID);m_Clients.erase(it);Logger::Info("Network: player "+std::to_string(playerID)+" disconnected.");}
   }else if(h.type==Transform&&n>=(int)sizeof(TransformPacket)){
    TransformPacket p{};std::memcpy(&p,b,sizeof(p));if(p.playerID==GetLocalPlayerID())continue;NetworkTransformState st{p.playerID,p.x,p.y,p.z,p.rx,p.ry,p.rz};m_RemoteTransforms[p.playerID]=st;
    if(m_Mode==Mode::Host){for(const auto& c:m_Clients)if(c.playerID!=p.playerID)SendTransformTo(c,st);}
   }
  }
 }
-void NetworkManager::Disconnect(){if(m_Mode!=Mode::Offline)CloseSocket(static_cast<SocketHandle>(m_Socket));
+void NetworkManager::Disconnect(){
+ if(m_Mode==Mode::Client&&m_Socket!=InvalidSocket){
+  PacketHeader p{Magic,Goodbye};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=m_Server.address;to.sin_port=htons(m_Server.port);
+  sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
+ }
+ if(m_Mode!=Mode::Offline)CloseSocket(static_cast<SocketHandle>(m_Socket));
 #ifdef _WIN32
  m_Socket=~(std::uintptr_t)0;
 #else
