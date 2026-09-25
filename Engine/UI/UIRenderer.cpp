@@ -460,8 +460,8 @@ void UIRenderer::UpdateInput(
     {
         // Match normal text-editor behavior: delete once immediately, then
         // repeat after a short hold delay at a steady rate.
-        constexpr float repeatDelay = 0.50f;
-        constexpr float repeatInterval = 0.50f;
+        constexpr float repeatDelay = 1.f;
+        constexpr float repeatInterval = 1.f;
         const float frameSeconds = 1.0f / 60.0f;
 
         auto repeatKey = [&](SDL_Scancode key, float& heldTime, float& repeatTime, auto action)
