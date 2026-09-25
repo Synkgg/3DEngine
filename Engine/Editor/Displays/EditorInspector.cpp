@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <initializer_list>
 
 namespace
 {
@@ -351,11 +352,11 @@ void Editor::RenderInspector(
             const std::vector<std::filesystem::path> modelAssets =
                 FindAssets({ ".obj" });
 
-            const char* modelPreview = mesh->modelPath.empty()
+            const std::string modelPreview = mesh->modelPath.empty()
                 ? "None"
-                : std::filesystem::path(mesh->modelPath).filename().string().c_str();
+                : std::filesystem::path(mesh->modelPath).filename().string();
 
-            if (ImGui::BeginCombo("Model", modelPreview))
+            if (ImGui::BeginCombo("Model", modelPreview.c_str()))
             {
                 if (ImGui::Selectable("None", mesh->modelPath.empty()))
                     mesh->modelPath.clear();
