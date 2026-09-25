@@ -770,7 +770,7 @@ namespace
                         Entity child;
                         for (const Entity& candidate : scene.GetEntities())
                             if (candidate.GetID() == childID) { child = candidate; break; }
-                        if (child.IsValid() && scene.SetParent(child, entityToRender))
+                        if (child.IsValid() && scene.SetParent(child, entityToRender, true))
                             Logger::Info("Parented entity " + std::to_string(childID) + " to " + std::to_string(entityToRender.GetID()));
                     }
                     ImGui::EndDragDropTarget();
