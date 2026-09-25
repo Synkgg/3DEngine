@@ -1005,111 +1005,45 @@ void UIEditor::DrawDesigner(
         }
     }
 
-    /*
-     * Mouse interaction.
-     */
-    if (mouseInsideCanvas)
-    {
-        /*
-         * The mouse is converted into UI design
-         * coordinates here. This is the important
-         * scaling fix.
-         */
-        const float uiMouseX =
-            (mouse.x -
-                canvasPosition.x) /
-            scale;
-
-        const float uiMouseY =
-            (mouse.y -
-                canvasPosition.y) /
-            scale;
-
-        (void)uiMouseX;
-        (void)uiMouseY;
-
-        if (m_SelectedWidget)
-        {
-            const UIRect selectedRect =
-                GetAbsoluteRect(
-                    *m_SelectedWidget,
-                    UIRect{
-                        0.0f,
-                        0.0f,
-                        canvasSize.x,
-                        canvasSize.y
-                    }
-                );
-
-            if (!m_Dragging &&
-                !m_Resizing &&
-                ImGui::IsMouseClicked(
-                    ImGuiMouseButton_Left))
-            {
-                const int handle =
-                    GetResizeHandle(
-                        selectedRect,
-                        mouse,
-                        canvasPosition,
-                        scale
-                    );
-
-                if (handle >= 0)
-                {
-                    BeginResize(
-                        *m_SelectedWidget,
-                        handle
-                    );
-                }
-                else if (
-                    IsMouseInsideRect(
-                        selectedRect,
-                        mouse,
-                        canvasPosition,
-                        scale
-                    ))
-                {
-                    BeginDrag(
-                        *m_SelectedWidget
-                    );
-                }
-            }
-        }
-
-        if (m_Dragging &&
-            m_SelectedWidget)
-        {
-            UpdateDrag(
-                *m_SelectedWidget
-            );
-        }
-
-        if (m_Resizing &&
-            m_SelectedWidget)
-        {
-            UpdateResize(
-                *m_SelectedWidget
-            );
-        }
-
-        if (ImGui::IsMouseReleased(
-            ImGuiMouseButton_Left))
-        {
-            m_Dragging =
-                false;
-
-            m_Resizing =
-                false;
-
-            m_ResizeHandle =
-                -1;
-        }
-    }
-
-    // Canvas context creation and empty-space deselection.
+    // Register the designer before processing mouse input. ImGui only reports
+    // clicks/drags against items submitted earlier in the frame.
     ImGui::SetCursorScreenPos(contentMin);
     ImGui::InvisibleButton("##UIDesignerDropTarget", availableSize,
         ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
+
+    if (mouseInsideCanvas)
+    {
+        if (m_SelectedWidget && !m_Dragging && !m_Resizing &&
+            ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            const UIRect selectedRect = GetAbsoluteRect(
+                *m_SelectedWidget,
+                UIRect{0.0f,0.0f,canvasSize.x,canvasSize.y});
+
+            const int handle = GetResizeHandle(
+                selectedRect, mouse, canvasPosition, scale);
+            if (handle >= 0)
+                BeginResize(*m_SelectedWidget, handle);
+            else if (IsMouseInsideRect(
+                selectedRect, mouse, canvasPosition, scale))
+                BeginDrag(*m_SelectedWidget);
+        }
+
+        if (m_Dragging && m_SelectedWidget)
+            UpdateDrag(*m_SelectedWidget);
+        if (m_Resizing && m_SelectedWidget)
+            UpdateResize(*m_SelectedWidget);
+    }
+
+    // Always terminate an active gesture, even if the pointer was released
+    // just outside the canvas.
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+    {
+        m_Dragging=false;
+        m_Resizing=false;
+        m_ResizeHandle=-1;
+    }
+
     if (mouseInsideCanvas && ImGui::IsItemClicked(ImGuiMouseButton_Right))
         ImGui::OpenPopup("DesignerCreatePopup");
     if (ImGui::BeginPopup("DesignerCreatePopup"))
