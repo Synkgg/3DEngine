@@ -11,6 +11,7 @@
 #include "../UI/UICanvas.h"
 
 #include "Time.h"
+#include "../Audio/AudioEngine.h"
 
 #include "../Scene/Scene.h"
 
@@ -42,6 +43,7 @@ private:
     Editor m_Editor;
 
     Time m_Time;
+    AudioEngine m_Audio;
 
     bool m_CameraControlActive;
     bool m_RuntimeMouseCaptured;
