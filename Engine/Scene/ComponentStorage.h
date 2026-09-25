@@ -13,6 +13,7 @@ public:
 
     virtual void Remove(Entity entity) = 0;
     virtual void Clear() = 0;
+    virtual void Copy(Entity source, Entity destination) = 0;
 
     virtual std::unique_ptr<IComponentStorage>
         Clone() const = 0;
@@ -88,6 +89,13 @@ public:
     void Clear() override
     {
         m_Components.clear();
+    }
+
+    void Copy(Entity source, Entity destination) override
+    {
+        const auto it = m_Components.find(source.GetID());
+        if (it != m_Components.end() && destination.IsValid())
+            m_Components[destination.GetID()] = it->second;
     }
 
     // PUT Clone() HERE
