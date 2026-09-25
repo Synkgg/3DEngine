@@ -441,6 +441,9 @@ void Application::Run()
 
             if (transform == nullptr || mesh == nullptr)
                 continue;
+            if (mesh->ownerNoSee && m_Runtime.IsRunning() &&
+                m_Runtime.IsLocalPlayerEntityOrChild(m_Scene, entity))
+                continue;
 
             Transform shadowTransform = m_Scene.GetWorldTransform(entity);
             shadowTransform.position.x += mesh->offset.x;
@@ -491,6 +494,10 @@ void Application::Run()
             if (transform != nullptr &&
                 mesh != nullptr)
             {
+                if (mesh->ownerNoSee && m_Runtime.IsRunning() &&
+                    m_Runtime.IsLocalPlayerEntityOrChild(m_Scene, entity))
+                    continue;
+
                 float red = 1.0f;
                 float green = 1.0f;
                 float blue = 1.0f;
