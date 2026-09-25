@@ -324,20 +324,6 @@ bool SceneSerializer::Save(
      */
     file << "MyEngineScene\n";
 
-    const SceneEnvironment& environment = m_Scene.GetEnvironment();
-    file << "Environment "
-        << (environment.antiAliasing ? 1 : 0) << " "
-        << environment.antiAliasingSamples << " "
-        << (environment.shadows ? 1 : 0) << " "
-        << (environment.fog ? 1 : 0) << " "
-        << (environment.bloom ? 1 : 0) << " "
-        << environment.viewDistance << " "
-        << environment.exposure << " "
-        << environment.fogDensity << " "
-        << environment.bloomStrength << " "
-        << environment.shadowQuality << " "
-        << environment.shadowDistance << '\n';
-
     /*
      * Entities
      */
@@ -728,11 +714,8 @@ bool SceneSerializer::Load(
 
     if (line.rfind("Environment ", 0) == 0)
     {
-        // Legacy scene files may contain per-scene rendering settings. Ignore
-        // them now; project settings are the single source of truth.
+        // Backward compatibility: consume and ignore legacy per-scene render settings.
         if (!ReadLine(file, line, "entity count", 0)) return false;
-    }
-        if (!ReadLine(file,line,"entity count",0)) return false;
     }
 
     std::istringstream entityHeader(line);
