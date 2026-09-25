@@ -933,10 +933,6 @@ bool SceneSerializer::Load(
          * Mesh
          */
         {
-            return false;
-        }
-
-        {
             std::istringstream meshLine(line);
 
             std::string token;
