@@ -2,6 +2,7 @@
 #include "../HierarchyFolder.h"
 
 #include "../../Scene/Scene.h"
+#include "../../Scene/PrefabSerializer.h"
 
 #include "../../Scene/Components/TransformComponent.h"
 #include "../../Scene/Components/MeshComponent.h"
@@ -24,6 +25,7 @@
 #include <cstring>
 #include <vector>
 #include <functional>
+#include <filesystem>
 
 namespace
 {
@@ -860,6 +862,18 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                         copyName->name = MakeUniqueName(scene, copyName->name, copy);
                     m_SelectedEntity = copy;
                 }
+            }
+            if (ImGui::MenuItem("Create Prefab"))
+            {
+                namespace fs = std::filesystem;
+                fs::path directory = fs::current_path() / "Assets" / "Prefabs";
+                std::error_code error;
+                fs::create_directories(directory, error);
+                std::string filename = label;
+                for (char& c : filename)
+                    if (c == '\\' || c == '/' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|') c = '_';
+                const fs::path prefabPath = directory / (filename + ".prefab");
+                if (!error) PrefabSerializer::Save(scene, entity, prefabPath.string());
             }
             if (scene.GetParent(entity).IsValid() && ImGui::MenuItem("Unparent"))
                 scene.ClearParent(entity, true);
