@@ -192,6 +192,28 @@ void UIEditor::DrawHierarchy(
         );
     }
 
+    if (ImGui::BeginDragDropSource())
+    {
+        UIWidget* draggedWidget = &widget;
+        ImGui::SetDragDropPayload("UI_WIDGET_REPARENT", &draggedWidget, sizeof(draggedWidget));
+        ImGui::Text("Move %s", label.c_str());
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("UI_WIDGET_REPARENT"))
+        {
+            if (payload->DataSize == sizeof(UIWidget*))
+            {
+                UIWidget* draggedWidget = *static_cast<UIWidget* const*>(payload->Data);
+                if (draggedWidget && draggedWidget != &widget && draggedWidget->GetParent() != &widget)
+                    ImGui::SetTooltip("Reparenting requires ownership-safe detach support");
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
     if (open)
     {
         for (const auto& child :
@@ -293,23 +315,27 @@ void UIEditor::DrawInspector(
         widget.SetAnchors(anchorMin, anchorMax);
     }
 
-    if (ImGui::Button("Top Left"))
-    {
-        widget.SetAnchor(Vec2(0.0f, 0.0f));
-        widget.SetPivot(Vec2(0.0f, 0.0f));
-    }
+    ImGui::TextDisabled("Anchor Presets");
+    if (ImGui::Button("Top Left")) { widget.SetAnchor(Vec2(0,0)); widget.SetPivot(Vec2(0,0)); }
     ImGui::SameLine();
-    if (ImGui::Button("Center"))
-    {
-        widget.SetAnchor(Vec2(0.5f, 0.5f));
-        widget.SetPivot(Vec2(0.5f, 0.5f));
-    }
+    if (ImGui::Button("Top")) { widget.SetAnchor(Vec2(.5f,0)); widget.SetPivot(Vec2(.5f,0)); }
     ImGui::SameLine();
-    if (ImGui::Button("Fill"))
-    {
-        widget.SetAnchors(Vec2(0.0f, 0.0f), Vec2(1.0f, 1.0f));
-        widget.SetPivot(Vec2(0.0f, 0.0f));
-    }
+    if (ImGui::Button("Top Right")) { widget.SetAnchor(Vec2(1,0)); widget.SetPivot(Vec2(1,0)); }
+    if (ImGui::Button("Left")) { widget.SetAnchor(Vec2(0,.5f)); widget.SetPivot(Vec2(0,.5f)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Center")) { widget.SetAnchor(Vec2(.5f,.5f)); widget.SetPivot(Vec2(.5f,.5f)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Right")) { widget.SetAnchor(Vec2(1,.5f)); widget.SetPivot(Vec2(1,.5f)); }
+    if (ImGui::Button("Bottom Left")) { widget.SetAnchor(Vec2(0,1)); widget.SetPivot(Vec2(0,1)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Bottom")) { widget.SetAnchor(Vec2(.5f,1)); widget.SetPivot(Vec2(.5f,1)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Bottom Right")) { widget.SetAnchor(Vec2(1,1)); widget.SetPivot(Vec2(1,1)); }
+    if (ImGui::Button("Fill Width")) { widget.SetAnchors(Vec2(0,anchorMin.y),Vec2(1,anchorMax.y)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Fill Height")) { widget.SetAnchors(Vec2(anchorMin.x,0),Vec2(anchorMax.x,1)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Fill")) { widget.SetAnchors(Vec2(0,0),Vec2(1,1)); widget.SetPivot(Vec2(0,0)); }
 
     Vec2 pivot =
         widget.GetPivot();
@@ -434,7 +460,7 @@ void UIEditor::DrawInspector(
         ImGui::SeparatorText("Appearance");
         ImGui::TextDisabled("Brush / Image");
 
-        const std::string& currentPath = image->GetTexturePath();
+        const std::string currentPath = image->GetTexturePath();
         const std::string preview = currentPath.empty()
             ? "None"
             : std::filesystem::path(currentPath).filename().string();
