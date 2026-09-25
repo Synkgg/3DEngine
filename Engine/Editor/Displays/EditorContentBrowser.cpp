@@ -195,6 +195,21 @@ void Editor::RenderContentBrowser(
 
     ImGui::Separator();
 
+    int folderCount = 0;
+    int assetCount = 0;
+    {
+        std::error_code countError;
+        for (const fs::directory_entry& entry : fs::directory_iterator(currentPath, countError))
+        {
+            if (countError) break;
+            if (entry.is_directory()) ++folderCount; else ++assetCount;
+        }
+    }
+    ImGui::TextDisabled("%d folders   %d assets", folderCount, assetCount);
+    ImGui::SameLine();
+    ImGui::TextDisabled("   Drag assets into Details to assign them");
+    ImGui::Separator();
+
     /*
      * Asset entries.
      */
