@@ -1,0 +1,520 @@
+MyEngineScene
+Environment 1 4 1 1 1 180 0.62 0.018 0.18 3 75
+Entities 30
+Entity 1
+Name GameController
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 4
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 1
+Script Assets/Scripts/GraveyardController.lua
+Entity 2
+Name Player
+Position 0 1.05 18
+Rotation 0 3.14159 0
+Scale 1 1 1
+Parent 4
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 1 9.81 5 0 1
+Light 0
+Collider 1 0.8 2 0.8
+Scripts 1
+Script Assets/Scripts/Player.lua
+Entity 3
+Name PlayerLantern
+Position 0 1.15 0.35
+Rotation 0 0 0
+Scale 1 1 1
+Parent 2
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.95 0.58 0.24 0 -1 0 2.8 1 10 23 35 0
+Collider 0
+Scripts 0
+Entity 4
+Name Gameplay
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 5
+Name Environment
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 6
+Name Lighting
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 7
+Name BlackthornGround
+Position 0 -0.7 -4
+Rotation 0 0 0
+Scale 42 1 52
+Parent 5
+PrefabSource ""
+Mesh 1 1
+Color 1 0.045 0.065 0.048 1
+Texture 0
+Material 1 0.01 0.98 0.48 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 8
+Name ProcessionalPath
+Position 0 -0.04 2
+Rotation 0 1.5708 0
+Scale 17 1 1.6
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/StonePath.obj"
+Color 1 0.18 0.18 0.17 1
+Texture 0
+Material 1 0.02 0.94 0.58 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 9
+Name CrossPath
+Position 0 -0.03 -7
+Rotation 0 0 0
+Scale 14 1 1.3
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/StonePath.obj"
+Color 1 0.16 0.17 0.16 1
+Texture 0
+Material 1 0.02 0.95 0.58 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 10
+Name Mausoleum
+Position 0 0 -22
+Rotation 0 0 0
+Scale 1.8 1.8 1.8
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/Mausoleum.obj"
+Color 1 0.16 0.17 0.16 1
+Texture 0
+Material 1 0.02 0.92 0.58 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 4 4 4
+Scripts 0
+Entity 11
+Name WestCrypt
+Position -13 0 -12
+Rotation 0 .25 0
+Scale 1.05 1.05 1.05
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/Mausoleum.obj"
+Color 1 0.12 0.14 0.13 1
+Texture 0
+Material 1 0.02 0.96 0.55 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 4 4 4
+Scripts 0
+Entity 12
+Name AngelMemorial
+Position 12 0 -10
+Rotation 0 -.2 0
+Scale 1.35 1.35 1.35
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/AngelMonument.obj"
+Color 1 0.20 0.21 0.19 1
+Texture 0
+Material 1 0.02 0.94 0.55 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 13
+Name OldObelisk
+Position -9 0 -4
+Rotation 0 .08 0
+Scale 1 1 1
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/Obelisk.obj"
+Color 1 0.17 0.18 0.17 1
+Texture 0
+Material 1 0.02 0.95 0.55 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 14
+Name GraveClusterWestA
+Position -11 0 10
+Rotation 0 -.08 0
+Scale 1.1 1.1 1.1
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/CrossGrave.obj"
+Color 1 0.17 0.19 0.17 1
+Texture 0
+Material 1 0.02 0.96 0.5 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 15
+Name GraveClusterWestB
+Position -7 0 5
+Rotation 0 .11 0
+Scale .9 .9 .9
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/GraveMarker.obj"
+Color 1 0.19 0.20 0.18 1
+Texture 0
+Material 1 0.02 0.96 0.5 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 16
+Name GraveClusterEastA
+Position 9 0 11
+Rotation 0 .06 0
+Scale 1 1 1
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/LowHeadstone.obj"
+Color 1 0.16 0.18 0.16 1
+Texture 0
+Material 1 0.02 0.96 0.5 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 17
+Name GraveClusterEastB
+Position 13 0 4
+Rotation 0 -.12 0
+Scale 1.15 1.15 1.15
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/CrossGrave.obj"
+Color 1 0.18 0.19 0.17 1
+Texture 0
+Material 1 0.02 0.96 0.5 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 18
+Name DeadTreeWest
+Position -16 0 8
+Rotation 0 .3 0
+Scale 1.6 2 1.6
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/DeadTree.obj"
+Color 1 0.055 0.042 0.03 1
+Texture 0
+Material 1 0.01 0.98 0.45 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 19
+Name DeadTreeEast
+Position 16 0 -3
+Rotation 0 -.5 0
+Scale 1.8 2.2 1.8
+Parent 5
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/DeadTree.obj"
+Color 1 0.05 0.04 0.03 1
+Texture 0
+Material 1 0.01 0.98 0.45 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 20
+Name WardSealWest
+Position -13 1.4 -10
+Rotation 0 0 0
+Scale .65 .65 .65
+Parent 4
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/WardSeal.obj"
+Color 1 0.58 0.10 0.08 1
+Texture 0
+Material 1 0.55 0.32 1 0.75
+Interactable 1 1 "Recover ward seal"
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.2 .8
+Scripts 1
+Script Assets/Scripts/WardSeal.lua
+Entity 21
+Name WardSealEast
+Position 12 1.4 -8
+Rotation 0 0 0
+Scale .65 .65 .65
+Parent 4
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/WardSeal.obj"
+Color 1 0.58 0.10 0.08 1
+Texture 0
+Material 1 0.55 0.32 1 0.75
+Interactable 1 1 "Recover ward seal"
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.2 .8
+Scripts 1
+Script Assets/Scripts/WardSeal.lua
+Entity 22
+Name WardSealOldGraves
+Position -9 1.4 -3
+Rotation 0 0 0
+Scale .65 .65 .65
+Parent 4
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/WardSeal.obj"
+Color 1 0.58 0.10 0.08 1
+Texture 0
+Material 1 0.55 0.32 1 0.75
+Interactable 1 1 "Recover ward seal"
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.2 .8
+Scripts 1
+Script Assets/Scripts/WardSeal.lua
+Entity 23
+Name MausoleumWard
+Position 0 1.5 -18.3
+Rotation 0 0 0
+Scale 2.8 2.5 .35
+Parent 4
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/IronFence.obj"
+Color 1 0.08 0.07 0.07 1
+Texture 0
+Material 1 0.18 0.72 0.4 0
+Interactable 1 1 "Break the mausoleum ward"
+Player 0
+CharacterController 0
+Light 0
+Collider 1 5.5 3 .6
+Scripts 1
+Script Assets/Scripts/MausoleumGate.lua
+Entity 24
+Name Moon
+Position 0 18 -6
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.035 0.055 0.095 0 -1 0 0.12 0 80 23 35 0
+Collider 0
+Scripts 0
+Entity 25
+Name EntranceLantern
+Position 0 3 17
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/LanternPost.obj"
+Color 1 0.11 0.09 0.06 1
+Texture 0
+Material 1 0.15 0.75 0.4 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.72 0.31 0.09 0 -1 0 1.1 1 8 23 35 0
+Collider 0
+Scripts 0
+Entity 26
+Name CrossroadsLantern
+Position 0 3 -6
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Graveyard/LanternPost.obj"
+Color 1 0.11 0.09 0.06 1
+Texture 0
+Material 1 0.15 0.75 0.4 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.58 0.23 0.06 0 -1 0 .8 1 7 23 35 0
+Collider 0
+Scripts 0
+Entity 27
+Name MausoleumColdLight
+Position 0 3 -17
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.04 0.12 0.16 0 -1 0 .55 1 9 23 35 0
+Collider 0
+Scripts 0
+Entity 28
+Name WestSealLight
+Position -13 2 -10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.42 0.035 0.025 0 -1 0 .42 1 4 23 35 0
+Collider 0
+Scripts 0
+Entity 29
+Name EastSealLight
+Position 12 2 -8
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.42 0.035 0.025 0 -1 0 .42 1 4 23 35 0
+Collider 0
+Scripts 0
+Entity 30
+Name OldGraveSealLight
+Position -9 2 -3
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.42 0.035 0.025 0 -1 0 .42 1 4 23 35 0
+Collider 0
+Scripts 0
+HierarchyFolders 0
