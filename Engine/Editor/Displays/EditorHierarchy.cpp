@@ -875,6 +875,27 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 const fs::path prefabPath = directory / (filename + ".prefab");
                 if (!error) PrefabSerializer::Save(scene, entity, prefabPath.string());
             }
+            if (PrefabSerializer::IsInstanceRoot(scene, entity))
+            {
+                ImGui::Separator();
+                ImGui::TextDisabled("PREFAB INSTANCE");
+                const std::string prefabSource = PrefabSerializer::GetSource(scene, entity);
+                ImGui::TextWrapped("%s", prefabSource.c_str());
+                if (ImGui::MenuItem("Apply Prefab"))
+                    PrefabSerializer::Apply(scene, entity);
+                if (ImGui::MenuItem("Revert Prefab"))
+                {
+                    PrefabSerializer::Revert(scene, entity);
+                    m_SelectedEntity = Entity();
+                    ImGui::EndPopup();
+                    if (open) ImGui::TreePop();
+                    ImGui::PopID();
+                    return;
+                }
+                if (ImGui::MenuItem("Unpack Prefab"))
+                    PrefabSerializer::Unpack(scene, entity, true);
+                ImGui::Separator();
+            }
             if (scene.GetParent(entity).IsValid() && ImGui::MenuItem("Unparent"))
                 scene.ClearParent(entity, true);
             ImGui::Separator();
