@@ -43,6 +43,7 @@ Scene& Scene::operator=(
 
     m_Parents = other.m_Parents;
     m_PrefabSources = other.m_PrefabSources;
+    m_PendingDestroyEntities.clear();
 
     m_ComponentStorages.clear();
 
@@ -197,6 +198,7 @@ void Scene::Clear()
     m_NextEntityID = 1;
     m_Parents.clear();
     m_PrefabSources.clear();
+    m_PendingDestroyEntities.clear();
 }
 
 bool Scene::SetParent(Entity child, Entity parent, bool keepWorldTransform)
@@ -411,6 +413,26 @@ void Scene::DestroyEntityHierarchy(Entity root)
     const std::vector<Entity> children = GetChildren(root);
     for (Entity child : children) DestroyEntityHierarchy(child);
     DestroyEntity(root);
+}
+
+void Scene::QueueDestroyEntityHierarchy(Entity root)
+{
+    if (!root.IsValid() || !FindEntityByID(root.GetID()).IsValid()) return;
+    if (std::find(m_PendingDestroyEntities.begin(), m_PendingDestroyEntities.end(), root.GetID()) == m_PendingDestroyEntities.end())
+        m_PendingDestroyEntities.push_back(root.GetID());
+}
+
+std::vector<Entity> Scene::ConsumePendingDestroyEntities()
+{
+    std::vector<Entity> pending;
+    pending.reserve(m_PendingDestroyEntities.size());
+    for (std::uint32_t id : m_PendingDestroyEntities)
+    {
+        Entity entity = FindEntityByID(id);
+        if (entity.IsValid()) pending.push_back(entity);
+    }
+    m_PendingDestroyEntities.clear();
+    return pending;
 }
 
 
