@@ -2,6 +2,16 @@
 
 #include "Components/TransformComponent.h"
 #include "Components/NameComponent.h"
+#include "Components/MeshComponent.h"
+#include "Components/ColorComponent.h"
+#include "Components/PlayerComponent.h"
+#include "Components/CharacterControllerComponent.h"
+#include "Components/LightComponent.h"
+#include "Components/ColliderComponent.h"
+#include "Components/TextureComponent.h"
+#include "Components/MaterialComponent.h"
+#include "Components/InteractableComponent.h"
+#include "Components/ScriptComponent.h"
 
 #include "../Core/Logger.h"
 
@@ -314,4 +324,50 @@ Transform Scene::GetWorldTransform(Entity entity) const
         result.scale.z *= p.scale.z;
     }
     return result;
+}
+
+Entity Scene::DuplicateEntity(Entity source, bool duplicateChildren)
+{
+    if (!source.IsValid()) return Entity();
+
+    Entity duplicate = CreateEntity();
+    if (!duplicate.IsValid()) return Entity();
+
+    if (const TransformComponent* value = GetComponent<TransformComponent>(source))
+        if (TransformComponent* target = GetComponent<TransformComponent>(duplicate))
+            target->transform = value->transform;
+
+    if (const NameComponent* value = GetComponent<NameComponent>(source))
+        if (NameComponent* target = GetComponent<NameComponent>(duplicate))
+            target->name = value->name + " Copy";
+
+#define COPY_COMPONENT(Type) \
+    if (const Type* value = GetComponent<Type>(source)) AddComponent<Type>(duplicate, *value)
+
+    COPY_COMPONENT(MeshComponent);
+    COPY_COMPONENT(ColorComponent);
+    COPY_COMPONENT(PlayerComponent);
+    COPY_COMPONENT(CharacterControllerComponent);
+    COPY_COMPONENT(LightComponent);
+    COPY_COMPONENT(ColliderComponent);
+    COPY_COMPONENT(TextureComponent);
+    COPY_COMPONENT(MaterialComponent);
+    COPY_COMPONENT(InteractableComponent);
+    COPY_COMPONENT(ScriptComponent);
+
+#undef COPY_COMPONENT
+
+    Entity sourceParent = GetParent(source);
+    if (sourceParent.IsValid()) SetParent(duplicate, sourceParent, false);
+
+    if (duplicateChildren)
+    {
+        for (Entity child : GetChildren(source))
+        {
+            Entity childCopy = DuplicateEntity(child, true);
+            if (childCopy.IsValid()) SetParent(childCopy, duplicate, false);
+        }
+    }
+
+    return duplicate;
 }
