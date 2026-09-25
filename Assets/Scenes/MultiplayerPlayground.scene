@@ -91,7 +91,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 6
 Name NorthWall
-Position 0 4 -35
+Position 0 4 -40
 Rotation 0 -0 0
 Scale 100 8 1
 Parent 0
@@ -108,7 +108,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 7
 Name SouthWall
-Position 0 4 35
+Position 0 4 40
 Rotation 0 0 0
 Scale 100 8 1
 Parent 0
@@ -125,7 +125,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 8
 Name WestWall
-Position -35 4 0
+Position -40 4 0
 Rotation 0 0 0
 Scale 1 8 100
 Parent 0
@@ -142,7 +142,7 @@ Collider 1 1 1 1
 Scripts 0
 Entity 9
 Name EastWall
-Position 35 4 0
+Position 40 4 0
 Rotation 0 0 0
 Scale 1 8 100
 Parent 0
