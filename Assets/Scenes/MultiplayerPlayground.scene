@@ -1,0 +1,346 @@
+MyEngineScene
+Environment 1 4 1 1 1 320 1.0 0.002 0.18 2 110
+Entities 20
+Entity 1
+Name PlaygroundController
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 1
+Script Assets/Scripts/MultiplayerPlayground.lua
+Entity 2
+Name Player
+Position 0 1.2 10
+Rotation 0 3.14159 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 1 9.81 6 0 1
+Light 0
+Collider 1 0.8 2 0.8
+Scripts 1
+Script Assets/Scripts/Player.lua
+Entity 3
+Name PlayerBody
+Position 0 -0.35 0
+Rotation 0 0 0
+Scale 0.55 0.9 0.35
+Parent 2
+PrefabSource ""
+Mesh 1 4 "" 1
+Color 1 0.10 0.55 0.95 1
+Texture 0
+Material 1 0.05 0.45 0.9 0.08
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 4
+Name ArenaFloor
+Position 0 -0.6 0
+Rotation 0 0 0
+Scale 32 1 32
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.035 0.045 0.065 1
+Texture 0
+Material 1 0.02 0.72 0.7 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 5
+Name CenterPlatform
+Position 0 0.15 0
+Rotation 0 0 0
+Scale 5 0.5 5
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.08 0.22 0.38 1
+Texture 0
+Material 1 0.08 0.35 0.8 0.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 6
+Name NorthBlock
+Position 0 1 -10
+Rotation 0 0.35 0
+Scale 4 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.10 0.62 0.92 1
+Texture 0
+Material 1 0.1 0.3 0.9 0.15
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 7
+Name SouthBlock
+Position 0 1 18
+Rotation 0 -0.35 0
+Scale 4 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.92 0.28 0.18 1
+Texture 0
+Material 1 0.1 0.35 0.85 0.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 8
+Name WestTower
+Position -13 2 0
+Rotation 0 0 0
+Scale 2.5 5 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.42 0.18 0.92 1
+Texture 0
+Material 1 0.08 0.32 0.9 0.12
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 9
+Name EastTower
+Position 13 2 0
+Rotation 0 0 0
+Scale 2.5 5 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.15 0.88 0.55 1
+Texture 0
+Material 1 0.08 0.32 0.9 0.12
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 10
+Name JumpBoxA
+Position -7 0.5 8
+Rotation 0 0.2 0
+Scale 2 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.95 0.62 0.10 1
+Texture 0
+Material 1 0.05 0.4 0.8 0.08
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 11
+Name JumpBoxB
+Position 7 1.25 8
+Rotation 0 -0.2 0
+Scale 2 3 2
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.95 0.62 0.10 1
+Texture 0
+Material 1 0.05 0.4 0.8 0.08
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 12
+Name BallA
+Position -8 1 -8
+Rotation 0 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 2
+Color 1 0.95 0.16 0.48 1
+Texture 0
+Material 1 0.12 0.28 0.9 0.18
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 13
+Name BallB
+Position 8 1 -8
+Rotation 0 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 2
+Color 1 0.18 0.78 0.98 1
+Texture 0
+Material 1 0.12 0.28 0.9 0.18
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 14
+Name PillarA
+Position -16 1.5 -14
+Rotation 0 0 0
+Scale 1.5 4 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 4
+Color 1 0.25 0.35 0.55 1
+Texture 0
+Material 1 0.06 0.5 0.75 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 15
+Name PillarB
+Position 16 1.5 -14
+Rotation 0 0 0
+Scale 1.5 4 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 4
+Color 1 0.25 0.35 0.55 1
+Texture 0
+Material 1 0.06 0.5 0.75 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 16
+Name RampStepA
+Position -4 0.15 -18
+Rotation 0 0 0
+Scale 3 0.5 3
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.16 0.20 0.30 1
+Texture 0
+Material 1 0.04 0.55 0.7 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 17
+Name RampStepB
+Position 0 0.65 -20
+Rotation 0 0 0
+Scale 3 1.5 3
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.20 0.28 0.42 1
+Texture 0
+Material 1 0.04 0.5 0.75 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 18
+Name RampStepC
+Position 4 1.15 -22
+Rotation 0 0 0
+Scale 3 2.5 3
+Parent 0
+PrefabSource ""
+Mesh 1 1
+Color 1 0.25 0.38 0.58 1
+Texture 0
+Material 1 0.04 0.45 0.8 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 19
+Name Sun
+Position 0 15 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.52 0.66 1 -0.35 -1 -0.25 1.15 0 100 23 35 0
+Collider 0
+Scripts 0
+Entity 20
+Name ArenaGlow
+Position 0 8 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.10 0.48 1 0 -1 0 2.2 1 30 23 35 0
+Collider 0
+Scripts 0
+HierarchyFolders 0
