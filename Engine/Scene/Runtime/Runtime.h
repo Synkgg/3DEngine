@@ -56,6 +56,7 @@ public:
     bool IsPaused() const;
     void SetPaused(bool paused);
     void SetAudioEngine(AudioEngine* audio) { m_Audio = audio; }
+    AudioEngine* GetAudioEngine() const { return m_Audio; }
     void SetProjectSettings(ProjectSettings* settings) { m_ProjectSettings = settings; }
     NetworkManager& GetNetwork() { return m_Network; }
     bool IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) const;
