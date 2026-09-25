@@ -12,6 +12,7 @@
 #include "../../UI/UISerializer.h"
 
 #include "../Scene.h"
+#include "../PrefabSerializer.h"
 #include "../Runtime/Runtime.h"
 #include "../Components/TransformComponent.h"
 #include "../Components/CharacterControllerComponent.h"
@@ -910,6 +911,13 @@ void LuaScript::BindEngineAPI()
         return m_Scene->FindEntityByName(name).GetID();
     });
 
+    sceneApi.set_function("InstantiatePrefab", [this](const std::string& path, std::uint32_t parentID)
+    {
+        if (!m_Scene) return std::uint32_t(0);
+        Entity parent = parentID == 0 ? Entity() : m_Scene->FindEntityByID(parentID);
+        return PrefabSerializer::Instantiate(*m_Scene, path, parent).GetID();
+    });
+
     sceneApi.set_function("DuplicateEntity", [this](std::uint32_t entityID, bool includeChildren)
     {
         if (!m_Scene) return std::uint32_t(0);
@@ -918,7 +926,7 @@ void LuaScript::BindEngineAPI()
 
     sceneApi.set_function("DestroyEntity", [this](std::uint32_t entityID)
     {
-        if (m_Scene) m_Scene->DestroyEntity(Entity(entityID));
+        if (m_Scene) m_Scene->DestroyEntityHierarchy(Entity(entityID));
     });
 
     sceneApi.set_function("GetParent", [this](std::uint32_t entityID)
