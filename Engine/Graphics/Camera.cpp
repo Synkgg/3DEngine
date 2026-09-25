@@ -319,3 +319,13 @@ float Camera::GetFarPlane() const
 {
     return m_FarPlane;
 }
+
+void Camera::SetFovDegrees(float degrees)
+{
+    m_Fov = std::clamp(degrees, 50.0f, 120.0f) * DegreesToRadians;
+}
+
+float Camera::GetFovDegrees() const
+{
+    return m_Fov / DegreesToRadians;
+}
