@@ -116,9 +116,6 @@ bool LuaScript::Load(
         return false;
     }
 
-    // Every entity script gets an entity-first handle to its owning entity.
-    (*m_Environment)["self"] = LuaEntityHandle{m_Scene, m_Entity.GetID()};
-
     // Scripts declare editor-facing defaults in a global Properties table.
     // Instance overrides are injected after the script executes but before OnCreate.
     if (propertyOverrides != nullptr)
