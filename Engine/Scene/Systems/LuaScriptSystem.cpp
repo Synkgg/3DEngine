@@ -21,6 +21,7 @@ void LuaScriptSystem::Start(
     Runtime* runtime)
 {
     m_Instances.clear();
+    m_Scene = &scene;
 
     m_Lua =
         std::make_unique<
@@ -169,6 +170,8 @@ void LuaScriptSystem::Update(
             );
         }
     }
+
+    ProcessPendingDestructions();
 }
 
 void LuaScriptSystem::Interact(
@@ -193,6 +196,36 @@ void LuaScriptSystem::Interact(
             instance.script->Interact();
         }
     }
+
+    ProcessPendingDestructions();
+}
+
+void LuaScriptSystem::ProcessPendingDestructions()
+{
+    if (m_Scene == nullptr) return;
+
+    const std::vector<Entity> roots = m_Scene->ConsumePendingDestroyEntities();
+    for (Entity root : roots)
+    {
+        std::vector<Entity> hierarchy;
+        hierarchy.push_back(root);
+        for (std::size_t i = 0; i < hierarchy.size(); ++i)
+        {
+            const std::vector<Entity> children = m_Scene->GetChildren(hierarchy[i]);
+            hierarchy.insert(hierarchy.end(), children.begin(), children.end());
+        }
+
+        for (Entity entity : hierarchy)
+        {
+            auto it = m_Instances.find(entity.GetID());
+            if (it == m_Instances.end()) continue;
+            for (ScriptInstance& instance : it->second)
+                if (instance.script) instance.script->Destroy();
+            m_Instances.erase(it);
+        }
+
+        m_Scene->DestroyEntityHierarchy(root);
+    }
 }
 
 void LuaScriptSystem::Stop()
@@ -216,6 +249,7 @@ void LuaScriptSystem::Stop()
     m_Instances.clear();
 
     m_Lua.reset();
+    m_Scene = nullptr;
 }
 
 bool LuaScriptSystem::LoadGlobalScript(
