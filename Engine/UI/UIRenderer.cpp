@@ -3,6 +3,7 @@
 #include "UIText.h"
 #include "UIImage.h"
 #include "UIButton.h"
+#include "UITextInput.h"
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
@@ -416,20 +417,83 @@ void UIRenderer::UpdateInput(
     const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
 
     UIButton* hovered = nullptr;
+    UITextInput* hoveredInput = nullptr;
     if (inside)
     {
         // Children are z-sorted ascending, so later hits replace earlier ones
         // and the visually topmost button owns the interaction.
         for (const auto& child : root->GetChildren())
             if (child)
+            {
                 if (UIButton* hit = FindTopButton(*child, canvasRect, mouse))
                     hovered = hit;
+                if (UITextInput* hit = FindTopTextInput(*child, canvasRect, mouse))
+                    hoveredInput = hit;
+            }
     }
 
     if (hovered) hovered->SetHovered(true);
 
     if (inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT))
+    {
         m_PressedCanvasButton = hovered;
+        if (m_FocusedTextInput && m_FocusedTextInput != hoveredInput)
+            m_FocusedTextInput->SetFocused(false);
+        m_FocusedTextInput = hoveredInput;
+        if (m_FocusedTextInput)
+            m_FocusedTextInput->SetFocused(true);
+    }
+
+    if (m_FocusedTextInput)
+    {
+        const bool ctrl = input.IsKeyDown(SDL_SCANCODE_LCTRL) || input.IsKeyDown(SDL_SCANCODE_RCTRL);
+        const bool shift = input.IsKeyDown(SDL_SCANCODE_LSHIFT) || input.IsKeyDown(SDL_SCANCODE_RSHIFT);
+
+        if (ctrl && input.IsKeyPressed(SDL_SCANCODE_A)) m_FocusedTextInput->SelectAll();
+        else if (ctrl && input.IsKeyPressed(SDL_SCANCODE_C) && m_FocusedTextInput->HasSelection())
+            SDL_SetClipboardText(m_FocusedTextInput->GetText().c_str());
+        else if (ctrl && input.IsKeyPressed(SDL_SCANCODE_X) && m_FocusedTextInput->HasSelection())
+        {
+            SDL_SetClipboardText(m_FocusedTextInput->GetText().c_str());
+            m_FocusedTextInput->SetText("");
+        }
+        else if (ctrl && input.IsKeyPressed(SDL_SCANCODE_V))
+        {
+            char* clipboard = SDL_GetClipboardText();
+            if (clipboard) { m_FocusedTextInput->Insert(clipboard); SDL_free(clipboard); }
+        }
+        else
+        {
+            if (input.IsKeyPressed(SDL_SCANCODE_BACKSPACE)) m_FocusedTextInput->Backspace();
+            if (input.IsKeyPressed(SDL_SCANCODE_DELETE)) m_FocusedTextInput->DeleteForward();
+            if (input.IsKeyPressed(SDL_SCANCODE_LEFT)) m_FocusedTextInput->MoveCursorLeft();
+            if (input.IsKeyPressed(SDL_SCANCODE_RIGHT)) m_FocusedTextInput->MoveCursorRight();
+            if (input.IsKeyPressed(SDL_SCANCODE_HOME)) m_FocusedTextInput->SetCursor(0);
+            if (input.IsKeyPressed(SDL_SCANCODE_END)) m_FocusedTextInput->SetCursor(m_FocusedTextInput->GetText().size());
+
+            const bool caps = (SDL_GetModState() & SDL_KMOD_CAPS) != 0;
+            for (int i = 0; i < 26; ++i)
+                if (input.IsKeyPressed(static_cast<SDL_Scancode>(SDL_SCANCODE_A + i)))
+                {
+                    char ch = static_cast<char>('a' + i);
+                    if (shift != caps) ch = static_cast<char>('A' + i);
+                    m_FocusedTextInput->Insert(std::string(1, ch));
+                }
+            for (int i = 0; i < 10; ++i)
+                if (input.IsKeyPressed(static_cast<SDL_Scancode>(SDL_SCANCODE_0 + i)))
+                    m_FocusedTextInput->Insert(std::string(1, static_cast<char>('0' + i)));
+            if (input.IsKeyPressed(SDL_SCANCODE_SPACE)) m_FocusedTextInput->Insert(" ");
+            if (input.IsKeyPressed(SDL_SCANCODE_PERIOD)) m_FocusedTextInput->Insert(".");
+            if (input.IsKeyPressed(SDL_SCANCODE_MINUS)) m_FocusedTextInput->Insert(shift ? "_" : "-");
+            if (input.IsKeyPressed(SDL_SCANCODE_SLASH)) m_FocusedTextInput->Insert("/");
+        }
+
+        if (input.IsKeyPressed(SDL_SCANCODE_RETURN) || input.IsKeyPressed(SDL_SCANCODE_ESCAPE))
+        {
+            m_FocusedTextInput->SetFocused(false);
+            m_FocusedTextInput = nullptr;
+        }
+    }
 
     if (m_PressedCanvasButton)
         m_PressedCanvasButton->SetPressed(true);
@@ -483,6 +547,25 @@ UIButton* UIRenderer::FindTopButton(
         if (UIButton* button = dynamic_cast<UIButton*>(&widget))
             result = button;
 
+    return result;
+}
+
+UITextInput* UIRenderer::FindTopTextInput(
+    UIWidget& widget, const UIRect& parentRect, const Vec2& mouse)
+{
+    if (!widget.IsVisible() || !widget.IsEnabled()) return nullptr;
+    const UIRect rect = UILayout::Calculate(widget, parentRect);
+    UITextInput* result = nullptr;
+    for (const auto& child : widget.GetChildren())
+        if (child)
+            if (UITextInput* hit = FindTopTextInput(*child, rect, mouse))
+                result = hit;
+    const bool hit = widget.IsHitTestVisible() &&
+        mouse.x >= rect.x && mouse.x <= rect.x + rect.width &&
+        mouse.y >= rect.y && mouse.y <= rect.y + rect.height;
+    if (hit)
+        if (UITextInput* input = dynamic_cast<UITextInput*>(&widget))
+            result = input;
     return result;
 }
 
@@ -546,7 +629,12 @@ void UIRenderer::RenderCanvasWidget(
             parentRect
         );
 
-    if (widget.GetType() ==
+    if (widget.GetType() == UIWidgetType::TextInput)
+    {
+        if (const UITextInput* input = dynamic_cast<const UITextInput*>(&widget))
+            DrawTextInput(*input, rect);
+    }
+    else if (widget.GetType() ==
         UIWidgetType::Text)
     {
         const UIText* text =
@@ -741,6 +829,21 @@ bool UIRenderer::InitializeFontAtlas()
         glyph.xadvance = baked[i].xadvance;
     }
     return true;
+}
+
+void UIRenderer::DrawTextInput(const UITextInput& input, const UIRect& rect)
+{
+    // Background is drawn by the normal widget path before this text overlay.
+    DrawCanvasWidget(input, rect, nullptr);
+    UIText text;
+    text.SetPosition(Vec2(rect.x + 12.0f, rect.y + 8.0f));
+    text.SetSize(Vec2(std::max(0.0f, rect.width - 24.0f), rect.height - 16.0f));
+    text.SetFontSize(input.GetFontSize());
+    text.SetColor(input.GetText().empty() ? Vec4(0.45f,0.48f,0.52f,1.0f) : Vec4(0.92f,0.94f,0.97f,1.0f));
+    std::string display = input.GetDisplayText();
+    if (input.IsFocused()) display += "|";
+    text.SetText(display);
+    DrawCanvasText(text, UIRect{rect.x + 12.0f, rect.y + 8.0f, std::max(0.0f, rect.width - 24.0f), rect.height - 16.0f});
 }
 
 void UIRenderer::DrawCanvasText(
