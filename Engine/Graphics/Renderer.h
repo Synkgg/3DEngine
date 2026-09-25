@@ -4,6 +4,7 @@
 #include <array>
 #include <unordered_map>
 #include <string>
+#include <cstdint>
 
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
@@ -166,6 +167,16 @@ private:
     unsigned int m_ModelPreviewHeight = 0;
     Shader m_ModelPreviewShader;
 
+    struct ModelPreviewTexture
+    {
+        unsigned int framebuffer = 0;
+        unsigned int texture = 0;
+        unsigned int depth = 0;
+        unsigned int width = 0;
+        unsigned int height = 0;
+    };
+    std::unordered_map<std::string, ModelPreviewTexture> m_ModelPreviewCache;
+
     std::unique_ptr<Mesh> m_CubeMesh;
     std::unique_ptr<Mesh> m_PlaneMesh;
     std::unique_ptr<Mesh> m_SphereMesh;
@@ -208,4 +219,5 @@ private:
     unsigned int RenderBloom();
     bool EnsureModelPreviewTarget(unsigned int width, unsigned int height);
     void DestroyModelPreviewTarget();
+    void DestroyModelPreviewCache();
 };
