@@ -1,36 +1,43 @@
 VORTEK_UI 2
 1920 1080
-0 0 "HUD" 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 0 0
-0 1 "Objective" 76 64 620 34 0 0 0 0 0 0 0.38 0.78 0.73 1 1 1 0 2 "RECOVER THE THREE WARD SEALS" 20
-0 1 "ObjectiveDetail" 78 105 570 27 0 0 0 0 0 0 0.48 0.51 0.49 1 1 1 0 2 "Search the crypts and old burial rows" 16
-0 1 "RelicCount" 78 142 430 26 0 0 0 0 0 0 0.72 0.74 0.70 1 1 1 0 2 "WARD SEALS   0 / 3" 15
-0 0 "InteractPrompt" 1320 420 520 150 0 0 0 0 0 0 0.008 0.011 0.012 0.86 0 1 1 10
-1 0 "PromptAccent" 0 0 3 150 0 0 0 0 0 0 0.38 0.78 0.73 1 1 1 0 11
-1 1 "PromptFound" 42 26 430 24 0 0 0 0 0 0 0.90 0.91 0.87 1 1 1 0 11 "INTERACTION" 15
-1 1 "InteractText" 42 58 430 34 0 0 0 0 0 0 0.62 0.65 0.63 1 1 1 0 11 "Recover ward seal" 18
-1 0 "InteractKey" 42 108 44 28 0 0 0 0 0 0 0.08 0.11 0.11 1 1 1 0 11
-2 1 "InteractKeyText" 14 3 20 20 0 0 0 0 0 0 0.72 0.78 0.74 1 1 1 0 12 "E" 14
-1 1 "InteractHelp" 98 110 250 22 0 0 0 0 0 0 0.38 0.41 0.40 1 1 1 0 11 "INTERACT" 13
-0 0 "Inventory" 1280 250 540 580 0 0 0 0 0 0 0.007 0.010 0.011 0.96 0 1 1 20
-1 1 "InventoryEyebrow" 42 40 430 22 0 0 0 0 0 0 0.38 0.78 0.73 1 1 1 0 21 "JOURNAL" 14
-1 1 "InventoryTitle" 40 72 430 44 0 0 0 0 0 0 0.91 0.92 0.88 1 1 1 0 21 "THE BLACKTHORN WARD" 27
-1 0 "InventoryLine" 42 132 450 2 0 0 0 0 0 0 0.17 0.24 0.23 1 1 1 0 21
-1 1 "InventoryText" 42 170 450 250 0 0 0 0 0 0 0.61 0.64 0.62 1 1 1 0 21 "Three seals were torn from the mausoleum ward.\n\nRecover them from the western crypt, angel memorial, and old graves.\n\nThe ward can only be broken when all three are returned." 17
-1 0 "TabKey" 42 500 48 28 0 0 0 0 0 0 0.08 0.11 0.11 1 1 1 0 21
-2 1 "TabKeyText" 8 3 34 20 0 0 0 0 0 0 0.72 0.78 0.74 1 1 1 0 22 "TAB" 12
-1 1 "InventoryHelp" 105 503 300 22 0 0 0 0 0 0 0.40 0.43 0.42 1 1 1 0 21 "CLOSE JOURNAL" 13
-0 0 "PauseMenu" 0 0 1920 1080 0 0 0 0 0 0 0.003 0.005 0.006 0.86 0 1 1 40
-1 1 "PauseEyebrow" 112 260 520 25 0 0 0 0 0 0 0.38 0.78 0.73 1 1 1 0 41 "BLACKTHORN CEMETERY" 15
-1 1 "PauseTitle" 108 300 620 70 0 0 0 0 0 0 0.92 0.93 0.90 1 1 1 0 41 "PAUSED" 46
-1 3 "ResumeButton" 110 410 430 52 0 0 0 0 0 0 0 0 0 0 1 1 1 1 42 0 0 0 0 0.08 0.20 0.20 0.45 0.20 0.05 0.05 0.55 0 0 0 0
-2 1 "ResumeLabel" 20 9 300 30 0 0 0 0 0 0 0.91 0.92 0.88 1 1 1 0 43 "RESUME" 20
-1 3 "PauseMainMenuButton" 110 474 430 52 0 0 0 0 0 0 0 0 0 0 1 1 1 1 42 0 0 0 0 0.08 0.20 0.20 0.45 0.20 0.05 0.05 0.55 0 0 0 0
-2 1 "PauseMainMenuLabel" 20 9 300 30 0 0 0 0 0 0 0.60 0.62 0.60 1 1 1 0 43 "MAIN MENU" 20
-0 0 "WinScreen" 0 0 1920 1080 0 0 0 0 0 0 0.003 0.005 0.006 0.90 0 1 1 60
-1 1 "WinEyebrow" 110 255 650 24 0 0 0 0 0 0 0.38 0.78 0.73 1 1 1 0 61 "OBJECTIVE COMPLETE" 15
-1 1 "WinTitle" 106 292 850 66 0 0 0 0 0 0 0.92 0.93 0.90 1 1 1 0 61 "THE WARD IS BROKEN" 42
-1 1 "WinText" 110 378 700 60 0 0 0 0 0 0 0.58 0.61 0.59 1 1 1 0 61 "The iron seal releases. Something below the mausoleum answers." 18
-1 3 "PlayAgainButton" 110 490 300 52 0 0 0 0 0 0 0 0 0 0 1 1 1 1 62 0 0 0 0 0.08 0.20 0.20 0.45 0.20 0.05 0.05 0.55 0 0 0 0
-2 1 "PlayAgainLabel" 18 9 230 30 0 0 0 0 0 0 0.91 0.92 0.88 1 1 1 0 63 "PLAY AGAIN" 19
-1 3 "MainMenuButton" 110 552 300 52 0 0 0 0 0 0 0 0 0 0 1 1 1 1 62 0 0 0 0 0.08 0.20 0.20 0.45 0.20 0.05 0.05 0.55 0 0 0 0
-2 1 "MainMenuLabel" 18 9 230 30 0 0 0 0 0 0 0.60 0.62 0.60 1 1 1 0 63 "MAIN MENU" 19
+0 0 "HUD" 0 0 1920 1080 0 0 0 0 0 0 0 0 0 0 1 1 0 0
+1 0 "ObjectiveRail" 52 48 5 128 0 0 0 0 0 0 0.50 0.05 0.035 1 1 1 0 3
+1 1 "ObjectiveTag" 76 50 430 20 0 0 0 0 0 0 0.38 0.68 0.64 1 1 1 0 3 "CURRENT OBJECTIVE" 12
+1 1 "Objective" 76 78 720 34 0 0 0 0 0 0 0.93 0.93 0.88 1 1 1 0 3 "FIND THE MISSING WARD SEALS" 21
+1 1 "ObjectiveDetail" 76 119 680 27 0 0 0 0 0 0 0.47 0.51 0.49 1 1 1 0 3 "3 remain somewhere among the graves." 15
+1 1 "RelicCount" 76 154 430 24 0 0 0 0 0 0 0.58 0.09 0.065 1 1 1 0 3 "00 / 03  WARD SEALS" 14
+1 0 "InteractPrompt" 1390 788 440 176 0 0 0 0 0 0 0.012 0.016 0.018 0.94 0 1 1 12
+2 0 "PromptTop" 0 0 440 4 0 0 0 0 0 0 0.12 0.48 0.45 1 1 1 0 13
+2 1 "PromptFound" 28 24 360 20 0 0 0 0 0 0 0.36 0.64 0.60 1 1 1 0 13 "NEARBY" 12
+2 1 "InteractText" 28 54 370 34 0 0 0 0 0 0 0.92 0.92 0.87 1 1 1 0 13 "Recover ward seal" 19
+2 0 "InteractKey" 28 112 48 36 0 0 0 0 0 0 0.48 0.05 0.035 1 1 1 0 13
+3 1 "InteractKeyText" 17 7 20 20 0 0 0 0 0 0 0.96 0.94 0.88 1 1 1 0 14 "E" 14
+2 1 "InteractHelp" 94 119 260 22 0 0 0 0 0 0 0.48 0.52 0.50 1 1 1 0 13 "INTERACT" 13
+1 0 "Inventory" 0 0 1920 1080 0 0 0 0 0 0 0.003 0.005 0.006 0.82 0 1 1 25
+2 0 "JournalPage" 980 110 760 850 0 0 0 0 0 0 0.055 0.052 0.043 0.98 1 1 0 26
+3 0 "JournalBinding" 0 0 18 850 0 0 0 0 0 0 0.20 0.045 0.03 1 1 1 0 27
+3 1 "InventoryEyebrow" 62 54 560 22 0 0 0 0 0 0 0.38 0.31 0.23 1 1 1 0 27 "FIELD JOURNAL // ENTRY 07" 13
+3 1 "InventoryTitle" 58 92 590 48 0 0 0 0 0 0 0.16 0.14 0.11 1 1 1 0 27 "THE BLACKTHORN WARD" 29
+3 0 "JournalRule" 62 156 600 2 0 0 0 0 0 0 0.30 0.24 0.17 1 1 1 0 27
+3 1 "JournalProgress" 62 194 540 28 0 0 0 0 0 0 0.45 0.07 0.045 1 1 1 0 27 "RECOVERED   0 OF 3" 16
+3 1 "InventoryText" 62 252 590 310 0 0 0 0 0 0 0.19 0.17 0.13 1 1 1 0 27 "The iron ward was divided into three seals.\n\nOne was carried west. One rests by the angel. The last was abandoned among the oldest graves.\n\nBring all three to the mausoleum gate." 17
+3 1 "JournalQuote" 62 620 570 70 0 0 0 0 0 0 0.34 0.27 0.19 1 1 1 0 27 "Do not open the tomb after sundown." 18
+3 1 "InventoryHelp" 62 764 520 24 0 0 0 0 0 0 0.31 0.27 0.22 1 1 1 0 27 "TAB  //  CLOSE JOURNAL" 13
+1 0 "PauseMenu" 0 0 1920 1080 0 0 0 0 0 0 0.002 0.003 0.004 0.91 0 1 1 40
+2 0 "PauseSlash" 106 220 8 510 0 0 0 0 0 0 0.50 0.05 0.035 1 1 1 0 41
+2 1 "PauseEyebrow" 150 226 520 22 0 0 0 0 0 0 0.36 0.63 0.59 1 1 1 0 41 "BLACKTHORN // NIGHT 01" 13
+2 1 "PauseTitle" 142 270 620 70 0 0 0 0 0 0 0.94 0.93 0.89 1 1 1 0 41 "SUSPENDED" 48
+2 1 "PauseText" 148 354 520 42 0 0 0 0 0 0 0.39 0.43 0.42 1 1 1 0 41 "The cemetery waits." 16
+2 3 "ResumeButton" 148 448 390 58 0 0 0 0 0 0 0.03 0.04 0.045 1 1 1 1 42 0.03 0.04 0.045 1 0.10 0.29 0.27 1 0.45 0.06 0.04 1 0.02 0.02 0.02 0.5
+3 1 "ResumeLabel" 24 13 300 28 0 0 0 0 0 0 0.92 0.92 0.88 1 1 1 0 43 "RETURN" 19
+2 3 "PauseMainMenuButton" 148 522 390 58 0 0 0 0 0 0 0.03 0.04 0.045 1 1 1 1 42 0.03 0.04 0.045 1 0.10 0.29 0.27 1 0.45 0.06 0.04 1 0.02 0.02 0.02 0.5
+3 1 "PauseMainMenuLabel" 24 13 300 28 0 0 0 0 0 0 0.56 0.59 0.57 1 1 1 0 43 "ABANDON TO MENU" 19
+1 0 "WinScreen" 0 0 1920 1080 0 0 0 0 0 0 0.008 0.004 0.004 0.94 0 1 1 60
+2 0 "WinRed" 0 0 14 1080 0 0 0 0 0 0 0.52 0.025 0.018 1 1 1 0 61
+2 1 "WinEyebrow" 150 230 650 24 0 0 0 0 0 0 0.47 0.62 0.59 1 1 1 0 61 "THE WARD HAS FAILED" 14
+2 1 "WinTitle" 142 278 980 78 0 0 0 0 0 0 0.94 0.92 0.86 1 1 1 0 61 "SOMETHING ANSWERS" 46
+2 1 "WinText" 150 382 760 68 0 0 0 0 0 0 0.50 0.52 0.49 1 1 1 0 61 "The mausoleum opens. Cold air rises from below.\nFor tonight, your work is finished." 18
+2 3 "PlayAgainButton" 150 520 330 56 0 0 0 0 0 0 0.04 0.045 0.05 1 1 1 1 62 0.04 0.045 0.05 1 0.10 0.29 0.27 1 0.45 0.06 0.04 1 0.02 0.02 0.02 0.5
+3 1 "PlayAgainLabel" 24 12 260 28 0 0 0 0 0 0 0.91 0.91 0.87 1 1 1 0 63 "RETURN TO NIGHT" 18
+2 3 "MainMenuButton" 150 590 330 56 0 0 0 0 0 0 0.04 0.045 0.05 1 1 1 1 62 0.04 0.045 0.05 1 0.10 0.29 0.27 1 0.45 0.06 0.04 1 0.02 0.02 0.02 0.5
+3 1 "MainMenuLabel" 24 12 260 28 0 0 0 0 0 0 0.58 0.60 0.58 1 1 1 0 63 "MAIN MENU" 18
