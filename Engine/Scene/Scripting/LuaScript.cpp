@@ -904,6 +904,29 @@ void LuaScript::BindEngineAPI()
         return m_Runtime->RequestSceneLoad(path);
     });
 
+    sceneApi.set_function("FindEntity", [this](const std::string& name)
+    {
+        if (!m_Scene) return std::uint32_t(0);
+        return m_Scene->FindEntityByName(name).GetID();
+    });
+
+    sceneApi.set_function("GetParent", [this](std::uint32_t entityID)
+    {
+        if (!m_Scene) return std::uint32_t(0);
+        return m_Scene->GetParent(Entity(entityID)).GetID();
+    });
+
+    sceneApi.set_function("SetParent", [this](std::uint32_t childID, std::uint32_t parentID, bool keepWorld)
+    {
+        if (!m_Scene) return false;
+        return m_Scene->SetParent(Entity(childID), Entity(parentID), keepWorld);
+    });
+
+    sceneApi.set_function("ClearParent", [this](std::uint32_t childID, bool keepWorld)
+    {
+        if (m_Scene) m_Scene->ClearParent(Entity(childID), keepWorld);
+    });
+
     sceneApi.set_function("SetPaused", [this](bool paused)
     {
         if (!m_Runtime) return;
