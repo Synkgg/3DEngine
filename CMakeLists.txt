@@ -33,6 +33,10 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE
 )
 
+# Build SDL into the executable instead of shipping SDL3.dll.
+# SDL's CMake project exposes SDL3::SDL3-static when SDL_STATIC is enabled.
+set(SDL_SHARED OFF CACHE BOOL "Build SDL shared library" FORCE)
+set(SDL_STATIC ON CACHE BOOL "Build SDL static library" FORCE)
 FetchContent_MakeAvailable(SDL3)
 
 #
@@ -178,7 +182,7 @@ target_link_libraries(
     3DEngine
     PRIVATE
 
-    SDL3::SDL3
+    SDL3::SDL3-static
     lua54
     sol2_headers
 )
@@ -196,10 +200,19 @@ target_compile_definitions(
     $<$<CONFIG:RelWithDebInfo>:ENGINE_RELEASE=1>
 )
 
-# Make Debug and Release explicit and consistent across Visual Studio and
-# single-config generators. CMake already selects /MDd vs /MD correctly for
-# MSVC; these flags only define the engine-side configuration behavior.
+# Link the Microsoft C/C++ runtime statically as well, so the portable
+# package does not depend on the VC runtime DLLs being installed beside it.
 if (MSVC)
+    set_property(TARGET 3DEngine PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET lua54 PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    if (TARGET SDL3-static)
+        set_property(TARGET SDL3-static PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+
+
     target_compile_options(
         3DEngine
         PRIVATE
@@ -248,20 +261,8 @@ set_target_properties(
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-# SDL3 is a shared library on Windows. Copy the exact runtime DLL produced for
-# the active configuration beside the engine executable so Debug and Release
-# can both be launched directly from Visual Studio or Explorer.
-if (WIN32)
-    add_custom_command(
-        TARGET 3DEngine
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "$<TARGET_FILE:SDL3::SDL3>"
-                "$<TARGET_FILE_DIR:3DEngine>"
-        COMMENT "Copying SDL3 runtime for $<CONFIG>"
-        VERBATIM
-    )
-endif()
+# SDL3, Lua, GLAD, ImGui and ImGuizmo are statically linked, so no
+# project-owned runtime DLL needs to be copied beside the executable.
 
 add_custom_command(
     TARGET 3DEngine
@@ -278,3 +279,27 @@ add_custom_command(
 
 # Make the engine executable the startup target for Visual Studio generators.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3DEngine)
+
+#
+# Portable distribution
+#
+# Build with:
+#   cmake --preset x64-Release
+#   cmake --build --preset x64-Release
+#   cmake --build --preset x64-Release --target package_portable
+#
+# The resulting folder contains only the executable and Assets directory.
+set(PORTABLE_DIR "${CMAKE_BINARY_DIR}/portable")
+
+add_custom_target(
+    package_portable
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${PORTABLE_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PORTABLE_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:3DEngine>" "${PORTABLE_DIR}/3DEngine.exe"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
+            "${PORTABLE_DIR}/Assets"
+    DEPENDS 3DEngine
+    COMMENT "Creating portable 3DEngine.exe + Assets package"
+    VERBATIM
+)
