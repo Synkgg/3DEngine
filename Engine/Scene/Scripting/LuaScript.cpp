@@ -55,7 +55,8 @@ void LuaScript::Initialize(
 }
 
 bool LuaScript::Load(
-    const std::string& filepath)
+    const std::string& filepath,
+    const std::unordered_map<std::string, ScriptPropertyValue>* propertyOverrides)
 {
     if (m_Lua == nullptr ||
         m_Environment == nullptr)
@@ -113,6 +114,36 @@ bool LuaScript::Load(
         );
 
         return false;
+    }
+
+    // Scripts declare editor-facing defaults in a global Properties table.
+    // Instance overrides are injected after the script executes but before OnCreate.
+    if (propertyOverrides != nullptr)
+    {
+        sol::object propertiesObject = (*m_Environment)["Properties"];
+        if (propertiesObject.is<sol::table>())
+        {
+            sol::table properties = propertiesObject.as<sol::table>();
+            for (const auto& [name, property] : *propertyOverrides)
+            {
+                switch (property.type)
+                {
+                case ScriptPropertyType::Number:
+                    try { properties[name] = std::stod(property.value); } catch (...) {}
+                    break;
+                case ScriptPropertyType::Boolean:
+                    properties[name] = (property.value == "1" || property.value == "true");
+                    break;
+                case ScriptPropertyType::Entity:
+                    try { properties[name] = static_cast<std::uint32_t>(std::stoul(property.value)); } catch (...) { properties[name] = std::uint32_t(0); }
+                    break;
+                case ScriptPropertyType::String:
+                default:
+                    properties[name] = property.value;
+                    break;
+                }
+            }
+        }
     }
 
     sol::object onCreate =
@@ -898,6 +929,26 @@ void LuaScript::BindEngineAPI()
      * Scene - scene changes are queued until the current Lua update finishes.
      * This avoids destroying the script/scene while its callback is executing.
      */
+    // Object-oriented entity handle for readable project Lua:
+    // local cube = Scene.FindEntity("Cube"); cube:SetPosition(1, 2, 3)
+    struct LuaEntityHandle { Scene* scene=nullptr; std::uint32_t id=0; };
+    m_Lua->new_usertype<LuaEntityHandle>("Entity",
+        sol::constructors<LuaEntityHandle()>(),
+        "IsValid", [](const LuaEntityHandle& e){ return e.scene && e.scene->FindEntityByID(e.id).IsValid(); },
+        "GetID", [](const LuaEntityHandle& e){ return e.id; },
+        "SetPosition", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.position=Vec3(x,y,z); },
+        "Translate", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.position=c->transform.position+Vec3(x,y,z); },
+        "SetRotation", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; constexpr float d=0.0174532925f; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.rotation=Vec3(x*d,y*d,z*d); },
+        "SetScale", [](LuaEntityHandle& e,float x,float y,float z){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<TransformComponent>(Entity(e.id))) c->transform.scale=Vec3(x,y,z); },
+        "SetParent", [](LuaEntityHandle& e,const LuaEntityHandle& p,bool keepWorld){ return e.scene && p.scene==e.scene && e.scene->SetParent(Entity(e.id),Entity(p.id),keepWorld); },
+        "ClearParent", [](LuaEntityHandle& e,bool keepWorld){ if(e.scene)e.scene->ClearParent(Entity(e.id),keepWorld); },
+        "Destroy", [](LuaEntityHandle& e){ if(e.scene)e.scene->DestroyEntityHierarchy(Entity(e.id)); e.id=0; },
+        "SetInteractableEnabled", [](LuaEntityHandle& e,bool enabled){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<InteractableComponent>(Entity(e.id)))c->enabled=enabled; },
+        "SetInteractablePrompt", [](LuaEntityHandle& e,const std::string& prompt){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<InteractableComponent>(Entity(e.id)))c->prompt=prompt; },
+        "SetLightIntensity", [](LuaEntityHandle& e,float intensity){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<LightComponent>(Entity(e.id)))c->intensity=intensity; },
+        "SetLightColor", [](LuaEntityHandle& e,float r,float g,float b){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<LightComponent>(Entity(e.id)))c->color=Vec3(r,g,b); }
+    );
+
     sol::table sceneApi = m_Lua->create_table();
 
     sceneApi.set_function("Load", [this](const std::string& path)
@@ -909,7 +960,8 @@ void LuaScript::BindEngineAPI()
     sceneApi.set_function("FindEntity", [this](const std::string& name)
     {
         if (!m_Scene) return std::uint32_t(0);
-        return m_Scene->FindEntityByName(name).GetID();
+        Entity found=m_Scene->FindEntityByName(name);
+        return LuaEntityHandle{m_Scene,found.GetID()};
     });
 
     sceneApi.set_function("InstantiatePrefab", [this](const std::string& path, std::uint32_t parentID)
