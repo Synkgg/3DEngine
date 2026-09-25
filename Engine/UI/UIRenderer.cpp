@@ -433,7 +433,6 @@ void UIRenderer::UpdateInput(
     UIButton* hovered = nullptr;
     UITextInput* hoveredInput = nullptr;
     UISlider* hoveredSlider = nullptr;
-    UISlider* hoveredSlider = nullptr;
     if (inside)
     {
         // Children are z-sorted ascending, so later hits replace earlier ones
@@ -446,7 +445,6 @@ void UIRenderer::UpdateInput(
                 if (UITextInput* hit = FindTopTextInput(*child, canvasRect, mouse))
                     hoveredInput = hit;
                 if (UISlider* hit = FindTopSlider(*child, canvasRect, mouse)) hoveredSlider = hit;
-                if (UISlider* hit = FindTopSlider(*child, canvasRect, mouse)) hoveredSlider = hit;
             }
     }
 
@@ -455,7 +453,6 @@ void UIRenderer::UpdateInput(
     if (inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT))
     {
         m_PressedCanvasButton = hovered;
-        m_DraggedSlider = hoveredSlider;
         m_DraggedSlider = hoveredSlider;
         if (m_FocusedTextInput && m_FocusedTextInput != hoveredInput)
             m_FocusedTextInput->SetFocused(false);
@@ -572,12 +569,6 @@ void UIRenderer::UpdateInput(
         if(sliderRect.width>0.0f) m_DraggedSlider->SetValue((mouse.x-sliderRect.x)/sliderRect.width);
     }
 
-    if (m_DraggedSlider && inside && input.IsMouseButtonDown(SDL_BUTTON_LEFT))
-    {
-        const UIRect sliderRect=UILayout::Calculate(*m_DraggedSlider, m_DraggedSlider->GetParent() && m_DraggedSlider->GetParent()!=root ? UILayout::Calculate(*m_DraggedSlider->GetParent(),canvasRect) : canvasRect);
-        if(sliderRect.width>0.0f) m_DraggedSlider->SetValue((mouse.x-sliderRect.x)/sliderRect.width);
-    }
-
     if (input.IsMouseButtonReleased(SDL_BUTTON_LEFT))
     {
         if (m_PressedCanvasButton && m_PressedCanvasButton == hovered)
@@ -629,15 +620,6 @@ UIButton* UIRenderer::FindTopButton(
             result = button;
 
     return result;
-}
-
-UISlider* UIRenderer::FindTopSlider(UIWidget& widget,const UIRect& parentRect,const Vec2& mouse)
-{
-    if(!widget.IsVisible()||!widget.IsEnabled())return nullptr;
-    const UIRect rect=UILayout::Calculate(widget,parentRect); UISlider* result=nullptr;
-    for(const auto& child:widget.GetChildren())if(child)if(UISlider* hit=FindTopSlider(*child,rect,mouse))result=hit;
-    const bool hit=widget.IsHitTestVisible()&&mouse.x>=rect.x&&mouse.x<=rect.x+rect.width&&mouse.y>=rect.y&&mouse.y<=rect.y+rect.height;
-    if(hit)if(UISlider* slider=dynamic_cast<UISlider*>(&widget))result=slider; return result;
 }
 
 UISlider* UIRenderer::FindTopSlider(UIWidget& widget,const UIRect& parentRect,const Vec2& mouse)
@@ -932,15 +914,6 @@ bool UIRenderer::InitializeFontAtlas()
         glyph.xadvance = baked[i].xadvance;
     }
     return true;
-}
-
-void UIRenderer::DrawSlider(const UISlider& slider,const UIRect& rect)
-{
-    DrawCanvasWidget(slider,rect,nullptr);
-    UIWidget fill(UIWidgetType::Panel); fill.SetColor(slider.GetFillColor());
-    DrawCanvasWidget(fill,UIRect{rect.x,rect.y,rect.width*slider.GetValue(),rect.height},nullptr);
-    UIWidget handle(UIWidgetType::Panel); handle.SetColor(slider.GetHandleColor());
-    const float w=10.0f; DrawCanvasWidget(handle,UIRect{rect.x+rect.width*slider.GetValue()-w*0.5f,rect.y-3.0f,w,rect.height+6.0f},nullptr);
 }
 
 void UIRenderer::DrawSlider(const UISlider& slider,const UIRect& rect)
