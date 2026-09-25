@@ -478,32 +478,35 @@ void UIEditor::DrawInspector(
             image->SetTexturePath("");
     }
 
-    if (UIButton* button =
-        dynamic_cast<UIButton*>(
-            &widget))
+    if (UIButton* button = dynamic_cast<UIButton*>(&widget))
     {
-        ImGui::TextUnformatted(
-            "Button State"
-        );
+        ImGui::Spacing();
+        ImGui::SeparatorText("Button Style");
+        ImGui::TextDisabled("Per-state appearance");
 
-        bool hovered =
-            button->IsHovered();
+        Vec4 normal = button->GetNormalColor();
+        if (ImGui::ColorEdit4("Normal", &normal.x))
+            button->SetNormalColor(normal);
 
-        bool pressed =
-            button->IsPressed();
+        Vec4 hoveredColor = button->GetHoveredColor();
+        if (ImGui::ColorEdit4("Hovered", &hoveredColor.x))
+            button->SetHoveredColor(hoveredColor);
 
+        Vec4 pressedColor = button->GetPressedColor();
+        if (ImGui::ColorEdit4("Pressed", &pressedColor.x))
+            button->SetPressedColor(pressedColor);
+
+        Vec4 disabledColor = button->GetDisabledColor();
+        if (ImGui::ColorEdit4("Disabled", &disabledColor.x))
+            button->SetDisabledColor(disabledColor);
+
+        ImGui::Spacing();
+        ImGui::TextDisabled("Runtime state");
+        bool hovered = button->IsHovered();
+        bool pressed = button->IsPressed();
         ImGui::BeginDisabled();
-
-        ImGui::Checkbox(
-            "Hovered",
-            &hovered
-        );
-
-        ImGui::Checkbox(
-            "Pressed",
-            &pressed
-        );
-
+        ImGui::Checkbox("Hovered##RuntimeState", &hovered);
+        ImGui::Checkbox("Pressed##RuntimeState", &pressed);
         ImGui::EndDisabled();
     }
 }
