@@ -18,7 +18,7 @@ end
 local function playerPosition(id)
     if id == Network.GetLocalPlayerID() then
         local player=Scene.FindEntity("Player")
-        if player:IsValid() then local p=player:GetPosition(); return {valid=true,x=p.x,y=p.y,z=p.z} end
+        if player.id ~= 0 then local p=Scene.GetPosition(player.id); return {valid=true,x=p.x,y=p.y,z=p.z} end
     end
     return Network.GetRemotePlayerPosition(id)
 end
@@ -128,7 +128,7 @@ function OnUpdate(dt)
     end
 
     local orb=Scene.FindEntity("CoreOrb")
-    if orb:IsValid() then orb:SetPosition(orbX,orbY,orbZ) end
+    if orb.id ~= 0 then Scene.SetPosition(orb.id,orbX,orbY,orbZ) end
 
     if hudTimer>=0.1 then hudTimer=0;updateHUD() end
 
