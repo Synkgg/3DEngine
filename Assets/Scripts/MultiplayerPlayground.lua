@@ -152,7 +152,7 @@ function OnCreate()
     UI.SetVisible("InteractPrompt",false)
     moveLocalPlayerToBase()
     if Network.IsHost() then
-        math.randomseed(os.time())
+        -- The engine sandbox does not expose Lua's os library. math.random is sufficient here.
         resetCore()
         Network.SetCoreRushState(0,0,180,orbX,orbY,orbZ,0,0)
     end
