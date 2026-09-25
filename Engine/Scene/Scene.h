@@ -66,6 +66,10 @@ public:
     SceneEnvironment& GetEnvironment() { return m_Environment; }
     const SceneEnvironment& GetEnvironment() const { return m_Environment; }
 
+    void SetPrefabSource(Entity entity, const std::string& source);
+    void ClearPrefabSource(Entity entity);
+    std::string GetPrefabSource(Entity entity) const;
+
     const std::vector<Entity>& GetEntities() const
     {
         return m_Entities;
@@ -213,6 +217,7 @@ private:
     std::uint32_t m_NextEntityID = 1;
 
     std::unordered_map<std::uint32_t, std::uint32_t> m_Parents;
+    std::unordered_map<std::uint32_t, std::string> m_PrefabSources;
 
     std::unordered_map<
         std::type_index,
