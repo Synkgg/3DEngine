@@ -888,6 +888,10 @@ void Editor::RenderHierarchy(
 {
     ImGui::Begin("Hierarchy");
 
+    ImGui::SetNextItemWidth(-86.0f);
+    ImGui::InputTextWithHint("##HierarchySearch", "Search entities...", m_HierarchySearchBuffer, sizeof(m_HierarchySearchBuffer));
+    ImGui::SameLine();
+
     /*
      * Create button.
      */
@@ -1159,6 +1163,16 @@ void Editor::RenderHierarchy(
                 )
             ? name->name.c_str()
             : "(Unnamed)";
+
+        if (m_HierarchySearchBuffer[0] != '\0')
+        {
+            std::string haystack = displayName;
+            std::string needle = m_HierarchySearchBuffer;
+            std::transform(haystack.begin(), haystack.end(), haystack.begin(), [](unsigned char ch){ return static_cast<char>(std::tolower(ch)); });
+            std::transform(needle.begin(), needle.end(), needle.begin(), [](unsigned char ch){ return static_cast<char>(std::tolower(ch)); });
+            if (haystack.find(needle) == std::string::npos)
+                continue;
+        }
 
         const bool selected =
             m_SelectedEntity.GetID() ==
