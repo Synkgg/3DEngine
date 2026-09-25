@@ -59,6 +59,16 @@ public:
     void SetProjectSettings(ProjectSettings* settings) { m_ProjectSettings = settings; }
     NetworkManager& GetNetwork() { return m_Network; }
     bool IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) const;
+    void SetMouseSensitivity(float value) { m_MouseSensitivity = value; }
+    float GetMouseSensitivity() const { return m_MouseSensitivity; }
+    void SetInvertY(bool value) { m_InvertY = value; }
+    bool GetInvertY() const { return m_InvertY; }
+    void SetSprintToggle(bool value) { m_SprintToggle = value; }
+    bool GetSprintToggle() const { return m_SprintToggle; }
+    void SetCameraBob(bool value) { m_CameraBob = value; }
+    bool GetCameraBob() const { return m_CameraBob; }
+    void SetShowFPS(bool value) { m_ShowFPS = value; }
+    bool GetShowFPS() const { return m_ShowFPS; }
 
 private:
     bool m_Running = false;
@@ -89,5 +99,10 @@ private:
     NetworkManager m_Network;
     std::unordered_map<std::uint32_t, std::uint32_t> m_RemotePlayerEntities;
     float m_NetworkTransformSendTimer = 0.0f;
+    float m_MouseSensitivity = 0.01f;
+    bool m_InvertY = false;
+    bool m_SprintToggle = false;
+    bool m_CameraBob = true;
+    bool m_ShowFPS = false;
     void UpdateNetworkPlayers(Scene& scene, float deltaTime);
 };
