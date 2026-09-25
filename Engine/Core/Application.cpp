@@ -457,7 +457,10 @@ void Application::Run()
             shadowTransform.rotation.y += mesh->rotation.y;
             shadowTransform.rotation.z += mesh->rotation.z;
 
-            m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
+            if (!mesh->modelPath.empty())
+                m_Renderer.DrawShadowModel(shadowTransform, mesh->modelPath);
+            else
+                m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
         }
         m_Renderer.EndShadowPass();
 
@@ -543,19 +546,28 @@ void Application::Run()
                 MaterialComponent* material =
                     m_Scene.GetComponent<MaterialComponent>(entity);
 
-                m_Renderer.DrawMesh(
-                    meshTransform,
-                    mesh->primitive,
-                    red,
-                    green,
-                    blue,
-                    alpha,
-                    texture,
-                    material ? material->metallic : 0.0f,
-                    material ? material->roughness : 0.65f,
-                    material ? material->ambientOcclusion : 1.0f,
-                    material ? material->emissive : 0.0f
-                );
+                if (!mesh->modelPath.empty())
+                {
+                    m_Renderer.DrawModel(
+                        meshTransform, mesh->modelPath,
+                        red, green, blue, alpha, texture,
+                        material ? material->metallic : 0.0f,
+                        material ? material->roughness : 0.65f,
+                        material ? material->ambientOcclusion : 1.0f,
+                        material ? material->emissive : 0.0f
+                    );
+                }
+                else
+                {
+                    m_Renderer.DrawMesh(
+                        meshTransform, mesh->primitive,
+                        red, green, blue, alpha, texture,
+                        material ? material->metallic : 0.0f,
+                        material ? material->roughness : 0.65f,
+                        material ? material->ambientOcclusion : 1.0f,
+                        material ? material->emissive : 0.0f
+                    );
+                }
             }
         }
 
