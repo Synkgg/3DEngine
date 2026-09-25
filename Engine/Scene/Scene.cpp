@@ -373,3 +373,41 @@ Entity Scene::DuplicateEntity(Entity source, bool duplicateChildren)
 
     return duplicate;
 }
+
+
+Entity Scene::CloneEntityTo(Entity source, Scene& destination, bool cloneChildren) const
+{
+    if (!source.IsValid()) return Entity();
+    Entity copy = destination.CreateEntity();
+    if (!copy.IsValid()) return Entity();
+
+    for (const auto& [type, sourceStorage] : m_ComponentStorages)
+    {
+        auto destinationIt = destination.m_ComponentStorages.find(type);
+        if (destinationIt == destination.m_ComponentStorages.end())
+        {
+            destination.m_ComponentStorages.emplace(type, sourceStorage->Clone());
+            destinationIt = destination.m_ComponentStorages.find(type);
+            destinationIt->second->Clear();
+        }
+        sourceStorage->CopyTo(source, *destinationIt->second, copy);
+    }
+
+    if (cloneChildren)
+    {
+        for (Entity child : GetChildren(source))
+        {
+            Entity childCopy = CloneEntityTo(child, destination, true);
+            if (childCopy.IsValid()) destination.SetParent(childCopy, copy, false);
+        }
+    }
+    return copy;
+}
+
+void Scene::DestroyEntityHierarchy(Entity root)
+{
+    if (!root.IsValid()) return;
+    const std::vector<Entity> children = GetChildren(root);
+    for (Entity child : children) DestroyEntityHierarchy(child);
+    DestroyEntity(root);
+}
