@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <cstring>
 #include <vector>
+#include <functional>
 
 namespace
 {
@@ -700,460 +701,208 @@ Entity Editor::CreatePrimitiveEntity(
     return entity;
 }
 
-void Editor::RenderHierarchy(
-    Scene& scene,
-    ImFont* iconFont)
+void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
 {
     ImGui::Begin("Hierarchy");
+
+    // One-time migration: legacy editor folders become ordinary empty entities.
+    // From this point forward the scene graph is the hierarchy source of truth.
+    if (!m_HierarchyFolders.empty())
+    {
+        std::function<void(const HierarchyFolder&, Entity)> migrateFolder;
+        migrateFolder = [&](const HierarchyFolder& folder, Entity parent)
+        {
+            Entity group = scene.CreateEntity();
+            if (NameComponent* name = scene.GetComponent<NameComponent>(group))
+                name->name = MakeUniqueName(scene, folder.name.empty() ? "Group" : folder.name, group);
+            if (parent.IsValid()) scene.SetParent(group, parent, false);
+
+            for (std::uint32_t id : folder.entities)
+            {
+                Entity member = scene.FindEntityByID(id);
+                if (member.IsValid()) scene.SetParent(member, group, true);
+            }
+            for (const HierarchyFolder& child : folder.children)
+                migrateFolder(child, group);
+        };
+
+        for (const HierarchyFolder& folder : m_HierarchyFolders)
+            migrateFolder(folder, Entity());
+        m_HierarchyFolders.clear();
+        Logger::Info("Migrated legacy hierarchy folders to scene graph groups.");
+    }
 
     ImGui::SetNextItemWidth(-86.0f);
     ImGui::InputTextWithHint("##HierarchySearch", "Search entities...", m_HierarchySearchBuffer, sizeof(m_HierarchySearchBuffer));
     ImGui::SameLine();
 
-    /*
-     * Create button.
-     */
     if (ImGui::Button("Create"))
+        ImGui::OpenPopup("CreateEntityPopup");
+
+    if (ImGui::BeginPopup("CreateEntityPopup"))
     {
-        ImGui::OpenPopup(
-            "CreateEntityPopup"
-        );
-    }
-
-    /*
-     * Create menu.
-     */
-    if (ImGui::BeginPopup(
-        "CreateEntityPopup"))
-    {
-        /*
-         * Folder.
-         */
-        if (ImGui::Selectable(
-            "Folder"))
+        auto createEmpty = [&](const char* baseName)
         {
-            m_HierarchyFolders.push_back(
-                HierarchyFolder{
-                    "New Folder"
-                }
-            );
-        }
+            Entity entity = scene.CreateEntity();
+            if (NameComponent* name = scene.GetComponent<NameComponent>(entity))
+                name->name = MakeUniqueName(scene, baseName, entity);
+            if (m_SelectedEntity.IsValid())
+                scene.SetParent(entity, m_SelectedEntity, false);
+            m_SelectedEntity = entity;
+        };
 
+        if (ImGui::Selectable("Group / Empty")) createEmpty("Group");
         ImGui::Separator();
-
-        /*
-         * Empty Entity.
-         */
-        if (ImGui::Selectable(
-            "Empty Entity"))
-        {
-            Entity entity =
-                scene.CreateEntity();
-
-            NameComponent* name =
-                scene.GetComponent<NameComponent>(
-                    entity
-                );
-
-            if (name != nullptr)
-            {
-                name->name =
-                    MakeUniqueName(
-                        scene,
-                        "Empty Entity",
-                        entity
-                    );
-            }
-
-            m_SelectedEntity =
-                entity;
-
-            Logger::Info(
-                std::string("Created ") +
-                (
-                    name != nullptr
-                    ? name->name
-                    : "Empty Entity"
-                    )
-            );
-        }
-
+        if (ImGui::Selectable("Cube")) CreatePrimitiveEntity(scene, PrimitiveType::Cube, "Cube");
+        if (ImGui::Selectable("Sphere")) CreatePrimitiveEntity(scene, PrimitiveType::Sphere, "Sphere");
+        if (ImGui::Selectable("Plane")) CreatePrimitiveEntity(scene, PrimitiveType::Plane, "Plane");
+        if (ImGui::Selectable("Cylinder")) CreatePrimitiveEntity(scene, PrimitiveType::Cylinder, "Cylinder");
         ImGui::Separator();
-
-        /*
-         * Cube.
-         */
-        if (ImGui::Selectable(
-            "Cube"))
+        if (ImGui::Selectable("Directional Light"))
         {
-            CreatePrimitiveEntity(
-                scene,
-                PrimitiveType::Cube,
-                "Cube"
-            );
+            Entity entity = scene.CreateEntity();
+            scene.AddComponent<LightComponent>(entity);
+            if (NameComponent* name = scene.GetComponent<NameComponent>(entity))
+                name->name = MakeUniqueName(scene, "Directional Light", entity);
+            m_SelectedEntity = entity;
         }
-
-        /*
-         * Sphere.
-         */
-        if (ImGui::Selectable(
-            "Sphere"))
+        if (ImGui::Selectable("Player"))
         {
-            CreatePrimitiveEntity(
-                scene,
-                PrimitiveType::Sphere,
-                "Sphere"
-            );
+            Entity entity = scene.CreateEntity();
+            scene.AddComponent<PlayerComponent>(entity);
+            scene.AddComponent<CharacterControllerComponent>(entity);
+            scene.AddComponent<ColliderComponent>(entity);
+            if (NameComponent* name = scene.GetComponent<NameComponent>(entity))
+                name->name = MakeUniqueName(scene, "Player", entity);
+            m_SelectedEntity = entity;
         }
-
-        /*
-         * Plane.
-         */
-        if (ImGui::Selectable(
-            "Plane"))
-        {
-            CreatePrimitiveEntity(
-                scene,
-                PrimitiveType::Plane,
-                "Plane"
-            );
-        }
-
-        /*
-         * Cylinder.
-         */
-        if (ImGui::Selectable(
-            "Cylinder"))
-        {
-            CreatePrimitiveEntity(
-                scene,
-                PrimitiveType::Cylinder,
-                "Cylinder"
-            );
-        }
-
-        ImGui::Separator();
-
-        /*
-         * Directional Light.
-         */
-        if (ImGui::Selectable(
-            "Directional Light"))
-        {
-            Entity entity =
-                scene.CreateEntity();
-
-            scene.AddComponent<LightComponent>(
-                entity
-            );
-
-            NameComponent* name =
-                scene.GetComponent<NameComponent>(
-                    entity
-                );
-
-            if (name != nullptr)
-            {
-                name->name =
-                    MakeUniqueName(
-                        scene,
-                        "Directional Light",
-                        entity
-                    );
-            }
-
-            m_SelectedEntity =
-                entity;
-
-            Logger::Info(
-                "Created Directional Light."
-            );
-        }
-
-        ImGui::Separator();
-
-        /*
-         * Player.
-         */
-        if (ImGui::Selectable(
-            "Player"))
-        {
-            Entity entity =
-                scene.CreateEntity();
-
-            scene.AddComponent<PlayerComponent>(
-                entity
-            );
-
-            scene.AddComponent<
-                CharacterControllerComponent
-            >(
-                entity
-            );
-
-            scene.AddComponent<ColliderComponent>(
-                entity
-            );
-
-            NameComponent* name =
-                scene.GetComponent<NameComponent>(
-                    entity
-                );
-
-            if (name != nullptr)
-            {
-                name->name =
-                    MakeUniqueName(
-                        scene,
-                        "Player",
-                        entity
-                    );
-            }
-
-            m_SelectedEntity =
-                entity;
-
-            Logger::Info(
-                std::string("Created ") +
-                (
-                    name != nullptr
-                    ? name->name
-                    : "Player"
-                    )
-            );
-        }
-
         ImGui::EndPopup();
     }
 
     ImGui::Separator();
 
-    /*
-     * User-created folders.
-     */
-    for (auto it =
-        m_HierarchyFolders.begin();
-        it != m_HierarchyFolders.end();)
+    std::string search = m_HierarchySearchBuffer;
+    std::transform(search.begin(), search.end(), search.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+
+    std::function<bool(Entity)> matchesSearch;
+    matchesSearch = [&](Entity entity)
     {
-        if (RenderHierarchyFolder(
-            *it,
-            scene,
-            m_SelectedEntity,
-            m_HierarchyFolders,
-            iconFont
-        ))
-        {
-            it =
-                m_HierarchyFolders.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
+        if (search.empty()) return true;
+        const NameComponent* name = scene.GetComponent<NameComponent>(entity);
+        std::string value = name ? name->name : std::string();
+        std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+        if (value.find(search) != std::string::npos) return true;
+        for (Entity child : scene.GetChildren(entity))
+            if (matchesSearch(child)) return true;
+        return false;
+    };
 
-    /*
-     * Root entities.
-     */
-    const std::vector<Entity> entities =
-        scene.GetEntities();
-
-    for (const Entity& entity :
-        entities)
+    std::function<void(Entity)> drawEntity;
+    drawEntity = [&](Entity entity)
     {
-        if (IsEntityInFolders(
-            m_HierarchyFolders,
-            entity.GetID()
-        ))
-        {
-            continue;
-        }
+        if (!matchesSearch(entity)) return;
 
-        NameComponent* name =
-            scene.GetComponent<NameComponent>(
-                entity
-            );
+        const std::vector<Entity> children = scene.GetChildren(entity);
+        NameComponent* name = scene.GetComponent<NameComponent>(entity);
+        const std::string label = (name && !name->name.empty()) ? name->name : "(Unnamed)";
 
-        const char* displayName =
-            (
-                name != nullptr &&
-                !name->name.empty()
-                )
-            ? name->name.c_str()
-            : "(Unnamed)";
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
+            ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        if (children.empty()) flags |= ImGuiTreeNodeFlags_Leaf;
+        if (m_SelectedEntity.GetID() == entity.GetID()) flags |= ImGuiTreeNodeFlags_Selected;
+        if (!search.empty()) flags |= ImGuiTreeNodeFlags_DefaultOpen;
 
-        if (m_HierarchySearchBuffer[0] != '\0')
-        {
-            std::string haystack = displayName;
-            std::string needle = m_HierarchySearchBuffer;
-            std::transform(haystack.begin(), haystack.end(), haystack.begin(), [](unsigned char ch){ return static_cast<char>(std::tolower(ch)); });
-            std::transform(needle.begin(), needle.end(), needle.begin(), [](unsigned char ch){ return static_cast<char>(std::tolower(ch)); });
-            if (haystack.find(needle) == std::string::npos)
-                continue;
-        }
+        ImGui::PushID(static_cast<int>(entity.GetID()));
+        const bool open = ImGui::TreeNodeEx("##EntityNode", flags);
+        ImGui::SameLine();
+        ImGui::TextUnformatted(label.c_str());
 
-        const bool selected =
-            m_SelectedEntity.GetID() ==
-            entity.GetID();
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+            m_SelectedEntity = entity;
 
-        ImGui::PushID(
-            static_cast<int>(
-                entity.GetID()
-                )
-        );
-
-        /*
-         * Select.
-         */
-        if (ImGui::Selectable(
-            displayName,
-            selected
-        ))
-        {
-            m_SelectedEntity =
-                entity;
-        }
-
-        /*
-         * Drag.
-         */
         if (ImGui::BeginDragDropSource())
         {
-            const std::uint32_t entityID =
-                entity.GetID();
-
-            ImGui::SetDragDropPayload(
-                "HIERARCHY_ENTITY",
-                &entityID,
-                sizeof(entityID)
-            );
-
-            ImGui::Text(
-                "%s",
-                displayName
-            );
-
+            const std::uint32_t id = entity.GetID();
+            ImGui::SetDragDropPayload("HIERARCHY_ENTITY", &id, sizeof(id));
+            ImGui::TextUnformatted(label.c_str());
             ImGui::EndDragDropSource();
         }
 
-        /*
-         * Context menu.
-         */
-        if (ImGui::BeginPopupContextItem())
+        if (ImGui::BeginDragDropTarget())
         {
-            /*
-             * Duplicate.
-             */
-            if (ImGui::MenuItem(
-                "Duplicate"))
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY"))
             {
-                Entity duplicate = scene.DuplicateEntity(entity, true);
-                if (duplicate.IsValid())
+                if (payload->DataSize == sizeof(std::uint32_t))
                 {
-                    if (TransformComponent* transform = scene.GetComponent<TransformComponent>(duplicate))
-                        transform->transform.position.x += 1.0f;
-
-                    if (NameComponent* duplicateName = scene.GetComponent<NameComponent>(duplicate))
-                        duplicateName->name = MakeUniqueName(scene, duplicateName->name, duplicate);
-
-                    m_SelectedEntity = duplicate;
-                    Logger::Info("Duplicated entity hierarchy " + std::to_string(entity.GetID()));
+                    Entity child = scene.FindEntityByID(*static_cast<const std::uint32_t*>(payload->Data));
+                    if (child.IsValid()) scene.SetParent(child, entity, true);
                 }
             }
+            ImGui::EndDragDropTarget();
+        }
 
-            /*
-             * Delete.
-             */
-            if (ImGui::MenuItem(
-                "Delete"))
+        if (ImGui::BeginPopupContextItem("EntityContext"))
+        {
+            if (ImGui::MenuItem("Create Child Group"))
             {
-                const std::uint32_t deletedID =
-                    entity.GetID();
-
-                RemoveEntityFromFolders(
-                    m_HierarchyFolders,
-                    deletedID
-                );
-
-                scene.DestroyEntity(
-                    entity
-                );
-
-                if (m_SelectedEntity.GetID() ==
-                    deletedID)
-                {
-                    m_SelectedEntity =
-                        Entity();
-
-                    m_NameEditEntityID =
-                        0;
-
-                    m_NameEditBuffer[0] =
-                        '\0';
-                }
-
-                Logger::Info(
-                    std::string(
-                        "Deleted Entity "
-                    ) +
-                    std::to_string(
-                        deletedID
-                    )
-                );
+                Entity child = scene.CreateEntity();
+                if (NameComponent* childName = scene.GetComponent<NameComponent>(child))
+                    childName->name = MakeUniqueName(scene, "Group", child);
+                scene.SetParent(child, entity, false);
+                m_SelectedEntity = child;
             }
-
+            if (ImGui::MenuItem("Duplicate Hierarchy"))
+            {
+                Entity copy = scene.DuplicateEntity(entity, true);
+                if (copy.IsValid())
+                {
+                    if (NameComponent* copyName = scene.GetComponent<NameComponent>(copy))
+                        copyName->name = MakeUniqueName(scene, copyName->name, copy);
+                    m_SelectedEntity = copy;
+                }
+            }
+            if (scene.GetParent(entity).IsValid() && ImGui::MenuItem("Unparent"))
+                scene.ClearParent(entity, true);
+            ImGui::Separator();
+            if (ImGui::MenuItem("Delete Hierarchy"))
+            {
+                const std::uint32_t deleted = entity.GetID();
+                scene.DestroyEntityHierarchy(entity);
+                if (m_SelectedEntity.GetID() == deleted) m_SelectedEntity = Entity();
+                ImGui::EndPopup();
+                if (open) ImGui::TreePop();
+                ImGui::PopID();
+                return;
+            }
             ImGui::EndPopup();
         }
 
+        if (open)
+        {
+            for (Entity child : children)
+                if (scene.FindEntityByID(child.GetID()).IsValid()) drawEntity(child);
+            ImGui::TreePop();
+        }
         ImGui::PopID();
-    }
+    };
 
-    /*
-     * Root drop target.
-     */
-    ImVec2 available =
-        ImGui::GetContentRegionAvail();
+    const std::vector<Entity> roots = scene.GetRootEntities();
+    for (Entity root : roots)
+        drawEntity(root);
 
-    if (available.y < 20.0f)
-    {
-        available.y = 20.0f;
-    }
-
-    ImGui::InvisibleButton(
-        "##RootDropArea",
-        ImVec2(
-            available.x,
-            available.y
-        )
-    );
-
+    ImVec2 available = ImGui::GetContentRegionAvail();
+    if (available.y < 28.0f) available.y = 28.0f;
+    ImGui::InvisibleButton("##HierarchyRootDrop", available);
     if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload* payload =
-            ImGui::AcceptDragDropPayload(
-                "HIERARCHY_ENTITY"))
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY"))
         {
-            if (payload->DataSize ==
-                sizeof(std::uint32_t))
+            if (payload->DataSize == sizeof(std::uint32_t))
             {
-                const std::uint32_t entityID =
-                    *static_cast<
-                    const std::uint32_t*
-                    >(
-                        payload->Data
-                        );
-
-                RemoveEntityFromFolders(
-                    m_HierarchyFolders,
-                    entityID
-                );
-
-                Entity dropped = scene.FindEntityByID(entityID);
-                if (dropped.IsValid())
-                    scene.ClearParent(dropped, true);
+                Entity entity = scene.FindEntityByID(*static_cast<const std::uint32_t*>(payload->Data));
+                if (entity.IsValid()) scene.ClearParent(entity, true);
             }
         }
-
         ImGui::EndDragDropTarget();
     }
 
