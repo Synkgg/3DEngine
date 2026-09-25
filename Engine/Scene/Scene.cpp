@@ -42,6 +42,7 @@ Scene& Scene::operator=(
         other.m_NextEntityID;
 
     m_Parents = other.m_Parents;
+    m_PrefabSources = other.m_PrefabSources;
 
     m_ComponentStorages.clear();
 
@@ -169,6 +170,7 @@ void Scene::DestroyEntity(
 
     const std::uint32_t deletedID = entity.GetID();
     m_Parents.erase(deletedID);
+    m_PrefabSources.erase(deletedID);
     for (auto parentIt = m_Parents.begin(); parentIt != m_Parents.end(); )
     {
         if (parentIt->second == deletedID) parentIt = m_Parents.erase(parentIt);
@@ -194,6 +196,7 @@ void Scene::Clear()
 
     m_NextEntityID = 1;
     m_Parents.clear();
+    m_PrefabSources.clear();
 }
 
 bool Scene::SetParent(Entity child, Entity parent, bool keepWorldTransform)
@@ -408,4 +411,24 @@ void Scene::DestroyEntityHierarchy(Entity root)
     const std::vector<Entity> children = GetChildren(root);
     for (Entity child : children) DestroyEntityHierarchy(child);
     DestroyEntity(root);
+}
+
+
+void Scene::SetPrefabSource(Entity entity, const std::string& source)
+{
+    if(!entity.IsValid() || FindEntityByID(entity.GetID()).IsValid()==false) return;
+    if(source.empty()) m_PrefabSources.erase(entity.GetID());
+    else m_PrefabSources[entity.GetID()]=source;
+}
+
+void Scene::ClearPrefabSource(Entity entity)
+{
+    if(entity.IsValid()) m_PrefabSources.erase(entity.GetID());
+}
+
+std::string Scene::GetPrefabSource(Entity entity) const
+{
+    if(!entity.IsValid()) return {};
+    const auto it=m_PrefabSources.find(entity.GetID());
+    return it==m_PrefabSources.end()?std::string():it->second;
 }
