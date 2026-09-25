@@ -12,6 +12,7 @@
 #include "../../UI/UIText.h"
 #include "../../UI/UIButton.h"
 #include "../../UI/UITextInput.h"
+#include "../../UI/UISlider.h"
 #include "../../UI/UISerializer.h"
 
 #include <filesystem>
@@ -1511,6 +1512,19 @@ void LuaScript::BindEngineAPI()
         if (!widget) return false;
         widget->SetPosition(Vec2(x, y));
         return true;
+    });
+
+    ui.set_function("SetValue", [this](const std::string& name, float value)
+    {
+        if(!m_UICanvas||!m_UICanvas->GetRoot())return false;
+        UISlider* slider=dynamic_cast<UISlider*>(m_UICanvas->GetRoot()->Find(name));
+        if(!slider)return false; slider->SetValue(value); return true;
+    });
+    ui.set_function("GetValue", [this](const std::string& name)
+    {
+        if(!m_UICanvas||!m_UICanvas->GetRoot())return 0.0f;
+        UISlider* slider=dynamic_cast<UISlider*>(m_UICanvas->GetRoot()->Find(name));
+        return slider?slider->GetValue():0.0f;
     });
 
     ui.set_function("WasClicked", [this](const std::string& name)
