@@ -4,6 +4,7 @@
 #include "UIImage.h"
 #include "UIButton.h"
 #include "UITextInput.h"
+#include "UISlider.h"
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
@@ -430,6 +431,7 @@ void UIRenderer::UpdateInput(
 
     UIButton* hovered = nullptr;
     UITextInput* hoveredInput = nullptr;
+    UISlider* hoveredSlider = nullptr;
     if (inside)
     {
         // Children are z-sorted ascending, so later hits replace earlier ones
@@ -441,6 +443,7 @@ void UIRenderer::UpdateInput(
                     hovered = hit;
                 if (UITextInput* hit = FindTopTextInput(*child, canvasRect, mouse))
                     hoveredInput = hit;
+                if (UISlider* hit = FindTopSlider(*child, canvasRect, mouse)) hoveredSlider = hit;
             }
     }
 
@@ -449,6 +452,7 @@ void UIRenderer::UpdateInput(
     if (inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT))
     {
         m_PressedCanvasButton = hovered;
+        m_DraggedSlider = hoveredSlider;
         if (m_FocusedTextInput && m_FocusedTextInput != hoveredInput)
             m_FocusedTextInput->SetFocused(false);
         m_FocusedTextInput = hoveredInput;
@@ -556,6 +560,12 @@ void UIRenderer::UpdateInput(
     if (m_PressedCanvasButton)
         m_PressedCanvasButton->SetPressed(true);
 
+    if (m_DraggedSlider && inside && input.IsMouseButtonDown(SDL_BUTTON_LEFT))
+    {
+        const UIRect sliderRect=UILayout::Calculate(*m_DraggedSlider, m_DraggedSlider->GetParent() && m_DraggedSlider->GetParent()!=root ? UILayout::Calculate(*m_DraggedSlider->GetParent(),canvasRect) : canvasRect);
+        if(sliderRect.width>0.0f) m_DraggedSlider->SetValue((mouse.x-sliderRect.x)/sliderRect.width);
+    }
+
     if (input.IsMouseButtonReleased(SDL_BUTTON_LEFT))
     {
         if (m_PressedCanvasButton && m_PressedCanvasButton == hovered)
@@ -566,6 +576,7 @@ void UIRenderer::UpdateInput(
         if (m_PressedCanvasButton)
             m_PressedCanvasButton->SetPressed(false);
         m_PressedCanvasButton = nullptr;
+        m_DraggedSlider = nullptr;
     }
 }
 
@@ -606,6 +617,15 @@ UIButton* UIRenderer::FindTopButton(
             result = button;
 
     return result;
+}
+
+UISlider* UIRenderer::FindTopSlider(UIWidget& widget,const UIRect& parentRect,const Vec2& mouse)
+{
+    if(!widget.IsVisible()||!widget.IsEnabled())return nullptr;
+    const UIRect rect=UILayout::Calculate(widget,parentRect); UISlider* result=nullptr;
+    for(const auto& child:widget.GetChildren())if(child)if(UISlider* hit=FindTopSlider(*child,rect,mouse))result=hit;
+    const bool hit=widget.IsHitTestVisible()&&mouse.x>=rect.x&&mouse.x<=rect.x+rect.width&&mouse.y>=rect.y&&mouse.y<=rect.y+rect.height;
+    if(hit)if(UISlider* slider=dynamic_cast<UISlider*>(&widget))result=slider; return result;
 }
 
 UITextInput* UIRenderer::FindTopTextInput(
@@ -687,7 +707,11 @@ void UIRenderer::RenderCanvasWidget(
             parentRect
         );
 
-    if (widget.GetType() == UIWidgetType::TextInput)
+    if (widget.GetType() == UIWidgetType::Slider)
+    {
+        if(const UISlider* slider=dynamic_cast<const UISlider*>(&widget)) DrawSlider(*slider,rect);
+    }
+    else if (widget.GetType() == UIWidgetType::TextInput)
     {
         if (const UITextInput* input = dynamic_cast<const UITextInput*>(&widget))
             DrawTextInput(*input, rect);
@@ -887,6 +911,15 @@ bool UIRenderer::InitializeFontAtlas()
         glyph.xadvance = baked[i].xadvance;
     }
     return true;
+}
+
+void UIRenderer::DrawSlider(const UISlider& slider,const UIRect& rect)
+{
+    DrawCanvasWidget(slider,rect,nullptr);
+    UIWidget fill(UIWidgetType::Panel); fill.SetColor(slider.GetFillColor());
+    DrawCanvasWidget(fill,UIRect{rect.x,rect.y,rect.width*slider.GetValue(),rect.height},nullptr);
+    UIWidget handle(UIWidgetType::Panel); handle.SetColor(slider.GetHandleColor());
+    const float w=10.0f; DrawCanvasWidget(handle,UIRect{rect.x+rect.width*slider.GetValue()-w*0.5f,rect.y-3.0f,w,rect.height+6.0f},nullptr);
 }
 
 void UIRenderer::DrawTextInput(const UITextInput& input, const UIRect& rect)
