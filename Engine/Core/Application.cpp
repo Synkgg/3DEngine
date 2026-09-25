@@ -436,6 +436,31 @@ void Application::Run()
 
         UpdateLighting();
 
+        // Directional shadow depth pass. Keep this separate from the color pass
+        // so the material shader can sample a stable light-space depth map.
+        m_Renderer.BeginShadowPass();
+        for (const Entity& entity : m_Scene.GetEntities())
+        {
+            TransformComponent* transform =
+                m_Scene.GetComponent<TransformComponent>(entity);
+            MeshComponent* mesh =
+                m_Scene.GetComponent<MeshComponent>(entity);
+
+            if (transform == nullptr || mesh == nullptr)
+                continue;
+
+            Transform shadowTransform = transform->transform;
+            shadowTransform.position.x += mesh->offset.x;
+            shadowTransform.position.y += mesh->offset.y;
+            shadowTransform.position.z += mesh->offset.z;
+            shadowTransform.rotation.x += mesh->rotation.x;
+            shadowTransform.rotation.y += mesh->rotation.y;
+            shadowTransform.rotation.z += mesh->rotation.z;
+
+            m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
+        }
+        m_Renderer.EndShadowPass();
+
         m_Renderer.BeginFrame();
 
         m_Renderer.DrawSky();
