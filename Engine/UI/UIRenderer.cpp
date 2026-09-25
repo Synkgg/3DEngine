@@ -458,6 +458,41 @@ void UIRenderer::UpdateInput(
 
     if (m_FocusedTextInput)
     {
+        // Match normal text-editor behavior: delete once immediately, then
+        // repeat after a short hold delay at a steady rate.
+        constexpr float repeatDelay = 0.38f;
+        constexpr float repeatInterval = 0.045f;
+        const float frameSeconds = 1.0f / 60.0f;
+
+        auto repeatKey = [&](SDL_Scancode key, float& heldTime, float& repeatTime, auto action)
+        {
+            if (!input.IsKeyDown(key))
+            {
+                heldTime = 0.0f;
+                repeatTime = 0.0f;
+                return;
+            }
+
+            if (input.IsKeyPressed(key))
+            {
+                action();
+                heldTime = 0.0f;
+                repeatTime = 0.0f;
+                return;
+            }
+
+            heldTime += frameSeconds;
+            if (heldTime < repeatDelay)
+                return;
+
+            repeatTime += frameSeconds;
+            while (repeatTime >= repeatInterval)
+            {
+                action();
+                repeatTime -= repeatInterval;
+            }
+        };
+
         const bool ctrl = input.IsKeyDown(SDL_SCANCODE_LCTRL) || input.IsKeyDown(SDL_SCANCODE_RCTRL);
         const bool shift = input.IsKeyDown(SDL_SCANCODE_LSHIFT) || input.IsKeyDown(SDL_SCANCODE_RSHIFT);
 
@@ -476,8 +511,10 @@ void UIRenderer::UpdateInput(
         }
         else
         {
-            if (input.IsKeyPressed(SDL_SCANCODE_BACKSPACE)) m_FocusedTextInput->Backspace();
-            if (input.IsKeyPressed(SDL_SCANCODE_DELETE)) m_FocusedTextInput->DeleteForward();
+            repeatKey(SDL_SCANCODE_BACKSPACE, m_BackspaceHeldTime, m_BackspaceRepeatTime,
+                [&]() { m_FocusedTextInput->Backspace(); });
+            repeatKey(SDL_SCANCODE_DELETE, m_DeleteHeldTime, m_DeleteRepeatTime,
+                [&]() { m_FocusedTextInput->DeleteForward(); });
             if (input.IsKeyPressed(SDL_SCANCODE_LEFT)) m_FocusedTextInput->MoveCursorLeft();
             if (input.IsKeyPressed(SDL_SCANCODE_RIGHT)) m_FocusedTextInput->MoveCursorRight();
             if (input.IsKeyPressed(SDL_SCANCODE_HOME)) m_FocusedTextInput->SetCursor(0);
@@ -509,6 +546,8 @@ void UIRenderer::UpdateInput(
 
         if (input.IsKeyPressed(SDL_SCANCODE_RETURN) || input.IsKeyPressed(SDL_SCANCODE_ESCAPE))
         {
+            m_BackspaceHeldTime = m_DeleteHeldTime = 0.0f;
+            m_BackspaceRepeatTime = m_DeleteRepeatTime = 0.0f;
             m_FocusedTextInput->SetFocused(false);
             m_FocusedTextInput = nullptr;
         }
@@ -1141,6 +1180,8 @@ void UIRenderer::Clear()
     m_Elements.clear();
     m_TextElements.clear();
     m_PressedCanvasButton = nullptr;
+    m_BackspaceHeldTime = m_DeleteHeldTime = 0.0f;
+    m_BackspaceRepeatTime = m_DeleteRepeatTime = 0.0f;
     if (m_FocusedTextInput)
         m_FocusedTextInput->SetFocused(false);
     m_FocusedTextInput = nullptr;
