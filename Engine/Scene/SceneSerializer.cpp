@@ -423,6 +423,8 @@ bool SceneSerializer::Save(
 
         Entity parent = m_Scene.GetParent(entity);
         file << "Parent " << (parent.IsValid() ? parent.GetID() : 0) << '\n';
+        const std::string prefabSource = m_Scene.GetPrefabSource(entity);
+        file << "PrefabSource " << std::quoted(prefabSource) << '\n';
 
         /*
          * Mesh
@@ -956,6 +958,18 @@ bool SceneSerializer::Load(
             if (parentID != 0)
                 m_Scene.SetParent(entity, Entity(parentID));
 
+            if (!ReadLine(file, line, "Mesh or PrefabSource", entityID))
+                return false;
+        }
+
+        // PrefabSource is optional so existing scenes continue to load.
+        if (line.rfind("PrefabSource ", 0) == 0)
+        {
+            std::istringstream prefabLine(line);
+            std::string token;
+            std::string source;
+            prefabLine >> token >> std::quoted(source);
+            if (!source.empty()) m_Scene.SetPrefabSource(entity, source);
             if (!ReadLine(file, line, "Mesh", entityID))
                 return false;
         }
