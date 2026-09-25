@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <array>
+#include <unordered_map>
+#include <string>
 
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
@@ -77,6 +79,16 @@ public:
         float emissive = 0.0f
     );
 
+    void DrawModel(
+        const Transform& transform,
+        const std::string& modelPath,
+        float red, float green, float blue, float alpha,
+        const Texture2D* texture = nullptr,
+        float metallic = 0.0f, float roughness = 0.65f,
+        float ambientOcclusion = 1.0f, float emissive = 0.0f
+    );
+    void DrawShadowModel(const Transform& transform, const std::string& modelPath);
+
     SDL_GLContext GetContext() const;
     unsigned int GetViewportTexture() const;
 
@@ -151,6 +163,7 @@ private:
     std::unique_ptr<Mesh> m_PlaneMesh;
     std::unique_ptr<Mesh> m_SphereMesh;
     std::unique_ptr<Mesh> m_CylinderMesh;
+    std::unordered_map<std::string, std::unique_ptr<Mesh>> m_ModelCache;
 
     Camera m_Camera;
     Framebuffer m_Framebuffer;
@@ -173,6 +186,10 @@ private:
 
     TextureManager m_TextureManager;
     UIRenderer m_UIRenderer;
+
+    Mesh* GetPrimitiveMesh(PrimitiveType primitive);
+    Mesh* GetModelMesh(const std::string& modelPath);
+    void DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha, const Texture2D* texture, float metallic, float roughness, float ambientOcclusion, float emissive);
 
     bool CreateShadowTarget();
     void DestroyShadowTarget();
