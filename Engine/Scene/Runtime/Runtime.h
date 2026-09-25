@@ -88,5 +88,6 @@ private:
     ProjectSettings* m_ProjectSettings = nullptr;
     NetworkManager m_Network;
     std::unordered_map<std::uint32_t, std::uint32_t> m_RemotePlayerEntities;
-    void UpdateNetworkPlayers(Scene& scene);
+    float m_NetworkTransformSendTimer = 0.0f;
+    void UpdateNetworkPlayers(Scene& scene, float deltaTime);
 };
