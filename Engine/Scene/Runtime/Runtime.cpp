@@ -136,7 +136,8 @@ void Runtime::Update(
             scene,
             renderer,
             input,
-            m_LuaScriptSystem
+            m_LuaScriptSystem,
+            m_Audio
         );
 
         m_CollisionSystem.Update(
