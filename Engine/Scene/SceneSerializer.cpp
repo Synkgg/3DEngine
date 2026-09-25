@@ -324,6 +324,20 @@ bool SceneSerializer::Save(
      */
     file << "MyEngineScene\n";
 
+    const SceneEnvironment& environment = m_Scene.GetEnvironment();
+    file << "Environment "
+        << (environment.antiAliasing ? 1 : 0) << " "
+        << environment.antiAliasingSamples << " "
+        << (environment.shadows ? 1 : 0) << " "
+        << (environment.fog ? 1 : 0) << " "
+        << (environment.bloom ? 1 : 0) << " "
+        << environment.viewDistance << " "
+        << environment.exposure << " "
+        << environment.fogDensity << " "
+        << environment.bloomStrength << " "
+        << environment.shadowQuality << " "
+        << environment.shadowDistance << '\n';
+
     /*
      * Entities
      */
@@ -617,6 +631,14 @@ bool SceneSerializer::Save(
                     << scriptName
                     << '\n';
             }
+            std::size_t propertyCount=0;
+            for(const auto& scriptProperties:scripts->properties) propertyCount+=scriptProperties.second.size();
+            file << "ScriptProperties " << propertyCount << '\n';
+            for(const auto& scriptProperties:scripts->properties)
+                for(const auto& property:scriptProperties.second)
+                    file << "ScriptProperty " << std::quoted(scriptProperties.first) << " "
+                        << std::quoted(property.first) << " " << static_cast<int>(property.second.type) << " "
+                        << std::quoted(property.second.value) << '\n';
         }
         else
         {
@@ -697,15 +719,24 @@ bool SceneSerializer::Load(
     }
 
     /*
-     * Entity count
+     * Scene environment is optional for backward compatibility.
      */
-    if (!ReadLine(
-        file,
-        line,
-        "entity count",
-        0))
-    {
+    if (!ReadLine(file, line, "environment or entity count", 0))
         return false;
+
+    if (line.rfind("Environment ", 0) == 0)
+    {
+        std::istringstream environmentLine(line);
+        std::string token;
+        int aa=1, shadows=1, fog=0, bloom=1;
+        SceneEnvironment& environment=m_Scene.GetEnvironment();
+        environmentLine >> token >> aa >> environment.antiAliasingSamples >> shadows >> fog >> bloom
+            >> environment.viewDistance >> environment.exposure >> environment.fogDensity
+            >> environment.bloomStrength >> environment.shadowQuality >> environment.shadowDistance;
+        if(environmentLine.fail()) return false;
+        environment.antiAliasing=aa!=0; environment.shadows=shadows!=0;
+        environment.fog=fog!=0; environment.bloom=bloom!=0;
+        if (!ReadLine(file,line,"entity count",0)) return false;
     }
 
     std::istringstream entityHeader(line);
@@ -1696,6 +1727,24 @@ bool SceneSerializer::Load(
                         scripts.scriptNames.push_back(
                             scriptName
                         );
+                    }
+
+                    const std::streampos propertiesPosition=file.tellg();
+                    if(std::getline(file,line) && line.rfind("ScriptProperties ",0)==0)
+                    {
+                        std::istringstream header(line); std::string token; std::size_t count=0; header>>token>>count;
+                        for(std::size_t propertyIndex=0;propertyIndex<count;++propertyIndex)
+                        {
+                            if(!std::getline(file,line)) return false;
+                            std::istringstream propertyLine(line); std::string propertyToken,scriptPath,propertyName,value; int type=0;
+                            propertyLine>>propertyToken>>std::quoted(scriptPath)>>std::quoted(propertyName)>>type>>std::quoted(value);
+                            if(propertyToken!="ScriptProperty"||propertyLine.fail()) return false;
+                            scripts.properties[scriptPath][propertyName]={static_cast<ScriptPropertyType>(type),value};
+                        }
+                    }
+                    else
+                    {
+                        file.clear(); file.seekg(propertiesPosition);
                     }
 
                     if (!scripts.scriptNames.empty())
