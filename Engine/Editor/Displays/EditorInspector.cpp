@@ -462,6 +462,10 @@ void Editor::RenderInspector(
                 }
             }
 
+            ImGui::Checkbox("Owner No See", &mesh->ownerNoSee);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Hide this mesh for the local Player during runtime; remote players still see it.");
+
             ImGui::Separator();
 
             ImGui::Text("Mesh Offset");
