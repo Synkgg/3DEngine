@@ -86,7 +86,7 @@ local function moveLocalPlayerToBase()
     if id==0 then return end
     local player=Scene.FindEntity("Player")
     if player.id==0 then return end
-    local z=(teamFor(id)=="RED") and -75.0 or 75.0
+    local z=(teamFor(id)=="RED") and -30.0 or 30.0
     Scene.SetPosition(player.id,0.0,2.0,z)
 end
 
