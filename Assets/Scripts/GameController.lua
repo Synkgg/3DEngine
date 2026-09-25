@@ -1,3 +1,5 @@
+local CrystalGame = require("Assets.Scripts.Systems.CrystalGame")
+
 local inventoryOpen=false
 local paused=false
 local function Refresh()
