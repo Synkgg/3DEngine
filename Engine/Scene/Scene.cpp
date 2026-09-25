@@ -185,17 +185,75 @@ void Scene::Clear()
     m_Parents.clear();
 }
 
-bool Scene::SetParent(Entity child, Entity parent)
+bool Scene::SetParent(Entity child, Entity parent, bool keepWorldTransform)
 {
     if (!child.IsValid() || !parent.IsValid() || child.GetID() == parent.GetID()) return false;
     if (IsDescendant(parent, child)) return false;
+
+    Transform worldBefore;
+    if (keepWorldTransform) worldBefore = GetWorldTransform(child);
     m_Parents[child.GetID()] = parent.GetID();
+
+    if (keepWorldTransform)
+    {
+        TransformComponent* local = GetComponent<TransformComponent>(child);
+        const Transform parentWorld = GetWorldTransform(parent);
+        if (local)
+        {
+            local->transform = worldBefore;
+            local->transform.position.x -= parentWorld.position.x;
+            local->transform.position.y -= parentWorld.position.y;
+            local->transform.position.z -= parentWorld.position.z;
+            local->transform.rotation.x -= parentWorld.rotation.x;
+            local->transform.rotation.y -= parentWorld.rotation.y;
+            local->transform.rotation.z -= parentWorld.rotation.z;
+            if (parentWorld.scale.x != 0.0f) local->transform.scale.x /= parentWorld.scale.x;
+            if (parentWorld.scale.y != 0.0f) local->transform.scale.y /= parentWorld.scale.y;
+            if (parentWorld.scale.z != 0.0f) local->transform.scale.z /= parentWorld.scale.z;
+
+            const float cy = std::cos(-parentWorld.rotation.y), sy = std::sin(-parentWorld.rotation.y);
+            const float x = local->transform.position.x, z = local->transform.position.z;
+            local->transform.position.x = (x * cy + z * sy) / (parentWorld.scale.x == 0.0f ? 1.0f : parentWorld.scale.x);
+            local->transform.position.z = (-x * sy + z * cy) / (parentWorld.scale.z == 0.0f ? 1.0f : parentWorld.scale.z);
+            local->transform.position.y /= (parentWorld.scale.y == 0.0f ? 1.0f : parentWorld.scale.y);
+        }
+    }
     return true;
 }
 
-void Scene::ClearParent(Entity child)
+void Scene::ClearParent(Entity child, bool keepWorldTransform)
 {
-    if (child.IsValid()) m_Parents.erase(child.GetID());
+    if (!child.IsValid()) return;
+    Transform worldBefore;
+    if (keepWorldTransform) worldBefore = GetWorldTransform(child);
+    m_Parents.erase(child.GetID());
+    if (keepWorldTransform)
+    {
+        TransformComponent* local = GetComponent<TransformComponent>(child);
+        if (local) local->transform = worldBefore;
+    }
+}
+
+std::vector<Entity> Scene::GetChildren(Entity parent) const
+{
+    std::vector<Entity> result;
+    if (!parent.IsValid()) return result;
+    for (const Entity& entity : m_Entities)
+    {
+        auto it = m_Parents.find(entity.GetID());
+        if (it != m_Parents.end() && it->second == parent.GetID()) result.push_back(entity);
+    }
+    return result;
+}
+
+Entity Scene::FindEntityByName(const std::string& name) const
+{
+    for (const Entity& entity : m_Entities)
+    {
+        const NameComponent* component = GetComponent<NameComponent>(entity);
+        if (component && component->name == name) return entity;
+    }
+    return Entity();
 }
 
 Entity Scene::GetParent(Entity child) const
