@@ -975,7 +975,7 @@ void LuaScript::BindEngineAPI()
         "SetInteractablePrompt", [](LuaEntityHandle& e,const std::string& prompt){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<InteractableComponent>(Entity(e.id)))c->prompt=prompt; },
         "SetLightIntensity", [](LuaEntityHandle& e,float intensity){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<LightComponent>(Entity(e.id)))c->intensity=intensity; },
         "SetLightColor", [](LuaEntityHandle& e,float r,float g,float b){ if(!e.scene)return; if(auto* c=e.scene->GetComponent<LightComponent>(Entity(e.id)))c->color=Vec3(r,g,b); }
-    );
+    , sol::meta_function::index, [](LuaEntityHandle& e, sol::stack_object key, sol::this_state ts) -> sol::object {\n        sol::state_view lua(ts);\n        const std::string name = key.as<std::string>();\n        sol::table entityType = lua["Entity"];\n        return entityType.raw_get<sol::object>(name);\n    });
 
     sol::table sceneApi = m_Lua->create_table();
 
