@@ -76,6 +76,8 @@ void Runtime::Update(
     }
 
 
+    m_Network.Update();
+
     m_LuaScriptSystem.Update(
         scene,
         deltaTime
@@ -157,6 +159,7 @@ void Runtime::Stop(Scene& scene)
 
     m_LuaScriptSystem.Stop();
     m_ScriptSystem.Stop();
+    m_Network.Disconnect();
 
     if (m_HasSnapshot)
     {
