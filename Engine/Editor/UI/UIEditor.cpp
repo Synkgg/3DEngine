@@ -517,14 +517,25 @@ void UIEditor::DrawInspector(
             text->GetText().c_str()
         );
 
-        if (ImGui::InputText(
+        // Multiline editor: Enter commits focus naturally, while Shift+Enter
+        // inserts a newline into the text value.
+        if (ImGui::InputTextMultiline(
             "Content",
             textBuffer,
-            sizeof(textBuffer)))
+            sizeof(textBuffer),
+            ImVec2(-1.0f, 92.0f),
+            ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            text->SetText(
-                textBuffer
-            );
+            text->SetText(textBuffer);
+        }
+
+        if (ImGui::IsItemActive() &&
+            ImGui::GetIO().KeyShift &&
+            ImGui::IsKeyPressed(ImGuiKey_Enter))
+        {
+            std::string value = text->GetText();
+            value += '\n';
+            text->SetText(value);
         }
 
         float fontSize =
