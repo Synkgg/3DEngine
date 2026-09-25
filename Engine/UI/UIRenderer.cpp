@@ -631,15 +631,7 @@ void UIRenderer::DrawCanvasWidget(
     Vec4 color = widget.GetColor();
 
     if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
-    {
-        const float multiplier =
-            button->IsPressed() ? 0.72f :
-            (button->IsHovered() ? 1.12f : 1.0f);
-
-        color.x = std::clamp(color.x * multiplier, 0.0f, 1.0f);
-        color.y = std::clamp(color.y * multiplier, 0.0f, 1.0f);
-        color.z = std::clamp(color.z * multiplier, 0.0f, 1.0f);
-    }
+        color = button->GetCurrentColor();
 
     m_Shader.SetVec4(
         "u_Color",
