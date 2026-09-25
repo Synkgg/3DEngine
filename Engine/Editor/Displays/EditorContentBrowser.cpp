@@ -601,7 +601,6 @@ void Editor::RenderContentBrowser(
                 ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
                 m_MeshPreviewPath = fs::relative(entry.path, fs::current_path(), error).generic_string();
-                ImGui::OpenPopup("Mesh Preview");
             }
 
             /*
@@ -946,27 +945,28 @@ void Editor::RenderContentBrowser(
 
     if (!m_MeshPreviewPath.empty())
     {
-        ImGui::SetNextWindowSize(ImVec2(440.0f, 210.0f), ImGuiCond_Appearing);
-        if (ImGui::BeginPopupModal("Mesh Preview", nullptr, ImGuiWindowFlags_NoResize))
+        ImGui::SetNextWindowSize(ImVec2(440.0f, 210.0f), ImGuiCond_FirstUseEver);
+        bool previewOpen = true;
+        if (ImGui::Begin("Mesh Preview", &previewOpen))
         {
-            ImGui::TextDisabled("MESH PREVIEW");
+            ImGui::TextDisabled("MESH ASSET");
             ImGui::Separator();
             ImGui::TextWrapped("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
             ImGui::TextDisabled("%s", m_MeshPreviewPath.c_str());
             ImGui::Spacing();
-            ImGui::TextWrapped("OBJ model ready for the scene renderer. Drag this asset onto a Mesh component in Details to assign it.");
+            ImGui::TextWrapped("Drag the OBJ from Assets onto an entity's Mesh component to assign it.");
             ImGui::Spacing();
-            ImGui::Text("Renderer preview:");
-            ImGui::BulletText("Uses the same cached OBJ loader as scene rendering");
-            ImGui::BulletText("Receives material, lights, bloom and directional shadows");
+            ImGui::Text("Scene preview pipeline");
+            ImGui::BulletText("Cached OBJ geometry");
+            ImGui::BulletText("Material and local lighting");
+            ImGui::BulletText("Directional shadows and HDR bloom");
             ImGui::Spacing();
-            if (ImGui::Button("Close", ImVec2(100.0f, 0.0f)))
-            {
-                m_MeshPreviewPath.clear();
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::EndPopup();
+            if (ImGui::Button("Clear Preview", ImVec2(110.0f, 0.0f)))
+                previewOpen = false;
         }
+        ImGui::End();
+        if (!previewOpen)
+            m_MeshPreviewPath.clear();
     }
 
     /*
