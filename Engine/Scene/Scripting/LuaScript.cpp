@@ -910,6 +910,17 @@ void LuaScript::BindEngineAPI()
         return m_Scene->FindEntityByName(name).GetID();
     });
 
+    sceneApi.set_function("DuplicateEntity", [this](std::uint32_t entityID, bool includeChildren)
+    {
+        if (!m_Scene) return std::uint32_t(0);
+        return m_Scene->DuplicateEntity(Entity(entityID), includeChildren).GetID();
+    });
+
+    sceneApi.set_function("DestroyEntity", [this](std::uint32_t entityID)
+    {
+        if (m_Scene) m_Scene->DestroyEntity(Entity(entityID));
+    });
+
     sceneApi.set_function("GetParent", [this](std::uint32_t entityID)
     {
         if (!m_Scene) return std::uint32_t(0);
