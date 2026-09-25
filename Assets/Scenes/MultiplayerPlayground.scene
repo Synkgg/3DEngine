@@ -21,7 +21,7 @@ Scripts 1
 Script Assets/Scripts/MultiplayerPlayground.lua
 Entity 2
 Name Player
-Position 0 1.2 -8
+Position 0 2 0
 Rotation 0 3.14159 0
 Scale 1 1 1
 Parent 0
@@ -401,7 +401,7 @@ Rotation 0 0 0
 Scale 0.42 0.42 0.42
 Parent 2
 PrefabSource ""
-Mesh 1 2
+Mesh 1 2 "" 1
 Color 1 0.08 0.18 0.28 1
 Texture 0
 Material 1 0.12 0.38 0.75 0.12
@@ -418,7 +418,7 @@ Rotation 0 0 0
 Scale 0.34 0.16 0.08
 Parent 2
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 1
 Color 1 0.20 0.85 1.0 1
 Texture 0
 Material 1 0.45 0.22 0.9 0.45
