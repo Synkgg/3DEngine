@@ -1243,15 +1243,15 @@ void LuaScript::BindEngineAPI()
         NetworkGameState state=m_Runtime ? m_Runtime->GetNetwork().GetGameState() : NetworkGameState{};
         result["revision"]=state.revision; result["redScore"]=state.redScore; result["blueScore"]=state.blueScore;
         result["roundSeconds"]=state.roundSeconds; result["orbX"]=state.orbX; result["orbY"]=state.orbY; result["orbZ"]=state.orbZ;
-        result["carrierID"]=state.carrierID; result["winner"]=state.winner;
+        result["carrierID"]=state.carrierID; result["winner"]=state.winner; result["matchStarted"]=state.matchStarted;
         return result;
     });
-    network.set_function("SetCoreRushState", [this](int redScore, int blueScore, int roundSeconds, float orbX, float orbY, float orbZ, std::uint32_t carrierID, int winner)
+    network.set_function("SetCoreRushState", [this](int redScore, int blueScore, int roundSeconds, float orbX, float orbY, float orbZ, std::uint32_t carrierID, int winner, int matchStarted)
     {
         if (!m_Runtime || !m_Runtime->GetNetwork().IsHost()) return false;
         NetworkGameState state=m_Runtime->GetNetwork().GetGameState(); ++state.revision;
         state.redScore=redScore; state.blueScore=blueScore; state.roundSeconds=roundSeconds;
-        state.orbX=orbX; state.orbY=orbY; state.orbZ=orbZ; state.carrierID=carrierID; state.winner=winner;
+        state.orbX=orbX; state.orbY=orbY; state.orbZ=orbZ; state.carrierID=carrierID; state.winner=winner; state.matchStarted=matchStarted;
         m_Runtime->GetNetwork().SetGameState(state); return true;
     });
     network.set_function("SendGameAction", [this](int action) { if(m_Runtime)m_Runtime->GetNetwork().SendGameAction(static_cast<std::uint8_t>(action)); });
