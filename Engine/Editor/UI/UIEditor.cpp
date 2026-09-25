@@ -435,16 +435,23 @@ void UIEditor::DrawInspector(
         ImGui::TextDisabled("Brush / Image");
 
         const std::string& currentPath = image->GetTexturePath();
-        ImGui::TextWrapped("%s",
-            currentPath.empty() ? "No image selected" : currentPath.c_str());
+        const std::string preview = currentPath.empty()
+            ? "None"
+            : std::filesystem::path(currentPath).filename().string();
 
-        if (ImGui::Button("Choose Image...", ImVec2(-1.0f, 0.0f)))
-            ImGui::OpenPopup("SelectUIImage");
-
-        if (ImGui::BeginPopup("SelectUIImage"))
+        if (ImGui::BeginCombo("Image Asset", preview.c_str()))
         {
-            ImGui::TextDisabled("TEXTURES");
+            static char imageSearch[128] = {};
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputTextWithHint("##UIImageSearch", "Search textures...", imageSearch, sizeof(imageSearch));
             ImGui::Separator();
+
+            if (ImGui::Selectable("None", currentPath.empty()))
+                image->SetTexturePath("");
+
+            std::string query = imageSearch;
+            std::transform(query.begin(), query.end(), query.begin(),
+                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
 
             std::error_code ec;
             const std::filesystem::path root("Assets");
@@ -458,24 +465,52 @@ void UIEditor::DrawInspector(
                     std::string ext = entry.path().extension().string();
                     std::transform(ext.begin(), ext.end(), ext.begin(),
                         [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-
                     if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" &&
                         ext != ".bmp" && ext != ".tga")
                         continue;
 
-                    const std::string path = entry.path().generic_string();
-                    if (ImGui::Selectable(path.c_str(), path == currentPath))
+                    const std::string assetPath = entry.path().generic_string();
+                    std::string searchable = assetPath;
+                    std::transform(searchable.begin(), searchable.end(), searchable.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                    if (!query.empty() && searchable.find(query) == std::string::npos)
+                        continue;
+
+                    ImGui::PushID(assetPath.c_str());
+                    Texture2D* texture = m_Renderer ? m_Renderer->LoadTexture(assetPath) : nullptr;
+                    if (texture && texture->IsLoaded())
                     {
-                        image->SetTexturePath(path);
+                        ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),
+                            ImVec2(34.0f, 34.0f), ImVec2(0, 1), ImVec2(1, 0));
+                        ImGui::SameLine();
+                    }
+
+                    const bool selected = currentPath == assetPath;
+                    if (ImGui::Selectable(entry.path().filename().string().c_str(), selected,
+                        ImGuiSelectableFlags_None, ImVec2(0.0f, 34.0f)))
+                    {
+                        image->SetTexturePath(assetPath);
                         ImGui::CloseCurrentPopup();
                     }
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", assetPath.c_str());
+                    ImGui::PopID();
                 }
             }
-            ImGui::EndPopup();
+            ImGui::EndCombo();
         }
 
-        if (!currentPath.empty() && ImGui::Button("Clear Image"))
-            image->SetTexturePath("");
+        if (!currentPath.empty() && m_Renderer)
+        {
+            Texture2D* texture = m_Renderer->LoadTexture(currentPath);
+            if (texture && texture->IsLoaded())
+            {
+                ImGui::TextDisabled("Preview");
+                ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),
+                    ImVec2(96.0f, 96.0f), ImVec2(0, 1), ImVec2(1, 0));
+            }
+        }
+
     }
 
     if (UIButton* button = dynamic_cast<UIButton*>(&widget))
