@@ -12,6 +12,21 @@
 #include <unordered_set>
 #include <string>
 
+struct SceneEnvironment
+{
+    bool antiAliasing = true;
+    int antiAliasingSamples = 4;
+    bool shadows = true;
+    bool fog = false;
+    bool bloom = true;
+    float viewDistance = 1000.0f;
+    float exposure = 1.0f;
+    float fogDensity = 0.003f;
+    float bloomStrength = 0.32f;
+    int shadowQuality = 2;
+    float shadowDistance = 80.0f;
+};
+
 class Scene
 {
 public:
@@ -47,6 +62,9 @@ public:
     Entity DuplicateEntity(Entity source, bool duplicateChildren = true);
     Entity CloneEntityTo(Entity source, Scene& destination, bool cloneChildren = true) const;
     void DestroyEntityHierarchy(Entity root);
+
+    SceneEnvironment& GetEnvironment() { return m_Environment; }
+    const SceneEnvironment& GetEnvironment() const { return m_Environment; }
 
     const std::vector<Entity>& GetEntities() const
     {
@@ -189,6 +207,7 @@ public:
     }
 
 private:
+    SceneEnvironment m_Environment;
     std::vector<Entity> m_Entities;
 
     std::uint32_t m_NextEntityID = 1;
