@@ -1084,7 +1084,7 @@ void LuaScript::BindEngineAPI()
         return m_Runtime->RequestSceneLoad(path);
     });
 
-    sceneApi.set_function("FindEntity", [this, &makeEntityHandle](const std::string& name)
+    sceneApi.set_function("FindEntity", [this, makeEntityHandle](const std::string& name)
     {
         Entity found = m_Scene ? m_Scene->FindEntityByName(name) : Entity();
         return makeEntityHandle(m_Scene, found.GetID());
