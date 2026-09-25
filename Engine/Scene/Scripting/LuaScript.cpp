@@ -12,6 +12,9 @@
 #include "../../UI/UIButton.h"
 #include "../../UI/UISerializer.h"
 
+#include <filesystem>
+#include <fstream>
+
 #include "../Scene.h"
 #include "../PrefabSerializer.h"
 #include "../Runtime/Runtime.h"
@@ -729,8 +732,101 @@ void LuaScript::BindEngineAPI()
         }
     );
 
+    input.set_function(
+        "GetClipboardText",
+        []()
+        {
+            char* text = SDL_GetClipboardText();
+            if (text == nullptr)
+                return std::string();
+
+            std::string result(text);
+            SDL_free(text);
+            return result;
+        }
+    );
+
+    input.set_function(
+        "SetClipboardText",
+        [](const std::string& text)
+        {
+            return SDL_SetClipboardText(text.c_str());
+        }
+    );
+
     (*m_Environment)["Input"] =
         input;
+
+    /*
+     * Preferences - tiny per-project string storage for runtime UI values
+     * such as the last multiplayer address. Keys are sanitized so scripts
+     * cannot escape the Saved directory.
+     */
+    sol::table preferences = m_Lua->create_table();
+
+    preferences.set_function(
+        "LoadString",
+        [](const std::string& key, const std::string& fallback)
+        {
+            std::string safeKey;
+            for (char ch : key)
+            {
+                if ((ch >= 'a' && ch <= 'z') ||
+                    (ch >= 'A' && ch <= 'Z') ||
+                    (ch >= '0' && ch <= '9') ||
+                    ch == '_' || ch == '-')
+                {
+                    safeKey += ch;
+                }
+            }
+
+            if (safeKey.empty())
+                return fallback;
+
+            std::ifstream file(std::filesystem::path("Saved") / (safeKey + ".txt"));
+            if (!file.is_open())
+                return fallback;
+
+            std::string value;
+            std::getline(file, value);
+            return value.empty() ? fallback : value;
+        }
+    );
+
+    preferences.set_function(
+        "SaveString",
+        [](const std::string& key, const std::string& value)
+        {
+            std::string safeKey;
+            for (char ch : key)
+            {
+                if ((ch >= 'a' && ch <= 'z') ||
+                    (ch >= 'A' && ch <= 'Z') ||
+                    (ch >= '0' && ch <= '9') ||
+                    ch == '_' || ch == '-')
+                {
+                    safeKey += ch;
+                }
+            }
+
+            if (safeKey.empty())
+                return false;
+
+            std::error_code error;
+            std::filesystem::create_directories("Saved", error);
+            if (error)
+                return false;
+
+            std::ofstream file(std::filesystem::path("Saved") / (safeKey + ".txt"), std::ios::trunc);
+            if (!file.is_open())
+                return false;
+
+            file << value;
+            return file.good();
+        }
+    );
+
+    (*m_Environment)["Preferences"] = preferences;
 
     /*
      * Time
