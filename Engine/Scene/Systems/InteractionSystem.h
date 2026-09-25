@@ -8,6 +8,7 @@ class Scene;
 class Renderer;
 class Input;
 class LuaScriptSystem;
+class AudioEngine;
 
 class InteractionSystem
 {
@@ -16,7 +17,8 @@ public:
         Scene& scene,
         Renderer& renderer,
         Input& input,
-        LuaScriptSystem& luaScriptSystem
+        LuaScriptSystem& luaScriptSystem,
+        AudioEngine* audio = nullptr
     );
 
     const std::string& GetPrompt() const
