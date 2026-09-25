@@ -728,16 +728,10 @@ bool SceneSerializer::Load(
 
     if (line.rfind("Environment ", 0) == 0)
     {
-        std::istringstream environmentLine(line);
-        std::string token;
-        int aa=1, shadows=1, fog=0, bloom=1;
-        SceneEnvironment& environment=m_Scene.GetEnvironment();
-        environmentLine >> token >> aa >> environment.antiAliasingSamples >> shadows >> fog >> bloom
-            >> environment.viewDistance >> environment.exposure >> environment.fogDensity
-            >> environment.bloomStrength >> environment.shadowQuality >> environment.shadowDistance;
-        if(environmentLine.fail()) return false;
-        environment.antiAliasing=aa!=0; environment.shadows=shadows!=0;
-        environment.fog=fog!=0; environment.bloom=bloom!=0;
+        // Legacy scene files may contain per-scene rendering settings. Ignore
+        // them now; project settings are the single source of truth.
+        if (!ReadLine(file, line, "entity count", 0)) return false;
+    }
         if (!ReadLine(file,line,"entity count",0)) return false;
     }
 
