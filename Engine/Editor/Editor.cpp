@@ -247,10 +247,71 @@ void Editor::Render(
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Settings"))
+        {
+            ImGui::TextDisabled("Rendering");
+            RenderSettings settings = renderer.GetRenderSettings();
+            bool changed = false;
+
+            changed |= ImGui::Checkbox("Anti-Aliasing", &settings.antiAliasing);
+            if (settings.antiAliasing)
+            {
+                const char* sampleNames[] = { "2x", "4x", "8x" };
+                int sampleIndex = settings.antiAliasingSamples <= 2 ? 0 : settings.antiAliasingSamples <= 4 ? 1 : 2;
+                if (ImGui::Combo("MSAA", &sampleIndex, sampleNames, 3))
+                {
+                    settings.antiAliasingSamples = sampleIndex == 0 ? 2 : sampleIndex == 1 ? 4 : 8;
+                    changed = true;
+                }
+            }
+
+            changed |= ImGui::Checkbox("Directional Shadows", &settings.shadows);
+            if (settings.shadows)
+            {
+                const char* qualities[] = { "Low (1024)", "Medium (2048)", "High (4096)" };
+                changed |= ImGui::Combo("Shadow Quality", &settings.shadowQuality, qualities, 3);
+                changed |= ImGui::SliderFloat("Shadow Distance", &settings.shadowDistance, 10.0f, 500.0f, "%.0f");
+            }
+
+            changed |= ImGui::Checkbox("Bloom", &settings.bloom);
+            if (settings.bloom)
+                changed |= ImGui::SliderFloat("Bloom Strength", &settings.bloomStrength, 0.0f, 2.0f);
+
+            changed |= ImGui::SliderFloat("Exposure", &settings.exposure, 0.1f, 4.0f);
+            changed |= ImGui::Checkbox("Fog", &settings.fog);
+            if (settings.fog)
+                changed |= ImGui::SliderFloat("Fog Density", &settings.fogDensity, 0.0f, 0.05f, "%.4f");
+
+            changed |= ImGui::SliderFloat("View Distance", &settings.viewDistance, 25.0f, 5000.0f, "%.0f");
+
+            if (changed)
+                renderer.SetRenderSettings(settings);
+
+            ImGui::EndMenu();
+        }
+
+        // Keep the primary runtime control permanently visible beside the menus.
+        ImGui::Separator();
+        if (!m_Playing)
+        {
+            if (ImGui::Button("PLAY"))
+            {
+                m_Playing = true;
+                m_SelectedEntity = Entity();
+                m_NameEditEntityID = 0;
+                m_NameEditBuffer[0] = '\0';
+                Logger::Info("Play mode started.");
+            }
+        }
+        else if (ImGui::Button("STOP"))
+        {
+            StopPlaying();
+        }
+
         ImGui::EndMainMenuBar();
     }
 
-    // Use the full main viewport for docking. Runtime transport belongs to
+    // Use the full main viewport for docking.
     // the Scene viewport, not to a second application-wide toolbar.
     ImGui::DockSpaceOverViewport();
 
