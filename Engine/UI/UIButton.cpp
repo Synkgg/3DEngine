@@ -41,3 +41,11 @@ Vec4 UIButton::GetCurrentColor() const
     if (m_Hovered) return m_HoveredColor;
     return m_NormalColor;
 }
+
+Vec4 UIButton::GetCurrentTextColor() const
+{
+    if (!IsEnabled()) return m_DisabledTextColor;
+    if (m_Pressed) return m_PressedTextColor;
+    if (m_Hovered) return m_HoveredTextColor;
+    return m_NormalTextColor;
+}
