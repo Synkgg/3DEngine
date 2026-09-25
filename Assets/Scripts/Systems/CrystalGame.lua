@@ -1,4 +1,4 @@
-CrystalGame = {
+local CrystalGame = {
     collected = 0,
     required = 3,
     won = false,
@@ -22,3 +22,5 @@ function CrystalGame.TryActivateAltar()
     CrystalGame.uiDirty = true
     return "won"
 end
+
+return CrystalGame
