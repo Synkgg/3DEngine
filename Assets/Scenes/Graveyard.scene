@@ -1,6 +1,6 @@
 MyEngineScene
-Environment 1 4 1 1 1 180 0.62 0.018 0.18 3 75
-Entities 129
+Environment 1 4 1 1 1 240 1.05 0.008 0.26 3 105
+Entities 138
 Entity 1
 Name GameController
 Position 0 0 0
@@ -51,7 +51,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.95 0.58 0.24 0 -1 0 2.8 1 10 23 35 0
+Light 1 1.0 0.64 0.34 0 -1 0 3.6 1 13 23 35 0
 Collider 0
 Scripts 0
 Entity 4
@@ -412,7 +412,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.035 0.055 0.095 0 -1 0 0.12 0 80 23 35 0
+Light 1 0.12 0.20 0.27 -0.35 -1 -0.25 0.42 0 120 23 35 0
 Collider 0
 Scripts 0
 Entity 25
@@ -429,7 +429,7 @@ Material 1 0.15 0.75 0.4 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.31 0.09 0 -1 0 1.1 1 8 23 35 0
+Light 1 0.95 0.50 0.18 0 -1 0 2.1 1 12 23 35 0
 Collider 0
 Scripts 0
 Entity 26
@@ -446,7 +446,7 @@ Material 1 0.15 0.75 0.4 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.58 0.23 0.06 0 -1 0 .8 1 7 23 35 0
+Light 1 0.90 0.42 0.13 0 -1 0 1.65 1 11 23 35 0
 Collider 0
 Scripts 0
 Entity 27
@@ -463,7 +463,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.04 0.12 0.16 0 -1 0 .55 1 9 23 35 0
+Light 1 0.10 0.34 0.40 0 -1 0 1.15 1 14 23 35 0
 Collider 0
 Scripts 0
 Entity 28
@@ -480,7 +480,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.42 0.035 0.025 0 -1 0 .42 1 4 23 35 0
+Light 1 0.62 0.055 0.035 0 -1 0 .72 1 6 23 35 0
 Collider 0
 Scripts 0
 Entity 29
@@ -497,7 +497,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.42 0.035 0.025 0 -1 0 .42 1 4 23 35 0
+Light 1 0.62 0.055 0.035 0 -1 0 .72 1 6 23 35 0
 Collider 0
 Scripts 0
 Entity 30
@@ -514,7 +514,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.42 0.035 0.025 0 -1 0 .42 1 4 23 35 0
+Light 1 0.62 0.055 0.035 0 -1 0 .72 1 6 23 35 0
 Collider 0
 Scripts 0
 Entity 31
@@ -2198,6 +2198,159 @@ Interactable 0
 Player 0
 CharacterController 0
 Light 0
+Collider 0
+Scripts 0
+Entity 130
+Name PathWarmSouth
+Position -3 2.5 10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.9 0.45 0.16 0 -1 0 1.25 1 9 23 35 0
+Collider 0
+Scripts 0
+Entity 131
+Name PathWarmNorth
+Position 3 2.5 1
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.9 0.43 0.14 0 -1 0 1.15 1 9 23 35 0
+Collider 0
+Scripts 0
+Entity 132
+Name WestFill
+Position -10 3 6
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.12 0.28 0.3 0 -1 0 0.75 1 11 23 35 0
+Collider 0
+Scripts 0
+Entity 133
+Name EastFill
+Position 10 3 6
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.12 0.28 0.3 0 -1 0 0.75 1 11 23 35 0
+Collider 0
+Scripts 0
+Entity 134
+Name WestCryptFill
+Position -13 3 -12
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.16 0.34 0.36 0 -1 0 0.95 1 10 23 35 0
+Collider 0
+Scripts 0
+Entity 135
+Name AngelFill
+Position 12 3 -10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.15 0.31 0.35 0 -1 0 0.9 1 10 23 35 0
+Collider 0
+Scripts 0
+Entity 136
+Name MausoleumWarmL
+Position -4 2.8 -18
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.88 0.35 0.1 0 -1 0 1.2 1 9 23 35 0
+Collider 0
+Scripts 0
+Entity 137
+Name MausoleumWarmR
+Position 4 2.8 -18
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.88 0.35 0.1 0 -1 0 1.2 1 9 23 35 0
+Collider 0
+Scripts 0
+Entity 138
+Name RearBlueFill
+Position 0 5 -23
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.08 0.26 0.36 0 -1 0 0.85 1 14 23 35 0
 Collider 0
 Scripts 0
 HierarchyFolders 0
