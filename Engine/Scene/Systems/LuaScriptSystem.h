@@ -15,6 +15,7 @@ class Input;
 class Renderer;
 class UICanvas;
 class Runtime;
+class ProjectSettings;
 
 class LuaScriptSystem
 {
@@ -24,7 +25,8 @@ public:
         Input& input,
         Renderer& renderer,
         UICanvas& uiCanvas,
-        Runtime* runtime = nullptr
+        Runtime* runtime = nullptr,
+        ProjectSettings* projectSettings = nullptr
     );
 
     void Update(
