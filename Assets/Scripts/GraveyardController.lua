@@ -1,30 +1,80 @@
-local Game=require("Assets.Scripts.Systems.GraveyardGame")
 local inventoryOpen=false
 local paused=false
+local seals=0
+local required=3
+local gateOpen=false
+
 local function Refresh()
- UI.SetText("RelicCount",string.format("WARD SEALS  %d / %d",Game.seals,Game.required))
- if Game.gateOpen then UI.SetText("Objective","THE MAUSOLEUM WARD IS BROKEN") UI.SetVisible("WinScreen",true) Scene.SetPaused(true) Input.SetCursorVisible(true)
- elseif Game.seals>=Game.required then UI.SetText("Objective","RETURN TO THE MAUSOLEUM GATE")
- else UI.SetText("Objective","RECOVER THE THREE WARD SEALS") end
- Game.uiDirty=false
+ UI.SetText("RelicCount",string.format("%02d / %02d  WARD SEALS",seals,required))
+ UI.SetText("JournalProgress",string.format("RECOVERED   %d OF %d",seals,required))
+ if gateOpen then
+  UI.SetText("Objective","DESCEND INTO THE MAUSOLEUM")
+  UI.SetText("ObjectiveDetail","The ward is broken. The cemetery releases you.")
+  UI.SetVisible("WinScreen",true)
+  Input.SetCursorVisible(true)
+ elseif seals>=required then
+  UI.SetText("Objective","RETURN TO THE MAUSOLEUM")
+  UI.SetText("ObjectiveDetail","All seals recovered. Break the iron ward.")
+ else
+  UI.SetText("Objective","FIND THE MISSING WARD SEALS")
+  UI.SetText("ObjectiveDetail",string.format("%d remain somewhere among the graves.",required-seals))
+ end
 end
+
 function OnCreate()
- Game.Reset() UI.Load("Assets/UI/GraveyardHUD.ui") UI.SetVisible("Inventory",false) UI.SetVisible("WinScreen",false) UI.SetVisible("PauseMenu",false)
- Scene.SetPaused(false) Input.SetCursorVisible(false) Refresh()
+ UI.Load("Assets/UI/GraveyardHUD.ui")
+ UI.SetVisible("Inventory",false)
+ UI.SetVisible("WinScreen",false)
+ UI.SetVisible("PauseMenu",false)
+ Scene.SetPaused(false)
+ Input.SetCursorVisible(false)
+ Refresh()
 end
+
 function OnUpdate(deltaTime)
  local prompt=Scene.GetInteractionPrompt()
- local showPrompt=prompt~=nil and prompt~="" and not paused
- UI.SetVisible("InteractPrompt",showPrompt) if showPrompt then UI.SetText("InteractText",prompt) end
- if Game.uiDirty then Refresh() end
- if Input.IsKeyPressed("Escape") and not Game.gateOpen then paused=not paused Scene.SetPaused(paused) UI.SetVisible("PauseMenu",paused) Input.SetCursorVisible(paused) end
+ local showPrompt=prompt~=nil and prompt~="" and not paused and not gateOpen
+ UI.SetVisible("InteractPrompt",showPrompt)
+ if showPrompt then UI.SetText("InteractText",prompt) end
+
+ if Input.IsKeyPressed("E") and showPrompt then
+  if prompt=="Recover ward seal" and seals<required then
+   seals=seals+1
+   Refresh()
+  elseif prompt=="Break the mausoleum ward" then
+   if seals>=required then
+    gateOpen=true
+    Refresh()
+   else
+    UI.SetText("Objective","THE IRON WARD HOLDS")
+    UI.SetText("ObjectiveDetail",string.format("Recover %d more seal%s.",required-seals,(required-seals)==1 and "" or "s"))
+   end
+  end
+ end
+
+ if Input.IsKeyPressed("Escape") and not gateOpen then
+  paused=not paused
+  Scene.SetPaused(paused)
+  UI.SetVisible("PauseMenu",paused)
+  Input.SetCursorVisible(paused)
+ end
+
  if paused then
-  if UI.WasClicked("ResumeButton") then paused=false Scene.SetPaused(false) UI.SetVisible("PauseMenu",false) Input.SetCursorVisible(false)
-  elseif UI.WasClicked("PauseMainMenuButton") then Scene.SetPaused(false) Scene.Load("Assets/Scenes/MainMenu.scene") end
+  if UI.WasClicked("ResumeButton") then
+   paused=false Scene.SetPaused(false) UI.SetVisible("PauseMenu",false) Input.SetCursorVisible(false)
+  elseif UI.WasClicked("PauseMainMenuButton") then
+   Scene.SetPaused(false) Scene.Load("Assets/Scenes/MainMenu.scene")
+  end
   return
  end
- if Input.IsKeyPressed("Tab") then inventoryOpen=not inventoryOpen UI.SetVisible("Inventory",inventoryOpen) end
- if Game.gateOpen then
+
+ if Input.IsKeyPressed("Tab") and not gateOpen then
+  inventoryOpen=not inventoryOpen
+  UI.SetVisible("Inventory",inventoryOpen)
+  Input.SetCursorVisible(inventoryOpen)
+ end
+
+ if gateOpen then
   if UI.WasClicked("PlayAgainButton") then Scene.SetPaused(false) Scene.Load("Assets/Scenes/Graveyard.scene")
   elseif UI.WasClicked("MainMenuButton") then Scene.SetPaused(false) Scene.Load("Assets/Scenes/MainMenu.scene") end
  end
