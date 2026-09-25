@@ -13,6 +13,7 @@ class Texture2D;
 class UIText;
 class UIButton;
 class UITextInput;
+class UISlider;
 class Renderer;
 class Input;
 class AudioEngine;
@@ -158,6 +159,7 @@ private:
         const UIRect& rect
     );
     void DrawTextInput(const UITextInput& input, const UIRect& rect);
+    void DrawSlider(const UISlider& slider, const UIRect& rect);
 
     bool InitializeFontAtlas();
     void DrawFontGlyph(
@@ -228,6 +230,7 @@ private:
     void ResetButtonInput(UIWidget& widget);
     UIButton* FindTopButton(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
     UITextInput* FindTopTextInput(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
+    UISlider* FindTopSlider(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
 
     bool GetAbsolutePosition(
         const std::string& id,
@@ -293,6 +296,7 @@ private:
     bool m_MouseInteractionEnabled = false;
     UIButton* m_PressedCanvasButton = nullptr;
     UITextInput* m_FocusedTextInput = nullptr;
+    UISlider* m_DraggedSlider = nullptr;
     float m_BackspaceHeldTime = 0.0f;
     float m_DeleteHeldTime = 0.0f;
     float m_BackspaceRepeatTime = 0.0f;
