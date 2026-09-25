@@ -21,3 +21,23 @@ bool UIButton::ConsumeClick()
     m_Clicked = false;
     return clicked;
 }
+
+const Vec4& UIButton::GetNormalColor() const { return m_NormalColor; }
+void UIButton::SetNormalColor(const Vec4& color) { m_NormalColor = color; }
+
+const Vec4& UIButton::GetHoveredColor() const { return m_HoveredColor; }
+void UIButton::SetHoveredColor(const Vec4& color) { m_HoveredColor = color; }
+
+const Vec4& UIButton::GetPressedColor() const { return m_PressedColor; }
+void UIButton::SetPressedColor(const Vec4& color) { m_PressedColor = color; }
+
+const Vec4& UIButton::GetDisabledColor() const { return m_DisabledColor; }
+void UIButton::SetDisabledColor(const Vec4& color) { m_DisabledColor = color; }
+
+Vec4 UIButton::GetCurrentColor() const
+{
+    if (!IsEnabled()) return m_DisabledColor;
+    if (m_Pressed) return m_PressedColor;
+    if (m_Hovered) return m_HoveredColor;
+    return m_NormalColor;
+}
