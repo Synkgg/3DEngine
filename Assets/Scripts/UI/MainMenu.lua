@@ -63,7 +63,9 @@ function OnUpdate(deltaTime)
             local key = tostring(i)
             if Input.IsKeyPressed(key) and #joinAddress < 15 then joinAddress = joinAddress .. key end
         end
-        if Input.IsKeyPressed("Period") and #joinAddress < 15 then joinAddress = joinAddress .. "." end
+        -- SDL reports the main keyboard '.' key as the literal "." name.
+        -- Keep "Period" as a fallback for layouts/backends that expose that name.
+        if (Input.IsKeyPressed(".") or Input.IsKeyPressed("Period")) and #joinAddress < 15 then joinAddress = joinAddress .. "." end
         if Input.IsKeyPressed("Backspace") and #joinAddress > 0 then joinAddress = string.sub(joinAddress, 1, #joinAddress - 1) end
         if Input.IsKeyPressed("Return") or Input.IsKeyPressed("Escape") then editingAddress = false end
         UI.SetText("AddressText", "IP: " .. joinAddress .. (editingAddress and " _" or ""))
