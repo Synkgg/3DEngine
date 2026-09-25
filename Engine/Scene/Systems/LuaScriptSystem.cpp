@@ -18,7 +18,8 @@ void LuaScriptSystem::Start(
     Input& input,
     Renderer& renderer,
     UICanvas& uiCanvas,
-    Runtime* runtime)
+    Runtime* runtime,
+    ProjectSettings* projectSettings)
 {
     m_Instances.clear();
     m_Scene = &scene;
@@ -104,7 +105,8 @@ void LuaScriptSystem::Start(
                 renderer,
                 uiCanvas,
                 *m_Lua,
-                runtime
+                runtime,
+                projectSettings
             );
 
             const auto propertyIt = scriptComponent->properties.find(scriptPath);
