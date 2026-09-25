@@ -23,6 +23,8 @@ public:
     void SetAspectRatio(float aspectRatio);
     void SetMoveSpeed(float speed);
     void SetFarPlane(float farPlane);
+    void SetFovDegrees(float degrees);
+    float GetFovDegrees() const;
     float GetFarPlane() const;
 
     void Rotate(float yawDelta, float pitchDelta);
