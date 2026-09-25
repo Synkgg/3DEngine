@@ -220,7 +220,8 @@ private:
         const TextElement& element
     );
 
-    void UpdateButtonInput(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse, bool pressed, bool released);
+    void ResetButtonInput(UIWidget& widget);
+    UIButton* FindTopButton(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
 
     bool GetAbsolutePosition(
         const std::string& id,
@@ -284,4 +285,5 @@ private:
     > m_TextElements;
 
     bool m_MouseInteractionEnabled = false;
+    UIButton* m_PressedCanvasButton = nullptr;
 };
