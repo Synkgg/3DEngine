@@ -82,7 +82,7 @@ void Runtime::Update(
 
 
     m_Network.Update();
-    UpdateNetworkPlayers(scene);
+    UpdateNetworkPlayers(scene, deltaTime);
 
     m_LuaScriptSystem.Update(
         scene,
@@ -275,7 +275,7 @@ bool Runtime::IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) cons
     return false;
 }
 
-void Runtime::UpdateNetworkPlayers(Scene& scene)
+void Runtime::UpdateNetworkPlayers(Scene& scene, float deltaTime)
 {
     if (!m_Network.IsConnected() || !m_Network.IsHandshakeComplete()) return;
 
@@ -304,8 +304,12 @@ void Runtime::UpdateNetworkPlayers(Scene& scene)
     TransformComponent* localTransform=localPlayer.IsValid()
         ? scene.GetComponent<TransformComponent>(localPlayer) : nullptr;
 
-    if (localTransform)
+    // Replicate movement at a fixed network rate instead of once per rendered
+    // frame. This prevents high-FPS clients from flooding the UDP receive loop.
+    m_NetworkTransformSendTimer += std::max(0.0f, deltaTime);
+    if (localTransform && m_NetworkTransformSendTimer >= (1.0f / 30.0f))
     {
+        m_NetworkTransformSendTimer = 0.0f;
         NetworkTransformState state;
         state.x=localTransform->transform.position.x;
         state.y=localTransform->transform.position.y;
