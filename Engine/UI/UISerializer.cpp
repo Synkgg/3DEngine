@@ -15,6 +15,35 @@
 
 namespace
 {
+    std::string EncodeText(std::string value)
+    {
+        std::string result;
+        result.reserve(value.size());
+        for (char ch : value)
+        {
+            if (ch == '\n') result += "\\n";
+            else if (ch == '\r') result += "\\r";
+            else result += ch;
+        }
+        return result;
+    }
+
+    std::string DecodeText(const std::string& value)
+    {
+        std::string result;
+        result.reserve(value.size());
+        for (std::size_t i = 0; i < value.size(); ++i)
+        {
+            if (value[i] == '\\' && i + 1 < value.size())
+            {
+                if (value[i + 1] == 'n') { result += '\n'; ++i; continue; }
+                if (value[i + 1] == 'r') { result += '\r'; ++i; continue; }
+            }
+            result += value[i];
+        }
+        return result;
+    }
+
     void WriteWidget(std::ostream& out, const UIWidget& widget, int depth)
     {
         const Vec2 pos = widget.GetPosition();
@@ -35,7 +64,7 @@ namespace
             << ' ' << widget.HasGradient() << ' ' << widget.GetGradientColor().x << ' ' << widget.GetGradientColor().y << ' ' << widget.GetGradientColor().z << ' ' << widget.GetGradientColor().w << ' ' << static_cast<int>(widget.GetGradientDirection());
 
         if (const UIText* text = dynamic_cast<const UIText*>(&widget))
-            out << ' ' << std::quoted(text->GetText()) << ' ' << text->GetFontSize();
+            out << ' ' << std::quoted(EncodeText(text->GetText())) << ' ' << text->GetFontSize();
         else if (const UITextInput* input = dynamic_cast<const UITextInput*>(&widget))
             out << ' ' << std::quoted(input->GetText()) << ' ' << std::quoted(input->GetPlaceholder())
                 << ' ' << input->GetFontSize() << ' ' << input->GetMaxLength() << ' ' << input->IsPassword();
@@ -158,7 +187,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             std::string value;
             float fontSize = 24.0f;
             row >> std::quoted(value) >> fontSize;
-            text->SetText(value);
+            text->SetText(DecodeText(value));
             text->SetFontSize(fontSize);
         }
         else if (UITextInput* input = dynamic_cast<UITextInput*>(widget.get()))
