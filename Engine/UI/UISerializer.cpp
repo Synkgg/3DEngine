@@ -30,7 +30,8 @@ namespace
             << pivot.x << ' ' << pivot.y << ' '
             << color.x << ' ' << color.y << ' ' << color.z << ' ' << color.w << ' '
             << widget.IsVisible() << ' ' << widget.IsEnabled() << ' '
-            << widget.IsHitTestVisible() << ' ' << widget.GetZOrder();
+            << widget.IsHitTestVisible() << ' ' << widget.GetZOrder()
+            << ' ' << widget.HasGradient() << ' ' << widget.GetGradientColor().x << ' ' << widget.GetGradientColor().y << ' ' << widget.GetGradientColor().z << ' ' << widget.GetGradientColor().w << ' ' << static_cast<int>(widget.GetGradientDirection());
 
         if (const UIText* text = dynamic_cast<const UIText*>(&widget))
             out << ' ' << std::quoted(text->GetText()) << ' ' << text->GetFontSize();
@@ -69,7 +70,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 2\n";
+    out << "VORTEK_UI 3\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -88,7 +89,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     std::string magic;
     int version = 0;
     in >> magic >> version;
-    if (magic != "VORTEK_UI" || version < 1 || version > 2) return false;
+    if (magic != "VORTEK_UI" || version < 1 || version > 3) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -113,6 +114,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         Vec4 color;
         bool visible = true, enabled = true, hitTest = true;
         int zOrder = 0;
+        bool gradient=false; Vec4 gradientColor; int gradientDirection=0;
 
         row >> depth >> typeValue >> std::quoted(name)
             >> pos.x >> pos.y >> size.x >> size.y
@@ -120,6 +122,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             >> pivot.x >> pivot.y
             >> color.x >> color.y >> color.z >> color.w
             >> visible >> enabled >> hitTest >> zOrder;
+        if(version>=3) row >> gradient >> gradientColor.x >> gradientColor.y >> gradientColor.z >> gradientColor.w >> gradientDirection;
 
         if (!row || typeValue < 0 || typeValue > static_cast<int>(UIWidgetType::Button))
             return false;
@@ -138,6 +141,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         widget->SetEnabled(enabled);
         widget->SetHitTestVisible(hitTest);
         widget->SetZOrder(zOrder);
+        if(version>=3){widget->SetGradientEnabled(gradient);widget->SetGradientColor(gradientColor);widget->SetGradientDirection(static_cast<UIGradientDirection>(gradientDirection));}
 
         if (UIText* text = dynamic_cast<UIText*>(widget.get()))
         {
