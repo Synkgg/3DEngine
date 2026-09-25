@@ -62,6 +62,8 @@ public:
     Entity DuplicateEntity(Entity source, bool duplicateChildren = true);
     Entity CloneEntityTo(Entity source, Scene& destination, bool cloneChildren = true) const;
     void DestroyEntityHierarchy(Entity root);
+    void QueueDestroyEntityHierarchy(Entity root);
+    std::vector<Entity> ConsumePendingDestroyEntities();
 
     SceneEnvironment& GetEnvironment() { return m_Environment; }
     const SceneEnvironment& GetEnvironment() const { return m_Environment; }
@@ -218,6 +220,7 @@ private:
 
     std::unordered_map<std::uint32_t, std::uint32_t> m_Parents;
     std::unordered_map<std::uint32_t, std::string> m_PrefabSources;
+    std::vector<std::uint32_t> m_PendingDestroyEntities;
 
     std::unordered_map<
         std::type_index,
