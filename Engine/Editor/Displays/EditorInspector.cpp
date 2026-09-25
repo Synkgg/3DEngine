@@ -16,6 +16,7 @@
 #include "../../SCene/Components/InteractableComponent.h"
 
 #include "../../Graphics/PrimitiveType.h"
+#include "../../Graphics/Renderer.h"
 #include "../../Core/Logger.h"
 
 #include <cmath>
@@ -97,6 +98,7 @@ namespace
 }
 
 void Editor::RenderInspector(
+    Renderer& renderer,
     Scene& scene)
 {
     ImGui::Begin("Details");
@@ -304,6 +306,47 @@ void Editor::RenderInspector(
             }
 
             ImGui::Separator();
+            ImGui::TextDisabled("External Model");
+
+            if (mesh->modelPath.empty())
+                ImGui::TextWrapped("Using primitive geometry");
+            else
+                ImGui::TextWrapped("%s", mesh->modelPath.c_str());
+
+            ImGui::Button(
+                mesh->modelPath.empty() ? "Drop .obj mesh here" : "Drop another .obj to replace",
+                ImVec2(-1.0f, 34.0f));
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_FILE"))
+                {
+                    const char* assetPath = static_cast<const char*>(payload->Data);
+                    std::filesystem::path path(assetPath);
+                    std::string extension = path.extension().string();
+                    std::transform(extension.begin(), extension.end(), extension.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                    if (extension == ".obj")
+                    {
+                        mesh->modelPath = assetPath;
+                        mesh->primitive = PrimitiveType::None;
+                        Logger::Info(std::string("Assigned model: ") + mesh->modelPath);
+                    }
+                    else
+                        Logger::Warning("Dropped asset is not a supported OBJ model.");
+                }
+                ImGui::EndDragDropTarget();
+            }
+
+            if (!mesh->modelPath.empty())
+            {
+                if (ImGui::Button("Clear Model"))
+                    mesh->modelPath.clear();
+                ImGui::SameLine();
+                ImGui::TextDisabled("Cached automatically by renderer");
+            }
+
+            ImGui::Separator();
 
             ImGui::Text("Mesh Offset");
 
@@ -315,8 +358,19 @@ void Editor::RenderInspector(
 
             if (ImGui::Button("Reset Offset"))
             {
-                mesh->offset =
-                    Vec3(0.0f, 0.0f, 0.0f);
+                mesh->offset = Vec3(0.0f, 0.0f, 0.0f);
+            }
+
+            float meshRotationDegrees[3] = {
+                mesh->rotation.x * RadiansToDegrees,
+                mesh->rotation.y * RadiansToDegrees,
+                mesh->rotation.z * RadiansToDegrees
+            };
+            if (ImGui::DragFloat3("Mesh Rotation", meshRotationDegrees, 1.0f))
+            {
+                mesh->rotation.x = meshRotationDegrees[0] * DegreesToRadians;
+                mesh->rotation.y = meshRotationDegrees[1] * DegreesToRadians;
+                mesh->rotation.z = meshRotationDegrees[2] * DegreesToRadians;
             }
 
             ImGui::Spacing();
@@ -987,6 +1041,41 @@ void Editor::RenderInspector(
                 );
             }
         }
+    }
+
+    if (ImGui::CollapsingHeader("Rendering", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        RenderSettings settings = renderer.GetRenderSettings();
+        bool changed = false;
+        changed |= ImGui::Checkbox("Anti-Aliasing", &settings.antiAliasing);
+        if (settings.antiAliasing)
+        {
+            const char* sampleNames[] = { "2x", "4x", "8x" };
+            int sampleIndex = settings.antiAliasingSamples <= 2 ? 0 : settings.antiAliasingSamples <= 4 ? 1 : 2;
+            if (ImGui::Combo("MSAA", &sampleIndex, sampleNames, 3))
+            {
+                settings.antiAliasingSamples = sampleIndex == 0 ? 2 : sampleIndex == 1 ? 4 : 8;
+                changed = true;
+            }
+        }
+        changed |= ImGui::Checkbox("Directional Shadows", &settings.shadows);
+        if (settings.shadows)
+        {
+            const char* qualities[] = { "Low (1024)", "Medium (2048)", "High (4096)" };
+            changed |= ImGui::Combo("Shadow Quality", &settings.shadowQuality, qualities, 3);
+            changed |= ImGui::DragFloat("Shadow Distance", &settings.shadowDistance, 1.0f, 10.0f, 500.0f, "%.0f");
+        }
+        changed |= ImGui::Checkbox("Bloom", &settings.bloom);
+        if (settings.bloom)
+            changed |= ImGui::SliderFloat("Bloom Strength", &settings.bloomStrength, 0.0f, 2.0f);
+        changed |= ImGui::SliderFloat("Exposure", &settings.exposure, 0.1f, 4.0f);
+        changed |= ImGui::Checkbox("Fog", &settings.fog);
+        if (settings.fog)
+            changed |= ImGui::DragFloat("Fog Density", &settings.fogDensity, 0.0005f, 0.0f, 0.05f, "%.4f");
+        changed |= ImGui::DragFloat("View Distance", &settings.viewDistance, 10.0f, 25.0f, 5000.0f, "%.0f");
+
+        if (changed)
+            renderer.SetRenderSettings(settings);
     }
 
     /*
