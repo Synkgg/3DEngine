@@ -1,3 +1,5 @@
+local CrystalGame = require("Assets.Scripts.Systems.CrystalGame")
+
 local collected = false
 
 function OnCreate()
