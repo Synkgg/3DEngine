@@ -1,3 +1,5 @@
+local CrystalGame = require("Assets.Scripts.Systems.CrystalGame")
+
 function OnCreate()
     Interactable.SetPrompt("Unlock cemetery gate")
 end
