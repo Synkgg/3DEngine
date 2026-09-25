@@ -142,25 +142,18 @@ void Editor::Render(
         m_StyleInitialized = true;
     }
 
-    // The scene owns environment settings; keep the editor preview renderer in sync.
-    {
-        const SceneEnvironment& e=scene.GetEnvironment();
-        const RenderSettings& current=renderer.GetRenderSettings();
-        if(current.antiAliasing!=e.antiAliasing || current.antiAliasingSamples!=e.antiAliasingSamples ||
-           current.shadows!=e.shadows || current.fog!=e.fog || current.bloom!=e.bloom ||
-           current.viewDistance!=e.viewDistance || current.exposure!=e.exposure ||
-           current.fogDensity!=e.fogDensity || current.bloomStrength!=e.bloomStrength ||
-           current.shadowQuality!=e.shadowQuality || current.shadowDistance!=e.shadowDistance)
-        {
-            RenderSettings settings=current;
-            settings.antiAliasing=e.antiAliasing; settings.antiAliasingSamples=e.antiAliasingSamples;
-            settings.shadows=e.shadows; settings.fog=e.fog; settings.bloom=e.bloom;
-            settings.viewDistance=e.viewDistance; settings.exposure=e.exposure;
-            settings.fogDensity=e.fogDensity; settings.bloomStrength=e.bloomStrength;
-            settings.shadowQuality=e.shadowQuality; settings.shadowDistance=e.shadowDistance;
-            renderer.SetRenderSettings(settings);
-        }
-    }
+    // Rendering settings belong to the project, not individual scenes.
+    m_ProjectSettings.EnsureLoaded();
+    const RenderSettings& projectSettings = m_ProjectSettings.GetRenderSettings();
+    const RenderSettings& currentSettings = renderer.GetRenderSettings();
+    if (currentSettings.antiAliasing != projectSettings.antiAliasing ||
+        currentSettings.antiAliasingSamples != projectSettings.antiAliasingSamples ||
+        currentSettings.shadows != projectSettings.shadows || currentSettings.fog != projectSettings.fog ||
+        currentSettings.bloom != projectSettings.bloom || currentSettings.viewDistance != projectSettings.viewDistance ||
+        currentSettings.exposure != projectSettings.exposure || currentSettings.fogDensity != projectSettings.fogDensity ||
+        currentSettings.bloomStrength != projectSettings.bloomStrength || currentSettings.shadowQuality != projectSettings.shadowQuality ||
+        currentSettings.shadowDistance != projectSettings.shadowDistance)
+        renderer.SetRenderSettings(projectSettings);
 
     if (ImGui::BeginMainMenuBar())
     {
@@ -269,70 +262,18 @@ void Editor::Render(
 
         if (ImGui::BeginMenu("Settings"))
         {
-            ImGui::TextDisabled("Rendering");
-            const SceneEnvironment& storedEnvironment = scene.GetEnvironment();
-            RenderSettings settings;
-            settings.antiAliasing=storedEnvironment.antiAliasing;
-            settings.antiAliasingSamples=storedEnvironment.antiAliasingSamples;
-            settings.shadows=storedEnvironment.shadows;
-            settings.fog=storedEnvironment.fog;
-            settings.bloom=storedEnvironment.bloom;
-            settings.viewDistance=storedEnvironment.viewDistance;
-            settings.exposure=storedEnvironment.exposure;
-            settings.fogDensity=storedEnvironment.fogDensity;
-            settings.bloomStrength=storedEnvironment.bloomStrength;
-            settings.shadowQuality=storedEnvironment.shadowQuality;
-            settings.shadowDistance=storedEnvironment.shadowDistance;
+            ImGui::TextDisabled("Project Rendering");
+            RenderSettings settings = m_ProjectSettings.GetRenderSettings();
             bool changed = false;
-
             changed |= ImGui::Checkbox("Anti-Aliasing", &settings.antiAliasing);
-            if (settings.antiAliasing)
-            {
-                const char* sampleNames[] = { "2x", "4x", "8x" };
-                int sampleIndex = settings.antiAliasingSamples <= 2 ? 0 : settings.antiAliasingSamples <= 4 ? 1 : 2;
-                if (ImGui::Combo("MSAA", &sampleIndex, sampleNames, 3))
-                {
-                    settings.antiAliasingSamples = sampleIndex == 0 ? 2 : sampleIndex == 1 ? 4 : 8;
-                    changed = true;
-                }
-            }
-
+            if (settings.antiAliasing) { const char* names[]={"2x","4x","8x"}; int i=settings.antiAliasingSamples<=2?0:settings.antiAliasingSamples<=4?1:2; if(ImGui::Combo("MSAA",&i,names,3)){settings.antiAliasingSamples=i==0?2:i==1?4:8;changed=true;} }
             changed |= ImGui::Checkbox("Directional Shadows", &settings.shadows);
-            if (settings.shadows)
-            {
-                const char* qualities[] = { "Low (1024)", "Medium (2048)", "High (4096)" };
-                changed |= ImGui::Combo("Shadow Quality", &settings.shadowQuality, qualities, 3);
-                changed |= ImGui::SliderFloat("Shadow Distance", &settings.shadowDistance, 10.0f, 500.0f, "%.0f");
-            }
-
-            changed |= ImGui::Checkbox("Bloom", &settings.bloom);
-            if (settings.bloom)
-                changed |= ImGui::SliderFloat("Bloom Strength", &settings.bloomStrength, 0.0f, 2.0f);
-
-            changed |= ImGui::SliderFloat("Exposure", &settings.exposure, 0.1f, 4.0f);
-            changed |= ImGui::Checkbox("Fog", &settings.fog);
-            if (settings.fog)
-                changed |= ImGui::SliderFloat("Fog Density", &settings.fogDensity, 0.0f, 0.05f, "%.4f");
-
-            changed |= ImGui::SliderFloat("View Distance", &settings.viewDistance, 25.0f, 5000.0f, "%.0f");
-
-            if (changed)
-            {
-                renderer.SetRenderSettings(settings);
-                SceneEnvironment& environment=scene.GetEnvironment();
-                environment.antiAliasing=settings.antiAliasing;
-                environment.antiAliasingSamples=settings.antiAliasingSamples;
-                environment.shadows=settings.shadows;
-                environment.fog=settings.fog;
-                environment.bloom=settings.bloom;
-                environment.viewDistance=settings.viewDistance;
-                environment.exposure=settings.exposure;
-                environment.fogDensity=settings.fogDensity;
-                environment.bloomStrength=settings.bloomStrength;
-                environment.shadowQuality=settings.shadowQuality;
-                environment.shadowDistance=settings.shadowDistance;
-            }
-
+            if(settings.shadows){const char* q[]={ "Low (1024)","Medium (2048)","High (4096)" };changed|=ImGui::Combo("Shadow Quality",&settings.shadowQuality,q,3);changed|=ImGui::SliderFloat("Shadow Distance",&settings.shadowDistance,10.0f,500.0f,"%.0f");}
+            changed |= ImGui::Checkbox("Bloom",&settings.bloom); if(settings.bloom) changed|=ImGui::SliderFloat("Bloom Strength",&settings.bloomStrength,0.0f,2.0f);
+            changed |= ImGui::SliderFloat("Exposure",&settings.exposure,0.1f,4.0f);
+            changed |= ImGui::Checkbox("Fog",&settings.fog); if(settings.fog) changed|=ImGui::SliderFloat("Fog Density",&settings.fogDensity,0.0f,0.05f,"%.4f");
+            changed |= ImGui::SliderFloat("View Distance",&settings.viewDistance,25.0f,5000.0f,"%.0f");
+            if(changed){ m_ProjectSettings.SetRenderSettings(settings); renderer.SetRenderSettings(settings); if(!m_ProjectSettings.Save()) Logger::Error("Failed to save project rendering settings."); }
             ImGui::EndMenu();
         }
 
