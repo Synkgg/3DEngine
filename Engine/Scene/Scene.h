@@ -2,6 +2,7 @@
 
 #include "Entity.h"
 #include "ComponentStorage.h"
+#include "../Math/Transform.h"
 
 #include <cstdint>
 #include <memory>
