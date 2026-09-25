@@ -265,6 +265,24 @@ void Editor::RenderInspector(
 
     ImGui::Separator();
 
+    if (ImGui::CollapsingHeader("Relationship", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        Entity parent = scene.GetParent(m_SelectedEntity);
+        if (parent.IsValid())
+        {
+            NameComponent* parentName = scene.GetComponent<NameComponent>(parent);
+            ImGui::Text("Parent: %s", parentName ? parentName->name.c_str() : "(Unnamed)");
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Clear Parent"))
+                scene.ClearParent(m_SelectedEntity);
+        }
+        else
+        {
+            ImGui::TextDisabled("Parent: None");
+        }
+        ImGui::TextDisabled("Drag an entity onto another entity in Hierarchy to parent it.");
+    }
+
     /*
      * Transform
      */
