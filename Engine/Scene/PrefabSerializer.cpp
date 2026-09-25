@@ -77,10 +77,18 @@ bool PrefabSerializer::Revert(Scene& scene, Entity instanceRoot)
     if(source.empty()) return false;
     Entity parent=scene.GetParent(instanceRoot);
     const Transform world=scene.GetWorldTransform(instanceRoot);
-    scene.DestroyEntityHierarchy(instanceRoot);
-    s_Instances[&scene].erase(instanceRoot.GetID());
-    Entity replacement=Instantiate(scene,source,parent);
+
+    // Load first so a malformed/deleted prefab never destroys the live instance.
+    Scene prefabScene;
+    std::vector<HierarchyFolder> folders;
+    SceneSerializer serializer(prefabScene);
+    if(!serializer.Load(source,folders)) return false;
+    const std::vector<Entity> roots=prefabScene.GetRootEntities();
+    if(roots.empty()) return false;
+
+    Entity replacement=prefabScene.CloneEntityTo(roots.front(),scene,true);
     if(!replacement.IsValid()) return false;
+    if(parent.IsValid()) scene.SetParent(replacement,parent,false);
     if(TransformComponent* transform=scene.GetComponent<TransformComponent>(replacement))
     {
         if(parent.IsValid())
@@ -91,6 +99,10 @@ bool PrefabSerializer::Revert(Scene& scene, Entity instanceRoot)
         }
         else transform->transform=world;
     }
+
+    scene.DestroyEntityHierarchy(instanceRoot);
+    s_Instances[&scene].erase(instanceRoot.GetID());
+    s_Instances[&scene][replacement.GetID()]={source};
     return true;
 }
 
