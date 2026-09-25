@@ -1,6 +1,7 @@
 #include "LuaScript.h"
 
 #include "../../Core/Logger.h"
+#include "../../Core/ProjectSettings.h"
 
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
@@ -32,7 +33,8 @@ void LuaScript::Initialize(
     Renderer& renderer,
     UICanvas& uiCanvas,
     sol::state& lua,
-    Runtime* runtime)
+    Runtime* runtime,
+    ProjectSettings* projectSettings)
 {
     m_Entity = entity;
     m_Scene = &scene;
@@ -41,6 +43,7 @@ void LuaScript::Initialize(
     m_UICanvas = &uiCanvas;
     m_Lua = &lua;
     m_Runtime = runtime;
+    m_ProjectSettings = projectSettings;
 
     m_Environment =
         std::make_unique<
@@ -1239,6 +1242,13 @@ void LuaScript::BindEngineAPI()
     graphics.set_function("GetShadowQuality", [this]()
     {
         return m_Renderer ? m_Renderer->GetRenderSettings().shadowQuality : 0;
+    });
+
+    graphics.set_function("Save", [this]()
+    {
+        if (!m_Renderer || !m_ProjectSettings) return false;
+        m_ProjectSettings->SetRenderSettings(m_Renderer->GetRenderSettings());
+        return m_ProjectSettings->Save();
     });
 
     (*m_Environment)["Graphics"] = graphics;
