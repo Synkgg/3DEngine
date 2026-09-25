@@ -265,6 +265,7 @@ void Editor::Render(
     );
 
     RenderInspector(
+        renderer,
         scene
     );
 
