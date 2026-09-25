@@ -1009,6 +1009,26 @@ void UIEditor::DrawDesigner(
         ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
 
     // Pan the zoomed designer with middle mouse, or Space + left mouse.
+    // Mouse-wheel zoom, centered on the cursor.
+    if (ImGui::IsItemHovered() && !m_Panning && ImGui::GetIO().MouseWheel != 0.0f)
+    {
+        const float oldZoom = m_Zoom;
+        const float newZoom = std::clamp(oldZoom * std::pow(1.12f, ImGui::GetIO().MouseWheel), 0.20f, 5.0f);
+        if (std::abs(newZoom - oldZoom) > 0.0001f)
+        {
+            const float newScale = scale / oldZoom * newZoom;
+            const ImVec2 center(contentMin.x + availableSize.x * 0.5f, contentMin.y + availableSize.y * 0.5f);
+            const ImVec2 oldBase(center.x - canvasPixelSize.x * 0.5f, center.y - canvasPixelSize.y * 0.5f);
+            const ImVec2 uiPoint((mouse.x - oldBase.x - m_DesignerPan.x) / scale,
+                                 (mouse.y - oldBase.y - m_DesignerPan.y) / scale);
+            const ImVec2 newSize(canvasSize.x * newScale, canvasSize.y * newScale);
+            const ImVec2 newBase(center.x - newSize.x * 0.5f, center.y - newSize.y * 0.5f);
+            m_Zoom = newZoom;
+            m_DesignerPan = ImVec2(mouse.x - newBase.x - uiPoint.x * newScale,
+                                   mouse.y - newBase.y - uiPoint.y * newScale);
+        }
+    }
+
     const bool panPressed = ImGui::IsMouseClicked(ImGuiMouseButton_Middle) ||
         (ImGui::IsKeyDown(ImGuiKey_Space) && ImGui::IsMouseClicked(ImGuiMouseButton_Left));
     if (ImGui::IsItemHovered() && panPressed)
