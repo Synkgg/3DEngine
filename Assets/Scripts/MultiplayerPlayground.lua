@@ -14,6 +14,12 @@ local aaSamples = {1,2,4,8}
 local viewDistances = {220.0,500.0,1000.0}
 local aaIndex, viewIndex = 1, 1
 local pauseFog, pauseBloom = false, false
+local settingsOpen = false
+
+local function teamFor(id)
+    if id == 0 then return "WAITING" end
+    return (id % 2 == 1) and "RED" or "BLUE"
+end
 
 local function nearestIndex(values,current)
     local best,distance=1,math.abs(values[1]-current)
@@ -33,8 +39,11 @@ end
 
 local function setPaused(value)
     paused=value
+    settingsOpen=false
     Scene.SetPaused(value)
     UI.SetVisible("PauseMenu",value)
+    UI.SetVisible("PauseMain",value)
+    UI.SetVisible("PauseSettings",false)
     Input.SetCursorVisible(value)
     if value then refreshPauseSettings() end
 end
@@ -93,17 +102,29 @@ end
 
 local function updateHUD()
     local id=Network.GetLocalPlayerID()
-    local role=Network.IsHost() and "HOST" or "CLIENT"
-    UI.SetText("Status",role.."  //  PLAYERS "..tostring(Network.GetPlayerCount()).."  //  ID "..tostring(id))
-    UI.SetText("Score","RED "..tostring(redScore).."   //   "..tostring(math.max(0,math.floor(roundTime))).."   //   BLUE "..tostring(blueScore))
+    local team=teamFor(id)
+    UI.SetText("Status","YOU ARE "..team.." TEAM  //  PLAYER "..tostring(id).."  //  "..tostring(Network.GetPlayerCount()).." PLAYERS")
+    UI.SetText("Score","RED "..tostring(redScore).."   //   "..tostring(math.max(0,math.floor(roundTime))).." SEC   //   BLUE "..tostring(blueScore))
+
+    local p=playerPosition(id)
+    local nearCore=p.valid and carrierID==0 and dist2(p,orbX,orbY,orbZ)<=pickupRadius*pickupRadius
+    UI.SetVisible("InteractPrompt",nearCore or carrierID==id)
+
+    if carrierID==id then
+        UI.SetText("InteractPrompt","[ E ]  DROP CORE")
+    elseif nearCore then
+        UI.SetText("InteractPrompt","[ E ]  PICK UP CORE")
+    end
+
     if winner ~= 0 then
-        UI.SetText("Objective",(winner==1 and "RED" or "BLUE").." WINS // NEW ROUND STARTING")
+        UI.SetText("Objective",(winner==1 and "RED" or "BLUE").." TEAM WINS!")
     elseif carrierID == id then
-        UI.SetText("Objective","STEP 3: YOU HAVE THE CORE // RUN TO A GLOWING END ZONE // E DROPS")
+        local target=(team=="RED") and "BLUE GOAL" or "RED GOAL"
+        UI.SetText("Objective","YOU HAVE THE CORE -> RUN INTO THE "..target.." TO SCORE")
     elseif carrierID ~= 0 then
-        UI.SetText("Objective","CORE TAKEN BY PLAYER "..tostring(carrierID).." // CHASE THEM OR WAIT FOR A DROP")
+        UI.SetText("Objective","PLAYER "..tostring(carrierID).." HAS THE CORE // STOP THEM")
     else
-        UI.SetText("Objective","STEP 1: FIND GOLD CORE AT CENTER // STEP 2: GET CLOSE + PRESS E")
+        UI.SetText("Objective","GO TO THE GOLD CORE IN THE CENTER // PRESS E TO PICK IT UP")
     end
 end
 
@@ -112,6 +133,7 @@ function OnCreate()
     Input.SetCursorVisible(false)
     Scene.SetPaused(false)
     UI.SetVisible("PauseMenu",false)
+    UI.SetVisible("InteractPrompt",false)
     if Network.IsHost() then
         Network.SetCoreRushState(0,0,180,orbX,orbY,orbZ,0,0)
     end
@@ -129,13 +151,13 @@ function OnUpdate(dt)
 
     if paused then
         if UI.WasClicked("ResumeButton") then setPaused(false); return end
+        if UI.WasClicked("OpenSettingsButton") then settingsOpen=true;UI.SetVisible("PauseMain",false);UI.SetVisible("PauseSettings",true);refreshPauseSettings() end
+        if UI.WasClicked("SettingsBackButton") then settingsOpen=false;UI.SetVisible("PauseSettings",false);UI.SetVisible("PauseMain",true) end
         if UI.WasClicked("PauseAAButton") then aaIndex=aaIndex%#aaSamples+1;savePauseSettings();refreshPauseSettings() end
         if UI.WasClicked("PauseFogButton") then pauseFog=not pauseFog;savePauseSettings();refreshPauseSettings() end
         if UI.WasClicked("PauseBloomButton") then pauseBloom=not pauseBloom;savePauseSettings();refreshPauseSettings() end
         if UI.WasClicked("PauseViewButton") then viewIndex=viewIndex%#viewDistances+1;savePauseSettings();refreshPauseSettings() end
-        if UI.WasClicked("PauseMenuButton") then
-            Scene.SetPaused(false);Network.Disconnect();Scene.Load("Assets/Scenes/MainMenu.scene");return
-        end
+        if UI.WasClicked("PauseMenuButton") then Scene.SetPaused(false);Network.Disconnect();Scene.Load("Assets/Scenes/MainMenu.scene");return end
         return
     end
 
@@ -153,9 +175,10 @@ function OnUpdate(dt)
                 local p=playerPosition(carrierID)
                 if p.valid then
                     orbX,orbY,orbZ=p.x,p.y+1.35,p.z
-                    if p.z < -23.0 then
+                    local team=teamFor(carrierID)
+                    if team=="RED" and p.z > 25.0 then
                         redScore=redScore+1; resetCore()
-                    elseif p.z > 23.0 then
+                    elseif team=="BLUE" and p.z < -25.0 then
                         blueScore=blueScore+1; resetCore()
                     end
                 else
