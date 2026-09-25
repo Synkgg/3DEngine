@@ -6,6 +6,7 @@
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
+#include "../../Audio/AudioEngine.h"
 #include "../../UI/UICanvas.h"
 #include "../../UI/UIWidget.h"
 #include "../../UI/UIText.h"
