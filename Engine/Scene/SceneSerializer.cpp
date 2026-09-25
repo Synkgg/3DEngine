@@ -418,9 +418,8 @@ bool SceneSerializer::Save(
         if (mesh != nullptr)
         {
             file << "Mesh 1 "
-                << static_cast<int>(
-                    mesh->primitive
-                    )
+                << static_cast<int>(mesh->primitive)
+                << " " << std::quoted(mesh->modelPath)
                 << '\n';
         }
         else
@@ -982,6 +981,12 @@ bool SceneSerializer::Load(
                     static_cast<PrimitiveType>(
                         primitiveValue
                         );
+
+                if (!(meshLine >> std::quoted(mesh.modelPath)))
+                {
+                    meshLine.clear();
+                    mesh.modelPath.clear();
+                }
 
                 m_Scene.AddComponent<
                     MeshComponent
