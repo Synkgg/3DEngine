@@ -461,6 +461,18 @@ void UIEditor::DrawInspector(
         );
     }
 
+    bool gradient = widget.HasGradient();
+    if (ImGui::Checkbox("Gradient", &gradient)) widget.SetGradientEnabled(gradient);
+    if (gradient)
+    {
+        Vec4 end = widget.GetGradientColor();
+        if (ImGui::ColorEdit4("Gradient End", &end.x)) widget.SetGradientColor(end);
+        int direction = static_cast<int>(widget.GetGradientDirection());
+        const char* directions[] = { "Vertical", "Horizontal" };
+        if (ImGui::Combo("Gradient Direction", &direction, directions, 2))
+            widget.SetGradientDirection(static_cast<UIGradientDirection>(direction));
+    }
+
     ImGui::Spacing();
     ImGui::SeparatorText("Behavior");
 
@@ -638,6 +650,16 @@ void UIEditor::DrawInspector(
         Vec4 disabledColor = button->GetDisabledColor();
         if (ImGui::ColorEdit4("Disabled", &disabledColor.x))
             button->SetDisabledColor(disabledColor);
+
+        bool textHighlight = button->GetAffectChildText();
+        if (ImGui::Checkbox("Highlight Child Text", &textHighlight)) button->SetAffectChildText(textHighlight);
+        if (textHighlight)
+        {
+            Vec4 tc = button->GetNormalTextColor(); if (ImGui::ColorEdit4("Text Normal", &tc.x)) button->SetNormalTextColor(tc);
+            tc = button->GetHoveredTextColor(); if (ImGui::ColorEdit4("Text Hovered", &tc.x)) button->SetHoveredTextColor(tc);
+            tc = button->GetPressedTextColor(); if (ImGui::ColorEdit4("Text Pressed", &tc.x)) button->SetPressedTextColor(tc);
+            tc = button->GetDisabledTextColor(); if (ImGui::ColorEdit4("Text Disabled", &tc.x)) button->SetDisabledTextColor(tc);
+        }
 
         ImGui::Spacing();
         ImGui::TextDisabled("Runtime state");
