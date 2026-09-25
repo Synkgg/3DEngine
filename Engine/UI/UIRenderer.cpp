@@ -7,6 +7,7 @@
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
 #include "../Core/Logger.h"
+#include "../Audio/AudioEngine.h"
 
 #include <glad/gl.h>
 
@@ -431,7 +432,10 @@ void UIRenderer::UpdateInput(
     if (input.IsMouseButtonReleased(SDL_BUTTON_LEFT))
     {
         if (m_PressedCanvasButton && m_PressedCanvasButton == hovered)
+        {
             m_PressedCanvasButton->SetClicked(true);
+            if (m_Audio) m_Audio->PlayUISound();
+        }
         if (m_PressedCanvasButton)
             m_PressedCanvasButton->SetPressed(false);
         m_PressedCanvasButton = nullptr;
