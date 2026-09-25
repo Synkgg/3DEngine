@@ -629,11 +629,24 @@ void Editor::RenderViewport(
 	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.205f, 0.215f, 0.228f, 1.0f));
 	ImGui::BeginChild("ViewportToolbar", ImVec2(0.0f, 42.0f), ImGuiChildFlags_Borders);
 
-	ImGui::TextDisabled("PERSPECTIVE");
+	if (ImGui::BeginCombo("##ViewMode", "Perspective"))
+	{
+		ImGui::Selectable("Perspective", true);
+		ImGui::TextDisabled("Orthographic views are planned.");
+		ImGui::EndCombo();
+	}
 	ImGui::SameLine();
-	ImGui::TextDisabled("  /  ");
+	if (ImGui::BeginCombo("##ShadingMode", "Lit"))
+	{
+		ImGui::Selectable("Lit", true);
+		ImGui::TextDisabled("Debug shading modes are planned.");
+		ImGui::EndCombo();
+	}
 	ImGui::SameLine();
-	ImGui::TextDisabled("LIT");
+	ImGui::Checkbox("Grid", &m_ShowGrid);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(86.0f);
+	ImGui::DragFloat("Speed", &m_EditorCameraSpeed, 0.25f, 0.5f, 40.0f, "%.1f");
 
 	const float transportWidth = 108.0f;
 	ImGui::SameLine();
