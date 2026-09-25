@@ -18,6 +18,7 @@
 class Renderer;
 class Input;
 class UICanvas;
+class AudioEngine;
 
 class Runtime
 {
@@ -51,6 +52,7 @@ public:
     void SetWantsCursor(bool wantsCursor);
     bool IsPaused() const;
     void SetPaused(bool paused);
+    void SetAudioEngine(AudioEngine* audio) { m_Audio = audio; }
 
 private:
     bool m_Running = false;
@@ -76,4 +78,5 @@ private:
     Renderer* m_Renderer = nullptr;
     Input* m_Input = nullptr;
     UICanvas* m_UICanvas = nullptr;
+    AudioEngine* m_Audio = nullptr;
 };
