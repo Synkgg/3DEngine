@@ -2,6 +2,8 @@ local aaSamples = { 1, 2, 4, 8 }
 local viewDistances = { 220.0, 500.0, 1000.0 }
 local aaIndex, viewIndex = 1, 1
 local pendingFog, pendingBloom = false, false
+local joinAddress = "127.0.0.1"
+local editingAddress = false
 
 local function nearestIndex(values, current)
     local best, distance = 1, math.abs(values[1] - current)
@@ -38,6 +40,7 @@ local function applyPending()
 end
 
 function OnCreate()
+    if Network.IsConnected() then Network.Disconnect() end
     Input.SetCursorVisible(true)
     UI.Load("Assets/UI/Main.ui")
     UI.SetVisible("MainMenu", true)
@@ -47,25 +50,47 @@ function OnCreate()
 end
 
 function OnUpdate(deltaTime)
-    if UI.WasClicked("PlayButton") then Input.SetCursorVisible(false); Scene.Load("Assets/Scenes/Graveyard.scene"); return end
+    if UI.WasClicked("PlayButton") then
+        if Network.IsConnected() then Network.Disconnect() end
+        Input.SetCursorVisible(false)
+        Scene.Load("Assets/Scenes/Graveyard.scene")
+        return
+    end
+
+    if UI.WasClicked("AddressField") then editingAddress = true end
+    if editingAddress then
+        for i = 0, 9 do
+            local key = tostring(i)
+            if Input.IsKeyPressed(key) and #joinAddress < 15 then joinAddress = joinAddress .. key end
+        end
+        if Input.IsKeyPressed("Period") and #joinAddress < 15 then joinAddress = joinAddress .. "." end
+        if Input.IsKeyPressed("Backspace") and #joinAddress > 0 then joinAddress = string.sub(joinAddress, 1, #joinAddress - 1) end
+        if Input.IsKeyPressed("Return") or Input.IsKeyPressed("Escape") then editingAddress = false end
+        UI.SetText("AddressText", "IP: " .. joinAddress .. (editingAddress and " _" or ""))
+    end
+
     if UI.WasClicked("HostButton") then
+        editingAddress = false
         if Network.Host(7777) then
-            UI.SetText("NetworkStatus", "HOSTING / UDP 7777 / WAITING FOR PLAYER")
+            Input.SetCursorVisible(false)
+            Scene.Load("Assets/Scenes/Graveyard.scene")
+            return
         else
             UI.SetText("NetworkStatus", "HOST FAILED / " .. Network.GetLastError())
         end
     end
+
     if UI.WasClicked("JoinButton") then
-        if Network.Join("127.0.0.1", 7777) then
-            UI.SetText("NetworkStatus", "JOINING / 127.0.0.1:7777")
+        editingAddress = false
+        if joinAddress == "" then
+            UI.SetText("NetworkStatus", "ENTER A HOST IP ADDRESS")
+        elseif Network.Join(joinAddress, 7777) then
+            Input.SetCursorVisible(false)
+            Scene.Load("Assets/Scenes/Graveyard.scene")
+            return
         else
             UI.SetText("NetworkStatus", "JOIN FAILED / " .. Network.GetLastError())
         end
-    end
-    if Network.IsHost() and Network.GetPlayerCount() > 1 then
-        UI.SetText("NetworkStatus", "HOST ONLINE / " .. Network.GetPlayerCount() .. " PLAYERS")
-    elseif Network.IsConnected() and not Network.IsHost() then
-        UI.SetText("NetworkStatus", "CLIENT ONLINE / 127.0.0.1:7777")
     end
     if UI.WasClicked("SettingsButton") then
         loadPending()
