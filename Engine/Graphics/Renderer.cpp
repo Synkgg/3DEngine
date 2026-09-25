@@ -21,6 +21,8 @@ uniform mat4 u_Model;
 out vec3 v_Normal;
 out vec3 v_WorldPosition;
 out vec2 v_UV;
+out vec4 v_LightSpacePosition;
+uniform mat4 u_LightSpaceMatrix;
 
 void main()
 {
@@ -28,6 +30,7 @@ void main()
     v_Normal = normalize(normalMatrix * a_Normal);
     v_WorldPosition = vec3(u_Model * vec4(a_Position, 1.0));
     v_UV = a_UV;
+    v_LightSpacePosition = u_LightSpaceMatrix * vec4(v_WorldPosition, 1.0);
 
     gl_Position =
         u_Transform *
@@ -41,6 +44,7 @@ static const char* fragmentShaderSource = R"(
 in vec3 v_Normal;
 in vec3 v_WorldPosition;
 in vec2 v_UV;
+in vec4 v_LightSpacePosition;
 
 uniform vec4 u_Color;
 
@@ -58,6 +62,8 @@ uniform float u_Emissive;
 uniform int u_FogEnabled;
 uniform float u_FogDensity;
 uniform float u_ViewDistance;
+uniform sampler2D u_ShadowMap;
+uniform int u_ShadowsEnabled;
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
 uniform int u_PointLightCount;
@@ -66,6 +72,33 @@ uniform PointLight u_PointLights[8];
 uniform SpotLight u_SpotLights[4];
 
 out vec4 FragColor;
+
+float CalculateShadow(vec4 lightSpacePosition, vec3 normal, vec3 lightDirection)
+{
+    if (u_ShadowsEnabled == 0)
+        return 0.0;
+
+    vec3 projected = lightSpacePosition.xyz / max(lightSpacePosition.w, 0.0001);
+    projected = projected * 0.5 + 0.5;
+    if (projected.z <= 0.0 || projected.z >= 1.0 ||
+        projected.x <= 0.0 || projected.x >= 1.0 ||
+        projected.y <= 0.0 || projected.y >= 1.0)
+        return 0.0;
+
+    float bias = max(0.0007 * (1.0 - dot(normal, lightDirection)), 0.00018);
+    vec2 texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));
+    float shadow = 0.0;
+    int radius = 2;
+    for (int x = -radius; x <= radius; ++x)
+    {
+        for (int y = -radius; y <= radius; ++y)
+        {
+            float closest = texture(u_ShadowMap, projected.xy + vec2(x, y) * texel).r;
+            shadow += projected.z - bias > closest ? 1.0 : 0.0;
+        }
+    }
+    return shadow / 25.0;
+}
 
 void main()
 {
@@ -109,19 +142,30 @@ void main()
     vec3 dielectricF0 = vec3(0.04);
     vec3 specularColor = mix(dielectricF0, baseColor.rgb, clamp(u_Metallic, 0.0, 1.0));
     vec3 diffuseColor = baseColor.rgb * (1.0 - clamp(u_Metallic, 0.0, 1.0));
-    vec3 lighting = diffuseColor * u_LightColor * brightness
-        + specularColor * u_LightColor * specular * (1.0 + fresnel) * u_LightIntensity;
+    float shadow = CalculateShadow(v_LightSpacePosition, normal, lightDirection);
+    vec3 ambientLighting = diffuseColor * u_LightColor * ambient;
+    vec3 directLighting =
+        diffuseColor * u_LightColor * diffuse * u_LightIntensity +
+        specularColor * u_LightColor * specular * (1.0 + fresnel) * u_LightIntensity;
+    vec3 lighting = ambientLighting + directLighting * (1.0 - shadow);
     for(int i=0;i<u_PointLightCount;i++) {
         vec3 toLight=u_PointLights[i].position-v_WorldPosition; float d=length(toLight);
         vec3 L=normalize(toLight); float att=pow(clamp(1.0-d/u_PointLights[i].range,0.0,1.0),2.0);
         float ndl=max(dot(normal,L),0.0);
-        lighting += baseColor.rgb*u_PointLights[i].color*ndl*u_PointLights[i].intensity*att;
+        vec3 H=normalize(L+viewDirection);
+        float localSpec=pow(max(dot(normal,H),0.0),shininess);
+        vec3 localDiffuse=diffuseColor*ndl;
+        vec3 localSpecular=specularColor*localSpec;
+        lighting += (localDiffuse+localSpecular)*u_PointLights[i].color*u_PointLights[i].intensity*att;
     }
     for(int i=0;i<u_SpotLightCount;i++) {
         vec3 toLight=u_SpotLights[i].position-v_WorldPosition; float d=length(toLight); vec3 L=normalize(toLight);
         float cone=smoothstep(u_SpotLights[i].outerCos,u_SpotLights[i].innerCos,dot(-L,normalize(u_SpotLights[i].direction)));
         float att=pow(clamp(1.0-d/u_SpotLights[i].range,0.0,1.0),2.0);
-        lighting += baseColor.rgb*u_SpotLights[i].color*max(dot(normal,L),0.0)*u_SpotLights[i].intensity*att*cone;
+        float ndl=max(dot(normal,L),0.0);
+        vec3 H=normalize(L+viewDirection);
+        float localSpec=pow(max(dot(normal,H),0.0),shininess);
+        lighting += (diffuseColor*ndl+specularColor*localSpec)*u_SpotLights[i].color*u_SpotLights[i].intensity*att*cone;
     }
     lighting += baseColor.rgb * u_Emissive;
 
@@ -141,6 +185,22 @@ void main()
     // in the final post-process pass.
     FragColor = vec4(max(lighting, vec3(0.0)), baseColor.a);
 }
+)";
+
+static const char* shadowVertexShaderSource = R"(
+#version 450 core
+layout(location = 0) in vec3 a_Position;
+uniform mat4 u_Model;
+uniform mat4 u_LightSpaceMatrix;
+void main()
+{
+    gl_Position = u_LightSpaceMatrix * u_Model * vec4(a_Position, 1.0);
+}
+)";
+
+static const char* shadowFragmentShaderSource = R"(
+#version 450 core
+void main() {}
 )";
 
 static const char* postVertexShaderSource = R"(
@@ -343,6 +403,18 @@ bool Renderer::Initialize(Window& window)
 		return false;
 	}
 
+    if (!m_ShadowShader.Initialize(shadowVertexShaderSource, shadowFragmentShaderSource))
+    {
+        Logger::Error("Failed to initialize shadow shader.");
+        return false;
+    }
+
+    if (!CreateShadowTarget())
+    {
+        Logger::Error("Failed to initialize directional shadow map.");
+        return false;
+    }
+
     if (!m_PostShader.Initialize(postVertexShaderSource, postFragmentShaderSource) ||
         !m_BloomExtractShader.Initialize(postVertexShaderSource, bloomExtractFragmentShaderSource) ||
         !m_BloomBlurShader.Initialize(postVertexShaderSource, bloomBlurFragmentShaderSource))
@@ -489,6 +561,8 @@ void Renderer::Shutdown()
     m_PostShader.Shutdown();
     m_BloomExtractShader.Shutdown();
     m_BloomBlurShader.Shutdown();
+    DestroyShadowTarget();
+    m_ShadowShader.Shutdown();
 	m_SkyShader.Shutdown();
 	m_Grid.Shutdown();
 	m_Shader.Shutdown();
@@ -655,6 +729,12 @@ void Renderer::DrawMesh(
 		"u_Model",
 		model
 	);
+    m_Shader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrix);
+    m_Shader.SetInt("u_ShadowsEnabled", (m_RenderSettings.shadows && m_ShadowMapReady) ? 1 : 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTexture);
+    m_Shader.SetInt("u_ShadowMap", 1);
+    glActiveTexture(GL_TEXTURE0);
 
 	m_Shader.SetVec3(
 		"u_LightDirection",
@@ -973,6 +1053,14 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     m_RenderSettings.antiAliasingSamples = std::clamp(m_RenderSettings.antiAliasingSamples, 1, 8);
     m_RenderSettings.shadowQuality = std::clamp(m_RenderSettings.shadowQuality, 0, 3);
     m_RenderSettings.shadowDistance = std::clamp(m_RenderSettings.shadowDistance, 10.0f, 500.0f);
+    const unsigned int desiredShadowSize = 1024u << static_cast<unsigned int>(m_RenderSettings.shadowQuality);
+    if (desiredShadowSize != m_ShadowMapSize)
+    {
+        m_ShadowMapSize = desiredShadowSize;
+        DestroyShadowTarget();
+        if (!CreateShadowTarget())
+            Logger::Error("Failed to resize directional shadow map.");
+    }
     m_Camera.SetFarPlane(m_RenderSettings.viewDistance);
 
     const unsigned int samples = m_RenderSettings.antiAliasing
@@ -994,6 +1082,103 @@ const RenderSettings& Renderer::GetRenderSettings() const
     return m_RenderSettings;
 }
 
+
+void Renderer::UpdateLightSpaceMatrix()
+{
+    const float distance = m_RenderSettings.shadowDistance;
+    const Vec3 center = m_Camera.GetPosition() + m_Camera.GetForward() * (distance * 0.28f);
+    Vec3 direction = m_LightDirection.Length() > 0.001f ? m_LightDirection.Normalized() : Vec3(-0.5f, -1.0f, -0.5f).Normalized();
+    const Vec3 lightPosition = center - direction * distance;
+    Vec3 up(0.0f, 1.0f, 0.0f);
+    if (std::abs(Vec3::Dot(direction, up)) > 0.96f)
+        up = Vec3(0.0f, 0.0f, 1.0f);
+
+    const Mat4 lightView = Mat4::LookAt(lightPosition, center, up);
+    const float extent = distance * 0.62f;
+    const Mat4 lightProjection = Mat4::Orthographic(-extent, extent, -extent, extent, 0.1f, distance * 2.5f);
+    m_LightSpaceMatrix = lightProjection * lightView;
+}
+
+bool Renderer::CreateShadowTarget()
+{
+    glGenFramebuffers(1, &m_ShadowFramebuffer);
+    glGenTextures(1, &m_ShadowDepthTexture);
+    glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_ShadowMapSize, m_ShadowMapSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    const float border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowDepthTexture, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    const bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (!complete) { DestroyShadowTarget(); return false; }
+    return true;
+}
+
+void Renderer::DestroyShadowTarget()
+{
+    if (m_ShadowDepthTexture) glDeleteTextures(1, &m_ShadowDepthTexture);
+    if (m_ShadowFramebuffer) glDeleteFramebuffers(1, &m_ShadowFramebuffer);
+    m_ShadowDepthTexture = 0;
+    m_ShadowFramebuffer = 0;
+    m_ShadowMapReady = false;
+}
+
+void Renderer::BeginShadowPass()
+{
+    m_ShadowMapReady = false;
+    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer)
+        return;
+    UpdateLightSpaceMatrix();
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffer);
+    glViewport(0, 0, static_cast<int>(m_ShadowMapSize), static_cast<int>(m_ShadowMapSize));
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+}
+
+void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitive)
+{
+    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer)
+        return;
+
+    Mesh* mesh = nullptr;
+    switch (primitive)
+    {
+    case PrimitiveType::Cube: mesh = m_CubeMesh.get(); break;
+    case PrimitiveType::Plane: mesh = m_PlaneMesh.get(); break;
+    case PrimitiveType::Sphere: mesh = m_SphereMesh.get(); break;
+    case PrimitiveType::Cylinder: mesh = m_CylinderMesh.get(); break;
+    default: return;
+    }
+    if (!mesh) return;
+
+    mesh->Bind();
+    m_ShadowShader.Bind();
+    m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
+    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrix);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
+    m_ShadowShader.Unbind();
+    mesh->Unbind();
+}
+
+void Renderer::EndShadowPass()
+{
+    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer)
+        return;
+    glCullFace(GL_BACK);
+    glDisable(GL_CULL_FACE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    m_ShadowMapReady = true;
+}
 
 bool Renderer::CreatePostProcessTarget()
 {
