@@ -88,6 +88,7 @@ public:
         float ambientOcclusion = 1.0f, float emissive = 0.0f
     );
     void DrawShadowModel(const Transform& transform, const std::string& modelPath);
+    unsigned int RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
 
     SDL_GLContext GetContext() const;
     unsigned int GetViewportTexture() const;
@@ -158,6 +159,12 @@ private:
     unsigned int m_PostColorTexture = 0;
     unsigned int m_BloomFramebuffer[2]{ 0, 0 };
     unsigned int m_BloomTexture[2]{ 0, 0 };
+    unsigned int m_ModelPreviewFramebuffer = 0;
+    unsigned int m_ModelPreviewTexture = 0;
+    unsigned int m_ModelPreviewDepth = 0;
+    unsigned int m_ModelPreviewWidth = 0;
+    unsigned int m_ModelPreviewHeight = 0;
+    Shader m_ModelPreviewShader;
 
     std::unique_ptr<Mesh> m_CubeMesh;
     std::unique_ptr<Mesh> m_PlaneMesh;
@@ -199,4 +206,6 @@ private:
     void DestroyPostProcessTarget();
     void RenderPostProcess();
     unsigned int RenderBloom();
+    bool EnsureModelPreviewTarget(unsigned int width, unsigned int height);
+    void DestroyModelPreviewTarget();
 };
