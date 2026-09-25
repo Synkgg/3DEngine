@@ -29,6 +29,7 @@ Scene::Scene(const Scene& other)
 Scene& Scene::operator=(
     const Scene& other)
 {
+    m_Environment = other.m_Environment;
     if (this == &other)
     {
         return *this;
@@ -179,6 +180,7 @@ void Scene::DestroyEntity(
 
 void Scene::Clear()
 {
+    m_Environment = SceneEnvironment();
     m_Entities.clear();
 
     /*
