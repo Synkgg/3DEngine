@@ -4,6 +4,15 @@ project(3DEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Keep single-config generators useful too. Visual Studio remains multi-config
+# and can switch Debug/Release from the IDE normally.
+if (NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 
 #
 # Dependencies
@@ -175,14 +184,30 @@ target_link_libraries(
 )
 
 #
-# ImGui configuration
+# ImGui / build configuration
 #
 target_compile_definitions(
     3DEngine
     PRIVATE
 
     IMGUI_IMPL_OPENGL_LOADER_GLAD2
+    $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
+    $<$<CONFIG:Release>:ENGINE_RELEASE=1>
+    $<$<CONFIG:RelWithDebInfo>:ENGINE_RELEASE=1>
 )
+
+# Make Debug and Release explicit and consistent across Visual Studio and
+# single-config generators. CMake already selects /MDd vs /MD correctly for
+# MSVC; these flags only define the engine-side configuration behavior.
+if (MSVC)
+    target_compile_options(
+        3DEngine
+        PRIVATE
+        $<$<CONFIG:Debug>:/Od;/Zi>
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:RelWithDebInfo>:/O2;/Zi>
+    )
+endif()
 
 #
 # Windows libraries
@@ -210,19 +235,26 @@ endif()
 #endif()
 
 #
-# Runtime assets
+# Runtime assets / debugger working directory
 #
-# Keep the executable's working directory self-contained. This runs after
-# every successful build and only copies files that are new or changed.
+# The editor resolves project content from the repository working directory.
+# Force Visual Studio's debugger to use that directory in both Debug and
+# Release, while also copying Assets beside the executable for direct launches.
 #
+set_target_properties(
+    3DEngine
+    PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
 add_custom_command(
     TARGET 3DEngine
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory
             "$<TARGET_FILE_DIR:3DEngine>/Assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
             "$<TARGET_FILE_DIR:3DEngine>/Assets"
-    COMMENT "Syncing Assets to runtime output directory"
+    COMMENT "Syncing Assets for $<CONFIG> runtime"
     VERBATIM
 )
