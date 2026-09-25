@@ -36,6 +36,17 @@ namespace
             out << ' ' << std::quoted(text->GetText()) << ' ' << text->GetFontSize();
         else if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
             out << ' ' << std::quoted(image->GetTexturePath());
+        else if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
+        {
+            const Vec4 normal = button->GetNormalColor();
+            const Vec4 hovered = button->GetHoveredColor();
+            const Vec4 pressed = button->GetPressedColor();
+            const Vec4 disabled = button->GetDisabledColor();
+            out << ' ' << normal.x << ' ' << normal.y << ' ' << normal.z << ' ' << normal.w
+                << ' ' << hovered.x << ' ' << hovered.y << ' ' << hovered.z << ' ' << hovered.w
+                << ' ' << pressed.x << ' ' << pressed.y << ' ' << pressed.z << ' ' << pressed.w
+                << ' ' << disabled.x << ' ' << disabled.y << ' ' << disabled.z << ' ' << disabled.w;
+        }
 
         out << '\n';
 
@@ -58,7 +69,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 1\n";
+    out << "VORTEK_UI 2\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -77,7 +88,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     std::string magic;
     int version = 0;
     in >> magic >> version;
-    if (magic != "VORTEK_UI" || version != 1) return false;
+    if (magic != "VORTEK_UI" || version < 1 || version > 2) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -141,6 +152,22 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             std::string path;
             row >> std::quoted(path);
             image->SetTexturePath(path);
+        }
+        else if (UIButton* button = dynamic_cast<UIButton*>(widget.get()))
+        {
+            if (version >= 2)
+            {
+                Vec4 normal, hovered, pressed, disabled;
+                row >> normal.x >> normal.y >> normal.z >> normal.w
+                    >> hovered.x >> hovered.y >> hovered.z >> hovered.w
+                    >> pressed.x >> pressed.y >> pressed.z >> pressed.w
+                    >> disabled.x >> disabled.y >> disabled.z >> disabled.w;
+                if (!row) return false;
+                button->SetNormalColor(normal);
+                button->SetHoveredColor(hovered);
+                button->SetPressedColor(pressed);
+                button->SetDisabledColor(disabled);
+            }
         }
 
         UIWidget* parent = depth == 0 ? canvas.GetRoot() :
