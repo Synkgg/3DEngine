@@ -671,6 +671,25 @@ void Application::Run()
 
 void Application::Shutdown()
 {
+    // Runtime owns Lua scripts and network state that can still reference the
+    // UI canvas, renderer, input, and audio systems. Stop it while all of
+    // those dependencies are still alive. Previously the application could
+    // tear down SDL/audio/rendering first and leave runtime/UI pointers alive
+    // until object destruction, causing a shutdown-time read access violation.
+    if (m_Runtime.IsRunning())
+    {
+        m_Editor.StopPlaying();
+        StopRuntime();
+    }
+
+    // UIRenderer keeps a non-owning AudioEngine pointer for button sounds.
+    // Detach it before the audio engine is shut down so no late UI cleanup can
+    // observe a destroyed audio backend.
+    m_Renderer.GetUIRenderer().SetMouseInteractionEnabled(false);
+    m_Renderer.GetUIRenderer().SetAudioEngine(nullptr);
+    m_Renderer.GetUIRenderer().Clear();
+    m_UICanvas.Clear();
+
     m_Audio.Shutdown();
     m_ImGuiLayer.Shutdown();
     m_Renderer.Shutdown();
