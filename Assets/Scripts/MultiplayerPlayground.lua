@@ -174,7 +174,7 @@ function OnUpdate(dt)
     end
 
     if paused then
-        if UI.WasClicked("ResumeButton") then setPaused(false); return end
+        if UI.WasClicked("ReturnMatchButton") then setPaused(false); return end
         if UI.WasClicked("OpenSettingsButton") then settingsOpen=true;UI.SetVisible("PauseMain",false);UI.SetVisible("PauseSettings",true);refreshPauseSettings() end
         if UI.WasClicked("SettingsBackButton") then settingsOpen=false;UI.SetVisible("PauseSettings",false);UI.SetVisible("PauseMain",true) end
         if UI.WasClicked("PauseAAButton") then aaIndex=aaIndex%#aaSamples+1;savePauseSettings();refreshPauseSettings() end
