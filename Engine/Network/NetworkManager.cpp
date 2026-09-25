@@ -21,12 +21,13 @@ using SocketHandle=SOCKET; constexpr SocketHandle InvalidSocket=INVALID_SOCKET;
 using SocketHandle=int; constexpr SocketHandle InvalidSocket=-1;
 #endif
 constexpr std::uint32_t Magic=0x4B545256; // VRTK
-enum : std::uint8_t { Hello=1, Welcome=2, Transform=3, Goodbye=4, GameState=5 };
+enum : std::uint8_t { Hello=1, Welcome=2, Transform=3, Goodbye=4, GameState=5, GameAction=6 };
 #pragma pack(push,1)
 struct PacketHeader { std::uint32_t magic; std::uint8_t type; };
 struct WelcomePacket { PacketHeader header; std::uint32_t playerID; };
 struct TransformPacket { PacketHeader header; std::uint32_t playerID; float x,y,z,rx,ry,rz; };
-struct GameStatePacket { PacketHeader header; std::uint32_t revision; std::int32_t redScore,blueScore,roundSeconds; float orbX,orbY,orbZ; };
+struct GameStatePacket { PacketHeader header; std::uint32_t revision; std::int32_t redScore,blueScore,roundSeconds; float orbX,orbY,orbZ; std::uint32_t carrierID; std::int32_t winner; };
+struct GameActionPacket { PacketHeader header; std::uint32_t playerID; std::uint8_t action; };
 #pragma pack(pop)
 void CloseSocket(SocketHandle s){
 #ifdef _WIN32
@@ -59,13 +60,19 @@ bool NetworkManager::Join(const std::string& address,std::uint16_t port){Disconn
 void NetworkManager::SendHello(){if(m_Mode!=Mode::Client)return;PacketHeader p{Magic,Hello};Endpoint e=m_Server;sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
 void NetworkManager::SendTransformTo(const Endpoint& e,const NetworkTransformState& s){TransformPacket p{{Magic,Transform},s.playerID,s.x,s.y,s.z,s.rx,s.ry,s.rz};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
 void NetworkManager::SendGameStateTo(const Endpoint& e){
- GameStatePacket p{{Magic,GameState},m_GameState.revision,m_GameState.redScore,m_GameState.blueScore,m_GameState.roundSeconds,m_GameState.orbX,m_GameState.orbY,m_GameState.orbZ};
+ GameStatePacket p{{Magic,GameState},m_GameState.revision,m_GameState.redScore,m_GameState.blueScore,m_GameState.roundSeconds,m_GameState.orbX,m_GameState.orbY,m_GameState.orbZ,m_GameState.carrierID,m_GameState.winner};
  sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);
  sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
 }
 void NetworkManager::SetGameState(const NetworkGameState& state){
  if(m_Mode!=Mode::Host)return;m_GameState=state;for(const auto& client:m_Clients)SendGameStateTo(client);
 }
+void NetworkManager::SendGameAction(std::uint8_t action){
+ if(m_Mode==Mode::Offline||!IsHandshakeComplete())return;
+ if(m_Mode==Mode::Host){m_GameActions.emplace_back(GetLocalPlayerID(),action);return;}
+ GameActionPacket p{{Magic,GameAction},GetLocalPlayerID(),action};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=m_Server.address;to.sin_port=htons(m_Server.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
+}
+std::vector<std::pair<std::uint32_t,std::uint8_t>> NetworkManager::ConsumeGameActions(){auto actions=std::move(m_GameActions);m_GameActions.clear();return actions;}
 void NetworkManager::SendLocalTransform(const NetworkTransformState& state){
  if(m_Mode==Mode::Offline||!IsHandshakeComplete())return;NetworkTransformState s=state;s.playerID=GetLocalPlayerID();
  if(m_Mode==Mode::Host){for(const auto& c:m_Clients)SendTransformTo(c,s);}else SendTransformTo(m_Server,s);
@@ -90,7 +97,9 @@ void NetworkManager::Update(){
    auto it=std::find_if(m_Clients.begin(),m_Clients.end(),[&](const Endpoint&e){return e.address==from.sin_addr.s_addr&&e.port==ntohs(from.sin_port);});
    if(it!=m_Clients.end()){const std::uint32_t playerID=it->playerID;m_RemoteTransforms.erase(playerID);m_Clients.erase(it);Logger::Info("Network: player "+std::to_string(playerID)+" disconnected.");}
   }else if(m_Mode==Mode::Client&&h.type==GameState&&n>=(int)sizeof(GameStatePacket)){
-   GameStatePacket p{};std::memcpy(&p,b,sizeof(p));if(p.revision>=m_GameState.revision)m_GameState={p.revision,p.redScore,p.blueScore,p.roundSeconds,p.orbX,p.orbY,p.orbZ};
+   GameStatePacket p{};std::memcpy(&p,b,sizeof(p));if(p.revision>=m_GameState.revision)m_GameState={p.revision,p.redScore,p.blueScore,p.roundSeconds,p.orbX,p.orbY,p.orbZ,p.carrierID,p.winner};
+  }else if(m_Mode==Mode::Host&&h.type==GameAction&&n>=(int)sizeof(GameActionPacket)){
+   GameActionPacket p{};std::memcpy(&p,b,sizeof(p));auto sender=std::find_if(m_Clients.begin(),m_Clients.end(),[&](const Endpoint&e){return e.address==from.sin_addr.s_addr&&e.port==ntohs(from.sin_port)&&e.playerID==p.playerID;});if(sender!=m_Clients.end())m_GameActions.emplace_back(p.playerID,p.action);
   }else if(h.type==Transform&&n>=(int)sizeof(TransformPacket)){
    TransformPacket p{};std::memcpy(&p,b,sizeof(p));if(p.playerID==GetLocalPlayerID())continue;NetworkTransformState st{p.playerID,p.x,p.y,p.z,p.rx,p.ry,p.rz};m_RemoteTransforms[p.playerID]=st;
    if(m_Mode==Mode::Host){for(const auto& c:m_Clients)if(c.playerID!=p.playerID)SendTransformTo(c,st);}
@@ -108,5 +117,5 @@ void NetworkManager::Disconnect(){
 #else
  m_Socket=-1;
 #endif
- m_Mode=Mode::Offline;m_Clients.clear();m_RemoteTransforms.clear();m_Server={};m_LocalPlayerID=0;m_NextPlayerID=2;m_GameState={};
+ m_Mode=Mode::Offline;m_Clients.clear();m_RemoteTransforms.clear();m_Server={};m_LocalPlayerID=0;m_NextPlayerID=2;m_GameState={};m_GameActions.clear();
 }
