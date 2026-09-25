@@ -21,7 +21,7 @@ using SocketHandle=SOCKET; constexpr SocketHandle InvalidSocket=INVALID_SOCKET;
 using SocketHandle=int; constexpr SocketHandle InvalidSocket=-1;
 #endif
 constexpr std::uint32_t Magic=0x4B545256; // VRTK
-enum : std::uint8_t { Hello=1, Welcome=2, Transform=3, Goodbye=4, GameState=5, GameAction=6 };
+enum : std::uint8_t { Hello=1, Welcome=2, Transform=3, Goodbye=4, GameState=5, GameAction=6, HostShutdown=7 };
 #pragma pack(push,1)
 struct PacketHeader { std::uint32_t magic; std::uint8_t type; };
 struct WelcomePacket { PacketHeader header; std::uint32_t playerID; };
@@ -73,6 +73,7 @@ void NetworkManager::SendGameAction(std::uint8_t action){
  GameActionPacket p{{Magic,GameAction},GetLocalPlayerID(),action};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=m_Server.address;to.sin_port=htons(m_Server.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
 }
 std::vector<std::pair<std::uint32_t,std::uint8_t>> NetworkManager::ConsumeGameActions(){auto actions=std::move(m_GameActions);m_GameActions.clear();return actions;}
+bool NetworkManager::WasKickedByHost(){const bool value=m_KickedByHost;m_KickedByHost=false;return value;}
 void NetworkManager::SendLocalTransform(const NetworkTransformState& state){
  if(m_Mode==Mode::Offline||!IsHandshakeComplete())return;NetworkTransformState s=state;s.playerID=GetLocalPlayerID();
  if(m_Mode==Mode::Host){for(const auto& c:m_Clients)SendTransformTo(c,s);}else SendTransformTo(m_Server,s);
@@ -100,6 +101,8 @@ void NetworkManager::Update(){
   }else if(m_Mode==Mode::Host&&h.type==Goodbye){
    auto it=std::find_if(m_Clients.begin(),m_Clients.end(),[&](const Endpoint&e){return e.address==from.sin_addr.s_addr&&e.port==ntohs(from.sin_port);});
    if(it!=m_Clients.end()){const std::uint32_t playerID=it->playerID;m_RemoteTransforms.erase(playerID);m_Clients.erase(it);Logger::Info("Network: player "+std::to_string(playerID)+" disconnected.");}
+  }else if(m_Mode==Mode::Client&&h.type==HostShutdown){
+   if(from.sin_addr.s_addr==m_Server.address&&ntohs(from.sin_port)==m_Server.port){Logger::Info("Network: host ended the match.");m_KickedByHost=true;CloseSocket(s);m_Socket=InvalidSocket;m_Mode=Mode::Offline;m_RemoteTransforms.clear();m_Server={};m_LocalPlayerID=0;m_GameState={};m_GameActions.clear();break;}
   }else if(m_Mode==Mode::Client&&h.type==GameState&&n>=(int)sizeof(GameStatePacket)){
    GameStatePacket p{};std::memcpy(&p,b,sizeof(p));if(p.revision>=m_GameState.revision)m_GameState={p.revision,p.redScore,p.blueScore,p.roundSeconds,p.orbX,p.orbY,p.orbZ,p.carrierID,p.winner,p.matchStarted};
   }else if(m_Mode==Mode::Host&&h.type==GameAction&&n>=(int)sizeof(GameActionPacket)){
@@ -111,6 +114,10 @@ void NetworkManager::Update(){
  }
 }
 void NetworkManager::Disconnect(){
+ if(m_Mode==Mode::Host&&m_Socket!=InvalidSocket){
+  PacketHeader p{Magic,HostShutdown};
+  for(const auto& client:m_Clients){sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=client.address;to.sin_port=htons(client.port);for(int i=0;i<3;++i)sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
+ }
  if(m_Mode==Mode::Client&&m_Socket!=InvalidSocket){
   PacketHeader p{Magic,Goodbye};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=m_Server.address;to.sin_port=htons(m_Server.port);
   sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
