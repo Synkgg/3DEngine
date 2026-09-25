@@ -1233,15 +1233,14 @@ void UIEditor::DrawWidget(
                 text->GetFontSize() *
                 scale;
 
-            // The old preview effectively looked like a bitmap font because
-            // text was scaled down with the canvas and then sampled at tiny
-            // sizes. Keep the requested UI size, but never render below the
-            // editor font's native size. ImGui's atlas then provides the same
-            // smooth Inter face used by the rest of the editor.
-            ImFont* previewFont = ImGui::GetFont();
-            const float previewSize = std::max(
-                ImGui::GetFontSize(),
-                std::max(1.0f, fontSize));
+            // Use the same Inter face as the runtime UI. The editor's first
+            // regular font is loaded from Assets/Fonts/InterVariable.ttf;
+            // avoid whichever temporary/icon font happens to be active while
+            // the Widget Blueprint window is drawing.
+            ImFont* previewFont = ImGui::GetIO().Fonts->Fonts.empty()
+                ? ImGui::GetFont()
+                : ImGui::GetIO().Fonts->Fonts.front();
+            const float previewSize = std::max(1.0f, fontSize);
 
             drawList->AddText(
                 previewFont,
