@@ -394,56 +394,87 @@ void UIRenderer::UpdateInput(
     UIWidget* root = canvas.GetRoot();
     if (!root) return;
 
-    Vec2 mouse;
-    const float localX = input.GetMouseX() - viewportX;
-    const float localY = input.GetMouseY() - viewportY;
-    const bool inside = ViewportToCanvas(
-        localX, localY, viewportWidth, viewportHeight, mouse);
-
-    const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
-    const bool pressed = inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT);
-    // A release outside still has to clear a previously pressed button.
-    const bool released = input.IsMouseButtonReleased(SDL_BUTTON_LEFT);
-
     for (const auto& child : root->GetChildren())
-        if (child) UpdateButtonInput(*child, canvasRect, mouse, pressed, released);
-}
+        if (child) ResetButtonInput(*child);
 
-void UIRenderer::UpdateButtonInput(
-    UIWidget& widget,
-    const UIRect& parentRect,
-    const Vec2& mouse,
-    bool pressed,
-    bool released)
-{
-    if (!widget.IsVisible() || !widget.IsEnabled())
+    if (!m_MouseInteractionEnabled)
     {
-        if (UIButton* button = dynamic_cast<UIButton*>(&widget))
-        {
-            button->SetHovered(false);
-            button->SetPressed(false);
-        }
+        m_PressedCanvasButton = nullptr;
         return;
     }
 
+    Vec2 mouse;
+    const float localX = input.GetMouseX() - viewportX;
+    const float localY = input.GetMouseY() - viewportY;
+    const bool inside = ViewportToCanvas(localX, localY, viewportWidth, viewportHeight, mouse);
+    const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
+
+    UIButton* hovered = nullptr;
+    if (inside)
+    {
+        // Children are z-sorted ascending, so later hits replace earlier ones
+        // and the visually topmost button owns the interaction.
+        for (const auto& child : root->GetChildren())
+            if (child)
+                if (UIButton* hit = FindTopButton(*child, canvasRect, mouse))
+                    hovered = hit;
+    }
+
+    if (hovered) hovered->SetHovered(true);
+
+    if (inside && input.IsMouseButtonPressed(SDL_BUTTON_LEFT))
+        m_PressedCanvasButton = hovered;
+
+    if (m_PressedCanvasButton)
+        m_PressedCanvasButton->SetPressed(true);
+
+    if (input.IsMouseButtonReleased(SDL_BUTTON_LEFT))
+    {
+        if (m_PressedCanvasButton && m_PressedCanvasButton == hovered)
+            m_PressedCanvasButton->SetClicked(true);
+        if (m_PressedCanvasButton)
+            m_PressedCanvasButton->SetPressed(false);
+        m_PressedCanvasButton = nullptr;
+    }
+}
+
+void UIRenderer::ResetButtonInput(UIWidget& widget)
+{
+    if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+    {
+        button->SetHovered(false);
+        if (button != m_PressedCanvasButton)
+            button->SetPressed(false);
+    }
+    for (const auto& child : widget.GetChildren())
+        if (child) ResetButtonInput(*child);
+}
+
+UIButton* UIRenderer::FindTopButton(
+    UIWidget& widget,
+    const UIRect& parentRect,
+    const Vec2& mouse)
+{
+    if (!widget.IsVisible() || !widget.IsEnabled())
+        return nullptr;
+
     const UIRect rect = UILayout::Calculate(widget, parentRect);
+    UIButton* result = nullptr;
+
+    for (const auto& child : widget.GetChildren())
+        if (child)
+            if (UIButton* hit = FindTopButton(*child, rect, mouse))
+                result = hit;
+
     const bool hit = widget.IsHitTestVisible() &&
         mouse.x >= rect.x && mouse.x <= rect.x + rect.width &&
         mouse.y >= rect.y && mouse.y <= rect.y + rect.height;
 
-    if (UIButton* button = dynamic_cast<UIButton*>(&widget))
-    {
-        button->SetHovered(hit);
-        if (pressed) button->SetPressed(hit);
-        if (released)
-        {
-            if (button->IsPressed() && hit) button->SetClicked(true);
-            button->SetPressed(false);
-        }
-    }
+    if (hit)
+        if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+            result = button;
 
-    for (const auto& child : widget.GetChildren())
-        if (child) UpdateButtonInput(*child, rect, mouse, pressed, released);
+    return result;
 }
 
 // =============================================================
