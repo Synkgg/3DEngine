@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include <unordered_set>
+#include <string>
 
 class Scene
 {
@@ -33,8 +34,10 @@ public:
 
     void Clear();
 
-    bool SetParent(Entity child, Entity parent);
-    void ClearParent(Entity child);
+    bool SetParent(Entity child, Entity parent, bool keepWorldTransform = false);
+    void ClearParent(Entity child, bool keepWorldTransform = false);
+    std::vector<Entity> GetChildren(Entity parent) const;
+    Entity FindEntityByName(const std::string& name) const;
     Entity GetParent(Entity child) const;
     bool IsDescendant(Entity entity, Entity possibleAncestor) const;
     Transform GetWorldTransform(Entity entity) const;
