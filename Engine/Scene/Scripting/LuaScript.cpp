@@ -1243,7 +1243,8 @@ void LuaScript::BindEngineAPI()
         sol::table result=m_Lua->create_table();
         NetworkGameState state=m_Runtime ? m_Runtime->GetNetwork().GetGameState() : NetworkGameState{};
         result["revision"]=state.revision; result["redScore"]=state.redScore; result["blueScore"]=state.blueScore;
-        result["roundSeconds"]=state.roundSeconds; result["orbX"]=state.orbX; result["orbY"]=state.orbY; result["orbZ"]=state.orbZ;\n        result["carrierID"]=state.carrierID; result["winner"]=state.winner;
+        result["roundSeconds"]=state.roundSeconds; result["orbX"]=state.orbX; result["orbY"]=state.orbY; result["orbZ"]=state.orbZ;
+        result["carrierID"]=state.carrierID; result["winner"]=state.winner;
         return result;
     });
     network.set_function("SetCoreRushState", [this](int redScore, int blueScore, int roundSeconds, float orbX, float orbY, float orbZ, std::uint32_t carrierID, int winner)
