@@ -15,6 +15,7 @@
 #include "../../Network/NetworkManager.h"
 
 #include <string>
+#include <unordered_map>
 
 class Renderer;
 class Input;
@@ -57,6 +58,7 @@ public:
     void SetAudioEngine(AudioEngine* audio) { m_Audio = audio; }
     void SetProjectSettings(ProjectSettings* settings) { m_ProjectSettings = settings; }
     NetworkManager& GetNetwork() { return m_Network; }
+    bool IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) const;
 
 private:
     bool m_Running = false;
@@ -85,4 +87,6 @@ private:
     AudioEngine* m_Audio = nullptr;
     ProjectSettings* m_ProjectSettings = nullptr;
     NetworkManager m_Network;
+    std::unordered_map<std::uint32_t, std::uint32_t> m_RemotePlayerEntities;
+    void UpdateNetworkPlayers(Scene& scene);
 };
