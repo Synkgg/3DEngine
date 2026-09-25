@@ -250,7 +250,19 @@ void Editor::Render(
         if (ImGui::BeginMenu("Settings"))
         {
             ImGui::TextDisabled("Rendering");
-            RenderSettings settings = renderer.GetRenderSettings();
+            const SceneEnvironment& storedEnvironment = scene.GetEnvironment();
+            RenderSettings settings;
+            settings.antiAliasing=storedEnvironment.antiAliasing;
+            settings.antiAliasingSamples=storedEnvironment.antiAliasingSamples;
+            settings.shadows=storedEnvironment.shadows;
+            settings.fog=storedEnvironment.fog;
+            settings.bloom=storedEnvironment.bloom;
+            settings.viewDistance=storedEnvironment.viewDistance;
+            settings.exposure=storedEnvironment.exposure;
+            settings.fogDensity=storedEnvironment.fogDensity;
+            settings.bloomStrength=storedEnvironment.bloomStrength;
+            settings.shadowQuality=storedEnvironment.shadowQuality;
+            settings.shadowDistance=storedEnvironment.shadowDistance;
             bool changed = false;
 
             changed |= ImGui::Checkbox("Anti-Aliasing", &settings.antiAliasing);
@@ -285,7 +297,21 @@ void Editor::Render(
             changed |= ImGui::SliderFloat("View Distance", &settings.viewDistance, 25.0f, 5000.0f, "%.0f");
 
             if (changed)
+            {
                 renderer.SetRenderSettings(settings);
+                SceneEnvironment& environment=scene.GetEnvironment();
+                environment.antiAliasing=settings.antiAliasing;
+                environment.antiAliasingSamples=settings.antiAliasingSamples;
+                environment.shadows=settings.shadows;
+                environment.fog=settings.fog;
+                environment.bloom=settings.bloom;
+                environment.viewDistance=settings.viewDistance;
+                environment.exposure=settings.exposure;
+                environment.fogDensity=settings.fogDensity;
+                environment.bloomStrength=settings.bloomStrength;
+                environment.shadowQuality=settings.shadowQuality;
+                environment.shadowDistance=settings.shadowDistance;
+            }
 
             ImGui::EndMenu();
         }
