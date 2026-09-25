@@ -1794,8 +1794,9 @@ void UIEditor::RenameSelected()
 
 void UIEditor::ResetView()
 {
-    m_Zoom =
-        1.0f;
+    m_Zoom = 1.0f;
+    m_DesignerPan = ImVec2(0.0f, 0.0f);
+    m_Panning = false;
 }
 
 UIRect UIEditor::GetAbsoluteRect(
