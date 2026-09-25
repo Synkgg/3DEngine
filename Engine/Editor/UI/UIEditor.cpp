@@ -21,6 +21,9 @@
 #include <vector>
 #include <cctype>
 #include <cstdint>
+#include <fstream>
+#include <sstream>
+#include <chrono>
 
 bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
 {
@@ -133,7 +136,12 @@ void UIEditor::Draw(
         ImGui::BeginChild("HierarchyPanel", ImVec2(hierarchyWidth, 0.0f), true);
         ImGui::TextDisabled("HIERARCHY");
         ImGui::Separator();
-        if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot());
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputTextWithHint("##UIHierarchySearch", "Search hierarchy...", m_HierarchySearch, sizeof(m_HierarchySearch));
+        std::string hierarchyQuery=m_HierarchySearch;
+        std::transform(hierarchyQuery.begin(),hierarchyQuery.end(),hierarchyQuery.begin(),
+            [](unsigned char c){return static_cast<char>(std::tolower(c));});
+        if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot(), hierarchyQuery);
         ImGui::EndChild();
         ImGui::PopStyleColor();
         sameLine();
@@ -162,18 +170,27 @@ void UIEditor::Draw(
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
-        if (ImGui::IsKeyPressed(ImGuiKey_Delete)) DeleteSelected(canvas);
+        const bool editingText = ImGui::GetIO().WantTextInput;
         const bool ctrl = ImGui::GetIO().KeyCtrl;
-        if (ctrl && ImGui::IsKeyPressed(ImGuiKey_D)) DuplicateSelected(canvas);
-        if (ImGui::IsKeyPressed(ImGuiKey_F2)) RenameSelected();
-        if (ImGui::IsKeyPressed(ImGuiKey_F)) ResetView();
+        if (!editingText && ImGui::IsKeyPressed(ImGuiKey_Delete)) { PushHistory(canvas); DeleteSelected(canvas); }
+        if (!editingText && ctrl && ImGui::IsKeyPressed(ImGuiKey_D)) { PushHistory(canvas); DuplicateSelected(canvas); }
+        if (!editingText && ctrl && ImGui::IsKeyPressed(ImGuiKey_Z)) Undo(canvas);
+        if (!editingText && ctrl && ImGui::IsKeyPressed(ImGuiKey_Y)) Redo(canvas);
+        if (!editingText && ImGui::IsKeyPressed(ImGuiKey_F2)) RenameSelected();
+        if (!editingText && ImGui::IsKeyPressed(ImGuiKey_F)) ResetView();
+        const float nudge=ImGui::GetIO().KeyShift ? std::max(1.0f,m_GridSize) : 1.0f;
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) NudgeSelected(-nudge,0);
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_RightArrow)) NudgeSelected(nudge,0);
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) NudgeSelected(0,-nudge);
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) NudgeSelected(0,nudge);
     }
 
     ImGui::End();
 }
 
 void UIEditor::DrawHierarchy(
-    UIWidget& widget)
+    UIWidget& widget,
+    const std::string& search)
 {
     ImGuiTreeNodeFlags flags =
         ImGuiTreeNodeFlags_OpenOnArrow |
@@ -200,11 +217,31 @@ void UIEditor::DrawHierarchy(
         label = "Widget";
     }
 
+    std::string lowerLabel=label;
+    std::transform(lowerLabel.begin(),lowerLabel.end(),lowerLabel.begin(),
+        [](unsigned char c){return static_cast<char>(std::tolower(c));});
+    bool childMatches=false;
+    std::function<bool(const UIWidget&)> matches=[&](const UIWidget& w)
+    {
+        std::string n=w.GetName();
+        std::transform(n.begin(),n.end(),n.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});
+        if(search.empty() || n.find(search)!=std::string::npos) return true;
+        for(const auto& child:w.GetChildren()) if(child && matches(*child)) return true;
+        return false;
+    };
+    if(!matches(widget)) return;
+    if(!search.empty()) flags |= ImGuiTreeNodeFlags_DefaultOpen;
+
+    const char* typeName = widget.GetType()==UIWidgetType::Panel ? "[Panel]" :
+        widget.GetType()==UIWidgetType::Text ? "[Text]" :
+        widget.GetType()==UIWidgetType::Image ? "[Image]" : "[Button]";
     const bool open =
         ImGui::TreeNodeEx(
             &widget,
             flags,
-            "%s",
+            "%s  %s%s",
+            typeName,
+            widget.IsVisible() ? "" : "(hidden) ",
             label.c_str()
         );
 
@@ -262,7 +299,8 @@ void UIEditor::DrawHierarchy(
             if (child)
             {
                 DrawHierarchy(
-                    *child
+                    *child,
+                    search
                 );
             }
         }
@@ -649,9 +687,19 @@ void UIEditor::DrawToolbar(
 
     if (ImGui::BeginPopup("UIEditPopup"))
     {
-        if (ImGui::MenuItem("Duplicate", "Ctrl+D")) DuplicateSelected(canvas);
+        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, !m_UndoStack.empty())) Undo(canvas);
+        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, !m_RedoStack.empty())) Redo(canvas);
+        ImGui::Separator();
+        if (ImGui::MenuItem("Duplicate", "Ctrl+D")) { PushHistory(canvas); DuplicateSelected(canvas); }
         if (ImGui::MenuItem("Rename", "F2")) RenameSelected();
-        if (ImGui::MenuItem("Delete", "Del")) DeleteSelected(canvas);
+        if (ImGui::MenuItem("Delete", "Del")) { PushHistory(canvas); DeleteSelected(canvas); }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Align Left")) AlignSelected(canvas,0);
+        if (ImGui::MenuItem("Align Center X")) AlignSelected(canvas,1);
+        if (ImGui::MenuItem("Align Right")) AlignSelected(canvas,2);
+        if (ImGui::MenuItem("Align Top")) AlignSelected(canvas,3);
+        if (ImGui::MenuItem("Align Center Y")) AlignSelected(canvas,4);
+        if (ImGui::MenuItem("Align Bottom")) AlignSelected(canvas,5);
         ImGui::EndPopup();
     }
 
@@ -663,6 +711,7 @@ void UIEditor::DrawToolbar(
     {
         ImGui::MenuItem("Grid", nullptr, &m_ShowGrid);
         ImGui::MenuItem("Snap", nullptr, &m_SnapToGrid);
+        ImGui::MenuItem("Widget Bounds", nullptr, &m_ShowWidgetBounds);
         if (ImGui::MenuItem("Frame Canvas", "F")) ResetView();
         ImGui::Separator();
         ImGui::TextDisabled("Grid size");
@@ -1057,11 +1106,21 @@ void UIEditor::DrawDesigner(
         }
     }
 
-    /*
-     * Keep ImGui's item system aware of the
-     * designer region.
-     */
-    ImGui::InvisibleButton("##UIDesignerDropTarget", availableSize);
+    // Canvas context creation and empty-space deselection.
+    ImGui::SetCursorScreenPos(contentMin);
+    ImGui::InvisibleButton("##UIDesignerDropTarget", availableSize,
+        ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
+    if (mouseInsideCanvas && ImGui::IsItemClicked(ImGuiMouseButton_Right))
+        ImGui::OpenPopup("DesignerCreatePopup");
+    if (ImGui::BeginPopup("DesignerCreatePopup"))
+    {
+        ImGui::TextDisabled("CREATE WIDGET");
+        if(ImGui::MenuItem("Panel")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Panel); }
+        if(ImGui::MenuItem("Text")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Text); }
+        if(ImGui::MenuItem("Image")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Image); }
+        if(ImGui::MenuItem("Button")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Button); }
+        ImGui::EndPopup();
+    }
     if (ImGui::BeginDragDropTarget())
     {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("UI_PALETTE_WIDGET"))
@@ -1243,6 +1302,9 @@ void UIEditor::DrawWidget(
         // not visible UI text. Add a UIText child when the button needs a label.
 
     }
+
+    if (m_ShowWidgetBounds && m_SelectedWidget != &widget)
+        drawList->AddRect(min,max,IM_COL32(110,120,135,80),0.0f,0,1.0f);
 
     /*
      * Selection outline and resize handles.
@@ -1692,120 +1754,19 @@ void UIEditor::DeleteSelected(
         -1;
 }
 
-void UIEditor::DuplicateSelected(
-    UICanvas& canvas)
+void UIEditor::DuplicateSelected(UICanvas& canvas)
 {
-    if (!m_SelectedWidget)
-    {
-        return;
-    }
-
-    UIWidget* parent =
-        m_SelectedWidget->GetParent();
-
-    if (!parent)
-    {
-        parent =
-            canvas.GetRoot();
-    }
-
-    if (!parent)
-    {
-        return;
-    }
-
-    std::unique_ptr<UIWidget> copy =
-        UIWidgetFactory::Create(
-            m_SelectedWidget->GetType()
-        );
-
-    if (!copy)
-    {
-        return;
-    }
-
-    copy->SetName(
-        m_SelectedWidget->GetName() +
-        " Copy"
-    );
-
-    copy->SetPosition(
-        m_SelectedWidget->GetPosition()
-    );
-
-    Vec2 position =
-        copy->GetPosition();
-
-    position.x +=
-        m_GridSize;
-
-    position.y +=
-        m_GridSize;
-
-    copy->SetPosition(
-        position
-    );
-
-    copy->SetSize(
-        m_SelectedWidget->GetSize()
-    );
-
-    copy->SetAnchor(
-        m_SelectedWidget->GetAnchor()
-    );
-
-    copy->SetPivot(
-        m_SelectedWidget->GetPivot()
-    );
-
-    copy->SetColor(
-        m_SelectedWidget->GetColor()
-    );
-
-    copy->SetVisible(
-        m_SelectedWidget->IsVisible()
-    );
-
-    if (UIText* sourceText =
-        dynamic_cast<UIText*>(
-            m_SelectedWidget))
-    {
-        if (UIText* destinationText =
-            dynamic_cast<UIText*>(
-                copy.get()))
-        {
-            destinationText->SetText(
-                sourceText->GetText()
-            );
-
-            destinationText->SetFontSize(
-                sourceText->GetFontSize()
-            );
-        }
-    }
-
-    if (UIImage* sourceImage =
-        dynamic_cast<UIImage*>(
-            m_SelectedWidget))
-    {
-        if (UIImage* destinationImage =
-            dynamic_cast<UIImage*>(
-                copy.get()))
-        {
-            destinationImage->SetTexturePath(
-                sourceImage->GetTexturePath()
-            );
-        }
-    }
-
-    UIWidget* newWidget =
-        parent->AddChild(
-            std::move(copy)
-        );
-
-    SelectWidget(
-        newWidget
-    );
+    if(!m_SelectedWidget) return;
+    UIWidget* parent=m_SelectedWidget->GetParent();
+    if(!parent) parent=canvas.GetRoot();
+    if(!parent) return;
+    std::unique_ptr<UIWidget> copy=CloneWidget(*m_SelectedWidget);
+    if(!copy) return;
+    copy->SetName(m_SelectedWidget->GetName()+" Copy");
+    Vec2 position=copy->GetPosition();
+    position.x+=m_GridSize; position.y+=m_GridSize; copy->SetPosition(position);
+    UIWidget* added=parent->AddChild(std::move(copy));
+    SelectWidget(added);
 }
 
 void UIEditor::AddWidget(
@@ -1896,4 +1857,77 @@ UIRect UIEditor::GetAbsoluteRect(
 
     const UIRect parentRect = GetAbsoluteRect(*parent, canvasRect);
     return UILayout::Calculate(widget, parentRect);
+}
+
+std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
+{
+    std::unique_ptr<UIWidget> copy=UIWidgetFactory::Create(source.GetType());
+    if(!copy) return nullptr;
+    copy->SetName(source.GetName()); copy->SetPosition(source.GetPosition()); copy->SetSize(source.GetSize());
+    copy->SetAnchors(source.GetAnchorMinimum(),source.GetAnchorMaximum()); copy->SetPivot(source.GetPivot());
+    copy->SetColor(source.GetColor()); copy->SetVisible(source.IsVisible()); copy->SetEnabled(source.IsEnabled());
+    copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder());
+    if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); }
+    if(auto* a=dynamic_cast<const UIImage*>(&source)) if(auto* b=dynamic_cast<UIImage*>(copy.get())) b->SetTexturePath(a->GetTexturePath());
+    if(auto* a=dynamic_cast<const UIButton*>(&source)) if(auto* b=dynamic_cast<UIButton*>(copy.get())) {
+        b->SetNormalColor(a->GetNormalColor()); b->SetHoveredColor(a->GetHoveredColor());
+        b->SetPressedColor(a->GetPressedColor()); b->SetDisabledColor(a->GetDisabledColor());
+    }
+    for(const auto& child:source.GetChildren()) if(child) copy->AddChild(CloneWidget(*child));
+    return copy;
+}
+
+void UIEditor::NudgeSelected(float x,float y)
+{
+    if(!m_SelectedWidget) return;
+    Vec2 p=m_SelectedWidget->GetPosition(); p.x+=x; p.y+=y; m_SelectedWidget->SetPosition(p);
+}
+
+void UIEditor::AlignSelected(UICanvas& canvas,int mode)
+{
+    if(!m_SelectedWidget || m_SelectedWidget==canvas.GetRoot()) return;
+    UIWidget* parent=m_SelectedWidget->GetParent();
+    Vec2 bounds=parent && parent!=canvas.GetRoot()?parent->GetSize():canvas.GetSize();
+    Vec2 p=m_SelectedWidget->GetPosition(), size=m_SelectedWidget->GetSize();
+    if(mode==0)p.x=0; else if(mode==1)p.x=(bounds.x-size.x)*.5f; else if(mode==2)p.x=bounds.x-size.x;
+    else if(mode==3)p.y=0; else if(mode==4)p.y=(bounds.y-size.y)*.5f; else if(mode==5)p.y=bounds.y-size.y;
+    m_SelectedWidget->SetPosition(p);
+}
+
+std::string UIEditor::CaptureCanvas(UICanvas& canvas) const
+{
+    if(m_UIAssetPath.empty()) return {};
+    const std::filesystem::path temp=std::filesystem::temp_directory_path()/"vortek_ui_editor_history.ui";
+    if(!UISerializer::Save(canvas,temp.string())) return {};
+    std::ifstream in(temp,std::ios::binary); return std::string((std::istreambuf_iterator<char>(in)),{});
+}
+
+bool UIEditor::RestoreCanvas(UICanvas& canvas,const std::string& snapshot)
+{
+    if(snapshot.empty()) return false;
+    const std::filesystem::path temp=std::filesystem::temp_directory_path()/"vortek_ui_editor_history.ui";
+    { std::ofstream out(temp,std::ios::binary|std::ios::trunc); out<<snapshot; }
+    m_SelectedWidget=nullptr; m_Dragging=false; m_Resizing=false;
+    return UISerializer::Load(canvas,temp.string());
+}
+
+void UIEditor::PushHistory(UICanvas& canvas)
+{
+    std::string snapshot=CaptureCanvas(canvas); if(snapshot.empty()) return;
+    if(m_UndoStack.size()>=MaxHistory) m_UndoStack.erase(m_UndoStack.begin());
+    m_UndoStack.push_back(std::move(snapshot)); m_RedoStack.clear();
+}
+
+void UIEditor::Undo(UICanvas& canvas)
+{
+    if(m_UndoStack.empty()) return;
+    std::string current=CaptureCanvas(canvas); std::string previous=std::move(m_UndoStack.back()); m_UndoStack.pop_back();
+    if(!current.empty()) m_RedoStack.push_back(std::move(current)); RestoreCanvas(canvas,previous);
+}
+
+void UIEditor::Redo(UICanvas& canvas)
+{
+    if(m_RedoStack.empty()) return;
+    std::string current=CaptureCanvas(canvas); std::string next=std::move(m_RedoStack.back()); m_RedoStack.pop_back();
+    if(!current.empty()) m_UndoStack.push_back(std::move(current)); RestoreCanvas(canvas,next);
 }
