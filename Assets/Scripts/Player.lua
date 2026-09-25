@@ -1,4 +1,5 @@
 local moveSpeed = 4.0
+local sprintSpeed = 7.0
 local mouseSensitivity = 0.01
 local cameraHeight = 0.4
 
@@ -56,6 +57,12 @@ function OnUpdate(deltaTime)
         right.z * inputX +
         forward.z * inputZ
 
+    -- Hold Left Shift to sprint.
+    local currentSpeed = moveSpeed
+    if Input.IsKeyDown("Left Shift") or Input.IsKeyDown("LShift") then
+        currentSpeed = sprintSpeed
+    end
+
     -- Prevent diagonal movement from being faster
     local length =
         math.sqrt(
@@ -65,10 +72,10 @@ function OnUpdate(deltaTime)
 
     if length > 0.0 then
         moveX =
-            moveX / length * moveSpeed
+            moveX / length * currentSpeed
 
         moveZ =
-            moveZ / length * moveSpeed
+            moveZ / length * currentSpeed
     end
 
     CharacterController.Move(
