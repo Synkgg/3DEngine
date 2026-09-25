@@ -438,6 +438,29 @@ void Editor::RenderContentBrowser(
                     }
                 }
             }
+            else if (isMesh)
+            {
+                std::error_code previewError;
+                const std::string modelPath =
+                    fs::relative(entry.path, fs::current_path(), previewError).generic_string();
+                const unsigned int previewTexture =
+                    previewError ? 0 : renderer.RenderModelPreview(modelPath, 144, 144);
+
+                if (previewTexture != 0)
+                {
+                    ImGui::ImageButton(
+                        "##meshThumbnail",
+                        (ImTextureID)(std::intptr_t)previewTexture,
+                        ImVec2(72.0f, 72.0f),
+                        ImVec2(0.0f, 1.0f),
+                        ImVec2(1.0f, 0.0f)
+                    );
+                }
+                else
+                {
+                    ImGui::Button(ICON_FA_CUBE, ImVec2(72.0f, 72.0f));
+                }
+            }
             else
             {
                 const char* icon =
@@ -960,24 +983,36 @@ void Editor::RenderContentBrowser(
 
     if (!m_MeshPreviewPath.empty())
     {
-        ImGui::SetNextWindowSize(ImVec2(440.0f, 210.0f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(520.0f, 590.0f), ImGuiCond_FirstUseEver);
         bool previewOpen = true;
         if (ImGui::Begin("Mesh Preview", &previewOpen))
         {
-            ImGui::TextDisabled("MESH ASSET");
+            ImGui::TextDisabled("STATIC MESH");
+            ImGui::SameLine();
+            ImGui::Text("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
             ImGui::Separator();
-            ImGui::TextWrapped("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
+
+            const ImVec2 available = ImGui::GetContentRegionAvail();
+            const float side = std::max(180.0f, std::min(available.x, available.y - 70.0f));
+            const unsigned int texture = renderer.RenderModelPreview(
+                m_MeshPreviewPath,
+                (unsigned int)std::max(1.0f, side * 2.0f),
+                (unsigned int)std::max(1.0f, side * 2.0f));
+
+            if (texture != 0)
+            {
+                const float x = std::max(0.0f, (available.x - side) * 0.5f);
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + x);
+                ImGui::Image((ImTextureID)(std::intptr_t)texture, ImVec2(side, side),
+                    ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+            }
+            else
+            {
+                ImGui::TextDisabled("Unable to render this model.");
+            }
+
+            ImGui::Separator();
             ImGui::TextDisabled("%s", m_MeshPreviewPath.c_str());
-            ImGui::Spacing();
-            ImGui::TextWrapped("Drag the OBJ from Assets onto an entity's Mesh component to assign it.");
-            ImGui::Spacing();
-            ImGui::Text("Scene preview pipeline");
-            ImGui::BulletText("Cached OBJ geometry");
-            ImGui::BulletText("Material and local lighting");
-            ImGui::BulletText("Directional shadows and HDR bloom");
-            ImGui::Spacing();
-            if (ImGui::Button("Clear Preview", ImVec2(110.0f, 0.0f)))
-                previewOpen = false;
         }
         ImGui::End();
         if (!previewOpen)
