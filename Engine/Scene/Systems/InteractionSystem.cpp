@@ -15,6 +15,7 @@
 #include "../../Platform/SDL/Input.h"
 
 #include "../../Core/Logger.h"
+#include "../../Audio/AudioEngine.h"
 
 #include <algorithm>
 #include <cmath>
@@ -146,7 +147,8 @@ void InteractionSystem::Update(
     Scene& scene,
     Renderer& renderer,
     Input& input,
-    LuaScriptSystem& luaScriptSystem)
+    LuaScriptSystem& luaScriptSystem,
+    AudioEngine* audio)
 {
     m_CurrentPrompt.clear();
 
@@ -273,6 +275,8 @@ void InteractionSystem::Update(
             interactable->prompt
         );
     }
+
+    if (audio) audio->PlayInteractSound();
 
     luaScriptSystem.Interact(
         closestEntity
