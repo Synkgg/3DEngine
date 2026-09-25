@@ -42,6 +42,7 @@ public:
     Entity GetParent(Entity child) const;
     bool IsDescendant(Entity entity, Entity possibleAncestor) const;
     Transform GetWorldTransform(Entity entity) const;
+    Entity DuplicateEntity(Entity source, bool duplicateChildren = true);
 
     const std::vector<Entity>& GetEntities() const
     {
