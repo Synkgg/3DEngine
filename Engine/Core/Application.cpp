@@ -456,7 +456,7 @@ void Application::Run()
             if (transform == nullptr || mesh == nullptr)
                 continue;
 
-            Transform shadowTransform = transform->transform;
+            Transform shadowTransform = m_Scene.GetWorldTransform(entity);
             shadowTransform.position.x += mesh->offset.x;
             shadowTransform.position.y += mesh->offset.y;
             shadowTransform.position.z += mesh->offset.z;
@@ -530,7 +530,7 @@ void Application::Run()
                 }
 
                 Transform meshTransform =
-                    transform->transform;
+                    m_Scene.GetWorldTransform(entity);
 
                 meshTransform.position.x +=
                     mesh->offset.x;
@@ -737,7 +737,7 @@ void Application::UpdateLighting()
         else if (light->type == LightType::Point && transform)
         {
             PointLightData data;
-            data.position = transform->transform.position;
+            data.position = m_Scene.GetWorldTransform(entity).position;
             data.color = light->color;
             data.intensity = light->intensity;
             data.range = light->range;
@@ -746,7 +746,7 @@ void Application::UpdateLighting()
         else if (light->type == LightType::Spot && transform)
         {
             SpotLightData data;
-            data.position = transform->transform.position;
+            data.position = m_Scene.GetWorldTransform(entity).position;
             data.direction = light->direction;
             data.color = light->color;
             data.intensity = light->intensity;
