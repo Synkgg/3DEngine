@@ -1,5 +1,5 @@
 MyEngineScene
-Entities 48
+Entities 60
 Entity 1
 Name GameController
 Position 0 0 0
@@ -724,6 +724,186 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+Entity 49
+Name GraveWestA
+Position -8 0 -7
+Rotation 0 0 0
+Scale 1 1 1
+Mesh 1 0 "Assets/Models/Graveyard/GraveMarker.obj"
+Color 1 0.24 0.27 0.24 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 50
+Name GraveWestB
+Position -6 0 -7.8
+Rotation 0 0.12 0
+Scale 0.9 0.9 0.9
+Mesh 1 0 "Assets/Models/Graveyard/GraveMarker.obj"
+Color 1 0.21 0.24 0.22 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 51
+Name GraveEastA
+Position 7.4 0 -7.2
+Rotation 0 -0.1 0
+Scale 1.1 1.1 1.1
+Mesh 1 0 "Assets/Models/Graveyard/GraveMarker.obj"
+Color 1 0.23 0.25 0.23 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 52
+Name GraveEastB
+Position 9 0 -5.7
+Rotation 0 0.08 0
+Scale 0.85 0.85 0.85
+Mesh 1 0 "Assets/Models/Graveyard/GraveMarker.obj"
+Color 1 0.20 0.23 0.21 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 53
+Name DeadTreeWest
+Position -10.2 0 4.5
+Rotation 0 0.25 0
+Scale 1.1 1.1 1.1
+Mesh 1 0 "Assets/Models/Graveyard/DeadTree.obj"
+Color 1 0.12 0.10 0.08 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 54
+Name DeadTreeEast
+Position 10.4 0 -2.2
+Rotation 0 -0.35 0
+Scale 0.9 1.15 0.9
+Mesh 1 0 "Assets/Models/Graveyard/DeadTree.obj"
+Color 1 0.11 0.09 0.07 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 55
+Name FenceNorthWest
+Position -7 0 -10.8
+Rotation 0 0 0
+Scale 2.5 1 1
+Mesh 1 0 "Assets/Models/Graveyard/IronFence.obj"
+Color 1 0.10 0.11 0.10 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 56
+Name FenceNorthEast
+Position 7 0 -10.8
+Rotation 0 0 0
+Scale 2.5 1 1
+Mesh 1 0 "Assets/Models/Graveyard/IronFence.obj"
+Color 1 0.10 0.11 0.10 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 57
+Name CoffinWest
+Position -4.8 0.1 6.7
+Rotation 0 0.18 0
+Scale 1 1 1
+Mesh 1 0 "Assets/Models/Graveyard/Coffin.obj"
+Color 1 0.19 0.16 0.13 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 58
+Name CoffinEast
+Position 5.5 0.08 7.1
+Rotation 0 -0.22 0
+Scale 0.92 0.92 0.92
+Mesh 1 0 "Assets/Models/Graveyard/Coffin.obj"
+Color 1 0.17 0.15 0.12 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 59
+Name GraveSouthWest
+Position -8.6 0 8.2
+Rotation 0 -0.08 0
+Scale 1 1 1
+Mesh 1 0 "Assets/Models/Graveyard/GraveMarker.obj"
+Color 1 0.22 0.25 0.22 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 60
+Name GraveSouthEast
+Position 8.5 0 8.5
+Rotation 0 0.11 0
+Scale 1 1 1
+Mesh 1 0 "Assets/Models/Graveyard/GraveMarker.obj"
+Color 1 0.22 0.25 0.22 1
+Texture 0
+Material 1 0.02 0.9 0.72 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
 HierarchyFolders 6
 Folder "Gameplay" 1
 Entities 2 1 3
@@ -734,7 +914,7 @@ Entities 15 2 4 5 6 7 8 10 11 12 13 29 30 31 38 39 40
 Children 0
 EndFolder
 Folder "Graves and Ruins" 1
-Entities 10 20 21 22 23 36 37 41 42 43 46
+Entities 22 20 21 22 23 36 37 41 42 43 46 49 50 51 52 53 54 55 56 57 58 59 60
 Children 0
 EndFolder
 Folder "Paths and Grounds" 1
