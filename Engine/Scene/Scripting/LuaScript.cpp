@@ -1226,6 +1226,7 @@ void LuaScript::BindEngineAPI()
     network.set_function("Disconnect", [this]() { if (m_Runtime) m_Runtime->GetNetwork().Disconnect(); });
     network.set_function("IsHost", [this]() { return m_Runtime && m_Runtime->GetNetwork().IsHost(); });
     network.set_function("IsConnected", [this]() { return m_Runtime && m_Runtime->GetNetwork().IsConnected(); });
+    network.set_function("WasKickedByHost", [this]() { return m_Runtime && m_Runtime->GetNetwork().WasKickedByHost(); });
     network.set_function("GetPlayerCount", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetPlayerCount() : 1; });
     network.set_function("GetLastError", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetLastError() : std::string(); });
     network.set_function("GetLocalPlayerID", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetLocalPlayerID() : std::uint32_t(0); });
