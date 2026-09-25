@@ -86,6 +86,18 @@ Mat4 Mat4::RotationZ(float angle)
     return result;
 }
 
+Mat4 Mat4::Orthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
+{
+    Mat4 result = Mat4::Identity();
+    result.elements[0] = 2.0f / (right - left);
+    result.elements[5] = 2.0f / (top - bottom);
+    result.elements[10] = -2.0f / (farPlane - nearPlane);
+    result.elements[12] = -(right + left) / (right - left);
+    result.elements[13] = -(top + bottom) / (top - bottom);
+    result.elements[14] = -(farPlane + nearPlane) / (farPlane - nearPlane);
+    return result;
+}
+
 Mat4 Mat4::Perspective(
     float fov,
     float aspect,
