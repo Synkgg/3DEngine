@@ -6,6 +6,8 @@
 #include "../../UI/UIText.h"
 #include "../../UI/UIImage.h"
 #include "../../UI/UIButton.h"
+#include "../../UI/UITextInput.h"
+#include "../../UI/UISlider.h"
 #include "../../UI/UISerializer.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
@@ -124,6 +126,8 @@ void UIEditor::Draw(
         paletteItem("Text", UIWidgetType::Text);
         paletteItem("Image", UIWidgetType::Image);
         paletteItem("Button", UIWidgetType::Button);
+        paletteItem("Text Input", UIWidgetType::TextInput);
+        paletteItem("Slider", UIWidgetType::Slider);
         ImGui::Spacing();
         ImGui::TextDisabled("Click to add, or drag into the Designer");
         ImGui::EndChild();
@@ -234,7 +238,9 @@ void UIEditor::DrawHierarchy(
 
     const char* typeName = widget.GetType()==UIWidgetType::Panel ? "[Panel]" :
         widget.GetType()==UIWidgetType::Text ? "[Text]" :
-        widget.GetType()==UIWidgetType::Image ? "[Image]" : "[Button]";
+        widget.GetType()==UIWidgetType::Image ? "[Image]" :
+        widget.GetType()==UIWidgetType::Button ? "[Button]" :
+        widget.GetType()==UIWidgetType::TextInput ? "[TextInput]" : "[Slider]";
     const bool open =
         ImGui::TreeNodeEx(
             &widget,
@@ -629,6 +635,14 @@ void UIEditor::DrawInspector(
             }
         }
 
+    }
+
+    if (UISlider* slider=dynamic_cast<UISlider*>(&widget))
+    {
+        ImGui::Spacing(); ImGui::SeparatorText("Slider");
+        float value=slider->GetValue(); if(ImGui::SliderFloat("Value",&value,0.0f,1.0f,"%.2f"))slider->SetValue(value);
+        Vec4 fill=slider->GetFillColor(); if(ImGui::ColorEdit4("Fill Color",&fill.x))slider->SetFillColor(fill);
+        Vec4 handle=slider->GetHandleColor(); if(ImGui::ColorEdit4("Handle Color",&handle.x))slider->SetHandleColor(handle);
     }
 
     if (UIButton* button = dynamic_cast<UIButton*>(&widget))
@@ -1800,7 +1814,7 @@ void UIEditor::AddWidget(
         parent->GetType() ==
         UIWidgetType::Image ||
         parent->GetType() ==
-        UIWidgetType::Button)
+        UIWidgetType::Button || parent->GetType() == UIWidgetType::TextInput || parent->GetType() == UIWidgetType::Slider)
     {
         parent =
             canvas.GetRoot();
@@ -1887,6 +1901,7 @@ std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
     copy->SetColor(source.GetColor()); copy->SetVisible(source.IsVisible()); copy->SetEnabled(source.IsEnabled());
     copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder());
     if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); }
+    if(auto* a=dynamic_cast<const UISlider*>(&source)) if(auto* b=dynamic_cast<UISlider*>(copy.get())) { b->SetValue(a->GetValue()); b->SetFillColor(a->GetFillColor()); b->SetHandleColor(a->GetHandleColor()); }
     if(auto* a=dynamic_cast<const UIImage*>(&source)) if(auto* b=dynamic_cast<UIImage*>(copy.get())) b->SetTexturePath(a->GetTexturePath());
     if(auto* a=dynamic_cast<const UIButton*>(&source)) if(auto* b=dynamic_cast<UIButton*>(copy.get())) {
         b->SetNormalColor(a->GetNormalColor()); b->SetHoveredColor(a->GetHoveredColor());
