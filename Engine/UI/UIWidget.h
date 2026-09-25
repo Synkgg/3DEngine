@@ -47,7 +47,8 @@ enum class UIWidgetType
     Text,
     Image,
     Button,
-    TextInput
+    TextInput,
+    Slider
 };
 
 class UIWidget
