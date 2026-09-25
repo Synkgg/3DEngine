@@ -2,12 +2,16 @@ local moveSpeed = 4.0
 local sprintSpeed = 7.0
 local mouseSensitivity = 0.01
 local cameraHeight = 0.4
+local sprintToggled = false
+local bobTime = 0.0
 
 function OnCreate()
     print("Player controller started.")
 end
 
 function OnUpdate(deltaTime)
+
+    mouseSensitivity = GameSettings.GetMouseSensitivity()
 
     -- Camera look
     local mouseX =
@@ -16,9 +20,10 @@ function OnUpdate(deltaTime)
     local mouseY =
         Input.GetMouseDeltaY()
 
+    local pitchDirection = GameSettings.GetInvertY() and 1.0 or -1.0
     Camera.Rotate(
         mouseX * mouseSensitivity,
-        -mouseY * mouseSensitivity
+        mouseY * mouseSensitivity * pitchDirection
     )
 
     -- WASD input
@@ -57,11 +62,12 @@ function OnUpdate(deltaTime)
         right.z * inputX +
         forward.z * inputZ
 
-    -- Hold Left Shift to sprint.
-    local currentSpeed = moveSpeed
-    if Input.IsKeyDown("Left Shift") or Input.IsKeyDown("LShift") then
-        currentSpeed = sprintSpeed
-    end
+    -- Sprint can be hold or toggle from Settings.
+    local shiftDown = Input.IsKeyDown("Left Shift") or Input.IsKeyDown("LShift")
+    local shiftPressed = Input.IsKeyPressed("Left Shift") or Input.IsKeyPressed("LShift")
+    if GameSettings.GetSprintToggle() and shiftPressed then sprintToggled = not sprintToggled end
+    local sprinting = GameSettings.GetSprintToggle() and sprintToggled or shiftDown
+    local currentSpeed = sprinting and sprintSpeed or moveSpeed
 
     -- Prevent diagonal movement from being faster
     local length =
@@ -107,9 +113,14 @@ function OnUpdate(deltaTime)
     local position =
         transform.GetPosition()
 
+    local bob = 0.0
+    if GameSettings.GetCameraBob() and length > 0.0 and CharacterController.IsGrounded() then
+        bobTime = bobTime + deltaTime * (sprinting and 12.0 or 8.0)
+        bob = math.sin(bobTime) * 0.035
+    end
     Camera.SetPosition(
         position.x,
-        position.y + cameraHeight,
+        position.y + cameraHeight + bob,
         position.z
     )
 end
