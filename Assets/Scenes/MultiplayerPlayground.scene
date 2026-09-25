@@ -1,5 +1,4 @@
 MyEngineScene
-Environment 1 4 1 1 1 180 0.82 0.004 0.28 2 105
 Entities 25
 Entity 1
 Name PlaygroundController
@@ -19,9 +18,10 @@ Light 0
 Collider 0
 Scripts 1
 Script Assets/Scripts/MultiplayerPlayground.lua
+ScriptProperties 0
 Entity 2
 Name Player
-Position 0 2 -75
+Position 0 2 -30
 Rotation 0 3.14159 0
 Scale 1 1 1
 Parent 0
@@ -37,6 +37,7 @@ Light 0
 Collider 1 0.8 2 0.8
 Scripts 1
 Script Assets/Scripts/Player.lua
+ScriptProperties 0
 Entity 3
 Name PlayerBody
 Position 0 -0.35 0
@@ -45,7 +46,7 @@ Scale 0.62 0.82 0.38
 Parent 2
 PrefabSource ""
 Mesh 1 4 "" 1
-Color 1 0.10 0.55 0.95 1
+Color 1 0.1 0.55 0.95 1
 Texture 0
 Material 1 0.05 0.45 0.9 0.08
 Interactable 0
@@ -61,7 +62,7 @@ Rotation 0 0 0
 Scale 100 1 100
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.055 0.22 0.075 1
 Texture 0
 Material 1 0.01 0.92 0.48 0
@@ -78,8 +79,8 @@ Rotation 0 0 0
 Scale 4 0.18 4
 Parent 0
 PrefabSource ""
-Mesh 1 1
-Color 1 0.09 0.32 0.10 1
+Mesh 1 1 "" 0
+Color 1 0.09 0.32 0.1 1
 Texture 0
 Material 1 0.08 0.35 0.8 0.1
 Interactable 0
@@ -90,12 +91,12 @@ Collider 1 1 1 1
 Scripts 0
 Entity 6
 Name NorthWall
-Position 0 4 -100
-Rotation 0 0 0
+Position 0 4 -35
+Rotation 0 -0 0
 Scale 100 8 1
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.18 0.22 0.18 1
 Texture 0
 Material 1 0.1 0.3 0.9 0.15
@@ -107,12 +108,12 @@ Collider 1 1 1 1
 Scripts 0
 Entity 7
 Name SouthWall
-Position 0 4 100
+Position 0 4 35
 Rotation 0 0 0
 Scale 100 8 1
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.18 0.22 0.18 1
 Texture 0
 Material 1 0.1 0.35 0.85 0.1
@@ -124,12 +125,12 @@ Collider 1 1 1 1
 Scripts 0
 Entity 8
 Name WestWall
-Position -100 4 0
+Position -35 4 0
 Rotation 0 0 0
 Scale 1 8 100
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.18 0.22 0.18 1
 Texture 0
 Material 1 0.08 0.32 0.9 0.12
@@ -141,12 +142,12 @@ Collider 1 1 1 1
 Scripts 0
 Entity 9
 Name EastWall
-Position 100 4 0
+Position 35 4 0
 Rotation 0 0 0
 Scale 1 8 100
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.18 0.22 0.18 1
 Texture 0
 Material 1 0.08 0.32 0.9 0.12
@@ -163,7 +164,7 @@ Rotation 0 0.2 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.05 0.4 0.8 0.08
@@ -180,7 +181,7 @@ Rotation 0 -0.2 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.05 0.4 0.8 0.08
@@ -197,7 +198,7 @@ Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 2
+Mesh 1 2 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.12 0.28 0.9 0.18
@@ -214,7 +215,7 @@ Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 2
+Mesh 1 2 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.12 0.28 0.9 0.18
@@ -231,7 +232,7 @@ Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 4
+Mesh 1 4 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.06 0.5 0.75 0
@@ -248,7 +249,7 @@ Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 4
+Mesh 1 4 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.06 0.5 0.75 0
@@ -265,7 +266,7 @@ Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.04 0.55 0.7 0
@@ -282,7 +283,7 @@ Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.04 0.5 0.75 0
@@ -299,7 +300,7 @@ Rotation 0 0 0
 Scale 1 0.5 1
 Parent 0
 PrefabSource ""
-Mesh 1 1
+Mesh 1 1 "" 0
 Color 1 0.92 0.92 0.82 1
 Texture 0
 Material 1 0.04 0.45 0.8 0
@@ -323,7 +324,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.70 -0.35 -1 -0.25 0.62 0 80 23 35 0
+Light 1 0.72 0.78 0.7 -0.35 -1 -0.25 0.62 0 80 23 35 0
 Collider 0
 Scripts 0
 Entity 20
@@ -340,7 +341,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.18 0.32 0.20 0 -1 0 0.55 1 18 23 35 0
+Light 1 0.18 0.32 0.2 0 -1 0 0.55 1 18 23 35 0
 Collider 0
 Scripts 0
 Entity 21
@@ -350,7 +351,7 @@ Rotation 0 0 0
 Scale 1.25 1.25 1.25
 Parent 0
 PrefabSource ""
-Mesh 1 2
+Mesh 1 2 "" 0
 Color 1 1 0.72 0.12 1
 Texture 0
 Material 1 0.08 0.22 1 0.35
@@ -362,15 +363,15 @@ Collider 0
 Scripts 0
 Entity 22
 Name RedGoal
-Position 0 0.25 -78
+Position 0 0.25 -30
 Rotation 0 0 0
 Scale 14 0.25 8
 Parent 0
 PrefabSource ""
-Mesh 1 1
-Color 1 0.95 0.12 0.10 0.72
+Mesh 1 1 "" 0
+Color 1 0.95 0.12 0.1 0.72
 Texture 0
-Material 1 0.08 0.30 0.95 0.28
+Material 1 0.08 0.3 0.95 0.28
 Interactable 0
 Player 0
 CharacterController 0
@@ -379,15 +380,15 @@ Collider 0
 Scripts 0
 Entity 23
 Name BlueGoal
-Position 0 0.25 78
+Position 0 0.25 30
 Rotation 0 0 0
 Scale 14 0.25 8
 Parent 0
 PrefabSource ""
-Mesh 1 1
-Color 1 0.10 0.38 1 0.72
+Mesh 1 1 "" 0
+Color 1 0.1 0.38 1 0.72
 Texture 0
-Material 1 0.08 0.30 0.95 0.28
+Material 1 0.08 0.3 0.95 0.28
 Interactable 0
 Player 0
 CharacterController 0
@@ -419,7 +420,7 @@ Scale 0.34 0.16 0.08
 Parent 2
 PrefabSource ""
 Mesh 1 1 "" 1
-Color 1 0.20 0.85 1.0 1
+Color 1 0.2 0.85 1 1
 Texture 0
 Material 1 0.45 0.22 0.9 0.45
 Interactable 0
