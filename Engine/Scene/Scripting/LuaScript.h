@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <cstdint>
 
 #include <sol/sol.hpp>
 
@@ -14,6 +15,15 @@ class Input;
 class Renderer;
 class UICanvas;
 class Runtime;
+
+struct LuaEntityHandle
+{
+    Scene* scene = nullptr;
+    std::uint32_t id = 0;
+    LuaEntityHandle() = default;
+    explicit LuaEntityHandle(std::uint32_t entityID) : id(entityID) {}
+    LuaEntityHandle(Scene* owner, std::uint32_t entityID) : scene(owner), id(entityID) {}
+};
 
 class LuaScript
 {
