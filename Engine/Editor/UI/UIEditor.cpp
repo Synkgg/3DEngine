@@ -1272,12 +1272,17 @@ void UIEditor::DrawWidget(
     }
     else
     {
-        drawList->AddRectFilled(
-            min,
-            max,
-            fillColor,
-            4.0f
-        );
+        if (widget.HasGradient())
+        {
+            const Vec4 gc = widget.GetGradientColor();
+            const ImU32 endColor = IM_COL32((int)(std::clamp(gc.x,0.0f,1.0f)*255.0f),(int)(std::clamp(gc.y,0.0f,1.0f)*255.0f),(int)(std::clamp(gc.z,0.0f,1.0f)*255.0f),(int)(std::clamp(gc.w,0.0f,1.0f)*255.0f));
+            if (widget.GetGradientDirection() == UIGradientDirection::Horizontal)
+                drawList->AddRectFilledMultiColor(min,max,fillColor,endColor,endColor,fillColor);
+            else
+                drawList->AddRectFilledMultiColor(min,max,fillColor,fillColor,endColor,endColor);
+        }
+        else
+            drawList->AddRectFilled(min,max,fillColor,4.0f);
 
         drawList->AddRect(
             min,
