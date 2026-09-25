@@ -5,6 +5,15 @@ local pendingFog, pendingBloom = false, false
 local joinAddress = "127.0.0.1"
 local editingAddress = false
 
+local function sanitizeAddress(value)
+    local cleaned = string.gsub(value or "", "[^0-9%.]", "")
+    return string.sub(cleaned, 1, 15)
+end
+
+local function saveAddress()
+    Preferences.SaveString("multiplayer_ip", joinAddress)
+end
+
 local function nearestIndex(values, current)
     local best, distance = 1, math.abs(values[1] - current)
     for i = 2, #values do local d = math.abs(values[i] - current); if d < distance then best, distance = i, d end end
@@ -41,12 +50,14 @@ end
 
 function OnCreate()
     if Network.IsConnected() then Network.Disconnect() end
+    joinAddress = sanitizeAddress(Preferences.LoadString("multiplayer_ip", "127.0.0.1"))
     Input.SetCursorVisible(true)
     UI.Load("Assets/UI/Main.ui")
     UI.SetVisible("MainMenu", true)
     UI.SetVisible("SettingsPanel", false)
     Camera.Reset()
     loadPending()
+    UI.SetText("AddressText", "IP: " .. joinAddress)
 end
 
 function OnUpdate(deltaTime)
@@ -59,15 +70,40 @@ function OnUpdate(deltaTime)
 
     if UI.WasClicked("AddressField") then editingAddress = true end
     if editingAddress then
-        for i = 0, 9 do
-            local key = tostring(i)
-            if Input.IsKeyPressed(key) and #joinAddress < 15 then joinAddress = joinAddress .. key end
+        local changed = false
+        local ctrl = Input.IsKeyDown("Left Ctrl") or Input.IsKeyDown("Right Ctrl")
+
+        if ctrl and Input.IsKeyPressed("V") then
+            local pasted = sanitizeAddress(Input.GetClipboardText())
+            if pasted ~= "" then
+                joinAddress = pasted
+                changed = true
+            end
+        elseif ctrl and Input.IsKeyPressed("C") then
+            Input.SetClipboardText(joinAddress)
+        else
+            for i = 0, 9 do
+                local key = tostring(i)
+                if Input.IsKeyPressed(key) and #joinAddress < 15 then
+                    joinAddress = joinAddress .. key
+                    changed = true
+                end
+            end
+            if (Input.IsKeyPressed(".") or Input.IsKeyPressed("Period")) and #joinAddress < 15 then
+                joinAddress = joinAddress .. "."
+                changed = true
+            end
+            if Input.IsKeyPressed("Backspace") and #joinAddress > 0 then
+                joinAddress = string.sub(joinAddress, 1, #joinAddress - 1)
+                changed = true
+            end
         end
-        -- SDL reports the main keyboard '.' key as the literal "." name.
-        -- Keep "Period" as a fallback for layouts/backends that expose that name.
-        if (Input.IsKeyPressed(".") or Input.IsKeyPressed("Period")) and #joinAddress < 15 then joinAddress = joinAddress .. "." end
-        if Input.IsKeyPressed("Backspace") and #joinAddress > 0 then joinAddress = string.sub(joinAddress, 1, #joinAddress - 1) end
-        if Input.IsKeyPressed("Return") or Input.IsKeyPressed("Escape") then editingAddress = false end
+
+        if changed then saveAddress() end
+        if Input.IsKeyPressed("Return") or Input.IsKeyPressed("Escape") then
+            editingAddress = false
+            saveAddress()
+        end
         UI.SetText("AddressText", "IP: " .. joinAddress .. (editingAddress and " _" or ""))
     end
 
@@ -75,7 +111,7 @@ function OnUpdate(deltaTime)
         editingAddress = false
         if Network.Host(7777) then
             Input.SetCursorVisible(false)
-            Scene.Load("Assets/Scenes/Graveyard.scene")
+            Scene.Load("Assets/Scenes/MultiplayerPlayground.scene")
             return
         else
             UI.SetText("NetworkStatus", "HOST FAILED / " .. Network.GetLastError())
@@ -87,8 +123,9 @@ function OnUpdate(deltaTime)
         if joinAddress == "" then
             UI.SetText("NetworkStatus", "ENTER A HOST IP ADDRESS")
         elseif Network.Join(joinAddress, 7777) then
+            saveAddress()
             Input.SetCursorVisible(false)
-            Scene.Load("Assets/Scenes/Graveyard.scene")
+            Scene.Load("Assets/Scenes/MultiplayerPlayground.scene")
             return
         else
             UI.SetText("NetworkStatus", "JOIN FAILED / " .. Network.GetLastError())
