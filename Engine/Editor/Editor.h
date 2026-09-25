@@ -109,6 +109,10 @@ private:
     std::string m_PendingUIAssetPath;
     std::string m_MeshPreviewPath;
     bool m_ShowRenderSettings = false;
+    char m_HierarchySearchBuffer[128]{};
+    char m_ConsoleSearchBuffer[128]{};
+    float m_EditorCameraSpeed = 5.0f;
+    bool m_ShowGrid = true;
 
     char m_ContentBrowserSearchBuffer[256]{};
 
