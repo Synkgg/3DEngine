@@ -39,6 +39,8 @@ struct UIOffsets
     float bottom = 100.0f;
 };
 
+enum class UIGradientDirection { Vertical, Horizontal };
+
 enum class UIWidgetType
 {
     Panel,
@@ -77,6 +79,12 @@ public:
 
     const Vec4& GetColor() const;
     void SetColor(const Vec4& color);
+    bool HasGradient() const { return m_GradientEnabled; }
+    void SetGradientEnabled(bool enabled) { m_GradientEnabled = enabled; }
+    const Vec4& GetGradientColor() const { return m_GradientColor; }
+    void SetGradientColor(const Vec4& color) { m_GradientColor = color; }
+    UIGradientDirection GetGradientDirection() const { return m_GradientDirection; }
+    void SetGradientDirection(UIGradientDirection direction) { m_GradientDirection = direction; }
 
     bool IsVisible() const;
     void SetVisible(bool visible);
@@ -108,6 +116,9 @@ private:
     UIOffsets m_Offsets;
     Vec2 m_Pivot = Vec2(0.0f, 0.0f);
     Vec4 m_Color;
+    bool m_GradientEnabled = false;
+    Vec4 m_GradientColor;
+    UIGradientDirection m_GradientDirection = UIGradientDirection::Vertical;
 
     bool m_Visible = true;
     bool m_Enabled = true;
