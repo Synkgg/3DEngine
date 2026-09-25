@@ -815,9 +815,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
         if (!search.empty()) flags |= ImGuiTreeNodeFlags_DefaultOpen;
 
         ImGui::PushID(static_cast<int>(entity.GetID()));
-        const bool open = ImGui::TreeNodeEx("##EntityNode", flags);
-        ImGui::SameLine();
-        ImGui::TextUnformatted(label.c_str());
+        const bool open = ImGui::TreeNodeEx("##EntityNode", flags, "%s", label.c_str());
 
         if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
             m_SelectedEntity = entity;
@@ -887,6 +885,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 {
                     PrefabSerializer::Revert(scene, entity);
                     m_SelectedEntity = Entity();
+                    ImGui::CloseCurrentPopup();
                     ImGui::EndPopup();
                     if (open) ImGui::TreePop();
                     ImGui::PopID();
