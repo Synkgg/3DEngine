@@ -11,6 +11,7 @@
 #include "../UI/UICanvas.h"
 
 #include "Time.h"
+#include "ProjectSettings.h"
 #include "../Audio/AudioEngine.h"
 
 #include "../Scene/Scene.h"
@@ -44,6 +45,7 @@ private:
 
     Time m_Time;
     AudioEngine m_Audio;
+    ProjectSettings m_ProjectSettings;
 
     bool m_CameraControlActive;
     bool m_RuntimeMouseCaptured;
