@@ -216,6 +216,13 @@ function OnCreate()
 end
 
 function OnUpdate(dt)
+    if Network.WasKickedByHost() then
+        Scene.SetPaused(false)
+        Input.SetCursorVisible(true)
+        Scene.Load("Assets/Scenes/MainMenu.scene")
+        return
+    end
+
     hudTimer=hudTimer+dt
     sendTimer=sendTimer+dt
     actionCooldown=math.max(0,actionCooldown-dt)
