@@ -1061,7 +1061,6 @@ void UIEditor::DrawDesigner(
      * Keep ImGui's item system aware of the
      * designer region.
      */
-    ImGui::SetCursorScreenPos(ImGui::GetCursorScreenPos());
     ImGui::InvisibleButton("##UIDesignerDropTarget", availableSize);
     if (ImGui::BeginDragDropTarget())
     {
