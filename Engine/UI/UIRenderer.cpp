@@ -407,7 +407,19 @@ void UIRenderer::UpdateInput(
     if (!m_MouseInteractionEnabled)
     {
         m_PressedCanvasButton = nullptr;
+        if (m_FocusedTextInput)
+            m_FocusedTextInput->SetFocused(false);
+        m_FocusedTextInput = nullptr;
         return;
+    }
+
+    // Loading/clearing a UI replaces the widget tree. Never keep a raw focus
+    // pointer into an old canvas: validate it against the current tree first.
+    if (m_FocusedTextInput)
+    {
+        UIWidget* current = root->Find(m_FocusedTextInput->GetName());
+        if (current != m_FocusedTextInput)
+            m_FocusedTextInput = nullptr;
     }
 
     Vec2 mouse;
@@ -479,9 +491,16 @@ void UIRenderer::UpdateInput(
                     if (shift != caps) ch = static_cast<char>('A' + i);
                     m_FocusedTextInput->Insert(std::string(1, ch));
                 }
-            for (int i = 0; i < 10; ++i)
-                if (input.IsKeyPressed(static_cast<SDL_Scancode>(SDL_SCANCODE_0 + i)))
+            // SDL digit scancodes are not laid out numerically: 1..9 are
+            // contiguous and 0 comes after 9.
+            for (int i = 1; i <= 9; ++i)
+            {
+                const SDL_Scancode key = static_cast<SDL_Scancode>(SDL_SCANCODE_1 + (i - 1));
+                if (input.IsKeyPressed(key))
                     m_FocusedTextInput->Insert(std::string(1, static_cast<char>('0' + i)));
+            }
+            if (input.IsKeyPressed(SDL_SCANCODE_0))
+                m_FocusedTextInput->Insert("0");
             if (input.IsKeyPressed(SDL_SCANCODE_SPACE)) m_FocusedTextInput->Insert(" ");
             if (input.IsKeyPressed(SDL_SCANCODE_PERIOD)) m_FocusedTextInput->Insert(".");
             if (input.IsKeyPressed(SDL_SCANCODE_MINUS)) m_FocusedTextInput->Insert(shift ? "_" : "-");
@@ -1121,6 +1140,10 @@ void UIRenderer::Clear()
 {
     m_Elements.clear();
     m_TextElements.clear();
+    m_PressedCanvasButton = nullptr;
+    if (m_FocusedTextInput)
+        m_FocusedTextInput->SetFocused(false);
+    m_FocusedTextInput = nullptr;
 }
 
 void UIRenderer::SetMouseInteractionEnabled(
