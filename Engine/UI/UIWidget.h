@@ -46,7 +46,8 @@ enum class UIWidgetType
     Panel,
     Text,
     Image,
-    Button
+    Button,
+    TextInput
 };
 
 class UIWidget
