@@ -108,6 +108,11 @@ private:
     std::string m_SelectedAssetPath;
     std::string m_PendingUIAssetPath;
     std::string m_MeshPreviewPath;
+    unsigned int m_MeshPreviewFramebuffer = 0;
+    unsigned int m_MeshPreviewTexture = 0;
+    unsigned int m_MeshPreviewDepth = 0;
+    int m_MeshPreviewWidth = 0;
+    int m_MeshPreviewHeight = 0;
     bool m_ShowRenderSettings = false;
     char m_HierarchySearchBuffer[128]{};
     char m_ConsoleSearchBuffer[128]{};
