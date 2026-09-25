@@ -176,9 +176,9 @@ function OnUpdate(dt)
                 if p.valid then
                     orbX,orbY,orbZ=p.x,p.y+1.35,p.z
                     local team=teamFor(carrierID)
-                    if team=="RED" and p.z > 25.0 then
+                    if team=="RED" and p.z > 8.5 then
                         redScore=redScore+1; resetCore()
-                    elseif team=="BLUE" and p.z < -25.0 then
+                    elseif team=="BLUE" and p.z < -8.5 then
                         blueScore=blueScore+1; resetCore()
                     end
                 else
