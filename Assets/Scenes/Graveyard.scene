@@ -1,6 +1,6 @@
 MyEngineScene
 Environment 1 4 1 1 1 240 1.05 0.008 0.26 3 105
-Entities 138
+Entities 139
 Entity 1
 Name GameController
 Position 0 0 0
@@ -2351,6 +2351,23 @@ Interactable 0
 Player 0
 CharacterController 0
 Light 1 0.08 0.26 0.36 0 -1 0 0.85 1 14 23 35 0
+Collider 0
+Scripts 0
+Entity 139
+Name PlayerBody
+Position 0 -0.35 0
+Rotation 0 0 0
+Scale 0.55 0.9 0.35
+Parent 2
+PrefabSource ""
+Mesh 1 4 "" 1
+Color 1 0.18 0.24 0.27 1
+Texture 0
+Material 1 0.02 0.72 0.85 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
 Collider 0
 Scripts 0
 HierarchyFolders 0
