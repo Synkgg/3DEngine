@@ -15,6 +15,7 @@ class Input;
 class Renderer;
 class UICanvas;
 class Runtime;
+class ProjectSettings;
 
 struct LuaEntityHandle
 {
@@ -37,7 +38,8 @@ public:
         Renderer& renderer,
         UICanvas& uiCanvas,
         sol::state& lua,
-        Runtime* runtime = nullptr
+        Runtime* runtime = nullptr,
+        ProjectSettings* projectSettings = nullptr
     );
 
     bool Load(const std::string& filepath, const std::unordered_map<std::string, ScriptPropertyValue>* propertyOverrides = nullptr);
@@ -68,6 +70,7 @@ private:
     Renderer* m_Renderer = nullptr;
     UICanvas* m_UICanvas = nullptr;
     Runtime* m_Runtime = nullptr;
+    ProjectSettings* m_ProjectSettings = nullptr;
 
     float m_DeltaTime = 0.0f;
 };
