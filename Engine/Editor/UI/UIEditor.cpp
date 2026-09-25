@@ -92,12 +92,36 @@ void UIEditor::Draw(
         ImGui::BeginChild("Palette", ImVec2(paletteWidth, 0.0f), true);
         ImGui::TextDisabled("PALETTE");
         ImGui::Separator();
-        if (ImGui::Selectable("Panel")) AddWidget(canvas, UIWidgetType::Panel);
-        if (ImGui::Selectable("Text")) AddWidget(canvas, UIWidgetType::Text);
-        if (ImGui::Selectable("Image")) AddWidget(canvas, UIWidgetType::Image);
-        if (ImGui::Selectable("Button")) AddWidget(canvas, UIWidgetType::Button);
+        static char paletteSearch[64] = {};
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputTextWithHint("##PaletteSearch", "Search widgets...", paletteSearch, sizeof(paletteSearch));
+        std::string paletteQuery = paletteSearch;
+        std::transform(paletteQuery.begin(), paletteQuery.end(), paletteQuery.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+        auto paletteItem = [&](const char* label, UIWidgetType type)
+        {
+            std::string lower = label;
+            std::transform(lower.begin(), lower.end(), lower.begin(),
+                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (!paletteQuery.empty() && lower.find(paletteQuery) == std::string::npos)
+                return;
+            if (ImGui::Selectable(label))
+                AddWidget(canvas, type);
+            if (ImGui::BeginDragDropSource())
+            {
+                const int payloadType = static_cast<int>(type);
+                ImGui::SetDragDropPayload("UI_PALETTE_WIDGET", &payloadType, sizeof(payloadType));
+                ImGui::Text("Add %s", label);
+                ImGui::EndDragDropSource();
+            }
+        };
+        paletteItem("Panel", UIWidgetType::Panel);
+        paletteItem("Text", UIWidgetType::Text);
+        paletteItem("Image", UIWidgetType::Image);
+        paletteItem("Button", UIWidgetType::Button);
         ImGui::Spacing();
-        ImGui::TextDisabled("Add to selected container");
+        ImGui::TextDisabled("Click to add, or drag into the Designer");
         ImGui::EndChild();
         ImGui::PopStyleColor();
         sameLine();
@@ -207,8 +231,24 @@ void UIEditor::DrawHierarchy(
             if (payload->DataSize == sizeof(UIWidget*))
             {
                 UIWidget* draggedWidget = *static_cast<UIWidget* const*>(payload->Data);
-                if (draggedWidget && draggedWidget != &widget && draggedWidget->GetParent() != &widget)
-                    ImGui::SetTooltip("Reparenting requires ownership-safe detach support");
+                const bool targetCanContainChildren =
+                    widget.GetType() == UIWidgetType::Panel;
+                if (draggedWidget && draggedWidget != &widget &&
+                    draggedWidget->GetParent() != &widget &&
+                    targetCanContainChildren &&
+                    !widget.IsDescendantOf(draggedWidget))
+                {
+                    UIWidget* oldParent = draggedWidget->GetParent();
+                    if (oldParent)
+                    {
+                        std::unique_ptr<UIWidget> moved = oldParent->DetachChild(draggedWidget);
+                        if (moved)
+                        {
+                            widget.AddChild(std::move(moved));
+                            SelectWidget(draggedWidget);
+                        }
+                    }
+                }
             }
         }
         ImGui::EndDragDropTarget();
@@ -1021,9 +1061,32 @@ void UIEditor::DrawDesigner(
      * Keep ImGui's item system aware of the
      * designer region.
      */
-    ImGui::Dummy(
-        availableSize
-    );
+    ImGui::SetCursorScreenPos(designerOrigin);
+    ImGui::InvisibleButton("##UIDesignerDropTarget", availableSize);
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("UI_PALETTE_WIDGET"))
+        {
+            if (payload->DataSize == sizeof(int))
+            {
+                const int value = *static_cast<const int*>(payload->Data);
+                if (value >= static_cast<int>(UIWidgetType::Panel) &&
+                    value <= static_cast<int>(UIWidgetType::Button))
+                {
+                    AddWidget(canvas, static_cast<UIWidgetType>(value));
+                    if (m_SelectedWidget)
+                    {
+                        Vec2 position(
+                            (ImGui::GetMousePos().x - canvasPosition.x) / scale,
+                            (ImGui::GetMousePos().y - canvasPosition.y) / scale);
+                        if (m_SnapToGrid) { position.x = SnapValue(position.x); position.y = SnapValue(position.y); }
+                        m_SelectedWidget->SetPosition(position);
+                    }
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
 }
 
 void UIEditor::DrawWidget(
