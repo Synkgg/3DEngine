@@ -293,5 +293,9 @@ private:
     bool m_MouseInteractionEnabled = false;
     UIButton* m_PressedCanvasButton = nullptr;
     UITextInput* m_FocusedTextInput = nullptr;
+    float m_BackspaceHeldTime = 0.0f;
+    float m_DeleteHeldTime = 0.0f;
+    float m_BackspaceRepeatTime = 0.0f;
+    float m_DeleteRepeatTime = 0.0f;
     AudioEngine* m_Audio = nullptr;
 };
