@@ -19,6 +19,7 @@
 #include "../Components/MeshComponent.h"
 #include "../Components/ColliderComponent.h"
 #include "../Components/InteractableComponent.h"
+#include "../Components/LightComponent.h"
 
 LuaScript::LuaScript()
 {
@@ -944,6 +945,80 @@ void LuaScript::BindEngineAPI()
     sceneApi.set_function("ClearParent", [this](std::uint32_t childID, bool keepWorld)
     {
         if (m_Scene) m_Scene->ClearParent(Entity(childID), keepWorld);
+    });
+
+    sceneApi.set_function("GetPosition", [this](std::uint32_t entityID)
+    {
+        sol::table result = m_Lua->create_table();
+        Entity entity(entityID);
+        const TransformComponent* component = m_Scene ? m_Scene->GetComponent<TransformComponent>(entity) : nullptr;
+        const Vec3 value = component ? component->transform.position : Vec3(0.0f, 0.0f, 0.0f);
+        result["x"]=value.x; result["y"]=value.y; result["z"]=value.z;
+        return result;
+    });
+
+    sceneApi.set_function("SetPosition", [this](std::uint32_t entityID, float x, float y, float z)
+    {
+        if (!m_Scene) return false;
+        TransformComponent* component=m_Scene->GetComponent<TransformComponent>(Entity(entityID));
+        if (!component) return false;
+        component->transform.position=Vec3(x,y,z);
+        return true;
+    });
+
+    sceneApi.set_function("SetRotation", [this](std::uint32_t entityID, float x, float y, float z)
+    {
+        if (!m_Scene) return false;
+        TransformComponent* component=m_Scene->GetComponent<TransformComponent>(Entity(entityID));
+        if (!component) return false;
+        constexpr float d=0.0174532925f;
+        component->transform.rotation=Vec3(x*d,y*d,z*d);
+        return true;
+    });
+
+    sceneApi.set_function("SetScale", [this](std::uint32_t entityID, float x, float y, float z)
+    {
+        if (!m_Scene) return false;
+        TransformComponent* component=m_Scene->GetComponent<TransformComponent>(Entity(entityID));
+        if (!component) return false;
+        component->transform.scale=Vec3(x,y,z);
+        return true;
+    });
+
+    sceneApi.set_function("SetInteractableEnabled", [this](std::uint32_t entityID, bool enabled)
+    {
+        if (!m_Scene) return false;
+        InteractableComponent* component=m_Scene->GetComponent<InteractableComponent>(Entity(entityID));
+        if (!component) return false;
+        component->enabled=enabled;
+        return true;
+    });
+
+    sceneApi.set_function("SetInteractablePrompt", [this](std::uint32_t entityID, const std::string& prompt)
+    {
+        if (!m_Scene) return false;
+        InteractableComponent* component=m_Scene->GetComponent<InteractableComponent>(Entity(entityID));
+        if (!component) return false;
+        component->prompt=prompt;
+        return true;
+    });
+
+    sceneApi.set_function("SetLightIntensity", [this](std::uint32_t entityID, float intensity)
+    {
+        if (!m_Scene) return false;
+        LightComponent* component=m_Scene->GetComponent<LightComponent>(Entity(entityID));
+        if (!component) return false;
+        component->intensity=intensity;
+        return true;
+    });
+
+    sceneApi.set_function("SetLightColor", [this](std::uint32_t entityID, float r, float g, float b)
+    {
+        if (!m_Scene) return false;
+        LightComponent* component=m_Scene->GetComponent<LightComponent>(Entity(entityID));
+        if (!component) return false;
+        component->color=Vec3(r,g,b);
+        return true;
     });
 
     sceneApi.set_function("SetPaused", [this](bool paused)
