@@ -39,6 +39,8 @@ public:
     void ClearParent(Entity child, bool keepWorldTransform = false);
     std::vector<Entity> GetChildren(Entity parent) const;
     Entity FindEntityByName(const std::string& name) const;
+    Entity FindEntityByID(std::uint32_t id) const;
+    std::vector<Entity> GetRootEntities() const;
     Entity GetParent(Entity child) const;
     bool IsDescendant(Entity entity, Entity possibleAncestor) const;
     Transform GetWorldTransform(Entity entity) const;
