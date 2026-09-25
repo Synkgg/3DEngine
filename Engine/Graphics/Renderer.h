@@ -51,6 +51,10 @@ public:
     bool Initialize(Window& window);
     void Shutdown();
 
+    void BeginShadowPass();
+    void DrawShadowMesh(const Transform& transform, PrimitiveType primitive);
+    void EndShadowPass();
+
     void BeginFrame();
     void EndScene();
     void BeginOverlay();
@@ -123,6 +127,7 @@ private:
 
     Shader m_Shader;
     Shader m_GridShader;
+    Shader m_ShadowShader;
     Shader m_SkyShader;
     Shader m_PostShader;
     Shader m_BloomExtractShader;
@@ -131,6 +136,12 @@ private:
     unsigned int m_SkyVBO = 0;
     unsigned int m_PostVAO = 0;
     unsigned int m_PostVBO = 0;
+    unsigned int m_ShadowFramebuffer = 0;
+    unsigned int m_ShadowDepthTexture = 0;
+    unsigned int m_ShadowMapSize = 2048;
+    Mat4 m_LightSpaceMatrix = Mat4::Identity();
+    bool m_ShadowMapReady = false;
+
     unsigned int m_PostFramebuffer = 0;
     unsigned int m_PostColorTexture = 0;
     unsigned int m_BloomFramebuffer[2]{ 0, 0 };
@@ -162,6 +173,10 @@ private:
 
     TextureManager m_TextureManager;
     UIRenderer m_UIRenderer;
+
+    bool CreateShadowTarget();
+    void DestroyShadowTarget();
+    void UpdateLightSpaceMatrix();
 
     bool CreatePostProcessTarget();
     void DestroyPostProcessTarget();
