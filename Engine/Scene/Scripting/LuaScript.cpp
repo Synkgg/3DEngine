@@ -959,21 +959,21 @@ void LuaScript::BindEngineAPI()
         sol::table handle = m_Lua->create_table();
         handle["id"] = id;
 
-        handle.set_function("IsValid", [scene, id]() { return scene && scene->FindEntityByID(id).IsValid(); });
-        handle.set_function("GetID", [id]() { return id; });
-        handle.set_function("GetPosition", [this, scene, id]() { sol::table t=m_Lua->create_table(); Vec3 v; if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.position; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; });
-        handle.set_function("GetRotation", [this, scene, id]() { sol::table t=m_Lua->create_table(); Vec3 v; if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.rotation; } constexpr float r=57.2957795f;t["x"]=v.x*r;t["y"]=v.y*r;t["z"]=v.z*r;return t; });
-        handle.set_function("GetScale", [this, scene, id]() { sol::table t=m_Lua->create_table(); Vec3 v(1,1,1); if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.scale; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; });
-        handle.set_function("SetPosition", [scene,id](float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.position=Vec3(x,y,z); } });
-        handle.set_function("Translate", [scene,id](float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.position=c->transform.position+Vec3(x,y,z); } });
-        handle.set_function("SetRotation", [scene,id](float x,float y,float z){ if(scene){ constexpr float d=0.0174532925f; if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.rotation=Vec3(x*d,y*d,z*d); } });
-        handle.set_function("SetScale", [scene,id](float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.scale=Vec3(x,y,z); } });
-        handle.set_function("ClearParent", [scene,id](bool keepWorld){ if(scene)scene->ClearParent(Entity(id),keepWorld); });
-        handle.set_function("Destroy", [scene,id](){ if(scene)scene->QueueDestroyEntityHierarchy(Entity(id)); });
-        handle.set_function("SetInteractableEnabled", [scene,id](bool enabled){ if(scene){ if(auto* c=scene->GetComponent<InteractableComponent>(Entity(id)))c->enabled=enabled; } });
-        handle.set_function("SetInteractablePrompt", [scene,id](const std::string& prompt){ if(scene){ if(auto* c=scene->GetComponent<InteractableComponent>(Entity(id)))c->prompt=prompt; } });
-        handle.set_function("SetLightIntensity", [scene,id](float intensity){ if(scene){ if(auto* c=scene->GetComponent<LightComponent>(Entity(id)))c->intensity=intensity; } });
-        handle.set_function("SetLightColor", [scene,id](float r,float g,float b){ if(scene){ if(auto* c=scene->GetComponent<LightComponent>(Entity(id)))c->color=Vec3(r,g,b); } });
+        handle.set_function("IsValid", [scene, id](sol::table) { return scene && scene->FindEntityByID(id).IsValid(); });
+        handle.set_function("GetID", [id](sol::table) { return id; });
+        handle.set_function("GetPosition", [this, scene, id](sol::table) { sol::table t=m_Lua->create_table(); Vec3 v; if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.position; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; });
+        handle.set_function("GetRotation", [this, scene, id](sol::table) { sol::table t=m_Lua->create_table(); Vec3 v; if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.rotation; } constexpr float r=57.2957795f;t["x"]=v.x*r;t["y"]=v.y*r;t["z"]=v.z*r;return t; });
+        handle.set_function("GetScale", [this, scene, id](sol::table) { sol::table t=m_Lua->create_table(); Vec3 v(1,1,1); if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))v=c->transform.scale; } t["x"]=v.x;t["y"]=v.y;t["z"]=v.z;return t; });
+        handle.set_function("SetPosition", [scene,id](sol::table,float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.position=Vec3(x,y,z); } });
+        handle.set_function("Translate", [scene,id](sol::table,float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.position=c->transform.position+Vec3(x,y,z); } });
+        handle.set_function("SetRotation", [scene,id](sol::table,float x,float y,float z){ if(scene){ constexpr float d=0.0174532925f; if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.rotation=Vec3(x*d,y*d,z*d); } });
+        handle.set_function("SetScale", [scene,id](sol::table,float x,float y,float z){ if(scene){ if(auto* c=scene->GetComponent<TransformComponent>(Entity(id)))c->transform.scale=Vec3(x,y,z); } });
+        handle.set_function("ClearParent", [scene,id](sol::table,bool keepWorld){ if(scene)scene->ClearParent(Entity(id),keepWorld); });
+        handle.set_function("Destroy", [scene,id](sol::table){ if(scene)scene->QueueDestroyEntityHierarchy(Entity(id)); });
+        handle.set_function("SetInteractableEnabled", [scene,id](sol::table,bool enabled){ if(scene){ if(auto* c=scene->GetComponent<InteractableComponent>(Entity(id)))c->enabled=enabled; } });
+        handle.set_function("SetInteractablePrompt", [scene,id](sol::table,const std::string& prompt){ if(scene){ if(auto* c=scene->GetComponent<InteractableComponent>(Entity(id)))c->prompt=prompt; } });
+        handle.set_function("SetLightIntensity", [scene,id](sol::table,float intensity){ if(scene){ if(auto* c=scene->GetComponent<LightComponent>(Entity(id)))c->intensity=intensity; } });
+        handle.set_function("SetLightColor", [scene,id](sol::table,float r,float g,float b){ if(scene){ if(auto* c=scene->GetComponent<LightComponent>(Entity(id)))c->color=Vec3(r,g,b); } });
         return handle;
     };
 
