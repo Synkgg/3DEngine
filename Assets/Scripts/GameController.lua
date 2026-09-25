@@ -32,6 +32,10 @@ function OnCreate()
     Refresh()
 end
 function OnUpdate(deltaTime)
+    local interactionPrompt=Scene.GetInteractionPrompt()
+    local showInteraction=interactionPrompt~=nil and interactionPrompt~="" and not paused
+    UI.SetVisible("InteractPrompt",showInteraction)
+    if showInteraction then UI.SetText("InteractText",interactionPrompt) end
     if CrystalGame and CrystalGame.uiDirty then Refresh() end
     if Input.IsKeyPressed("Escape") and not (CrystalGame and CrystalGame.won) then
         paused=not paused
