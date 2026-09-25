@@ -1,6 +1,7 @@
 #include "../Editor.h"
 
 #include "../../Scene/Scene.h"
+#include "../../Scene/PrefabSerializer.h"
 
 #include "../../Scene/Components/TransformComponent.h"
 #include "../../Scene/Components/MeshComponent.h"
@@ -281,6 +282,28 @@ void Editor::RenderInspector(
             ImGui::TextDisabled("Parent: None");
         }
         ImGui::TextDisabled("Drag an entity onto another entity in Hierarchy to parent it.");
+    }
+
+    if (PrefabSerializer::IsInstanceRoot(scene, m_SelectedEntity))
+    {
+        if (ImGui::CollapsingHeader("Prefab", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            const std::string source = PrefabSerializer::GetSource(scene, m_SelectedEntity);
+            ImGui::TextDisabled("INSTANCE");
+            ImGui::TextWrapped("%s", source.c_str());
+            if (ImGui::Button("Apply"))
+                PrefabSerializer::Apply(scene, m_SelectedEntity);
+            ImGui::SameLine();
+            if (ImGui::Button("Revert"))
+            {
+                PrefabSerializer::Revert(scene, m_SelectedEntity);
+                m_SelectedEntity = Entity();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Unpack"))
+                PrefabSerializer::Unpack(scene, m_SelectedEntity, true);
+            ImGui::Separator();
+        }
     }
 
     /*
