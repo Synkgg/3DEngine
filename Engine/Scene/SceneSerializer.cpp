@@ -407,6 +407,9 @@ bool SceneSerializer::Save(
             << scale.z
             << '\n';
 
+        Entity parent = m_Scene.GetParent(entity);
+        file << "Parent " << (parent.IsValid() ? parent.GetID() : 0) << '\n';
+
         /*
          * Mesh
          */
@@ -906,13 +909,29 @@ bool SceneSerializer::Load(
         }
 
         /*
+         * Parent is optional for backward compatibility with older scenes.
+         */
+        if (!ReadLine(file, line, "Mesh or Parent", entityID))
+        {
+            return false;
+        }
+
+        if (line.rfind("Parent ", 0) == 0)
+        {
+            std::istringstream parentLine(line);
+            std::string parentToken;
+            std::uint32_t parentID = 0;
+            parentLine >> parentToken >> parentID;
+            if (parentID != 0)
+                m_Scene.SetParent(entity, Entity(parentID));
+
+            if (!ReadLine(file, line, "Mesh", entityID))
+                return false;
+        }
+
+        /*
          * Mesh
          */
-        if (!ReadLine(
-            file,
-            line,
-            "Mesh",
-            entityID))
         {
             return false;
         }
