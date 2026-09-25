@@ -127,7 +127,9 @@ local function updateHUD()
 
     local p=playerPosition(id)
     local nearCore=p.valid and carrierID==0 and dist2(p,orbX,orbY,orbZ)<=pickupRadius*pickupRadius
-    UI.SetVisible("InteractPrompt",nearCore or carrierID==id)
+    local showInteraction=nearCore or carrierID==id
+    UI.SetVisible("InteractPrompt",showInteraction)
+    UI.SetVisible("InteractPlate",showInteraction)
 
     if carrierID==id then
         UI.SetText("InteractPrompt","[ E ]  DROP CORE")
@@ -155,6 +157,7 @@ function OnCreate()
     Scene.SetPaused(false)
     UI.SetVisible("PauseMenu",false)
     UI.SetVisible("InteractPrompt",false)
+    UI.SetVisible("InteractPlate",false)
     moveLocalPlayerToBase()
     if Network.IsHost() then
         -- The engine sandbox does not expose Lua's os library. math.random is sufficient here.
