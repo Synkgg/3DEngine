@@ -1021,6 +1021,11 @@ void LuaScript::BindEngineAPI()
         return true;
     });
 
+    sceneApi.set_function("GetInteractionPrompt", [this]()
+    {
+        return m_Runtime ? m_Runtime->GetInteractionPrompt() : std::string();
+    });
+
     sceneApi.set_function("SetPaused", [this](bool paused)
     {
         if (!m_Runtime) return;
