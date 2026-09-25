@@ -1121,6 +1121,17 @@ void LuaScript::BindEngineAPI()
 
     (*m_Environment)["Scene"] = sceneApi;
 
+    /* Runtime networking. Transport only for now; entity replication comes next. */
+    sol::table network = m_Lua->create_table();
+    network.set_function("Host", [this](int port) { return m_Runtime && m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port)); });
+    network.set_function("Join", [this](const std::string& address, int port) { return m_Runtime && m_Runtime->GetNetwork().Join(address, static_cast<std::uint16_t>(port)); });
+    network.set_function("Disconnect", [this]() { if (m_Runtime) m_Runtime->GetNetwork().Disconnect(); });
+    network.set_function("IsHost", [this]() { return m_Runtime && m_Runtime->GetNetwork().IsHost(); });
+    network.set_function("IsConnected", [this]() { return m_Runtime && m_Runtime->GetNetwork().IsConnected(); });
+    network.set_function("GetPlayerCount", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetPlayerCount() : 1; });
+    network.set_function("GetLastError", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetLastError() : std::string(); });
+    (*m_Environment)["Network"] = network;
+
     /*
      * Graphics settings - intentionally exposed as a small stable API so
      * runtime menus do not need to know about OpenGL implementation details.
