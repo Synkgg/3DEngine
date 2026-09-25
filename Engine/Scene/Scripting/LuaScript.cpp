@@ -1398,7 +1398,32 @@ void LuaScript::BindEngineAPI()
         return m_ProjectSettings->Save();
     });
 
+    graphics.set_function("SetFOV", [this](float value){ if(m_Renderer)m_Renderer->SetCameraFov(value); });
+    graphics.set_function("GetFOV", [this](){ return m_Renderer ? m_Renderer->GetCameraFov() : 60.0f; });
+
     (*m_Environment)["Graphics"] = graphics;
+
+    sol::table settingsApi=m_Lua->create_table();
+    settingsApi.set_function("SetMouseSensitivity",[this](float v){if(m_Runtime)m_Runtime->SetMouseSensitivity(v);});
+    settingsApi.set_function("GetMouseSensitivity",[this](){return m_Runtime?m_Runtime->GetMouseSensitivity():0.01f;});
+    settingsApi.set_function("SetInvertY",[this](bool v){if(m_Runtime)m_Runtime->SetInvertY(v);});
+    settingsApi.set_function("GetInvertY",[this](){return m_Runtime&&m_Runtime->GetInvertY();});
+    settingsApi.set_function("SetSprintToggle",[this](bool v){if(m_Runtime)m_Runtime->SetSprintToggle(v);});
+    settingsApi.set_function("GetSprintToggle",[this](){return m_Runtime&&m_Runtime->GetSprintToggle();});
+    settingsApi.set_function("SetCameraBob",[this](bool v){if(m_Runtime)m_Runtime->SetCameraBob(v);});
+    settingsApi.set_function("GetCameraBob",[this](){return !m_Runtime||m_Runtime->GetCameraBob();});
+    settingsApi.set_function("SetShowFPS",[this](bool v){if(m_Runtime)m_Runtime->SetShowFPS(v);});
+    settingsApi.set_function("GetShowFPS",[this](){return m_Runtime&&m_Runtime->GetShowFPS();});
+    (*m_Environment)["GameSettings"]=settingsApi;
+
+    sol::table audioApi=m_Lua->create_table();
+    audioApi.set_function("SetMasterVolume",[this](float v){if(m_Runtime&&m_Runtime->GetAudioEngine())m_Runtime->GetAudioEngine()->SetMasterVolume(v);});
+    audioApi.set_function("GetMasterVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetMasterVolume():1.0f;});
+    audioApi.set_function("SetSFXVolume",[this](float v){if(m_Runtime&&m_Runtime->GetAudioEngine())m_Runtime->GetAudioEngine()->SetSFXVolume(v);});
+    audioApi.set_function("GetSFXVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetSFXVolume():1.0f;});
+    audioApi.set_function("SetUIVolume",[this](float v){if(m_Runtime&&m_Runtime->GetAudioEngine())m_Runtime->GetAudioEngine()->SetUIVolume(v);});
+    audioApi.set_function("GetUIVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetUIVolume():1.0f;});
+    (*m_Environment)["Audio"]=audioApi;
 
     /*
      * UI - edits the same widget tree used by the editor and renderer.
