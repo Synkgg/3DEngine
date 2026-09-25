@@ -47,6 +47,12 @@ namespace
                 << ' ' << hovered.x << ' ' << hovered.y << ' ' << hovered.z << ' ' << hovered.w
                 << ' ' << pressed.x << ' ' << pressed.y << ' ' << pressed.z << ' ' << pressed.w
                 << ' ' << disabled.x << ' ' << disabled.y << ' ' << disabled.z << ' ' << disabled.w;
+            const Vec4 tn=button->GetNormalTextColor(), th=button->GetHoveredTextColor(), tp=button->GetPressedTextColor(), td=button->GetDisabledTextColor();
+            out << ' ' << button->GetAffectChildText()
+                << ' ' << tn.x << ' ' << tn.y << ' ' << tn.z << ' ' << tn.w
+                << ' ' << th.x << ' ' << th.y << ' ' << th.z << ' ' << th.w
+                << ' ' << tp.x << ' ' << tp.y << ' ' << tp.z << ' ' << tp.w
+                << ' ' << td.x << ' ' << td.y << ' ' << td.z << ' ' << td.w;
         }
 
         out << '\n';
@@ -70,7 +76,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 3\n";
+    out << "VORTEK_UI 4\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -89,7 +95,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     std::string magic;
     int version = 0;
     in >> magic >> version;
-    if (magic != "VORTEK_UI" || version < 1 || version > 3) return false;
+    if (magic != "VORTEK_UI" || version < 1 || version > 4) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -171,6 +177,13 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
                 button->SetHoveredColor(hovered);
                 button->SetPressedColor(pressed);
                 button->SetDisabledColor(disabled);
+                if (version >= 4)
+                {
+                    bool affect=false; Vec4 tn,th,tp,td;
+                    row >> affect >> tn.x >> tn.y >> tn.z >> tn.w >> th.x >> th.y >> th.z >> th.w >> tp.x >> tp.y >> tp.z >> tp.w >> td.x >> td.y >> td.z >> td.w;
+                    if (!row) return false;
+                    button->SetAffectChildText(affect); button->SetNormalTextColor(tn); button->SetHoveredTextColor(th); button->SetPressedTextColor(tp); button->SetDisabledTextColor(td);
+                }
             }
         }
 
