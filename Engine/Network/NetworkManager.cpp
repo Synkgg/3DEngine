@@ -79,7 +79,11 @@ void NetworkManager::SendLocalTransform(const NetworkTransformState& state){
 }
 void NetworkManager::Update(){
  if(m_Mode==Mode::Offline)return;SocketHandle s=static_cast<SocketHandle>(m_Socket);char b[256];sockaddr_in from{};
- for(;;){
+ // Keep networking from monopolizing an entire render frame if packets
+ // arrive faster than they can be consumed. Remaining UDP packets stay queued
+ // for the next update.
+ constexpr int MaxPacketsPerUpdate=128;
+ for(int packetIndex=0;packetIndex<MaxPacketsPerUpdate;++packetIndex){
 #ifdef _WIN32
   int len=sizeof(from);
 #else
