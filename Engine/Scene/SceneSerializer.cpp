@@ -425,6 +425,7 @@ bool SceneSerializer::Save(
             file << "Mesh 1 "
                 << static_cast<int>(mesh->primitive)
                 << " " << std::quoted(mesh->modelPath)
+                << " " << (mesh->ownerNoSee ? 1 : 0)
                 << '\n';
         }
         else
@@ -1024,6 +1025,11 @@ bool SceneSerializer::Load(
                     meshLine.clear();
                     mesh.modelPath.clear();
                 }
+
+                // Optional for scenes saved before Owner No See existed.
+                int ownerNoSee = 0;
+                if (meshLine >> ownerNoSee)
+                    mesh.ownerNoSee = ownerNoSee != 0;
 
                 m_Scene.AddComponent<
                     MeshComponent
