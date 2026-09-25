@@ -16,6 +16,13 @@ local viewDistances = {220.0,500.0,1000.0}
 local aaIndex, viewIndex = 1, 1
 local pauseFog, pauseBloom = false, false
 local settingsOpen = false
+local fovValues={60,75,90,105}
+local sensitivityValues={0.005,0.01,0.015,0.02}
+local volumeValues={0.0,0.25,0.5,0.75,1.0}
+local shadowValues={0,1,2}
+local fovIndex,sensitivityIndex,masterIndex,sfxIndex,uiVolumeIndex,shadowIndex=2,2,5,5,5,3
+local invertY,sprintToggle,cameraBob,showFPS=false,false,true,false
+local fpsTimer,fpsFrames=0.0,0
 local spawnedAtBase = false
 
 local function teamFor(id)
@@ -37,6 +44,41 @@ local function refreshPauseSettings()
     UI.SetText("PauseFogValue",pauseFog and "ENABLED" or "DISABLED")
     UI.SetText("PauseBloomValue",pauseBloom and "ENABLED" or "DISABLED")
     UI.SetText("PauseViewValue",tostring(math.floor(viewDistances[viewIndex])))
+end
+
+local function loadExtraSettings()
+    fovIndex=nearestIndex(fovValues,tonumber(Preferences.LoadString("fov","75")) or 75)
+    sensitivityIndex=nearestIndex(sensitivityValues,tonumber(Preferences.LoadString("mouse_sensitivity","0.01")) or 0.01)
+    masterIndex=nearestIndex(volumeValues,tonumber(Preferences.LoadString("master_volume","1")) or 1)
+    sfxIndex=nearestIndex(volumeValues,tonumber(Preferences.LoadString("sfx_volume","1")) or 1)
+    uiVolumeIndex=nearestIndex(volumeValues,tonumber(Preferences.LoadString("ui_volume","1")) or 1)
+    shadowIndex=nearestIndex(shadowValues,tonumber(Preferences.LoadString("shadow_quality","2")) or 2)
+    invertY=Preferences.LoadString("invert_y","0")=="1"; sprintToggle=Preferences.LoadString("sprint_toggle","0")=="1"
+    cameraBob=Preferences.LoadString("camera_bob","1")=="1"; showFPS=Preferences.LoadString("show_fps","0")=="1"
+end
+
+local function applyExtraSettings()
+    Graphics.SetFOV(fovValues[fovIndex]); Graphics.SetShadowQuality(shadowValues[shadowIndex])
+    GameSettings.SetMouseSensitivity(sensitivityValues[sensitivityIndex]); GameSettings.SetInvertY(invertY)
+    GameSettings.SetSprintToggle(sprintToggle); GameSettings.SetCameraBob(cameraBob); GameSettings.SetShowFPS(showFPS)
+    Audio.SetMasterVolume(volumeValues[masterIndex]); Audio.SetSFXVolume(volumeValues[sfxIndex]); Audio.SetUIVolume(volumeValues[uiVolumeIndex])
+end
+
+local function saveExtraSettings()
+    Preferences.SaveString("fov",tostring(fovValues[fovIndex])); Preferences.SaveString("mouse_sensitivity",tostring(sensitivityValues[sensitivityIndex]))
+    Preferences.SaveString("master_volume",tostring(volumeValues[masterIndex])); Preferences.SaveString("sfx_volume",tostring(volumeValues[sfxIndex])); Preferences.SaveString("ui_volume",tostring(volumeValues[uiVolumeIndex]))
+    Preferences.SaveString("shadow_quality",tostring(shadowValues[shadowIndex])); Preferences.SaveString("invert_y",invertY and "1" or "0"); Preferences.SaveString("sprint_toggle",sprintToggle and "1" or "0")
+    Preferences.SaveString("camera_bob",cameraBob and "1" or "0"); Preferences.SaveString("show_fps",showFPS and "1" or "0"); Graphics.Save()
+end
+
+local function refreshExtraSettings()
+    local shadowNames={"OFF","LOW","HIGH"}
+    UI.SetText("ShadowValue","SHADOWS: "..shadowNames[shadowIndex]); UI.SetText("FOVValue","FOV: "..tostring(fovValues[fovIndex]))
+    UI.SetText("SensitivityValue","SENSITIVITY: "..string.format("%.1fX",sensitivityValues[sensitivityIndex]/0.01))
+    UI.SetText("InvertValue","INVERT Y: "..(invertY and "ON" or "OFF")); UI.SetText("SprintModeValue","SPRINT: "..(sprintToggle and "TOGGLE" or "HOLD"))
+    UI.SetText("CameraBobValue","CAMERA BOB: "..(cameraBob and "ON" or "OFF")); UI.SetText("MasterVolumeValue","MASTER: "..math.floor(volumeValues[masterIndex]*100).."%")
+    UI.SetText("SFXVolumeValue","SFX: "..math.floor(volumeValues[sfxIndex]*100).."%"); UI.SetText("UIVolumeValue","UI VOLUME: "..math.floor(volumeValues[uiVolumeIndex]*100).."%")
+    UI.SetText("ShowFPSValue","SHOW FPS: "..(showFPS and "ON" or "OFF")); UI.SetVisible("FPSCounter",showFPS)
 end
 
 local function setPaused(value)
@@ -159,6 +201,7 @@ function OnCreate()
     UI.SetVisible("PauseMenu",false)
     UI.SetVisible("InteractPrompt",false)
     UI.SetVisible("InteractPlate",false)
+    loadExtraSettings(); applyExtraSettings(); refreshExtraSettings()
     moveLocalPlayerToBase()
     spawnedAtBase = Network.GetLocalPlayerID() ~= 0
     UI.SetVisible("StartMatchButton",Network.IsHost())
@@ -175,6 +218,8 @@ function OnUpdate(dt)
     hudTimer=hudTimer+dt
     sendTimer=sendTimer+dt
     actionCooldown=math.max(0,actionCooldown-dt)
+    fpsTimer=fpsTimer+dt; fpsFrames=fpsFrames+1
+    if fpsTimer>=0.5 then UI.SetText("FPSCounter","FPS "..tostring(math.floor(fpsFrames/fpsTimer+0.5)));fpsTimer=0;fpsFrames=0 end
 
     if Input.IsKeyPressed("Escape") then
         setPaused(not paused)
@@ -189,6 +234,16 @@ function OnUpdate(dt)
         if UI.WasClicked("PauseFogButton") then pauseFog=not pauseFog;savePauseSettings();refreshPauseSettings() end
         if UI.WasClicked("PauseBloomButton") then pauseBloom=not pauseBloom;savePauseSettings();refreshPauseSettings() end
         if UI.WasClicked("PauseViewButton") then viewIndex=viewIndex%#viewDistances+1;savePauseSettings();refreshPauseSettings() end
+        if UI.WasClicked("ShadowButton") then shadowIndex=shadowIndex%#shadowValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("FOVButton") then fovIndex=fovIndex%#fovValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("SensitivityButton") then sensitivityIndex=sensitivityIndex%#sensitivityValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("InvertButton") then invertY=not invertY;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("SprintModeButton") then sprintToggle=not sprintToggle;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("CameraBobButton") then cameraBob=not cameraBob;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("MasterVolumeButton") then masterIndex=masterIndex%#volumeValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("SFXVolumeButton") then sfxIndex=sfxIndex%#volumeValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("UIVolumeButton") then uiVolumeIndex=uiVolumeIndex%#volumeValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+        if UI.WasClicked("ShowFPSButton") then showFPS=not showFPS;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
         if UI.WasClicked("PauseMenuButton") then Scene.SetPaused(false);Network.Disconnect();Scene.Load("Assets/Scenes/MainMenu.scene");return end
         return
     end
