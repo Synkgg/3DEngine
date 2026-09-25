@@ -571,6 +571,7 @@ void Renderer::Shutdown()
 {
 	m_DebugRenderer.Shutdown();
 	m_UIRenderer.Shutdown();
+    DestroyModelPreviewCache();
     DestroyModelPreviewTarget();
     m_ModelPreviewShader.Shutdown();
 
@@ -713,7 +714,34 @@ void Renderer::DestroyModelPreviewTarget()
 }
 unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int width,unsigned int height)
 {
-    Mesh* mesh=GetModelMesh(path); if(!mesh||mesh->GetVertices().empty()||!EnsureModelPreviewTarget(width,height))return 0;
+    Mesh* mesh=GetModelMesh(path);
+    if(!mesh||mesh->GetVertices().empty()) return 0;
+
+    width=std::max(1u,width); height=std::max(1u,height);
+    const std::string cacheKey=path+"#"+std::to_string(width)+"x"+std::to_string(height);
+    auto cached=m_ModelPreviewCache.find(cacheKey);
+    if(cached!=m_ModelPreviewCache.end()) return cached->second.texture;
+
+    ModelPreviewTexture target;
+    target.width=width; target.height=height;
+    glGenFramebuffers(1,&target.framebuffer); glBindFramebuffer(GL_FRAMEBUFFER,target.framebuffer);
+    glGenTextures(1,&target.texture); glBindTexture(GL_TEXTURE_2D,target.texture);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,(GLsizei)width,(GLsizei)height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE); glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,target.texture,0);
+    glGenRenderbuffers(1,&target.depth); glBindRenderbuffer(GL_RENDERBUFFER,target.depth);
+    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,(GLsizei)width,(GLsizei)height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,target.depth);
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+        if(target.depth)glDeleteRenderbuffers(1,&target.depth);
+        if(target.texture)glDeleteTextures(1,&target.texture);
+        if(target.framebuffer)glDeleteFramebuffers(1,&target.framebuffer);
+        return 0;
+    }
+
     const auto& v=mesh->GetVertices(); Vec3 mn(v[0].position[0],v[0].position[1],v[0].position[2]),mx=mn;
     for(const Vertex& x:v){mn.x=std::min(mn.x,x.position[0]);mn.y=std::min(mn.y,x.position[1]);mn.z=std::min(mn.z,x.position[2]);mx.x=std::max(mx.x,x.position[0]);mx.y=std::max(mx.y,x.position[1]);mx.z=std::max(mx.z,x.position[2]);}
     Vec3 center((mn.x+mx.x)*.5f,(mn.y+mx.y)*.5f,(mn.z+mx.z)*.5f);
@@ -721,12 +749,29 @@ unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int w
     Mat4 view=Mat4::LookAt(Vec3(center.x+dist*.78f,center.y+dist*.58f,center.z+dist),center,Vec3(0,1,0));
     Mat4 proj=Mat4::Perspective(45.f*.0174532925f,(float)width/(float)height,.01f,dist+radius*4.f);
     Mat4 mvp=proj*view;
+
     GLint oldFbo=0,oldVp[4]{};glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&oldFbo);glGetIntegerv(GL_VIEWPORT,oldVp);
-    glBindFramebuffer(GL_FRAMEBUFFER,m_ModelPreviewFramebuffer);glViewport(0,0,(GLsizei)width,(GLsizei)height);glEnable(GL_DEPTH_TEST);
+    glBindFramebuffer(GL_FRAMEBUFFER,target.framebuffer);glViewport(0,0,(GLsizei)width,(GLsizei)height);glEnable(GL_DEPTH_TEST);
     glClearColor(.075f,.082f,.095f,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     m_ModelPreviewShader.Bind();m_ModelPreviewShader.SetMat4("u_MVP",mvp);mesh->Bind();
     glDrawElements(GL_TRIANGLES,(GLsizei)mesh->GetIndexCount(),GL_UNSIGNED_INT,nullptr);mesh->Unbind();m_ModelPreviewShader.Unbind();
-    glBindFramebuffer(GL_FRAMEBUFFER,(GLuint)oldFbo);glViewport(oldVp[0],oldVp[1],oldVp[2],oldVp[3]);return m_ModelPreviewTexture;
+    glBindFramebuffer(GL_FRAMEBUFFER,(GLuint)oldFbo);glViewport(oldVp[0],oldVp[1],oldVp[2],oldVp[3]);
+
+    const unsigned int texture=target.texture;
+    m_ModelPreviewCache.emplace(cacheKey,target);
+    return texture;
+}
+
+void Renderer::DestroyModelPreviewCache()
+{
+    for(auto& pair:m_ModelPreviewCache)
+    {
+        ModelPreviewTexture& target=pair.second;
+        if(target.depth)glDeleteRenderbuffers(1,&target.depth);
+        if(target.texture)glDeleteTextures(1,&target.texture);
+        if(target.framebuffer)glDeleteFramebuffers(1,&target.framebuffer);
+    }
+    m_ModelPreviewCache.clear();
 }
 
 void Renderer::DrawMeshInternal(
