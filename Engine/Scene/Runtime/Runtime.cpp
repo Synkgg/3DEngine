@@ -279,6 +279,27 @@ void Runtime::UpdateNetworkPlayers(Scene& scene)
 {
     if (!m_Network.IsConnected() || !m_Network.IsHandshakeComplete()) return;
 
+    // NetworkManager removes a disconnected player's transform immediately,
+    // but the duplicated scene entity is owned by Runtime. Remove any remote
+    // entity whose player ID is no longer present in the network snapshot.
+    const auto& remoteTransforms = m_Network.GetRemoteTransforms();
+    for (auto it = m_RemotePlayerEntities.begin(); it != m_RemotePlayerEntities.end();)
+    {
+        if (remoteTransforms.find(it->first) == remoteTransforms.end())
+        {
+            Entity staleRemote = scene.FindEntityByID(it->second);
+            if (staleRemote.IsValid())
+                scene.DestroyEntityHierarchy(staleRemote);
+
+            Logger::Info("Network: despawned remote player " + std::to_string(it->first) + ".");
+            it = m_RemotePlayerEntities.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
     Entity localPlayer=scene.FindEntityByName("Player");
     TransformComponent* localTransform=localPlayer.IsValid()
         ? scene.GetComponent<TransformComponent>(localPlayer) : nullptr;
