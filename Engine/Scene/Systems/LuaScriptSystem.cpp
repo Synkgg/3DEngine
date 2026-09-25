@@ -106,8 +106,13 @@ void LuaScriptSystem::Start(
                 runtime
             );
 
+            const auto propertyIt = scriptComponent->properties.find(scriptPath);
+            const std::unordered_map<std::string, ScriptPropertyValue>* propertyOverrides =
+                propertyIt == scriptComponent->properties.end() ? nullptr : &propertyIt->second;
+
             if (!script->Load(
-                fullPath.string()))
+                fullPath.string(),
+                propertyOverrides))
             {
                 continue;
             }
