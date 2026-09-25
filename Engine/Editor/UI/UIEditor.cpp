@@ -19,6 +19,7 @@
 #include <string>
 #include <filesystem>
 #include <vector>
+#include <functional>
 #include <cctype>
 #include <cstdint>
 #include <fstream>
@@ -220,7 +221,6 @@ void UIEditor::DrawHierarchy(
     std::string lowerLabel=label;
     std::transform(lowerLabel.begin(),lowerLabel.end(),lowerLabel.begin(),
         [](unsigned char c){return static_cast<char>(std::tolower(c));});
-    bool childMatches=false;
     std::function<bool(const UIWidget&)> matches=[&](const UIWidget& w)
     {
         std::string n=w.GetName();
