@@ -94,6 +94,8 @@ public:
     const std::vector<std::unique_ptr<UIWidget>>& GetChildren() const;
 
     UIWidget* AddChild(std::unique_ptr<UIWidget> child);
+    std::unique_ptr<UIWidget> DetachChild(UIWidget* child);
+    bool IsDescendantOf(const UIWidget* widget) const;
     void RemoveChild(UIWidget* child);
     UIWidget* Find(const std::string& name);
     const UIWidget* Find(const std::string& name) const;
