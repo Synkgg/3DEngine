@@ -200,8 +200,7 @@ bool Scene::SetParent(Entity child, Entity parent, bool keepWorldTransform)
     if (!child.IsValid() || !parent.IsValid() || child.GetID() == parent.GetID()) return false;
     if (IsDescendant(parent, child)) return false;
 
-    Transform worldBefore;
-    if (keepWorldTransform) worldBefore = GetWorldTransform(child);
+    const Transform worldBefore = keepWorldTransform ? GetWorldTransform(child) : Transform();
     m_Parents[child.GetID()] = parent.GetID();
 
     if (keepWorldTransform)
@@ -210,22 +209,22 @@ bool Scene::SetParent(Entity child, Entity parent, bool keepWorldTransform)
         const Transform parentWorld = GetWorldTransform(parent);
         if (local)
         {
-            local->transform = worldBefore;
-            local->transform.position.x -= parentWorld.position.x;
-            local->transform.position.y -= parentWorld.position.y;
-            local->transform.position.z -= parentWorld.position.z;
-            local->transform.rotation.x -= parentWorld.rotation.x;
-            local->transform.rotation.y -= parentWorld.rotation.y;
-            local->transform.rotation.z -= parentWorld.rotation.z;
-            if (parentWorld.scale.x != 0.0f) local->transform.scale.x /= parentWorld.scale.x;
-            if (parentWorld.scale.y != 0.0f) local->transform.scale.y /= parentWorld.scale.y;
-            if (parentWorld.scale.z != 0.0f) local->transform.scale.z /= parentWorld.scale.z;
-
-            const float cy = std::cos(-parentWorld.rotation.y), sy = std::sin(-parentWorld.rotation.y);
-            const float x = local->transform.position.x, z = local->transform.position.z;
-            local->transform.position.x = (x * cy + z * sy) / (parentWorld.scale.x == 0.0f ? 1.0f : parentWorld.scale.x);
-            local->transform.position.z = (-x * sy + z * cy) / (parentWorld.scale.z == 0.0f ? 1.0f : parentWorld.scale.z);
-            local->transform.position.y /= (parentWorld.scale.y == 0.0f ? 1.0f : parentWorld.scale.y);
+            Vec3 p = worldBefore.position - parentWorld.position;
+            auto rotateX=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x,v.y*c-v.z*q,v.y*q+v.z*c); };
+            auto rotateY=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x*c+v.z*q,v.y,-v.x*q+v.z*c); };
+            auto rotateZ=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x*c-v.y*q,v.x*q+v.y*c,v.z); };
+            p=rotateZ(p,-parentWorld.rotation.z);
+            p=rotateY(p,-parentWorld.rotation.y);
+            p=rotateX(p,-parentWorld.rotation.x);
+            if (std::abs(parentWorld.scale.x)>0.000001f) p.x/=parentWorld.scale.x;
+            if (std::abs(parentWorld.scale.y)>0.000001f) p.y/=parentWorld.scale.y;
+            if (std::abs(parentWorld.scale.z)>0.000001f) p.z/=parentWorld.scale.z;
+            local->transform.position=p;
+            local->transform.rotation=worldBefore.rotation-parentWorld.rotation;
+            local->transform.scale=worldBefore.scale;
+            if (std::abs(parentWorld.scale.x)>0.000001f) local->transform.scale.x/=parentWorld.scale.x;
+            if (std::abs(parentWorld.scale.y)>0.000001f) local->transform.scale.y/=parentWorld.scale.y;
+            if (std::abs(parentWorld.scale.z)>0.000001f) local->transform.scale.z/=parentWorld.scale.z;
         }
     }
     return true;
@@ -321,22 +320,20 @@ Transform Scene::GetWorldTransform(Entity entity) const
         current = GetParent(current);
     }
 
+    auto rotateX=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x,v.y*c-v.z*q,v.y*q+v.z*c); };
+    auto rotateY=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x*c+v.z*q,v.y,-v.x*q+v.z*c); };
+    auto rotateZ=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x*c-v.y*q,v.x*q+v.y*c,v.z); };
+
     for (auto it = chain.rbegin(); it != chain.rend(); ++it)
     {
         const Transform& p = **it;
-        const float cy = std::cos(p.rotation.y), sy = std::sin(p.rotation.y);
-        const float x = result.position.x * p.scale.x;
-        const float y = result.position.y * p.scale.y;
-        const float z = result.position.z * p.scale.z;
-        result.position.x = p.position.x + x * cy + z * sy;
-        result.position.y = p.position.y + y;
-        result.position.z = p.position.z - x * sy + z * cy;
-        result.rotation.x += p.rotation.x;
-        result.rotation.y += p.rotation.y;
-        result.rotation.z += p.rotation.z;
-        result.scale.x *= p.scale.x;
-        result.scale.y *= p.scale.y;
-        result.scale.z *= p.scale.z;
+        Vec3 position(result.position.x*p.scale.x,result.position.y*p.scale.y,result.position.z*p.scale.z);
+        position=rotateX(position,p.rotation.x);
+        position=rotateY(position,p.rotation.y);
+        position=rotateZ(position,p.rotation.z);
+        result.position=p.position+position;
+        result.rotation=result.rotation+p.rotation;
+        result.scale=Vec3(result.scale.x*p.scale.x,result.scale.y*p.scale.y,result.scale.z*p.scale.z);
     }
     return result;
 }
