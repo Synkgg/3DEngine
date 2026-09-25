@@ -10,6 +10,7 @@
 
 #include "../Scene/Entity.h"
 #include "../Graphics/PrimitiveType.h"
+#include "../Core/ProjectSettings.h"
 
 #include "HierarchyFolder.h"
 
@@ -38,6 +39,9 @@ public:
     void StopPlaying();
 
     std::string ConsumeOpenedUIAsset();
+
+    ProjectSettings& GetProjectSettings() { return m_ProjectSettings; }
+    const ProjectSettings& GetProjectSettings() const { return m_ProjectSettings; }
 
 private:
     Entity CreatePrimitiveEntity(
@@ -114,6 +118,7 @@ private:
     int m_MeshPreviewWidth = 0;
     int m_MeshPreviewHeight = 0;
     bool m_ShowRenderSettings = false;
+    ProjectSettings m_ProjectSettings;
     char m_HierarchySearchBuffer[128]{};
     char m_ConsoleSearchBuffer[128]{};
     float m_EditorCameraSpeed = 5.0f;
