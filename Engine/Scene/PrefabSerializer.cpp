@@ -7,8 +7,6 @@
 
 #include <vector>
 
-std::unordered_map<const Scene*, std::unordered_map<std::uint32_t, PrefabSerializer::InstanceInfo>> PrefabSerializer::s_Instances;
-
 bool PrefabSerializer::Save(Scene& scene, Entity root, const std::string& filepath)
 {
     if (!root.IsValid() || filepath.empty()) return false;
@@ -45,23 +43,19 @@ Entity PrefabSerializer::Instantiate(Scene& scene, const std::string& filepath, 
     Entity instance = prefabScene.CloneEntityTo(roots.front(), scene, true);
     if (!instance.IsValid()) return Entity();
     if (parent.IsValid()) scene.SetParent(instance, parent, false);
-    s_Instances[&scene][instance.GetID()] = { filepath };
+    scene.SetPrefabSource(instance, filepath);
     Logger::Info("Instantiated prefab: " + filepath);
     return instance;
 }
 
 bool PrefabSerializer::IsInstanceRoot(const Scene& scene, Entity entity)
 {
-    auto sceneIt=s_Instances.find(&scene);
-    return entity.IsValid() && sceneIt!=s_Instances.end() && sceneIt->second.find(entity.GetID())!=sceneIt->second.end();
+    return entity.IsValid() && !scene.GetPrefabSource(entity).empty();
 }
 
 std::string PrefabSerializer::GetSource(const Scene& scene, Entity entity)
 {
-    auto sceneIt=s_Instances.find(&scene);
-    if(sceneIt==s_Instances.end()) return {};
-    auto it=sceneIt->second.find(entity.GetID());
-    return it==sceneIt->second.end()?std::string():it->second.source;
+    return scene.GetPrefabSource(entity);
 }
 
 bool PrefabSerializer::Apply(Scene& scene, Entity instanceRoot)
@@ -101,25 +95,24 @@ bool PrefabSerializer::Revert(Scene& scene, Entity instanceRoot)
     }
 
     scene.DestroyEntityHierarchy(instanceRoot);
-    s_Instances[&scene].erase(instanceRoot.GetID());
-    s_Instances[&scene][replacement.GetID()]={source};
+    scene.ClearPrefabSource(instanceRoot);
+    scene.SetPrefabSource(replacement,source);
     return true;
 }
 
 bool PrefabSerializer::Unpack(Scene& scene, Entity instanceRoot, bool)
 {
-    auto sceneIt=s_Instances.find(&scene);
-    if(sceneIt==s_Instances.end()) return false;
-    return sceneIt->second.erase(instanceRoot.GetID())>0;
+    if(scene.GetPrefabSource(instanceRoot).empty()) return false;
+    scene.ClearPrefabSource(instanceRoot);
+    return true;
 }
 
 void PrefabSerializer::ForgetEntity(const Scene& scene, Entity entity)
 {
-    auto it=s_Instances.find(&scene);
-    if(it!=s_Instances.end()) it->second.erase(entity.GetID());
+    const_cast<Scene&>(scene).ClearPrefabSource(entity);
 }
 
 void PrefabSerializer::ForgetScene(const Scene& scene)
 {
-    s_Instances.erase(&scene);
+    // Prefab metadata is owned by Scene and cleared with scene data.
 }
