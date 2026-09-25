@@ -5,6 +5,15 @@
 #include <unordered_map>
 #include <vector>
 
+struct NetworkGameState
+{
+    std::uint32_t revision = 0;
+    int redScore = 0;
+    int blueScore = 0;
+    int roundSeconds = 180;
+    float orbX = 0, orbY = 1, orbZ = 0;
+};
+
 struct NetworkTransformState
 {
     std::uint32_t playerID = 0;
@@ -21,6 +30,8 @@ public:
     void Update();
     void Disconnect();
     void SendLocalTransform(const NetworkTransformState& state);
+    void SetGameState(const NetworkGameState& state);
+    const NetworkGameState& GetGameState() const { return m_GameState; }
     const std::unordered_map<std::uint32_t, NetworkTransformState>& GetRemoteTransforms() const { return m_RemoteTransforms; }
 
     bool IsHost() const { return m_Mode == Mode::Host; }
@@ -37,6 +48,7 @@ private:
     void SendHello();
     void SetError(const std::string& message);
     void SendTransformTo(const Endpoint& endpoint, const NetworkTransformState& state);
+    void SendGameStateTo(const Endpoint& endpoint);
 
     Mode m_Mode=Mode::Offline;
 #ifdef _WIN32
@@ -50,4 +62,5 @@ private:
     std::string m_LastError;
     std::uint32_t m_LocalPlayerID=0;
     std::uint32_t m_NextPlayerID=2;
+    NetworkGameState m_GameState{};
 };
