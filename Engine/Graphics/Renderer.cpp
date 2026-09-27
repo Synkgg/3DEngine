@@ -91,7 +91,8 @@ uniform int u_SpotLightCount;
 uniform PointLight u_PointLights[8];
 uniform SpotLight u_SpotLights[4];
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 NormalRoughness;
 
 const float PI = 3.14159265359;
 
@@ -316,6 +317,7 @@ void main()
     }
 
     FragColor = vec4(max(lighting, vec3(0.0)), baseColor.a);
+    NormalRoughness = vec4(N * 0.5 + 0.5, roughness);
 }
 )";
 
@@ -364,6 +366,7 @@ out vec4 FragColor;
 uniform sampler2D u_Scene;
 uniform sampler2D u_Bloom;
 uniform sampler2D u_Depth;
+uniform sampler2D u_NormalRoughness;
  uniform float u_Exposure;
 uniform float u_BloomStrength;
 uniform vec3 u_CameraForward;
@@ -390,6 +393,7 @@ float LinearizeDepth(float d)
 
 float ScreenAO(vec2 uv)
 {
+    vec3 centerNormal = normalize(texture(u_NormalRoughness, uv).xyz * 2.0 - 1.0);
     float centerRaw = texture(u_Depth, uv).r;
     if (centerRaw >= 0.99999) return 1.0;
     float center = LinearizeDepth(centerRaw);
@@ -410,7 +414,9 @@ float ScreenAO(vec2 uv)
             float delta = center - sd;
             float thickness = max(0.08, center * 0.012);
             float range = 1.0 - smoothstep(thickness, thickness * 5.0, abs(delta));
-            occ += smoothstep(0.015, thickness, delta) * range;
+            vec3 sampleNormal = normalize(texture(u_NormalRoughness, uv + dirs[i] * texel * radius).xyz * 2.0 - 1.0);
+            float normalWeight = 0.35 + 0.65 * (1.0 - max(dot(centerNormal, sampleNormal), 0.0));
+            occ += smoothstep(0.015, thickness, delta) * range * normalWeight;
             samples += 1.0;
         }
     }
@@ -502,8 +508,12 @@ void main()
         vec3 gi = ScreenSpaceGI(v_UV, centerDepth);
         hdr += gi * (1.0 - ao) * u_GIStrength;
 
-        vec3 reflected = ScreenSpaceReflection(v_UV, reflect(viewRay, u_CameraUp), centerDepth);
-        float grazing = pow(1.0 - abs(dot(viewRay,u_CameraUp)), 2.0);
+        vec4 normalRoughness = texture(u_NormalRoughness, v_UV);
+        vec3 surfaceNormal = normalize(normalRoughness.xyz * 2.0 - 1.0);
+        float surfaceRoughness = normalRoughness.w;
+        vec3 reflectionRay = reflect(viewRay, surfaceNormal);
+        vec3 reflected = ScreenSpaceReflection(v_UV, reflectionRay, centerDepth);
+        float grazing = pow(1.0 - abs(dot(-viewRay, surfaceNormal)), 2.0) * (1.0 - surfaceRoughness);
         hdr = mix(hdr, hdr + reflected * 0.22, clamp(grazing * u_SSRStrength,0.0,0.28));
     }
 
