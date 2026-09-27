@@ -83,17 +83,9 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     m_RenderSettings.contrast = std::clamp(m_RenderSettings.contrast, 0.5f, 1.6f);
     m_RenderSettings.screenSpaceReflectionStrength = std::clamp(m_RenderSettings.screenSpaceReflectionStrength, 0.0f, 1.0f);
     m_RenderSettings.giStrength = std::clamp(m_RenderSettings.giStrength, 0.0f, 1.5f);
-    const unsigned int desiredShadowSize =
-        m_RenderSettings.shadowQuality <= 0 ? 1024u :
-        m_RenderSettings.shadowQuality == 1 ? 2048u :
-        m_RenderSettings.shadowQuality == 2 ? 4096u : 4096u;
-    if (desiredShadowSize != m_ShadowMapSize)
-    {
-        m_ShadowMapSize = desiredShadowSize;
-        DestroyShadowTarget();
-        if (!CreateShadowTarget())
-            Logger::Error("Failed to resize directional shadow map.");
-    }
+    const unsigned int baseShadowSize = m_RenderSettings.shadowQuality <= 0 ? 1024u : m_RenderSettings.shadowQuality == 1 ? 2048u : 4096u;
+    const std::array<unsigned int, ShadowCascadeCount> desiredSizes{ baseShadowSize, std::max(1024u, baseShadowSize / 2u), 1024u };
+    if (desiredSizes != m_ShadowMapSizes) { m_ShadowMapSizes = desiredSizes; if (!CreateShadowTarget()) Logger::Error("Failed to resize cascaded shadow maps."); }
     m_Camera.SetFarPlane(m_RenderSettings.viewDistance);
 
     const unsigned int samples = m_RenderSettings.antiAliasing
@@ -115,73 +107,71 @@ const RenderSettings& Renderer::GetRenderSettings() const
     return m_RenderSettings;
 }
 
-void Renderer::UpdateLightSpaceMatrix()
+void Renderer::UpdateLightSpaceMatrices()
 {
-    const float distance = m_RenderSettings.shadowDistance;
-    const Vec3 center = m_Camera.GetPosition() + m_Camera.GetForward() * (distance * 0.28f);
+    const float maxDistance = m_RenderSettings.shadowDistance;
+    m_ShadowCascadeSplits = { maxDistance * 0.15f, maxDistance * 0.40f, maxDistance };
     Vec3 direction = m_LightDirection.Length() > 0.001f ? m_LightDirection.Normalized() : Vec3(-0.5f, -1.0f, -0.5f).Normalized();
-    const Vec3 lightPosition = center - direction * distance;
     Vec3 up(0.0f, 1.0f, 0.0f);
-    if (std::abs(Vec3::Dot(direction, up)) > 0.96f)
-        up = Vec3(0.0f, 0.0f, 1.0f);
-
-    const float extent = distance * 0.62f;
-    // Snap the shadow focus to shadow-map texels. This removes the crawling
-    // shimmer that otherwise appears whenever the camera translates.
-    const float worldUnitsPerTexel = (extent * 2.0f) / static_cast<float>(std::max(1u, m_ShadowMapSize));
-    Vec3 stableCenter = center;
-    if (worldUnitsPerTexel > 0.000001f)
+    if (std::abs(Vec3::Dot(direction, up)) > 0.96f) up = Vec3(0.0f, 0.0f, 1.0f);
+    float previousSplit = 0.1f;
+    for (int i = 0; i < ShadowCascadeCount; ++i)
     {
-        stableCenter.x = std::floor(stableCenter.x / worldUnitsPerTexel + 0.5f) * worldUnitsPerTexel;
-        stableCenter.y = std::floor(stableCenter.y / worldUnitsPerTexel + 0.5f) * worldUnitsPerTexel;
-        stableCenter.z = std::floor(stableCenter.z / worldUnitsPerTexel + 0.5f) * worldUnitsPerTexel;
+        const float split = m_ShadowCascadeSplits[i];
+        const float centerDistance = (previousSplit + split) * 0.5f;
+        const float extent = std::max(6.0f, split * 0.72f);
+        Vec3 center = m_Camera.GetPosition() + m_Camera.GetForward() * centerDistance;
+        const float texel = (extent * 2.0f) / static_cast<float>(std::max(1u, m_ShadowMapSizes[i]));
+        center.x = std::floor(center.x / texel + 0.5f) * texel;
+        center.y = std::floor(center.y / texel + 0.5f) * texel;
+        center.z = std::floor(center.z / texel + 0.5f) * texel;
+        const Vec3 lightPosition = center - direction * (split + extent);
+        const Mat4 view = Mat4::LookAt(lightPosition, center, up);
+        const Mat4 projection = Mat4::Orthographic(-extent, extent, -extent, extent, 0.1f, (split + extent) * 3.0f);
+        m_LightSpaceMatrices[i] = projection * view;
+        previousSplit = split;
     }
-    const Vec3 stableLightPosition = stableCenter - direction * distance;
-    const Mat4 lightView = Mat4::LookAt(stableLightPosition, stableCenter, up);
-    const Mat4 lightProjection = Mat4::Orthographic(-extent, extent, -extent, extent, 0.1f, distance * 2.5f);
-    m_LightSpaceMatrix = lightProjection * lightView;
 }
 
 bool Renderer::CreateShadowTarget()
 {
-    glGenFramebuffers(1, &m_ShadowFramebuffer);
-    glGenTextures(1, &m_ShadowDepthTexture);
-    glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_ShadowMapSize, m_ShadowMapSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    const float border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowDepthTexture, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    const bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (!complete) { DestroyShadowTarget(); return false; }
-    return true;
+    DestroyShadowTarget();
+    for (int i = 0; i < ShadowCascadeCount; ++i)
+    {
+        glGenFramebuffers(1, &m_ShadowFramebuffers[i]);
+        glGenTextures(1, &m_ShadowDepthTextures[i]);
+        glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTextures[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_ShadowMapSizes[i], m_ShadowMapSizes[i], 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        const float border[] = { 1,1,1,1 }; glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffers[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowDepthTextures[i], 0);
+        glDrawBuffer(GL_NONE); glReadBuffer(GL_NONE);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) { glBindFramebuffer(GL_FRAMEBUFFER, 0); DestroyShadowTarget(); return false; }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); return true;
 }
 
 void Renderer::DestroyShadowTarget()
 {
-    if (m_ShadowDepthTexture) glDeleteTextures(1, &m_ShadowDepthTexture);
-    if (m_ShadowFramebuffer) glDeleteFramebuffers(1, &m_ShadowFramebuffer);
-    m_ShadowDepthTexture = 0;
-    m_ShadowFramebuffer = 0;
+    for (int i = 0; i < ShadowCascadeCount; ++i) {
+        if (m_ShadowDepthTextures[i]) glDeleteTextures(1, &m_ShadowDepthTextures[i]);
+        if (m_ShadowFramebuffers[i]) glDeleteFramebuffers(1, &m_ShadowFramebuffers[i]);
+        m_ShadowDepthTextures[i] = 0; m_ShadowFramebuffers[i] = 0;
+    }
     m_ShadowMapReady = false;
 }
 
-void Renderer::BeginShadowPass()
+void Renderer::BeginShadowPass(int cascadeIndex)
 {
-    m_ShadowMapReady = false;
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer)
-        return;
-    UpdateLightSpaceMatrix();
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffer);
-    glViewport(0, 0, static_cast<int>(m_ShadowMapSize), static_cast<int>(m_ShadowMapSize));
+    if (cascadeIndex == 0) { m_ShadowMapReady = false; UpdateLightSpaceMatrices(); }
+    if (!m_RenderSettings.shadows || cascadeIndex < 0 || cascadeIndex >= ShadowCascadeCount || !m_ShadowFramebuffers[m_ActiveShadowCascade]s[cascadeIndex]) return;
+    m_ActiveShadowCascade = cascadeIndex;
+    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffers[cascadeIndex]);
+    glViewport(0, 0, static_cast<int>(m_ShadowMapSizes[cascadeIndex]), static_cast<int>(m_ShadowMapSizes[cascadeIndex]));
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -190,7 +180,7 @@ void Renderer::BeginShadowPass()
 
 void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitive)
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer)
+    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade])
         return;
 
     Mesh* mesh = GetPrimitiveMesh(primitive);
@@ -199,7 +189,7 @@ void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitiv
     mesh->Bind();
     m_ShadowShader.Bind();
     m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrix);
+    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrices[m_ActiveShadowCascade]);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
     m_ShadowShader.Unbind();
     mesh->Unbind();
@@ -207,13 +197,13 @@ void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitiv
 
 void Renderer::DrawShadowModel(const Transform& transform, const std::string& modelPath)
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer) return;
+    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade]) return;
     Mesh* mesh = GetModelMesh(modelPath);
     if (!mesh) return;
     mesh->Bind();
     m_ShadowShader.Bind();
     m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrix);
+    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrices[m_ActiveShadowCascade]);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
     m_ShadowShader.Unbind();
     mesh->Unbind();
@@ -221,10 +211,9 @@ void Renderer::DrawShadowModel(const Transform& transform, const std::string& mo
 
 void Renderer::EndShadowPass()
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffer)
-        return;
+    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade]) return;
     glCullFace(GL_BACK);
     glDisable(GL_CULL_FACE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    m_ShadowMapReady = true;
+    if (m_ActiveShadowCascade == ShadowCascadeCount - 1) m_ShadowMapReady = true;
 }
