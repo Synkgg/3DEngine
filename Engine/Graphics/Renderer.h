@@ -142,6 +142,7 @@ private:
     Shader m_PostShader;
     Shader m_BloomExtractShader;
     Shader m_BloomBlurShader;
+    Shader m_TAAShader;
     unsigned int m_SkyVAO = 0;
     unsigned int m_SkyVBO = 0;
     unsigned int m_PostVAO = 0;
@@ -159,6 +160,12 @@ private:
     unsigned int m_HistoryFramebuffer = 0;
     unsigned int m_HistoryTexture = 0;
     bool m_HistoryValid = false;
+    Vec3 m_PreviousCameraPosition{};
+    Vec3 m_PreviousCameraForward{};
+    Vec3 m_PreviousCameraRight{};
+    Vec3 m_PreviousCameraUp{};
+    float m_PreviousTanHalfFov = 0.0f;
+    float m_PreviousAspect = 1.0f;
     unsigned int m_BloomFramebuffer[2]{ 0, 0 };
     unsigned int m_BloomTexture[2]{ 0, 0 };
     unsigned int m_ModelPreviewFramebuffer = 0;
@@ -219,6 +226,7 @@ private:
     void DestroyPostProcessTarget();
     void RenderPostProcess();
     unsigned int RenderBloom();
+    void ResolveTAA();
     bool EnsureModelPreviewTarget(unsigned int width, unsigned int height);
     void DestroyModelPreviewTarget();
     void DestroyModelPreviewCache();
