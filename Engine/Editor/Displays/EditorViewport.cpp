@@ -637,6 +637,37 @@ void Editor::RenderViewport(
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(86.0f);
 	ImGui::DragFloat("Speed", &m_EditorCameraSpeed, 0.25f, 0.5f, 40.0f, "%.1f");
+	ImGui::SameLine();
+	const char* viewNames[] = { "Lit", "Normals", "Roughness", "Depth", "AO", "Reflections" };
+	int debugView = static_cast<int>(renderer.GetDebugView());
+	ImGui::SetNextItemWidth(105.0f);
+	if (ImGui::Combo("View", &debugView, viewNames, 6))
+		renderer.SetDebugView(static_cast<RenderDebugView>(debugView));
+	ImGui::SameLine();
+	if (ImGui::Button("Render")) ImGui::OpenPopup("SceneRenderSettings");
+	if (ImGui::BeginPopup("SceneRenderSettings"))
+	{
+		RenderSettings settings = m_ProjectSettings.GetRenderSettings();
+		bool changed = false;
+		ImGui::TextDisabled("Scene Rendering");
+		changed |= ImGui::Checkbox("Shadows", &settings.shadows);
+		changed |= ImGui::Checkbox("Bloom", &settings.bloom);
+		changed |= ImGui::Checkbox("SSR", &settings.screenSpaceReflections);
+		changed |= ImGui::SliderFloat("Exposure", &settings.exposure, 0.1f, 4.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Bloom Strength", &settings.bloomStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("SSR Strength", &settings.screenSpaceReflectionStrength, 0.0f, 1.0f, "%.2f");
+		changed |= ImGui::SliderFloat("GI Strength", &settings.giStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Atmosphere", &settings.atmosphereStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Sky", &settings.skyIntensity, 0.0f, 3.0f, "%.2f");
+		if (changed)
+		{
+			m_ProjectSettings.SetRenderSettings(settings);
+			renderer.SetRenderSettings(settings);
+			renderer.InvalidateTemporalHistory();
+			if (!m_ProjectSettings.Save()) Logger::Error("Failed to save project rendering settings.");
+		}
+		ImGui::EndPopup();
+	}
 
 	const float transportWidth = 108.0f;
 	ImGui::SameLine();
