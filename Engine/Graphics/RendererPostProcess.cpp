@@ -50,7 +50,7 @@ bool Renderer::CreatePostProcessTarget()
     glBindFramebuffer(GL_FRAMEBUFFER, m_HistoryFramebuffer);
     glGenTextures(1, &m_HistoryTexture);
     glBindTexture(GL_TEXTURE_2D, m_HistoryTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -173,6 +173,29 @@ void Renderer::RenderPostProcess()
     m_PostShader.Unbind();
 
     glActiveTexture(GL_TEXTURE0);
+    ResolveTAA();
     glEnable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::ResolveTAA()
+{
+    if (!m_HistoryFramebuffer || !m_HistoryTexture || !m_PostColorTexture || !m_PostVAO) return;
+    const Vec3 forward=m_Camera.GetForward(), right=m_Camera.GetRight(), up=Vec3::Cross(right,forward).Normalized(), position=m_Camera.GetPosition();
+    const float tanHalf=std::tan(m_Camera.GetFovDegrees()*0.5f*0.017453292519943295f);
+    const float aspect=m_ViewportHeight?static_cast<float>(m_ViewportWidth)/static_cast<float>(m_ViewportHeight):1.0f;
+    // Resolve into history using camera reprojection and neighborhood clipping.
+    glBindFramebuffer(GL_FRAMEBUFFER,m_HistoryFramebuffer); glViewport(0,0,(int)m_ViewportWidth,(int)m_ViewportHeight); glDisable(GL_DEPTH_TEST);
+    m_TAAShader.Bind();
+    glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,m_PostColorTexture);m_TAAShader.SetInt("u_Current",0);
+    glActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D,m_HistoryTexture);m_TAAShader.SetInt("u_History",1);
+    glActiveTexture(GL_TEXTURE2);glBindTexture(GL_TEXTURE_2D,m_Framebuffer.GetDepthTexture());m_TAAShader.SetInt("u_Depth",2);
+    m_TAAShader.SetVec3("u_CameraForward",forward.x,forward.y,forward.z);m_TAAShader.SetVec3("u_CameraRight",right.x,right.y,right.z);m_TAAShader.SetVec3("u_CameraUp",up.x,up.y,up.z);m_TAAShader.SetVec3("u_CameraPosition",position.x,position.y,position.z);
+    m_TAAShader.SetVec3("u_PreviousForward",m_PreviousCameraForward.x,m_PreviousCameraForward.y,m_PreviousCameraForward.z);m_TAAShader.SetVec3("u_PreviousRight",m_PreviousCameraRight.x,m_PreviousCameraRight.y,m_PreviousCameraRight.z);m_TAAShader.SetVec3("u_PreviousUp",m_PreviousCameraUp.x,m_PreviousCameraUp.y,m_PreviousCameraUp.z);m_TAAShader.SetVec3("u_PreviousPosition",m_PreviousCameraPosition.x,m_PreviousCameraPosition.y,m_PreviousCameraPosition.z);
+    m_TAAShader.SetFloat("u_TanHalfFov",tanHalf);m_TAAShader.SetFloat("u_Aspect",aspect);m_TAAShader.SetFloat("u_PreviousTanHalfFov",m_PreviousTanHalfFov);m_TAAShader.SetFloat("u_PreviousAspect",m_PreviousAspect);m_TAAShader.SetInt("u_HistoryValid",m_HistoryValid?1:0);
+    glBindVertexArray(m_PostVAO);glDrawArrays(GL_TRIANGLES,0,3);glBindVertexArray(0);m_TAAShader.Unbind();
+    // Copy resolved history back to the viewport target without sampling and rendering the same texture.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER,m_HistoryFramebuffer);glBindFramebuffer(GL_DRAW_FRAMEBUFFER,m_PostFramebuffer);glBlitFramebuffer(0,0,m_ViewportWidth,m_ViewportHeight,0,0,m_ViewportWidth,m_ViewportHeight,GL_COLOR_BUFFER_BIT,GL_NEAREST);
+    m_PreviousCameraPosition=position;m_PreviousCameraForward=forward;m_PreviousCameraRight=right;m_PreviousCameraUp=up;m_PreviousTanHalfFov=tanHalf;m_PreviousAspect=aspect;m_HistoryValid=true;
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
 }
