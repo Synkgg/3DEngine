@@ -23,8 +23,8 @@ uniform mat4 u_Model;
 out vec3 v_Normal;
 out vec3 v_WorldPosition;
 out vec2 v_UV;
-out vec4 v_LightSpacePosition;
-uniform mat4 u_LightSpaceMatrix;
+out vec4 v_LightSpacePosition[3];
+uniform mat4 u_LightSpaceMatrices[3];
 
 void main()
 {
@@ -32,7 +32,8 @@ void main()
     v_Normal = normalize(normalMatrix * a_Normal);
     v_WorldPosition = vec3(u_Model * vec4(a_Position, 1.0));
     v_UV = a_UV;
-    v_LightSpacePosition = u_LightSpaceMatrix * vec4(v_WorldPosition, 1.0);
+    for (int i = 0; i < 3; ++i)
+        v_LightSpacePosition[i] = u_LightSpaceMatrices[i] * vec4(v_WorldPosition, 1.0);
 
     gl_Position =
         u_Transform *
@@ -46,7 +47,7 @@ static const char* fragmentShaderSource = R"(
 in vec3 v_Normal;
 in vec3 v_WorldPosition;
 in vec2 v_UV;
-in vec4 v_LightSpacePosition;
+in vec4 v_LightSpacePosition[3];
 
 uniform vec4 u_Color;
 uniform sampler2D u_Texture;
@@ -72,7 +73,8 @@ uniform int u_UseEmissiveMap;
 uniform int u_FogEnabled;
 uniform float u_FogDensity;
 uniform float u_ViewDistance;
-uniform sampler2D u_ShadowMap;
+uniform sampler2D u_ShadowMaps[3];
+uniform float u_ShadowCascadeSplits[3];
 uniform int u_ShadowsEnabled;
 uniform int u_ShadowPCFRadius;
 uniform float u_IndirectLightStrength;
@@ -146,8 +148,12 @@ vec3 SampleEnvironment(vec3 dir, vec3 sunL)
     return result * u_SkyIntensity;
 }
 
-float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
+float CalculateShadow(vec3 N, vec3 L)
 {
+    float cameraDistance = length(u_CameraPosition - v_WorldPosition);
+    int cascade = cameraDistance <= u_ShadowCascadeSplits[0] ? 0 :
+                  cameraDistance <= u_ShadowCascadeSplits[1] ? 1 : 2;
+    vec4 lightSpacePosition = v_LightSpacePosition[cascade];
     if (u_ShadowsEnabled == 0) return 0.0;
     vec3 p = lightSpacePosition.xyz / max(lightSpacePosition.w, 0.0001);
     p = p * 0.5 + 0.5;
@@ -156,7 +162,7 @@ float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
 
     float nDotL = max(dot(N, L), 0.0);
     float bias = max(0.00065 * (1.0 - nDotL), 0.00032);
-    vec2 texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));
+    vec2 texel = 1.0 / vec2(textureSize(u_ShadowMaps[cascade], 0));
     int radius = clamp(u_ShadowPCFRadius, 1, 3);
     float shadow = 0.0;
     float weight = 0.0;
@@ -166,7 +172,7 @@ float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
         {
             if (abs(x) > radius || abs(y) > radius) continue;
             float w = 1.0 / (1.0 + 0.32 * float(x*x + y*y));
-            float closest = texture(u_ShadowMap, p.xy + vec2(x,y) * texel).r;
+            float closest = texture(u_ShadowMaps[cascade], p.xy + vec2(x,y) * texel).r;
             shadow += (p.z - bias > closest ? 1.0 : 0.0) * w;
             weight += w;
         }
@@ -226,7 +232,7 @@ void main()
 
     vec3 sunL = normalize(-u_LightDirection);
     vec3 sunRadiance = u_LightColor * max(u_LightIntensity, 0.0);
-    float shadow = CalculateShadow(v_LightSpacePosition, N, sunL);
+    float shadow = CalculateShadow(N, sunL);
     float cameraDistance = length(u_CameraPosition - v_WorldPosition);
     float shadowFade = 1.0 - smoothstep(u_ViewDistance * 0.055, u_ViewDistance * 0.22, cameraDistance);
     shadow *= mix(0.72, 1.0, shadowFade);
