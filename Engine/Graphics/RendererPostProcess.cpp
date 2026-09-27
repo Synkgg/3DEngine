@@ -153,6 +153,7 @@ void Renderer::RenderPostProcess()
     m_PostShader.SetFloat("u_Contrast", m_RenderSettings.contrast);
     m_PostShader.SetFloat("u_SSRStrength", m_RenderSettings.screenSpaceReflections ? m_RenderSettings.screenSpaceReflectionStrength : 0.0f);
     m_PostShader.SetFloat("u_GIStrength", m_RenderSettings.giStrength);
+    m_PostShader.SetInt("u_DebugView", static_cast<int>(m_DebugView));
     glBindVertexArray(m_PostVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
@@ -160,7 +161,10 @@ void Renderer::RenderPostProcess()
     m_PostShader.Unbind();
 
     glActiveTexture(GL_TEXTURE0);
-    ResolveTAA();
+    if (m_DebugView == RenderDebugView::Lit)
+        ResolveTAA();
+    else
+        m_HistoryValid = false;
     glEnable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
