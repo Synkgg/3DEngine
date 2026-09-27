@@ -49,10 +49,8 @@ in vec2 v_UV;
 in vec4 v_LightSpacePosition;
 
 uniform vec4 u_Color;
-
 uniform sampler2D u_Texture;
 uniform int u_UseTexture;
-
 uniform vec3 u_LightDirection;
 uniform vec3 u_LightColor;
 uniform float u_LightIntensity;
@@ -67,6 +65,7 @@ uniform float u_ViewDistance;
 uniform sampler2D u_ShadowMap;
 uniform int u_ShadowsEnabled;
 uniform int u_ShadowPCFRadius;
+
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
 uniform int u_PointLightCount;
@@ -76,120 +75,161 @@ uniform SpotLight u_SpotLights[4];
 
 out vec4 FragColor;
 
-float CalculateShadow(vec4 lightSpacePosition, vec3 normal, vec3 lightDirection)
+const float PI = 3.14159265359;
+
+float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-    if (u_ShadowsEnabled == 0)
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float nDotH = max(dot(N, H), 0.0);
+    float nDotH2 = nDotH * nDotH;
+    float denom = nDotH2 * (a2 - 1.0) + 1.0;
+    return a2 / max(PI * denom * denom, 0.000001);
+}
+
+float GeometrySchlickGGX(float nDotV, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    return nDotV / max(nDotV * (1.0 - k) + k, 0.000001);
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    return GeometrySchlickGGX(max(dot(N, V), 0.0), roughness) *
+           GeometrySchlickGGX(max(dot(N, L), 0.0), roughness);
+}
+
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) *
+        pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
+{
+    if (u_ShadowsEnabled == 0) return 0.0;
+    vec3 p = lightSpacePosition.xyz / max(lightSpacePosition.w, 0.0001);
+    p = p * 0.5 + 0.5;
+    if (p.z <= 0.0 || p.z >= 1.0 || p.x <= 0.0 || p.x >= 1.0 || p.y <= 0.0 || p.y >= 1.0)
         return 0.0;
 
-    vec3 projected = lightSpacePosition.xyz / max(lightSpacePosition.w, 0.0001);
-    projected = projected * 0.5 + 0.5;
-    if (projected.z <= 0.0 || projected.z >= 1.0 ||
-        projected.x <= 0.0 || projected.x >= 1.0 ||
-        projected.y <= 0.0 || projected.y >= 1.0)
-        return 0.0;
-
-    float bias = max(0.0007 * (1.0 - dot(normal, lightDirection)), 0.00018);
+    float bias = max(0.0012 * (1.0 - max(dot(N, L), 0.0)), 0.00018);
     vec2 texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));
-    float shadow = 0.0;
     int radius = clamp(u_ShadowPCFRadius, 1, 3);
-    float samples = 0.0;
+    float shadow = 0.0;
+    float weight = 0.0;
     for (int x = -3; x <= 3; ++x)
     {
         for (int y = -3; y <= 3; ++y)
         {
-            if (abs(x) > radius || abs(y) > radius)
-                continue;
-            float closest = texture(u_ShadowMap, projected.xy + vec2(x, y) * texel).r;
-            shadow += projected.z - bias > closest ? 1.0 : 0.0;
-            samples += 1.0;
+            if (abs(x) > radius || abs(y) > radius) continue;
+            float w = 1.0 / (1.0 + 0.32 * float(x*x + y*y));
+            float closest = texture(u_ShadowMap, p.xy + vec2(x,y) * texel).r;
+            shadow += (p.z - bias > closest ? 1.0 : 0.0) * w;
+            weight += w;
         }
     }
-    return shadow / max(samples, 1.0);
+    return shadow / max(weight, 0.0001);
+}
+
+vec3 EvaluateBRDF(vec3 N, vec3 V, vec3 L, vec3 radiance, vec3 albedo, float metallic, float roughness, vec3 F0)
+{
+    vec3 H = normalize(V + L);
+    float nDotL = max(dot(N, L), 0.0);
+    float nDotV = max(dot(N, V), 0.0);
+    if (nDotL <= 0.0 || nDotV <= 0.0) return vec3(0.0);
+
+    float NDF = DistributionGGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
+    vec3 specular = (NDF * G * F) / max(4.0 * nDotV * nDotL, 0.001);
+
+    vec3 kS = F;
+    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+    return (kD * albedo / PI + specular) * radiance * nDotL;
 }
 
 void main()
 {
-    vec3 normal =
-        normalize(v_Normal);
-
-    vec3 lightDirection =
-        normalize(-u_LightDirection);
-
-    float diffuse =
-        max(
-            dot(normal, lightDirection),
-            0.0
-        );
-
-    // Keep the original renderer's neutral 0.25 ambient baseline.
-    float ambient = 0.25 * u_AO;
-
-    vec3 viewDirection = normalize(u_CameraPosition - v_WorldPosition);
-    vec3 halfDirection = normalize(lightDirection + viewDirection);
-    float shininess = mix(128.0, 4.0, clamp(u_Roughness, 0.0, 1.0));
-    float specularStrength = mix(0.04, 1.0, clamp(u_Metallic, 0.0, 1.0));
-    float specular = pow(max(dot(normal, halfDirection), 0.0), shininess) * specularStrength;
-    float fresnel = pow(1.0 - max(dot(normal, viewDirection), 0.0), 5.0);
-    float brightness =
-        ambient +
-        diffuse * u_LightIntensity;
-
-    vec4 baseColor =
-        u_Color;
-
+    vec4 baseColor = u_Color;
     if (u_UseTexture != 0)
+        baseColor *= texture(u_Texture, v_UV);
+
+    // Treat authored colors/textures as display-space inputs and shade in linear space.
+    vec3 albedo = pow(max(baseColor.rgb, vec3(0.0)), vec3(2.2));
+    float metallic = clamp(u_Metallic, 0.0, 1.0);
+    float roughness = clamp(u_Roughness, 0.045, 1.0);
+    float ao = clamp(u_AO, 0.0, 1.0);
+
+    vec3 N = normalize(v_Normal);
+    vec3 V = normalize(u_CameraPosition - v_WorldPosition);
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+
+    vec3 sunL = normalize(-u_LightDirection);
+    vec3 sunRadiance = u_LightColor * max(u_LightIntensity, 0.0);
+    float shadow = CalculateShadow(v_LightSpacePosition, N, sunL);
+    vec3 lighting = EvaluateBRDF(N, V, sunL, sunRadiance, albedo, metallic, roughness, F0) * (1.0 - shadow);
+
+    for (int i = 0; i < u_PointLightCount; ++i)
     {
-        baseColor *=
-            texture(
-                u_Texture,
-                v_UV
-            );
+        vec3 toLight = u_PointLights[i].position - v_WorldPosition;
+        float distance = length(toLight);
+        if (distance < u_PointLights[i].range && distance > 0.0001)
+        {
+            vec3 L = toLight / distance;
+            float rangeFalloff = clamp(1.0 - distance / max(u_PointLights[i].range, 0.001), 0.0, 1.0);
+            float attenuation = rangeFalloff * rangeFalloff / max(1.0 + 0.045 * distance * distance, 1.0);
+            vec3 radiance = u_PointLights[i].color * u_PointLights[i].intensity * attenuation;
+            lighting += EvaluateBRDF(N, V, L, radiance, albedo, metallic, roughness, F0);
+        }
     }
 
-    vec3 dielectricF0 = vec3(0.04);
-    vec3 specularColor = mix(dielectricF0, baseColor.rgb, clamp(u_Metallic, 0.0, 1.0));
-    vec3 diffuseColor = baseColor.rgb * (1.0 - clamp(u_Metallic, 0.0, 1.0));
-    float shadow = CalculateShadow(v_LightSpacePosition, normal, lightDirection);
-    vec3 ambientLighting = diffuseColor * u_LightColor * ambient;
-    vec3 directLighting =
-        diffuseColor * u_LightColor * diffuse * u_LightIntensity +
-        specularColor * u_LightColor * specular * (1.0 + fresnel) * u_LightIntensity;
-    vec3 lighting = ambientLighting + directLighting * (1.0 - shadow);
-    for(int i=0;i<u_PointLightCount;i++) {
-        vec3 toLight=u_PointLights[i].position-v_WorldPosition; float d=length(toLight);
-        vec3 L=normalize(toLight); float att=pow(clamp(1.0-d/u_PointLights[i].range,0.0,1.0),2.0);
-        float ndl=max(dot(normal,L),0.0);
-        vec3 H=normalize(L+viewDirection);
-        float localSpec=pow(max(dot(normal,H),0.0),shininess);
-        vec3 localDiffuse=diffuseColor*ndl;
-        vec3 localSpecular=specularColor*localSpec;
-        lighting += (localDiffuse+localSpecular)*u_PointLights[i].color*u_PointLights[i].intensity*att;
+    for (int i = 0; i < u_SpotLightCount; ++i)
+    {
+        vec3 toLight = u_SpotLights[i].position - v_WorldPosition;
+        float distance = length(toLight);
+        if (distance < u_SpotLights[i].range && distance > 0.0001)
+        {
+            vec3 L = toLight / distance;
+            float cone = smoothstep(u_SpotLights[i].outerCos, u_SpotLights[i].innerCos,
+                                    dot(-L, normalize(u_SpotLights[i].direction)));
+            float rangeFalloff = clamp(1.0 - distance / max(u_SpotLights[i].range, 0.001), 0.0, 1.0);
+            float attenuation = rangeFalloff * rangeFalloff / max(1.0 + 0.045 * distance * distance, 1.0);
+            vec3 radiance = u_SpotLights[i].color * u_SpotLights[i].intensity * attenuation * cone;
+            lighting += EvaluateBRDF(N, V, L, radiance, albedo, metallic, roughness, F0);
+        }
     }
-    for(int i=0;i<u_SpotLightCount;i++) {
-        vec3 toLight=u_SpotLights[i].position-v_WorldPosition; float d=length(toLight); vec3 L=normalize(toLight);
-        float cone=smoothstep(u_SpotLights[i].outerCos,u_SpotLights[i].innerCos,dot(-L,normalize(u_SpotLights[i].direction)));
-        float att=pow(clamp(1.0-d/u_SpotLights[i].range,0.0,1.0),2.0);
-        float ndl=max(dot(normal,L),0.0);
-        vec3 H=normalize(L+viewDirection);
-        float localSpec=pow(max(dot(normal,H),0.0),shininess);
-        lighting += (diffuseColor*ndl+specularColor*localSpec)*u_SpotLights[i].color*u_SpotLights[i].intensity*att*cone;
-    }
-    lighting += baseColor.rgb * u_Emissive;
+
+    // Cheap environment lighting gives materials readable indirect light until
+    // cubemap IBL is added. Up-facing surfaces receive sky light, downward
+    // surfaces receive warmer ground bounce, and grazing angles retain Fresnel.
+    float skyWeight = N.y * 0.5 + 0.5;
+    vec3 skyIrradiance = mix(vec3(0.055, 0.045, 0.035), vec3(0.22, 0.32, 0.48), skyWeight);
+    vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 envDiffuse = albedo * (1.0 - metallic) * skyIrradiance;
+    vec3 envSpecular = Fenv * mix(vec3(0.035), skyIrradiance * 0.55, 1.0 - roughness);
+    lighting += (envDiffuse + envSpecular) * ao;
+
+    lighting += albedo * max(u_Emissive, 0.0) * 2.0;
 
     if (u_FogEnabled != 0)
     {
         float distanceToCamera = length(u_CameraPosition - v_WorldPosition);
-        // Gentle linear-distance fog. This deliberately avoids the old
-        // exponential wash that tinted most of the scene blue-gray.
-        float fogStart = max(25.0, 0.55 * u_ViewDistance);
+        float fogStart = max(20.0, 0.38 * u_ViewDistance);
         float fogEnd = max(fogStart + 1.0, u_ViewDistance);
-        float fogFactor = smoothstep(fogStart, fogEnd, distanceToCamera);
-        vec3 fogColor = vec3(0.64, 0.72, 0.76);
-        lighting = mix(lighting, fogColor, fogFactor * clamp(u_FogDensity * 40.0, 0.0, 1.0));
+        float distanceFog = smoothstep(fogStart, fogEnd, distanceToCamera);
+        float heightFog = exp(-max(v_WorldPosition.y, 0.0) * 0.025);
+        float fogAmount = clamp(distanceFog * (0.35 + u_FogDensity * 24.0) * heightFog, 0.0, 0.92);
+        vec3 fogColor = vec3(0.42, 0.55, 0.70);
+        lighting = mix(lighting, fogColor, fogAmount);
     }
 
-    // Materials output linear HDR. Exposure and display encoding happen once
-    // in the final post-process pass.
     FragColor = vec4(max(lighting, vec3(0.0)), baseColor.a);
 }
 )";
@@ -243,12 +283,8 @@ uniform float u_BloomStrength;
 
 vec3 ACESFilm(vec3 x)
 {
-    const float a = 2.51;
-    const float b = 0.03;
-    const float c = 2.43;
-    const float d = 0.59;
-    const float e = 0.14;
-    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+    const float a=2.51, b=0.03, c=2.43, d=0.59, e=0.14;
+    return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.0,1.0);
 }
 
 void main()
@@ -256,10 +292,23 @@ void main()
     vec3 hdr = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
     vec3 bloom = max(texture(u_Bloom, v_UV).rgb, vec3(0.0));
     hdr += bloom * u_BloomStrength;
-    vec3 mapped = ACESFilm(hdr * u_Exposure);
-    // Mild display encoding preserves contrast while lifting dark material detail.
-    mapped = pow(mapped, vec3(1.0 / 2.2));
-    FragColor = vec4(mapped, 1.0);
+
+    // Filmic exposure and tone mapping.
+    vec3 mapped = ACESFilm(hdr * max(u_Exposure, 0.001));
+
+    // Subtle cinematic color grade: preserve saturation in highlights while
+    // avoiding the flat gray look of a plain gamma-only output.
+    float luma = dot(mapped, vec3(0.2126,0.7152,0.0722));
+    mapped = mix(vec3(luma), mapped, 1.06);
+    mapped = (mapped - 0.5) * 1.035 + 0.5;
+
+    // Gentle vignette anchors the image without crushing the corners.
+    vec2 q = v_UV * (1.0 - v_UV.yx);
+    float vignette = pow(clamp(16.0 * q.x * q.y, 0.0, 1.0), 0.08);
+    mapped *= mix(0.88, 1.0, vignette);
+
+    mapped = pow(clamp(mapped,0.0,1.0), vec3(1.0/2.2));
+    FragColor = vec4(mapped,1.0);
 }
 )";
 
@@ -310,18 +359,26 @@ static const char* skyFragmentShaderSource = R"(
 #version 450 core
 in vec2 v_UV;
 out vec4 FragColor;
-void main() {
-    float h = clamp(v_UV.y, 0.0, 1.0);
-    vec3 horizon = vec3(0.48, 0.58, 0.66);
-    vec3 zenith = vec3(0.035, 0.12, 0.25);
-    vec3 sky = mix(horizon, zenith, smoothstep(0.0, 0.92, h));
-    float sunDistance = length((v_UV - vec2(0.76, 0.68)) * vec2(1.0, 1.35));
-    float sunDisc = pow(max(0.0, 1.0 - sunDistance * 8.0), 18.0);
-    float sunGlow = pow(max(0.0, 1.0 - sunDistance * 1.8), 5.0);
-    sky += vec3(1.0, 0.72, 0.42) * (sunGlow * 0.34 + sunDisc * 1.8);
-    float horizonHaze = 1.0 - smoothstep(0.0, 0.34, abs(v_UV.y - 0.32));
-    sky += vec3(0.18, 0.20, 0.21) * horizonHaze * 0.18;
-    FragColor = vec4(sky, 1.0);
+void main()
+{
+    float h = clamp(v_UV.y,0.0,1.0);
+    vec3 groundHaze = vec3(0.46,0.56,0.66);
+    vec3 horizon = vec3(0.32,0.50,0.72);
+    vec3 zenith = vec3(0.018,0.075,0.19);
+    vec3 sky = mix(horizon,zenith,smoothstep(0.18,1.0,h));
+    sky = mix(groundHaze,sky,smoothstep(0.0,0.24,h));
+
+    vec2 sunPos=vec2(0.76,0.68);
+    vec2 delta=(v_UV-sunPos)*vec2(1.0,1.35);
+    float d=length(delta);
+    float sun=1.0-smoothstep(0.0,0.018,d);
+    float innerGlow=exp(-d*18.0);
+    float outerGlow=exp(-d*5.0);
+    sky += vec3(1.0,0.72,0.38)*(sun*5.0+innerGlow*0.75+outerGlow*0.10);
+
+    float horizonGlow=exp(-abs(h-0.30)*11.0);
+    sky += vec3(0.18,0.11,0.055)*horizonGlow;
+    FragColor=vec4(max(sky,vec3(0.0)),1.0);
 }
 )";
 
