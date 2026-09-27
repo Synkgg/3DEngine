@@ -24,6 +24,10 @@ bool ProjectSettings::Load(const std::string& path)
         else if(key=="IndirectLightStrength") file>>m_RenderSettings.indirectLightStrength;
         else if(key=="ReflectionStrength") file>>m_RenderSettings.reflectionStrength;
         else if(key=="ContactShadowStrength") file>>m_RenderSettings.contactShadowStrength;
+        else if(key=="SkyIntensity") file>>m_RenderSettings.skyIntensity;
+        else if(key=="AtmosphereStrength") file>>m_RenderSettings.atmosphereStrength;
+        else if(key=="ColorSaturation") file>>m_RenderSettings.colorSaturation;
+        else if(key=="Contrast") file>>m_RenderSettings.contrast;
         else { std::string ignored; std::getline(file,ignored); }
     }
     return true;
@@ -46,7 +50,11 @@ bool ProjectSettings::Save(const std::string& path) const
          << "ShadowDistance " << m_RenderSettings.shadowDistance << '\n'
          << "IndirectLightStrength " << m_RenderSettings.indirectLightStrength << '\n'
          << "ReflectionStrength " << m_RenderSettings.reflectionStrength << '\n'
-         << "ContactShadowStrength " << m_RenderSettings.contactShadowStrength << '\n';
+         << "ContactShadowStrength " << m_RenderSettings.contactShadowStrength << '\n'
+         << "SkyIntensity " << m_RenderSettings.skyIntensity << '\n'
+         << "AtmosphereStrength " << m_RenderSettings.atmosphereStrength << '\n'
+         << "ColorSaturation " << m_RenderSettings.colorSaturation << '\n'
+         << "Contrast " << m_RenderSettings.contrast << '\n';
     return file.good();
 }
 

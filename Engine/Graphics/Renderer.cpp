@@ -78,6 +78,7 @@ uniform int u_ShadowPCFRadius;
 uniform float u_IndirectLightStrength;
 uniform float u_ReflectionStrength;
 uniform float u_ContactShadowStrength;
+uniform float u_SkyIntensity;
 
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
@@ -122,6 +123,25 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) *
         pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+vec3 SampleEnvironment(vec3 dir, vec3 sunL)
+{
+    dir = normalize(dir);
+    float h = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
+    float horizon = exp(-abs(dir.y) * 6.5);
+    vec3 ground = vec3(0.050, 0.043, 0.038);
+    vec3 horizonColor = vec3(0.38, 0.47, 0.58);
+    vec3 sky = vec3(0.13, 0.28, 0.52);
+    vec3 zenith = vec3(0.025, 0.085, 0.22);
+    vec3 result = mix(ground, horizonColor, smoothstep(0.08, 0.50, h));
+    result = mix(result, sky, smoothstep(0.46, 0.72, h));
+    result = mix(result, zenith, smoothstep(0.72, 1.0, h));
+    result += vec3(0.13,0.085,0.045) * horizon;
+    float sunDot = max(dot(dir, sunL), 0.0);
+    result += max(u_LightColor, vec3(0.72,0.52,0.30)) *
+              (pow(sunDot, 64.0) * 0.34 + pow(sunDot, 512.0) * 2.2) *
+              max(u_LightIntensity, 0.0);
+    return result * u_SkyIntensity;
 }
 
 float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
@@ -205,6 +225,9 @@ void main()
     vec3 sunL = normalize(-u_LightDirection);
     vec3 sunRadiance = u_LightColor * max(u_LightIntensity, 0.0);
     float shadow = CalculateShadow(v_LightSpacePosition, N, sunL);
+    float cameraDistance = length(u_CameraPosition - v_WorldPosition);
+    float shadowFade = 1.0 - smoothstep(u_ViewDistance * 0.055, u_ViewDistance * 0.22, cameraDistance);
+    shadow *= mix(0.72, 1.0, shadowFade);
     vec3 lighting = EvaluateBRDF(N, V, sunL, sunRadiance, albedo, metallic, roughness, F0) * (1.0 - shadow);
 
     for (int i = 0; i < u_PointLightCount; ++i)
@@ -237,45 +260,35 @@ void main()
         }
     }
 
-    // Hemispherical environment integration. It acts as a stable probe for
-    // scenes that do not yet provide an authored HDR cubemap.
-    float skyWeight = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
-    vec3 groundIrradiance = vec3(0.060, 0.050, 0.040);
-    vec3 skyIrradiance = vec3(0.20, 0.32, 0.54);
-    vec3 hemiIrradiance = mix(groundIrradiance, skyIrradiance, skyWeight);
-    float sunBounce = max(dot(N, -sunL), 0.0);
-    hemiIrradiance += u_LightColor * u_LightIntensity * sunBounce * 0.025;
+    // Environment lighting shares the same sky response as the visible
+    // atmosphere. Diffuse samples the normal hemisphere while specular follows
+    // the reflection vector, giving metals and glossy surfaces a coherent world.
+    vec3 R = reflect(-V, N);
+    vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 envN = SampleEnvironment(N, sunL);
+    vec3 envR = SampleEnvironment(R, sunL);
 
-    // Approximate first-bounce energy from local lights. This is deliberately
-    // low frequency so it reads as indirect illumination rather than a second
-    // direct-light term.
     vec3 localBounce = vec3(0.0);
     for (int i = 0; i < u_PointLightCount; ++i)
     {
         float d = length(u_PointLights[i].position - v_WorldPosition);
         float influence = clamp(1.0 - d / max(u_PointLights[i].range * 1.35, 0.001), 0.0, 1.0);
-        localBounce += u_PointLights[i].color * u_PointLights[i].intensity * influence * influence * 0.018;
+        localBounce += u_PointLights[i].color * u_PointLights[i].intensity *
+                       influence * influence * 0.014;
     }
     for (int i = 0; i < u_SpotLightCount; ++i)
     {
         float d = length(u_SpotLights[i].position - v_WorldPosition);
         float influence = clamp(1.0 - d / max(u_SpotLights[i].range * 1.25, 0.001), 0.0, 1.0);
-        localBounce += u_SpotLights[i].color * u_SpotLights[i].intensity * influence * influence * 0.012;
+        localBounce += u_SpotLights[i].color * u_SpotLights[i].intensity *
+                       influence * influence * 0.010;
     }
 
-    vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 envDiffuse = albedo * (1.0 - metallic) *
-        max(hemiIrradiance + localBounce, vec3(0.085, 0.095, 0.11));
-
-    vec3 R = reflect(-V, N);
-    float sunReflection = pow(max(dot(R, sunL), 0.0), mix(8.0, 768.0, 1.0 - roughness));
-    float reflectionHeight = clamp(R.y * 0.5 + 0.5, 0.0, 1.0);
-    float reflectionHorizon = exp(-abs(R.y) * 6.0);
-    vec3 horizonReflection = mix(groundIrradiance, skyIrradiance, reflectionHeight);
-    horizonReflection += vec3(0.16, 0.11, 0.065) * reflectionHorizon;
-    vec3 envSpecular = Fenv * horizonReflection * mix(0.12, 1.0, 1.0 - roughness);
-    envSpecular += Fenv * u_LightColor * sunReflection * u_LightIntensity *
-                   (1.0 - roughness) * 1.8;
+    vec3 kDenv = (vec3(1.0) - Fenv) * (1.0 - metallic);
+    vec3 envDiffuse = kDenv * albedo * (envN + localBounce);
+    // Roughness broadens and reduces the reflected environment lobe.
+    float specularEnergy = mix(1.0, 0.34, roughness * roughness);
+    vec3 envSpecular = Fenv * envR * specularEnergy;
     lighting += (envDiffuse * u_IndirectLightStrength +
                  envSpecular * u_ReflectionStrength) * ao;
 
@@ -353,6 +366,9 @@ uniform vec3 u_SunColor;
 uniform float u_SunIntensity;
 uniform float u_TanHalfFov;
 uniform float u_Aspect;
+uniform float u_AtmosphereStrength;
+uniform float u_ColorSaturation;
+uniform float u_Contrast;
  
 float LinearizeDepth(float d)
 {
@@ -426,7 +442,7 @@ void main()
         vec3 atmosphere = mix(vec3(0.18,0.28,0.42), max(u_SunColor, vec3(0.65,0.48,0.30)),
                               pow(max(dot(ray, sunDir),0.0), 8.0));
         hdr = mix(hdr, atmosphere * (0.7 + phase * max(u_SunIntensity,0.25)),
-                  clamp(aerial * 0.42, 0.0, 0.42));
+                  clamp(aerial * 0.42 * u_AtmosphereStrength, 0.0, 0.48));
     }
 
     // Filmic exposure and tone mapping.
@@ -435,8 +451,8 @@ void main()
     // Subtle cinematic color grade: preserve saturation in highlights while
     // avoiding the flat gray look of a plain gamma-only output.
     float luma = dot(mapped, vec3(0.2126,0.7152,0.0722));
-    mapped = mix(vec3(luma), mapped, 1.10);
-    mapped = (mapped - 0.5) * 1.055 + 0.5;
+    mapped = mix(vec3(luma), mapped, u_ColorSaturation);
+    mapped = (mapped - 0.5) * u_Contrast + 0.5;
 
     // Gentle vignette anchors the image without crushing the corners.
     vec2 q = v_UV * (1.0 - v_UV.yx);
@@ -507,6 +523,7 @@ uniform vec3 u_SunColor;
 uniform float u_SunIntensity;
 uniform float u_TanHalfFov;
 uniform float u_Aspect;
+uniform float u_SkyIntensity;
 
 void main()
 {
@@ -537,7 +554,7 @@ void main()
     float forwardScatter = pow(max(dot(ray, sunDir), 0.0), 3.0);
     sky += vec3(0.16, 0.10, 0.055) * forwardScatter * horizon * 1.5;
 
-    FragColor = vec4(max(sky, vec3(0.0)), 1.0);
+    FragColor = vec4(max(sky * u_SkyIntensity, vec3(0.0)), 1.0);
 }
 )";
 
@@ -1094,6 +1111,7 @@ void Renderer::DrawMeshInternal(
     m_Shader.SetFloat("u_IndirectLightStrength", m_RenderSettings.indirectLightStrength);
     m_Shader.SetFloat("u_ReflectionStrength", m_RenderSettings.reflectionStrength);
     m_Shader.SetFloat("u_ContactShadowStrength", m_RenderSettings.contactShadowStrength);
+    m_Shader.SetFloat("u_SkyIntensity", m_RenderSettings.skyIntensity);
     const Texture2D* maps[5] = { normalMap, metallicMap, roughnessMap, aoMap, emissiveMap };
     const char* samplers[5] = { "u_NormalMap", "u_MetallicMap", "u_RoughnessMap", "u_AOMap", "u_EmissiveMap" };
     const char* toggles[5] = { "u_UseNormalMap", "u_UseMetallicMap", "u_UseRoughnessMap", "u_UseAOMap", "u_UseEmissiveMap" };
@@ -1278,6 +1296,7 @@ void Renderer::DrawSky()
     m_SkyShader.SetFloat("u_SunIntensity", m_LightIntensity);
     m_SkyShader.SetFloat("u_TanHalfFov", tanHalfFov);
     m_SkyShader.SetFloat("u_Aspect", aspect);
+    m_SkyShader.SetFloat("u_SkyIntensity", m_RenderSettings.skyIntensity);
     glBindVertexArray(m_SkyVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
@@ -1451,10 +1470,14 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     m_RenderSettings.indirectLightStrength = std::clamp(m_RenderSettings.indirectLightStrength, 0.0f, 2.5f);
     m_RenderSettings.reflectionStrength = std::clamp(m_RenderSettings.reflectionStrength, 0.0f, 2.5f);
     m_RenderSettings.contactShadowStrength = std::clamp(m_RenderSettings.contactShadowStrength, 0.0f, 1.5f);
+    m_RenderSettings.skyIntensity = std::clamp(m_RenderSettings.skyIntensity, 0.1f, 3.0f);
+    m_RenderSettings.atmosphereStrength = std::clamp(m_RenderSettings.atmosphereStrength, 0.0f, 2.0f);
+    m_RenderSettings.colorSaturation = std::clamp(m_RenderSettings.colorSaturation, 0.0f, 2.0f);
+    m_RenderSettings.contrast = std::clamp(m_RenderSettings.contrast, 0.5f, 1.6f);
     const unsigned int desiredShadowSize =
         m_RenderSettings.shadowQuality <= 0 ? 1024u :
         m_RenderSettings.shadowQuality == 1 ? 2048u :
-        m_RenderSettings.shadowQuality == 2 ? 4096u : 8192u;
+        m_RenderSettings.shadowQuality == 2 ? 4096u : 4096u;
     if (desiredShadowSize != m_ShadowMapSize)
     {
         m_ShadowMapSize = desiredShadowSize;
@@ -1746,6 +1769,9 @@ void Renderer::RenderPostProcess()
     m_PostShader.SetFloat("u_SunIntensity", m_LightIntensity);
     m_PostShader.SetFloat("u_TanHalfFov", postTanHalfFov);
     m_PostShader.SetFloat("u_Aspect", postAspect);
+    m_PostShader.SetFloat("u_AtmosphereStrength", m_RenderSettings.atmosphereStrength);
+    m_PostShader.SetFloat("u_ColorSaturation", m_RenderSettings.colorSaturation);
+    m_PostShader.SetFloat("u_Contrast", m_RenderSettings.contrast);
     glBindVertexArray(m_PostVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);

@@ -44,6 +44,10 @@ struct RenderSettings
     float indirectLightStrength = 1.0f;
     float reflectionStrength = 1.0f;
     float contactShadowStrength = 1.0f;
+    float skyIntensity = 1.0f;
+    float atmosphereStrength = 1.0f;
+    float colorSaturation = 1.04f;
+    float contrast = 1.025f;
 };
 
 struct SpotLightData { Vec3 position; Vec3 direction; Vec3 color; float intensity=1.0f; float range=15.0f; float innerCos=0.92f; float outerCos=0.82f; };
