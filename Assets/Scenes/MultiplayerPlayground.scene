@@ -1,6 +1,6 @@
 MyEngineScene
-Environment 1 4 1 1 1 500 1.18 0.002 0.48 3 170
-Entities 485
+Environment 1 4 1 1 1 420 1.12 0.0015 0.42 2 125
+Entities 94
 Entity 1
 Name PlaygroundController
 Position 0 0 0
@@ -38,16 +38,16 @@ Collider 1 0.8 2 0.8
 Scripts 1
 Script Assets/Scripts/Player.lua
 Entity 3
-Name Deck_-32_-40
-Position -32 0 -40
+Name DeckSection_-24_-28
+Position -24 0 -28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -55,16 +55,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 4
-Name Deck_-32_-36
-Position -32 0 -36
+Name DeckSection_-24_0
+Position -24 0 0
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -72,16 +72,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 5
-Name Deck_-32_-32
-Position -32 0 -32
+Name DeckSection_-24_28
+Position -24 0 28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -89,16 +89,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 6
-Name Deck_-32_-28
-Position -32 0 -28
+Name DeckSection_0_-28
+Position 0 0 -28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -106,16 +106,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 7
-Name Deck_-32_-24
-Position -32 0 -24
+Name DeckSection_0_0
+Position 0 0 0
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -123,16 +123,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 8
-Name Deck_-32_-20
-Position -32 0 -20
+Name DeckSection_0_28
+Position 0 0 28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -140,16 +140,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 9
-Name Deck_-32_-16
-Position -32 0 -16
+Name DeckSection_24_-28
+Position 24 0 -28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -157,16 +157,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 10
-Name Deck_-32_-12
-Position -32 0 -12
+Name DeckSection_24_0
+Position 24 0 0
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -174,16 +174,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 11
-Name Deck_-32_-8
-Position -32 0 -8
+Name DeckSection_24_28
+Position 24 0 28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 6 1 7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
@@ -191,7197 +191,686 @@ Light 0
 Collider 0
 Scripts 0
 Entity 12
-Name Deck_-32_-4
-Position -32 0 -4
+Name ArenaFloorCollider
+Position 0 -0.25 0
 Rotation 0 0 0
 Scale 1 1 1
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 0
+Color 0
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 68 .5 84
 Scripts 0
 Entity 13
-Name Deck_-32_0
-Position -32 0 0
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_-32
+Position -32 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 14
-Name Deck_-32_4
-Position -32 0 4
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_-32
+Position -32 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 15
-Name Deck_-32_8
-Position -32 0 8
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_-24
+Position -24 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 16
-Name Deck_-32_12
-Position -32 0 12
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_-24
+Position -24 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 17
-Name Deck_-32_16
-Position -32 0 16
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_-16
+Position -16 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 18
-Name Deck_-32_20
-Position -32 0 20
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_-16
+Position -16 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 19
-Name Deck_-32_24
-Position -32 0 24
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_-8
+Position -8 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 20
-Name Deck_-32_28
-Position -32 0 28
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_-8
+Position -8 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 21
-Name Deck_-32_32
-Position -32 0 32
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_0
+Position 0 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 22
-Name Deck_-32_36
-Position -32 0 36
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_0
+Position 0 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 23
-Name Deck_-32_40
-Position -32 0 40
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_8
+Position 8 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 24
-Name Deck_-28_-40
-Position -28 0 -40
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_8
+Position 8 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 25
-Name Deck_-28_-36
-Position -28 0 -36
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_16
+Position 16 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 26
-Name Deck_-28_-32
-Position -28 0 -32
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_16
+Position 16 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 27
-Name Deck_-28_-28
-Position -28 0 -28
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_24
+Position 24 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 28
-Name Deck_-28_-24
-Position -28 0 -24
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_24
+Position 24 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 29
-Name Deck_-28_-20
-Position -28 0 -20
-Rotation 0 0 0
-Scale 1 1 1
+Name NorthBulkhead_32
+Position 32 0 -41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 30
-Name Deck_-28_-16
-Position -28 0 -16
-Rotation 0 0 0
-Scale 1 1 1
+Name SouthBulkhead_32
+Position 32 0 41.7
+Rotation 0 1.5708 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 8 3 .6
 Scripts 0
 Entity 31
-Name Deck_-28_-12
-Position -28 0 -12
+Name WestBulkhead_-36
+Position -33.7 0 -36
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 32
-Name Deck_-28_-8
-Position -28 0 -8
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_-36
+Position 33.7 0 -36
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 33
-Name Deck_-28_-4
-Position -28 0 -4
+Name WestBulkhead_-28
+Position -33.7 0 -28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 34
-Name Deck_-28_0
-Position -28 0 0
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_-28
+Position 33.7 0 -28
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 35
-Name Deck_-28_4
-Position -28 0 4
+Name WestBulkhead_-20
+Position -33.7 0 -20
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 36
-Name Deck_-28_8
-Position -28 0 8
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_-20
+Position 33.7 0 -20
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 37
-Name Deck_-28_12
-Position -28 0 12
+Name WestBulkhead_-12
+Position -33.7 0 -12
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 38
-Name Deck_-28_16
-Position -28 0 16
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_-12
+Position 33.7 0 -12
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 39
-Name Deck_-28_20
-Position -28 0 20
+Name WestBulkhead_-4
+Position -33.7 0 -4
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 40
-Name Deck_-28_24
-Position -28 0 24
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_-4
+Position 33.7 0 -4
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 41
-Name Deck_-28_28
-Position -28 0 28
+Name WestBulkhead_4
+Position -33.7 0 4
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 42
-Name Deck_-28_32
-Position -28 0 32
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_4
+Position 33.7 0 4
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 43
-Name Deck_-28_36
-Position -28 0 36
+Name WestBulkhead_12
+Position -33.7 0 12
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 44
-Name Deck_-28_40
-Position -28 0 40
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_12
+Position 33.7 0 12
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 45
-Name Deck_-24_-40
-Position -24 0 -40
+Name WestBulkhead_20
+Position -33.7 0 20
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 46
-Name Deck_-24_-36
-Position -24 0 -36
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_20
+Position 33.7 0 20
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 47
-Name Deck_-24_-32
-Position -24 0 -32
+Name WestBulkhead_28
+Position -33.7 0 28
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 48
-Name Deck_-24_-28
-Position -24 0 -28
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_28
+Position 33.7 0 28
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 49
-Name Deck_-24_-24
-Position -24 0 -24
+Name WestBulkhead_36
+Position -33.7 0 36
 Rotation 0 0 0
-Scale 1 1 1
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 50
-Name Deck_-24_-20
-Position -24 0 -20
-Rotation 0 0 0
-Scale 1 1 1
+Name EastBulkhead_36
+Position 33.7 0 36
+Rotation 0 3.14159 0
+Scale 1 1 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.58 0.36 0.9 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 0
+Collider 1 .6 3 8
 Scripts 0
 Entity 51
-Name Deck_-24_-16
-Position -24 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 52
-Name Deck_-24_-12
-Position -24 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 53
-Name Deck_-24_-8
-Position -24 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 54
-Name Deck_-24_-4
-Position -24 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 55
-Name Deck_-24_0
-Position -24 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 56
-Name Deck_-24_4
-Position -24 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 57
-Name Deck_-24_8
-Position -24 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 58
-Name Deck_-24_12
-Position -24 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 59
-Name Deck_-24_16
-Position -24 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 60
-Name Deck_-24_20
-Position -24 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 61
-Name Deck_-24_24
-Position -24 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 62
-Name Deck_-24_28
-Position -24 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 63
-Name Deck_-24_32
-Position -24 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 64
-Name Deck_-24_36
-Position -24 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 65
-Name Deck_-24_40
-Position -24 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 66
-Name Deck_-20_-40
-Position -20 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 67
-Name Deck_-20_-36
-Position -20 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 68
-Name Deck_-20_-32
-Position -20 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 69
-Name Deck_-20_-28
-Position -20 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 70
-Name Deck_-20_-24
-Position -20 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 71
-Name Deck_-20_-20
-Position -20 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 72
-Name Deck_-20_-16
-Position -20 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 73
-Name Deck_-20_-12
-Position -20 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 74
-Name Deck_-20_-8
-Position -20 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 75
-Name Deck_-20_-4
-Position -20 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 76
-Name Deck_-20_0
-Position -20 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 77
-Name Deck_-20_4
-Position -20 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 78
-Name Deck_-20_8
-Position -20 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 79
-Name Deck_-20_12
-Position -20 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 80
-Name Deck_-20_16
-Position -20 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 81
-Name Deck_-20_20
-Position -20 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 82
-Name Deck_-20_24
-Position -20 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 83
-Name Deck_-20_28
-Position -20 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 84
-Name Deck_-20_32
-Position -20 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 85
-Name Deck_-20_36
-Position -20 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 86
-Name Deck_-20_40
-Position -20 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 87
-Name Deck_-16_-40
-Position -16 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 88
-Name Deck_-16_-36
-Position -16 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 89
-Name Deck_-16_-32
-Position -16 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 90
-Name Deck_-16_-28
-Position -16 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 91
-Name Deck_-16_-24
-Position -16 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 92
-Name Deck_-16_-20
-Position -16 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 93
-Name Deck_-16_-16
-Position -16 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 94
-Name Deck_-16_-12
-Position -16 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 95
-Name Deck_-16_-8
-Position -16 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 96
-Name Deck_-16_-4
-Position -16 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 97
-Name Deck_-16_0
-Position -16 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 98
-Name Deck_-16_4
-Position -16 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 99
-Name Deck_-16_8
-Position -16 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 100
-Name Deck_-16_12
-Position -16 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 101
-Name Deck_-16_16
-Position -16 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 102
-Name Deck_-16_20
-Position -16 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 103
-Name Deck_-16_24
-Position -16 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 104
-Name Deck_-16_28
-Position -16 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 105
-Name Deck_-16_32
-Position -16 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 106
-Name Deck_-16_36
-Position -16 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 107
-Name Deck_-16_40
-Position -16 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 108
-Name Deck_-12_-40
-Position -12 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 109
-Name Deck_-12_-36
-Position -12 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 110
-Name Deck_-12_-32
-Position -12 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 111
-Name Deck_-12_-28
-Position -12 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 112
-Name Deck_-12_-24
-Position -12 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 113
-Name Deck_-12_-20
-Position -12 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 114
-Name Deck_-12_-16
-Position -12 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 115
-Name Deck_-12_-12
-Position -12 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 116
-Name Deck_-12_-8
-Position -12 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 117
-Name Deck_-12_-4
-Position -12 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 118
-Name Deck_-12_0
-Position -12 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 119
-Name Deck_-12_4
-Position -12 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 120
-Name Deck_-12_8
-Position -12 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 121
-Name Deck_-12_12
-Position -12 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 122
-Name Deck_-12_16
-Position -12 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 123
-Name Deck_-12_20
-Position -12 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 124
-Name Deck_-12_24
-Position -12 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 125
-Name Deck_-12_28
-Position -12 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 126
-Name Deck_-12_32
-Position -12 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 127
-Name Deck_-12_36
-Position -12 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 128
-Name Deck_-12_40
-Position -12 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 129
-Name Deck_-8_-40
-Position -8 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 130
-Name Deck_-8_-36
-Position -8 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 131
-Name Deck_-8_-32
-Position -8 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 132
-Name Deck_-8_-28
-Position -8 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 133
-Name Deck_-8_-24
-Position -8 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 134
-Name Deck_-8_-20
-Position -8 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 135
-Name Deck_-8_-16
-Position -8 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 136
-Name Deck_-8_-12
-Position -8 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 137
-Name Deck_-8_-8
-Position -8 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 138
-Name Deck_-8_-4
-Position -8 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 139
-Name Deck_-8_0
-Position -8 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 140
-Name Deck_-8_4
-Position -8 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 141
-Name Deck_-8_8
-Position -8 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 142
-Name Deck_-8_12
-Position -8 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 143
-Name Deck_-8_16
-Position -8 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 144
-Name Deck_-8_20
-Position -8 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 145
-Name Deck_-8_24
-Position -8 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 146
-Name Deck_-8_28
-Position -8 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 147
-Name Deck_-8_32
-Position -8 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 148
-Name Deck_-8_36
-Position -8 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 149
-Name Deck_-8_40
-Position -8 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 150
-Name Deck_-4_-40
-Position -4 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 151
-Name Deck_-4_-36
-Position -4 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 152
-Name Deck_-4_-32
-Position -4 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 153
-Name Deck_-4_-28
-Position -4 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 154
-Name Deck_-4_-24
-Position -4 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 155
-Name Deck_-4_-20
-Position -4 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 156
-Name Deck_-4_-16
-Position -4 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 157
-Name Deck_-4_-12
-Position -4 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 158
-Name Deck_-4_-8
-Position -4 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 159
-Name Deck_-4_-4
-Position -4 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 160
-Name Deck_-4_0
-Position -4 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 161
-Name Deck_-4_4
-Position -4 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 162
-Name Deck_-4_8
-Position -4 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 163
-Name Deck_-4_12
-Position -4 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 164
-Name Deck_-4_16
-Position -4 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 165
-Name Deck_-4_20
-Position -4 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 166
-Name Deck_-4_24
-Position -4 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 167
-Name Deck_-4_28
-Position -4 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 168
-Name Deck_-4_32
-Position -4 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 169
-Name Deck_-4_36
-Position -4 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 170
-Name Deck_-4_40
-Position -4 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 171
-Name Deck_0_-40
-Position 0 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 172
-Name Deck_0_-36
-Position 0 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 173
-Name Deck_0_-32
-Position 0 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 174
-Name Deck_0_-28
-Position 0 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 175
-Name Deck_0_-24
-Position 0 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 176
-Name Deck_0_-20
-Position 0 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 177
-Name Deck_0_-16
-Position 0 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 178
-Name Deck_0_-12
-Position 0 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 179
-Name Deck_0_-8
-Position 0 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 180
-Name Deck_0_-4
-Position 0 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 181
-Name Deck_0_0
-Position 0 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 182
-Name Deck_0_4
-Position 0 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 183
-Name Deck_0_8
-Position 0 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 184
-Name Deck_0_12
-Position 0 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 185
-Name Deck_0_16
-Position 0 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 186
-Name Deck_0_20
-Position 0 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 187
-Name Deck_0_24
-Position 0 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 188
-Name Deck_0_28
-Position 0 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 189
-Name Deck_0_32
-Position 0 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 190
-Name Deck_0_36
-Position 0 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 191
-Name Deck_0_40
-Position 0 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 192
-Name Deck_4_-40
-Position 4 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 193
-Name Deck_4_-36
-Position 4 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 194
-Name Deck_4_-32
-Position 4 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 195
-Name Deck_4_-28
-Position 4 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 196
-Name Deck_4_-24
-Position 4 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 197
-Name Deck_4_-20
-Position 4 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 198
-Name Deck_4_-16
-Position 4 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 199
-Name Deck_4_-12
-Position 4 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 200
-Name Deck_4_-8
-Position 4 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 201
-Name Deck_4_-4
-Position 4 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 202
-Name Deck_4_0
-Position 4 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 203
-Name Deck_4_4
-Position 4 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 204
-Name Deck_4_8
-Position 4 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 205
-Name Deck_4_12
-Position 4 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 206
-Name Deck_4_16
-Position 4 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 207
-Name Deck_4_20
-Position 4 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 208
-Name Deck_4_24
-Position 4 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 209
-Name Deck_4_28
-Position 4 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 210
-Name Deck_4_32
-Position 4 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 211
-Name Deck_4_36
-Position 4 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 212
-Name Deck_4_40
-Position 4 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 213
-Name Deck_8_-40
-Position 8 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 214
-Name Deck_8_-36
-Position 8 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 215
-Name Deck_8_-32
-Position 8 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 216
-Name Deck_8_-28
-Position 8 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 217
-Name Deck_8_-24
-Position 8 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 218
-Name Deck_8_-20
-Position 8 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 219
-Name Deck_8_-16
-Position 8 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 220
-Name Deck_8_-12
-Position 8 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 221
-Name Deck_8_-8
-Position 8 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 222
-Name Deck_8_-4
-Position 8 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 223
-Name Deck_8_0
-Position 8 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 224
-Name Deck_8_4
-Position 8 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 225
-Name Deck_8_8
-Position 8 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 226
-Name Deck_8_12
-Position 8 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 227
-Name Deck_8_16
-Position 8 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 228
-Name Deck_8_20
-Position 8 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 229
-Name Deck_8_24
-Position 8 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 230
-Name Deck_8_28
-Position 8 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 231
-Name Deck_8_32
-Position 8 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 232
-Name Deck_8_36
-Position 8 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 233
-Name Deck_8_40
-Position 8 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 234
-Name Deck_12_-40
-Position 12 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 235
-Name Deck_12_-36
-Position 12 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 236
-Name Deck_12_-32
-Position 12 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 237
-Name Deck_12_-28
-Position 12 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 238
-Name Deck_12_-24
-Position 12 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 239
-Name Deck_12_-20
-Position 12 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 240
-Name Deck_12_-16
-Position 12 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 241
-Name Deck_12_-12
-Position 12 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 242
-Name Deck_12_-8
-Position 12 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 243
-Name Deck_12_-4
-Position 12 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 244
-Name Deck_12_0
-Position 12 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 245
-Name Deck_12_4
-Position 12 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 246
-Name Deck_12_8
-Position 12 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 247
-Name Deck_12_12
-Position 12 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 248
-Name Deck_12_16
-Position 12 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 249
-Name Deck_12_20
-Position 12 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 250
-Name Deck_12_24
-Position 12 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 251
-Name Deck_12_28
-Position 12 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 252
-Name Deck_12_32
-Position 12 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 253
-Name Deck_12_36
-Position 12 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 254
-Name Deck_12_40
-Position 12 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 255
-Name Deck_16_-40
-Position 16 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 256
-Name Deck_16_-36
-Position 16 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 257
-Name Deck_16_-32
-Position 16 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 258
-Name Deck_16_-28
-Position 16 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 259
-Name Deck_16_-24
-Position 16 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 260
-Name Deck_16_-20
-Position 16 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 261
-Name Deck_16_-16
-Position 16 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 262
-Name Deck_16_-12
-Position 16 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 263
-Name Deck_16_-8
-Position 16 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 264
-Name Deck_16_-4
-Position 16 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 265
-Name Deck_16_0
-Position 16 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 266
-Name Deck_16_4
-Position 16 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 267
-Name Deck_16_8
-Position 16 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 268
-Name Deck_16_12
-Position 16 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 269
-Name Deck_16_16
-Position 16 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 270
-Name Deck_16_20
-Position 16 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 271
-Name Deck_16_24
-Position 16 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 272
-Name Deck_16_28
-Position 16 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 273
-Name Deck_16_32
-Position 16 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 274
-Name Deck_16_36
-Position 16 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 275
-Name Deck_16_40
-Position 16 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 276
-Name Deck_20_-40
-Position 20 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 277
-Name Deck_20_-36
-Position 20 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 278
-Name Deck_20_-32
-Position 20 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 279
-Name Deck_20_-28
-Position 20 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 280
-Name Deck_20_-24
-Position 20 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 281
-Name Deck_20_-20
-Position 20 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 282
-Name Deck_20_-16
-Position 20 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 283
-Name Deck_20_-12
-Position 20 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 284
-Name Deck_20_-8
-Position 20 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 285
-Name Deck_20_-4
-Position 20 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 286
-Name Deck_20_0
-Position 20 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 287
-Name Deck_20_4
-Position 20 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 288
-Name Deck_20_8
-Position 20 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 289
-Name Deck_20_12
-Position 20 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 290
-Name Deck_20_16
-Position 20 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 291
-Name Deck_20_20
-Position 20 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 292
-Name Deck_20_24
-Position 20 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 293
-Name Deck_20_28
-Position 20 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 294
-Name Deck_20_32
-Position 20 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 295
-Name Deck_20_36
-Position 20 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 296
-Name Deck_20_40
-Position 20 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 297
-Name Deck_24_-40
-Position 24 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 298
-Name Deck_24_-36
-Position 24 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 299
-Name Deck_24_-32
-Position 24 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 300
-Name Deck_24_-28
-Position 24 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 301
-Name Deck_24_-24
-Position 24 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 302
-Name Deck_24_-20
-Position 24 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 303
-Name Deck_24_-16
-Position 24 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 304
-Name Deck_24_-12
-Position 24 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 305
-Name Deck_24_-8
-Position 24 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 306
-Name Deck_24_-4
-Position 24 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 307
-Name Deck_24_0
-Position 24 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 308
-Name Deck_24_4
-Position 24 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 309
-Name Deck_24_8
-Position 24 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 310
-Name Deck_24_12
-Position 24 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 311
-Name Deck_24_16
-Position 24 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 312
-Name Deck_24_20
-Position 24 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 313
-Name Deck_24_24
-Position 24 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 314
-Name Deck_24_28
-Position 24 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 315
-Name Deck_24_32
-Position 24 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 316
-Name Deck_24_36
-Position 24 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 317
-Name Deck_24_40
-Position 24 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 318
-Name Deck_28_-40
-Position 28 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 319
-Name Deck_28_-36
-Position 28 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 320
-Name Deck_28_-32
-Position 28 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 321
-Name Deck_28_-28
-Position 28 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 322
-Name Deck_28_-24
-Position 28 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 323
-Name Deck_28_-20
-Position 28 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 324
-Name Deck_28_-16
-Position 28 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 325
-Name Deck_28_-12
-Position 28 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 326
-Name Deck_28_-8
-Position 28 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 327
-Name Deck_28_-4
-Position 28 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 328
-Name Deck_28_0
-Position 28 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 329
-Name Deck_28_4
-Position 28 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 330
-Name Deck_28_8
-Position 28 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 331
-Name Deck_28_12
-Position 28 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 332
-Name Deck_28_16
-Position 28 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 333
-Name Deck_28_20
-Position 28 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 334
-Name Deck_28_24
-Position 28 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 335
-Name Deck_28_28
-Position 28 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 336
-Name Deck_28_32
-Position 28 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 337
-Name Deck_28_36
-Position 28 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 338
-Name Deck_28_40
-Position 28 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 339
-Name Deck_32_-40
-Position 32 0 -40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 340
-Name Deck_32_-36
-Position 32 0 -36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 341
-Name Deck_32_-32
-Position 32 0 -32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 342
-Name Deck_32_-28
-Position 32 0 -28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 343
-Name Deck_32_-24
-Position 32 0 -24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 344
-Name Deck_32_-20
-Position 32 0 -20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 345
-Name Deck_32_-16
-Position 32 0 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 346
-Name Deck_32_-12
-Position 32 0 -12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 347
-Name Deck_32_-8
-Position 32 0 -8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 348
-Name Deck_32_-4
-Position 32 0 -4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 349
-Name Deck_32_0
-Position 32 0 0
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 350
-Name Deck_32_4
-Position 32 0 4
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 351
-Name Deck_32_8
-Position 32 0 8
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 352
-Name Deck_32_12
-Position 32 0 12
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 353
-Name Deck_32_16
-Position 32 0 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 354
-Name Deck_32_20
-Position 32 0 20
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 355
-Name Deck_32_24
-Position 32 0 24
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 356
-Name Deck_32_28
-Position 32 0 28
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 357
-Name Deck_32_32
-Position 32 0 32
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 358
-Name Deck_32_36
-Position 32 0 36
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 359
-Name Deck_32_40
-Position 32 0 40
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Metal.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.58 0.36 0.9 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 360
-Name NorthBulkhead_-32
-Position -32 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 361
-Name SouthBulkhead_-32
-Position -32 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 362
-Name NorthBulkhead_-28
-Position -28 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 363
-Name SouthBulkhead_-28
-Position -28 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 364
-Name NorthBulkhead_-24
-Position -24 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 365
-Name SouthBulkhead_-24
-Position -24 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 366
-Name NorthBulkhead_-20
-Position -20 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 367
-Name SouthBulkhead_-20
-Position -20 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 368
-Name NorthBulkhead_-16
-Position -16 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 369
-Name SouthBulkhead_-16
-Position -16 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 370
-Name NorthBulkhead_-12
-Position -12 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 371
-Name SouthBulkhead_-12
-Position -12 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 372
-Name NorthBulkhead_-8
-Position -8 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 373
-Name SouthBulkhead_-8
-Position -8 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 374
-Name NorthBulkhead_-4
-Position -4 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 375
-Name SouthBulkhead_-4
-Position -4 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 376
-Name NorthBulkhead_0
-Position 0 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 377
-Name SouthBulkhead_0
-Position 0 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 378
-Name NorthBulkhead_4
-Position 4 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 379
-Name SouthBulkhead_4
-Position 4 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 380
-Name NorthBulkhead_8
-Position 8 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 381
-Name SouthBulkhead_8
-Position 8 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 382
-Name NorthBulkhead_12
-Position 12 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 383
-Name SouthBulkhead_12
-Position 12 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 384
-Name NorthBulkhead_16
-Position 16 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 385
-Name SouthBulkhead_16
-Position 16 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 386
-Name NorthBulkhead_20
-Position 20 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 387
-Name SouthBulkhead_20
-Position 20 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 388
-Name NorthBulkhead_24
-Position 24 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 389
-Name SouthBulkhead_24
-Position 24 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 390
-Name NorthBulkhead_28
-Position 28 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 391
-Name SouthBulkhead_28
-Position 28 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 392
-Name NorthBulkhead_32
-Position 32 0 -42
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 393
-Name SouthBulkhead_32
-Position 32 0 42
-Rotation 0 3.14159 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallAstra_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2 3 .4
-Scripts 0
-Entity 394
-Name WestBulkhead_-38
-Position -34 0 -38
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 395
-Name EastBulkhead_-38
-Position 34 0 -38
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 396
-Name WestBulkhead_-34
-Position -34 0 -34
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 397
-Name EastBulkhead_-34
-Position 34 0 -34
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 398
-Name WestBulkhead_-30
-Position -34 0 -30
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 399
-Name EastBulkhead_-30
-Position 34 0 -30
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 400
-Name WestBulkhead_-26
-Position -34 0 -26
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 401
-Name EastBulkhead_-26
-Position 34 0 -26
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 402
-Name WestBulkhead_-22
-Position -34 0 -22
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 403
-Name EastBulkhead_-22
-Position 34 0 -22
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 404
-Name WestBulkhead_-18
-Position -34 0 -18
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 405
-Name EastBulkhead_-18
-Position 34 0 -18
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 406
-Name WestBulkhead_-14
-Position -34 0 -14
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 407
-Name EastBulkhead_-14
-Position 34 0 -14
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 408
-Name WestBulkhead_-10
-Position -34 0 -10
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 409
-Name EastBulkhead_-10
-Position 34 0 -10
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 410
-Name WestBulkhead_-6
-Position -34 0 -6
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 411
-Name EastBulkhead_-6
-Position 34 0 -6
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 412
-Name WestBulkhead_-2
-Position -34 0 -2
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 413
-Name EastBulkhead_-2
-Position 34 0 -2
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 414
-Name WestBulkhead_2
-Position -34 0 2
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 415
-Name EastBulkhead_2
-Position 34 0 2
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 416
-Name WestBulkhead_6
-Position -34 0 6
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 417
-Name EastBulkhead_6
-Position 34 0 6
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 418
-Name WestBulkhead_10
-Position -34 0 10
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 419
-Name EastBulkhead_10
-Position 34 0 10
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 420
-Name WestBulkhead_14
-Position -34 0 14
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 421
-Name EastBulkhead_14
-Position 34 0 14
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 422
-Name WestBulkhead_18
-Position -34 0 18
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 423
-Name EastBulkhead_18
-Position 34 0 18
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 424
-Name WestBulkhead_22
-Position -34 0 22
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 425
-Name EastBulkhead_22
-Position 34 0 22
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 426
-Name WestBulkhead_26
-Position -34 0 26
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 427
-Name EastBulkhead_26
-Position 34 0 26
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 428
-Name WestBulkhead_30
-Position -34 0 30
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 429
-Name EastBulkhead_30
-Position 34 0 30
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 430
-Name WestBulkhead_34
-Position -34 0 34
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 431
-Name EastBulkhead_34
-Position 34 0 34
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 432
-Name WestBulkhead_38
-Position -34 0 38
-Rotation 0 1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 433
-Name EastBulkhead_38
-Position 34 0 38
-Rotation 0 -1.5708 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 .4 3 2
-Scripts 0
-Entity 434
 Name CorePlatform
-Position 0 .12 0
+Position 0 .03 0
 Rotation 0 0 0
-Scale 2.4 1 2.4
+Scale 1.6 1 1.6
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Round1.obj"
-Color 1 0.68 0.72 0.74 1
+Color 1 0.64 0.70 0.76 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 5 .5 5
+Collider 1 5 .35 5
 Scripts 0
-Entity 435
+Entity 52
 Name CoreOrb
 Position 0 1.15 0
 Rotation 0 0 0
@@ -7391,220 +880,220 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_ItemHolder.obj"
 Color 1 1 0.58 0.06 1
 Texture 0
-Material 1 0.42 0.18 1 0.7
+Material 1 0.40 0.18 1 0.75
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
 Collider 0
 Scripts 0
-Entity 436
+Entity 53
 Name CoreRampN
 Position 0 0 -6
 Rotation 0 0 0
-Scale 1.3 1 1.3
+Scale 1.2 1 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 1 4
+Collider 1 2.5 1.3 4.8
 Scripts 0
-Entity 437
+Entity 54
 Name CoreRampS
 Position 0 0 6
 Rotation 0 3.14159 0
-Scale 1.3 1 1.3
+Scale 1.2 1 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 1 4
+Collider 1 2.5 1.3 4.8
 Scripts 0
-Entity 438
+Entity 55
 Name CoreRampW
 Position -6 0 0
-Rotation 0 1.5708 0
-Scale 1.3 1 1.3
+Rotation 0 -1.5708 0
+Scale 1.2 1 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 1 4
+Collider 1 2.5 1.3 4.8
 Scripts 0
-Entity 439
+Entity 56
 Name CoreRampE
 Position 6 0 0
-Rotation 0 -1.5708 0
-Scale 1.3 1 1.3
+Rotation 0 1.5708 0
+Scale 1.2 1 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 1 4
+Collider 1 2.5 1.3 4.8
 Scripts 0
-Entity 440
+Entity 57
 Name CoreColumnNW
-Position -7 0 -7
+Position -7 .01 -7
 Rotation 0 0 0
-Scale 1.25 1.25 1.25
+Scale 1.5 1.5 1.5
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Astra.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 .8 4.5 1.5
 Scripts 0
-Entity 441
+Entity 58
 Name CoreColumnNE
-Position 7 0 -7
-Rotation 0 0 0
-Scale 1.25 1.25 1.25
+Position 7 .01 -7
+Rotation 0 3.14159 0
+Scale 1.5 1.5 1.5
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Astra.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 .8 4.5 1.5
 Scripts 0
-Entity 442
+Entity 59
 Name CoreColumnSW
-Position -7 0 7
+Position -7 .01 7
 Rotation 0 0 0
-Scale 1.25 1.25 1.25
+Scale 1.5 1.5 1.5
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Astra.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 .8 4.5 1.5
 Scripts 0
-Entity 443
+Entity 60
 Name CoreColumnSE
-Position 7 0 7
-Rotation 0 0 0
-Scale 1.25 1.25 1.25
+Position 7 .01 7
+Rotation 0 3.14159 0
+Scale 1.5 1.5 1.5
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Astra.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 .8 4.5 1.5
 Scripts 0
-Entity 444
+Entity 61
 Name RedGoal
-Position 0 .08 -30
+Position 0 .06 -30
 Rotation 0 0 0
-Scale 4 0.12 3
+Scale 4 .1 3
 Parent 0
 PrefabSource ""
 Mesh 1 1 "" 0
-Color 1 0.62 0.055 0.035 1
+Color 1 0.68 0.045 0.025 1
 Texture 0
-Material 1 0.42 0.18 1 0.7
+Material 1 0.40 0.18 1 0.75
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
 Collider 0
 Scripts 0
-Entity 445
+Entity 62
 Name RedGate
 Position 0 0 -34
 Rotation 0 0 0
-Scale 2.3 2 1.5
+Scale 1.8 1.25 1.5
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Door_Frame_SquareTall.obj"
-Color 1 0.62 0.055 0.035 1
+Color 1 0.68 0.045 0.025 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 4 3 1
+Collider 1 4.5 6.2 1
 Scripts 0
-Entity 446
+Entity 63
 Name RedTowerL
 Position -8 0 -30
 Rotation 0 0 0
-Scale 1.35 1.35 1.35
+Scale 1.2 .7 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Large_Straight.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 1.7 7 2.2
 Scripts 0
-Entity 447
+Entity 64
 Name RedTowerR
 Position 8 0 -30
 Rotation 0 0 0
-Scale 1.35 1.35 1.35
+Scale 1.2 .7 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Large_Straight.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 1.7 7 2.2
 Scripts 0
-Entity 448
+Entity 65
 Name RedBaseLight
-Position 0 4 -30
+Position 0 4.5 -30
 Rotation 0 0 0
 Scale 1 1 1
 Parent 0
@@ -7616,80 +1105,80 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.95 0.04 0.02 0 -1 0 2.5 1 17 23 35 0
+Light 1 0.95 0.04 0.02 0 -1 0 2.2 1 17 23 35 0
 Collider 0
 Scripts 0
-Entity 449
+Entity 66
 Name BlueGoal
-Position 0 .08 30
+Position 0 .06 30
 Rotation 0 0 0
-Scale 4 0.12 3
+Scale 4 .1 3
 Parent 0
 PrefabSource ""
 Mesh 1 1 "" 0
-Color 1 0.035 0.25 0.9 1
+Color 1 0.025 0.25 0.95 1
 Texture 0
-Material 1 0.42 0.18 1 0.7
+Material 1 0.40 0.18 1 0.75
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
 Collider 0
 Scripts 0
-Entity 450
+Entity 67
 Name BlueGate
 Position 0 0 34
 Rotation 0 3.14159 0
-Scale 2.3 2 1.5
+Scale 1.8 1.25 1.5
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Door_Frame_SquareTall.obj"
-Color 1 0.035 0.25 0.9 1
+Color 1 0.025 0.25 0.95 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 4 3 1
+Collider 1 4.5 6.2 1
 Scripts 0
-Entity 451
+Entity 68
 Name BlueTowerL
 Position -8 0 30
 Rotation 0 3.14159 0
-Scale 1.35 1.35 1.35
+Scale 1.2 .7 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Large_Straight.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 1.7 7 2.2
 Scripts 0
-Entity 452
+Entity 69
 Name BlueTowerR
 Position 8 0 30
 Rotation 0 3.14159 0
-Scale 1.35 1.35 1.35
+Scale 1.2 .7 1.2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_Large_Straight.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.5 3 1.5
+Collider 1 1.7 7 2.2
 Scripts 0
-Entity 453
+Entity 70
 Name BlueBaseLight
-Position 0 4 30
+Position 0 4.5 30
 Rotation 0 0 0
 Scale 1 1 1
 Parent 0
@@ -7701,452 +1190,350 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.04 0.30 1 0 -1 0 2.5 1 17 23 35 0
+Light 1 0.04 0.30 1 0 -1 0 2.2 1 17 23 35 0
 Collider 0
 Scripts 0
-Entity 454
-Name Cover_1
-Position -18 .55 -24
+Entity 71
+Name CrateA
+Position -18 2 -24
 Rotation 0 0 0
 Scale 2 2 2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Crate3.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.4 1.5 1.4
+Collider 1 1.8 2 1.8
 Scripts 0
-Entity 455
-Name Cover_2
-Position -10 .55 -18
-Rotation 0 0.4 0
-Scale 2 2 2
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Crate4.obj"
-Color 1 0.68 0.72 0.74 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 1.4 1.5 1.4
-Scripts 0
-Entity 456
-Name Cover_3
-Position 12 .55 -22
-Rotation 0 -0.2 0
-Scale 1.6 1.6 1.6
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Computer.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 1.4 1.5 1.4
-Scripts 0
-Entity 457
-Name Cover_4
-Position 22 .55 -14
+Entity 72
+Name CrateB
+Position 18 2 24
 Rotation 0 0.3 0
 Scale 2 2 2
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Vent_Big.obj"
-Color 1 0.68 0.72 0.74 1
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Crate4.obj"
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.4 1.5 1.4
+Collider 1 1.8 2 1.8
 Scripts 0
-Entity 458
-Name Cover_5
-Position -22 .55 -5
-Rotation 0 -0.4 0
-Scale 2 2 2
+Entity 73
+Name CrateC
+Position 14 1.7 -20
+Rotation 0 -0.2 0
+Scale 1.7 1.7 1.7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Crate3.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.4 1.5 1.4
+Collider 1 1.8 2 1.8
 Scripts 0
-Entity 459
-Name Cover_6
-Position -13 .55 6
+Entity 74
+Name CrateD
+Position -14 1.7 20
 Rotation 0 0.2 0
-Scale 2 2 2
+Scale 1.7 1.7 1.7
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Crate4.obj"
-Color 1 0.68 0.72 0.74 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.4 1.5 1.4
+Collider 1 1.8 2 1.8
 Scripts 0
-Entity 460
-Name Cover_7
-Position 13 .55 -6
-Rotation 0 -0.2 0
-Scale 1.6 1.6 1.6
+Entity 75
+Name ComputerA
+Position -20 0 -8
+Rotation 0 1.5708 0
+Scale 2 2 2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Computer.obj"
-Color 1 0.14 0.17 0.20 1
+Color 1 0.64 0.70 0.76 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.4 1.5 1.4
+Collider 1 1.8 2 1.8
 Scripts 0
-Entity 461
-Name Cover_8
-Position 22 .55 5
-Rotation 0 0.4 0
+Entity 76
+Name ComputerB
+Position 20 0 8
+Rotation 0 -1.5708 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Computer.obj"
+Color 1 0.64 0.70 0.76 1
+Texture 0
+Material 1 0.70 0.30 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 1.8 2 1.8
+Scripts 0
+Entity 77
+Name VentA
+Position 18 0.14 -8
+Rotation 0 0 0
 Scale 2 2 2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Vent_Big.obj"
-Color 1 0.68 0.72 0.74 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.4 1.5 1.4
+Collider 1 1.8 2 1.8
 Scripts 0
-Entity 462
-Name Cover_9
-Position -22 .55 15
-Rotation 0 0.1 0
-Scale 2 2 2
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Crate3.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 1.4 1.5 1.4
-Scripts 0
-Entity 463
-Name Cover_10
-Position -12 .55 22
-Rotation 0 -0.3 0
-Scale 2 2 2
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Crate4.obj"
-Color 1 0.68 0.72 0.74 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 1.4 1.5 1.4
-Scripts 0
-Entity 464
-Name Cover_11
-Position 11 .55 18
-Rotation 0 0.25 0
-Scale 1.6 1.6 1.6
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Computer.obj"
-Color 1 0.14 0.17 0.20 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 1.4 1.5 1.4
-Scripts 0
-Entity 465
-Name Cover_12
-Position 20 .55 26
-Rotation 0 -0.2 0
+Entity 78
+Name VentB
+Position -18 0.14 8
+Rotation 0 3.14159 0
 Scale 2 2 2
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Vent_Big.obj"
-Color 1 0.68 0.72 0.74 1
+Color 1 0.10 0.13 0.17 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 1.4 1.5 1.4
+Collider 1 1.8 2 1.8
 Scripts 0
-Entity 466
-Name WestCatwalk-16
-Position -25 3 -16
+Entity 79
+Name WestCatwalk-12
+Position -25 2.8 -12
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 467
-Name WestCatwalk-8
-Position -25 3 -8
+Entity 80
+Name WestCatwalk-4
+Position -25 2.8 -4
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 468
-Name WestCatwalk0
-Position -25 3 0
+Entity 81
+Name WestCatwalk4
+Position -25 2.8 4
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 469
-Name WestCatwalk8
-Position -25 3 8
+Entity 82
+Name WestCatwalk12
+Position -25 2.8 12
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 470
-Name WestCatwalk16
-Position -25 3 16
-Rotation 0 0 0
-Scale 1.8 1 1.8
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 3 .5 3
-Scripts 0
-Entity 471
+Entity 83
 Name WestRampN
-Position -25 0 -23
+Position -25 0 -20
 Rotation 0 0 0
-Scale 1.6 1.6 1.6
+Scale 1.25 1.4 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 2 4
+Collider 1 2.7 2.8 5
 Scripts 0
-Entity 472
+Entity 84
 Name WestRampS
-Position -25 0 23
+Position -25 0 20
 Rotation 0 3.14159 0
-Scale 1.6 1.6 1.6
+Scale 1.25 1.4 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 2 4
+Collider 1 2.7 2.8 5
 Scripts 0
-Entity 473
-Name EastCatwalk-16
-Position 25 3 -16
+Entity 85
+Name EastCatwalk-12
+Position 25 2.8 -12
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 474
-Name EastCatwalk-8
-Position 25 3 -8
+Entity 86
+Name EastCatwalk-4
+Position 25 2.8 -4
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 475
-Name EastCatwalk0
-Position 25 3 0
+Entity 87
+Name EastCatwalk4
+Position 25 2.8 4
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 476
-Name EastCatwalk8
-Position 25 3 8
+Entity 88
+Name EastCatwalk12
+Position 25 2.8 12
 Rotation 0 0 0
-Scale 1.8 1 1.8
+Scale 1.25 1 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 .5 3
+Collider 1 2.7 .35 4.8
 Scripts 0
-Entity 477
-Name EastCatwalk16
-Position 25 3 16
-Rotation 0 0 0
-Scale 1.8 1 1.8
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 3 .5 3
-Scripts 0
-Entity 478
+Entity 89
 Name EastRampN
-Position 25 0 -23
-Rotation 0 3.14159 0
-Scale 1.6 1.6 1.6
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
-Texture 0
-Material 1 0.72 0.28 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 3 2 4
-Scripts 0
-Entity 479
-Name EastRampS
-Position 25 0 23
+Position 25 0 -20
 Rotation 0 0 0
-Scale 1.6 1.6 1.6
+Scale 1.25 1.4 1.25
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.58 0.62 0.66 1
+Color 1 0.50 0.56 0.62 1
 Texture 0
-Material 1 0.72 0.28 0.95 0
+Material 1 0.70 0.30 0.95 0
 Interactable 0
 Player 0
 CharacterController 0
 Light 0
-Collider 1 3 2 4
+Collider 1 2.7 2.8 5
 Scripts 0
-Entity 480
+Entity 90
+Name EastRampS
+Position 25 0 20
+Rotation 0 3.14159 0
+Scale 1.25 1.4 1.25
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
+Color 1 0.50 0.56 0.62 1
+Texture 0
+Material 1 0.70 0.30 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 2.7 2.8 5
+Scripts 0
+Entity 91
 Name ArenaKey
 Position 0 24 0
 Rotation 0 0 0
@@ -8160,10 +1547,10 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.28 0.38 0.52 -0.25 -1 -0.15 0.78 0 180 23 35 0
+Light 1 0.28 0.38 0.52 -0.25 -1 -0.15 0.72 0 180 23 35 0
 Collider 0
 Scripts 0
-Entity 481
+Entity 92
 Name CoreLight
 Position 0 5 0
 Rotation 0 0 0
@@ -8177,75 +1564,41 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1.0 0.58 0.10 0 -1 0 3.4 1 18 23 35 0
+Light 1 1.0 0.58 0.10 0 -1 0 3.1 1 18 23 35 0
 Collider 0
 Scripts 0
-Entity 482
-Name CyanNW
-Position -24 5 -16
-Rotation 0 0 0
-Scale 1 1 1
+Entity 93
+Name CyanWest
+Position -26 3.4 0
+Rotation 0 0 1.5708
+Scale 1.6 1.6 1.6
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.68 0.72 0.74 1
+Color 1 0.64 0.70 0.76 1
 Texture 0
-Material 1 0.42 0.18 1 0.7
+Material 1 0.40 0.18 1 0.75
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.04 0.52 1 0 -1 0 1.8 1 13 23 35 0
+Light 1 0.04 0.52 1 0 -1 0 1.7 1 14 23 35 0
 Collider 0
 Scripts 0
-Entity 483
-Name CyanSE
-Position 24 5 16
-Rotation 0 0 0
-Scale 1 1 1
+Entity 94
+Name MagentaEast
+Position 26 3.4 0
+Rotation 0 0 -1.5708
+Scale 1.6 1.6 1.6
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.68 0.72 0.74 1
+Color 1 0.64 0.70 0.76 1
 Texture 0
-Material 1 0.42 0.18 1 0.7
+Material 1 0.40 0.18 1 0.75
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.04 0.52 1 0 -1 0 1.8 1 13 23 35 0
-Collider 0
-Scripts 0
-Entity 484
-Name MagentaNE
-Position 24 5 -16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.68 0.72 0.74 1
-Texture 0
-Material 1 0.42 0.18 1 0.7
-Interactable 0
-Player 0
-CharacterController 0
-Light 1 0.85 0.05 0.42 0 -1 0 1.8 1 13 23 35 0
-Collider 0
-Scripts 0
-Entity 485
-Name MagentaSW
-Position -24 5 16
-Rotation 0 0 0
-Scale 1 1 1
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.68 0.72 0.74 1
-Texture 0
-Material 1 0.42 0.18 1 0.7
-Interactable 0
-Player 0
-CharacterController 0
-Light 1 0.85 0.05 0.42 0 -1 0 1.8 1 13 23 35 0
+Light 1 0.85 0.05 0.42 0 -1 0 1.7 1 14 23 35 0
 Collider 0
 Scripts 0
 HierarchyFolders 0
