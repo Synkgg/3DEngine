@@ -24,6 +24,10 @@ bool Framebuffer::CreateTargets()
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_ColorTextureID);
         glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Samples, internalFormat, m_Width, m_Height, GL_TRUE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_ColorTextureID, 0);
+        glGenTextures(1, &m_NormalTextureID); glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_NormalTextureID);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_Samples, GL_RGBA16F, m_Width, m_Height, GL_TRUE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, m_NormalTextureID, 0);
+        const GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 }; glDrawBuffers(2, drawBuffers);
 
         glGenRenderbuffers(1, &m_DepthStencilID);
         glBindRenderbuffer(GL_RENDERBUFFER, m_DepthStencilID);
@@ -40,6 +44,12 @@ bool Framebuffer::CreateTargets()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ResolveColorTextureID, 0);
+        glGenTextures(1, &m_ResolveNormalTextureID); glBindTexture(GL_TEXTURE_2D, m_ResolveNormalTextureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_ResolveNormalTextureID, 0);
+        const GLenum resolveBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 }; glDrawBuffers(2, resolveBuffers);
 
         glGenTextures(1, &m_ResolveDepthTextureID);
         glBindTexture(GL_TEXTURE_2D, m_ResolveDepthTextureID);
@@ -71,6 +81,12 @@ bool Framebuffer::CreateTargets()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorTextureID, 0);
+        glGenTextures(1, &m_NormalTextureID); glBindTexture(GL_TEXTURE_2D, m_NormalTextureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_NormalTextureID, 0);
+        const GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 }; glDrawBuffers(2, drawBuffers);
 
         glGenTextures(1, &m_DepthTextureID);
         glBindTexture(GL_TEXTURE_2D, m_DepthTextureID);
@@ -96,7 +112,11 @@ void Framebuffer::Resolve()
     if (m_Samples <= 1) return;
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FramebufferID);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_ResolveFramebufferID);
-    glBlitFramebuffer(0,0,m_Width,m_Height,0,0,m_Width,m_Height,GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,GL_NEAREST);
+    glReadBuffer(GL_COLOR_ATTACHMENT0); glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glBlitFramebuffer(0,0,m_Width,m_Height,0,0,m_Width,m_Height,GL_COLOR_BUFFER_BIT,GL_NEAREST);
+    glReadBuffer(GL_COLOR_ATTACHMENT1); glDrawBuffer(GL_COLOR_ATTACHMENT1);
+    glBlitFramebuffer(0,0,m_Width,m_Height,0,0,m_Width,m_Height,GL_COLOR_BUFFER_BIT,GL_NEAREST);
+    glBlitFramebuffer(0,0,m_Width,m_Height,0,0,m_Width,m_Height,GL_DEPTH_BUFFER_BIT,GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -146,13 +166,16 @@ void Framebuffer::Shutdown()
     if(m_DepthStencilID)glDeleteRenderbuffers(1,&m_DepthStencilID);
     if(m_ColorTextureID)glDeleteTextures(1,&m_ColorTextureID);
     if(m_ResolveColorTextureID)glDeleteTextures(1,&m_ResolveColorTextureID);
+    if(m_NormalTextureID)glDeleteTextures(1,&m_NormalTextureID); if(m_ResolveNormalTextureID)glDeleteTextures(1,&m_ResolveNormalTextureID);
     if(m_DepthTextureID)glDeleteTextures(1,&m_DepthTextureID);
     if(m_ResolveDepthTextureID)glDeleteTextures(1,&m_ResolveDepthTextureID);
     if(m_FramebufferID)glDeleteFramebuffers(1,&m_FramebufferID);
     if(m_ResolveFramebufferID)glDeleteFramebuffers(1,&m_ResolveFramebufferID);
-    m_DepthStencilID=m_ColorTextureID=m_ResolveColorTextureID=m_DepthTextureID=m_ResolveDepthTextureID=m_FramebufferID=m_ResolveFramebufferID=0;
+    m_DepthStencilID=m_ColorTextureID=m_ResolveColorTextureID=m_NormalTextureID=m_ResolveNormalTextureID=m_DepthTextureID=m_ResolveDepthTextureID=m_FramebufferID=m_ResolveFramebufferID=0;
 }
 
 unsigned int Framebuffer::GetColorTexture() const { return m_Samples>1 ? m_ResolveColorTextureID : m_ColorTextureID; }
 unsigned int Framebuffer::GetDepthTexture() const { return m_Samples>1 ? m_ResolveDepthTextureID : m_DepthTextureID; }
 unsigned int Framebuffer::GetSamples() const { return m_Samples; }
+
+unsigned int Framebuffer::GetNormalTexture() const { return m_Samples>1 ? m_ResolveNormalTextureID : m_NormalTextureID; }
