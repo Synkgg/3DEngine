@@ -177,7 +177,8 @@ void Renderer::ResolveTAA()
     m_TAAShader.Bind();
     glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,m_PostColorTexture);m_TAAShader.SetInt("u_Current",0);
     glActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D,m_HistoryTexture[m_HistoryReadIndex]);m_TAAShader.SetInt("u_History",1);
-    glActiveTexture(GL_TEXTURE2);glBindTexture(GL_TEXTURE_2D,m_Framebuffer.GetDepthTexture());m_TAAShader.SetInt("u_Depth",2);\n    glActiveTexture(GL_TEXTURE3);glBindTexture(GL_TEXTURE_2D,m_Framebuffer.GetNormalTexture());m_TAAShader.SetInt("u_NormalRoughness",3);
+    glActiveTexture(GL_TEXTURE2);glBindTexture(GL_TEXTURE_2D,m_Framebuffer.GetDepthTexture());m_TAAShader.SetInt("u_Depth",2);
+    glActiveTexture(GL_TEXTURE3);glBindTexture(GL_TEXTURE_2D,m_Framebuffer.GetNormalTexture());m_TAAShader.SetInt("u_NormalRoughness",3);
     m_TAAShader.SetVec3("u_CameraForward",forward.x,forward.y,forward.z);m_TAAShader.SetVec3("u_CameraRight",right.x,right.y,right.z);m_TAAShader.SetVec3("u_CameraUp",up.x,up.y,up.z);m_TAAShader.SetVec3("u_CameraPosition",position.x,position.y,position.z);
     m_TAAShader.SetVec3("u_PreviousForward",m_PreviousCameraForward.x,m_PreviousCameraForward.y,m_PreviousCameraForward.z);m_TAAShader.SetVec3("u_PreviousRight",m_PreviousCameraRight.x,m_PreviousCameraRight.y,m_PreviousCameraRight.z);m_TAAShader.SetVec3("u_PreviousUp",m_PreviousCameraUp.x,m_PreviousCameraUp.y,m_PreviousCameraUp.z);m_TAAShader.SetVec3("u_PreviousPosition",m_PreviousCameraPosition.x,m_PreviousCameraPosition.y,m_PreviousCameraPosition.z);
     m_TAAShader.SetFloat("u_TanHalfFov",tanHalf);m_TAAShader.SetFloat("u_Aspect",aspect);m_TAAShader.SetFloat("u_PreviousTanHalfFov",m_PreviousTanHalfFov);m_TAAShader.SetFloat("u_PreviousAspect",m_PreviousAspect);m_TAAShader.SetInt("u_HistoryValid",m_HistoryValid?1:0);
