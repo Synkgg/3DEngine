@@ -4,6 +4,11 @@ local mouseSensitivity = 0.01
 local cameraHeight = 0.4
 local sprintToggled = false
 local bobTime = 0.0
+local smoothedBob = 0.0
+local cameraInitialized = false
+local cameraX = 0.0
+local cameraY = 0.0
+local cameraZ = 0.0
 
 function OnCreate()
     print("Player controller started.")
@@ -118,11 +123,27 @@ function OnUpdate(deltaTime)
         bobTime = bobTime + deltaTime * (sprinting and 12.0 or 8.0)
         bob = math.sin(bobTime) * 0.035
     end
-    Camera.SetPosition(
-        position.x,
-        position.y + cameraHeight + bob,
-        position.z
-    )
+    -- Smooth the positional camera follow/bob without filtering mouse rotation.
+    -- This removes the small vertical/physics-step snaps that read as look jitter,
+    -- while keeping aiming responsive.
+    local bobBlend = 1.0 - math.exp(-18.0 * math.max(deltaTime, 0.0))
+    smoothedBob = smoothedBob + (bob - smoothedBob) * bobBlend
+
+    local targetX = position.x
+    local targetY = position.y + cameraHeight + smoothedBob
+    local targetZ = position.z
+
+    if not cameraInitialized then
+        cameraX, cameraY, cameraZ = targetX, targetY, targetZ
+        cameraInitialized = true
+    else
+        local followBlend = 1.0 - math.exp(-28.0 * math.max(deltaTime, 0.0))
+        cameraX = cameraX + (targetX - cameraX) * followBlend
+        cameraY = cameraY + (targetY - cameraY) * followBlend
+        cameraZ = cameraZ + (targetZ - cameraZ) * followBlend
+    end
+
+    Camera.SetPosition(cameraX, cameraY, cameraZ)
 end
 
 function OnDestroy()
