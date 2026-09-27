@@ -59,6 +59,16 @@ uniform float u_Metallic;
 uniform float u_Roughness;
 uniform float u_AO;
 uniform float u_Emissive;
+uniform sampler2D u_NormalMap;
+uniform sampler2D u_MetallicMap;
+uniform sampler2D u_RoughnessMap;
+uniform sampler2D u_AOMap;
+uniform sampler2D u_EmissiveMap;
+uniform int u_UseNormalMap;
+uniform int u_UseMetallicMap;
+uniform int u_UseRoughnessMap;
+uniform int u_UseAOMap;
+uniform int u_UseEmissiveMap;
 uniform int u_FogEnabled;
 uniform float u_FogDensity;
 uniform float u_ViewDistance;
@@ -165,11 +175,22 @@ void main()
     // working color space. Converting them with pow(2.2) here crushes the
     // deliberately dark/saturated palette used by existing scenes.
     vec3 albedo = max(baseColor.rgb, vec3(0.0));
-    float metallic = clamp(u_Metallic, 0.0, 1.0);
-    float roughness = clamp(u_Roughness, 0.045, 1.0);
-    float ao = clamp(u_AO, 0.0, 1.0);
+    float metallic = clamp(u_UseMetallicMap != 0 ? texture(u_MetallicMap, v_UV).r : u_Metallic, 0.0, 1.0);
+    float roughness = clamp(u_UseRoughnessMap != 0 ? texture(u_RoughnessMap, v_UV).r : u_Roughness, 0.045, 1.0);
+    float ao = clamp(u_UseAOMap != 0 ? texture(u_AOMap, v_UV).r : u_AO, 0.0, 1.0);
 
     vec3 N = normalize(v_Normal);
+    if (u_UseNormalMap != 0)
+    {
+        // Derivative-built TBN keeps normal mapping compatible with existing
+        // meshes without requiring tangent attributes in the vertex format.
+        vec3 dp1 = dFdx(v_WorldPosition), dp2 = dFdy(v_WorldPosition);
+        vec2 duv1 = dFdx(v_UV), duv2 = dFdy(v_UV);
+        vec3 T = normalize(dp1 * duv2.y - dp2 * duv1.y);
+        vec3 B = normalize(-dp1 * duv2.x + dp2 * duv1.x);
+        vec3 mapN = texture(u_NormalMap, v_UV).xyz * 2.0 - 1.0;
+        N = normalize(mat3(T, B, N) * mapN);
+    }
     vec3 V = normalize(u_CameraPosition - v_WorldPosition);
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
@@ -224,7 +245,8 @@ void main()
     envSpecular += Fenv * u_LightColor * sunReflection * u_LightIntensity * (1.0 - roughness) * 1.6;
     lighting += (envDiffuse + envSpecular) * ao;
 
-    lighting += albedo * max(u_Emissive, 0.0) * 2.0;
+    float emissiveAmount = u_UseEmissiveMap != 0 ? texture(u_EmissiveMap, v_UV).r : max(u_Emissive, 0.0);
+    lighting += albedo * emissiveAmount * 2.0;
 
     if (u_FogEnabled != 0)
     {
@@ -907,7 +929,9 @@ void Renderer::DrawMeshInternal(
     Mesh* mesh, const Transform& transform,
     float red, float green, float blue, float alpha,
     const Texture2D* texture, float metallic, float roughness,
-    float ambientOcclusion, float emissive)
+    float ambientOcclusion, float emissive, const Texture2D* normalMap,
+    const Texture2D* metallicMap, const Texture2D* roughnessMap,
+    const Texture2D* aoMap, const Texture2D* emissiveMap)
 {
     if (!mesh) return;	Mat4 model =
 		transform.GetMatrix();
@@ -1002,6 +1026,20 @@ void Renderer::DrawMeshInternal(
 	m_Shader.SetFloat("u_Roughness", roughness);
 	m_Shader.SetFloat("u_AO", ambientOcclusion);
 	m_Shader.SetFloat("u_Emissive", emissive);
+    const Texture2D* maps[5] = { normalMap, metallicMap, roughnessMap, aoMap, emissiveMap };
+    const char* samplers[5] = { "u_NormalMap", "u_MetallicMap", "u_RoughnessMap", "u_AOMap", "u_EmissiveMap" };
+    const char* toggles[5] = { "u_UseNormalMap", "u_UseMetallicMap", "u_UseRoughnessMap", "u_UseAOMap", "u_UseEmissiveMap" };
+    for (int mapIndex = 0; mapIndex < 5; ++mapIndex)
+    {
+        const bool valid = maps[mapIndex] && maps[mapIndex]->IsLoaded();
+        m_Shader.SetInt(toggles[mapIndex], valid ? 1 : 0);
+        if (valid)
+        {
+            maps[mapIndex]->Bind(2 + mapIndex);
+            m_Shader.SetInt(samplers[mapIndex], 2 + mapIndex);
+        }
+    }
+    glActiveTexture(GL_TEXTURE0);
 	m_Shader.SetInt("u_FogEnabled", m_RenderSettings.fog ? 1 : 0);
 	m_Shader.SetFloat("u_FogDensity", m_RenderSettings.fogDensity);
     m_Shader.SetFloat("u_ViewDistance", m_RenderSettings.viewDistance);
@@ -1053,20 +1091,28 @@ void Renderer::DrawMesh(
 	float metallic,
 	float roughness,
 	float ambientOcclusion,
-	float emissive)
+	float emissive,
+    const Texture2D* normalMap, const Texture2D* metallicMap,
+    const Texture2D* roughnessMap, const Texture2D* aoMap,
+    const Texture2D* emissiveMap)
 {
     DrawMeshInternal(GetPrimitiveMesh(primitive), transform, red, green, blue, alpha,
-        texture, metallic, roughness, ambientOcclusion, emissive);
+        texture, metallic, roughness, ambientOcclusion, emissive,
+        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap);
 }
 
 void Renderer::DrawModel(
     const Transform& transform, const std::string& modelPath,
     float red, float green, float blue, float alpha,
     const Texture2D* texture, float metallic, float roughness,
-    float ambientOcclusion, float emissive)
+    float ambientOcclusion, float emissive,
+    const Texture2D* normalMap, const Texture2D* metallicMap,
+    const Texture2D* roughnessMap, const Texture2D* aoMap,
+    const Texture2D* emissiveMap)
 {
     DrawMeshInternal(GetModelMesh(modelPath), transform, red, green, blue, alpha,
-        texture, metallic, roughness, ambientOcclusion, emissive);
+        texture, metallic, roughness, ambientOcclusion, emissive,
+        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap);
 }
 
 SDL_GLContext Renderer::GetContext() const

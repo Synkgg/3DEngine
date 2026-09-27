@@ -483,7 +483,12 @@ bool SceneSerializer::Save(
                 << material->metallic << " "
                 << material->roughness << " "
                 << material->ambientOcclusion << " "
-                << material->emissive << '\n';
+                << material->emissive << " "
+                << std::quoted(material->normalMap) << " "
+                << std::quoted(material->metallicMap) << " "
+                << std::quoted(material->roughnessMap) << " "
+                << std::quoted(material->aoMap) << " "
+                << std::quoted(material->emissiveMap) << '\n';
         }
         else
         {
@@ -1216,6 +1221,14 @@ bool SceneSerializer::Load(
                         materialLine >> material.metallic >> material.roughness
                             >> material.ambientOcclusion >> material.emissive;
                         if (materialLine.fail()) return false;
+                        materialLine >> std::quoted(material.normalMap)
+                            >> std::quoted(material.metallicMap)
+                            >> std::quoted(material.roughnessMap)
+                            >> std::quoted(material.aoMap)
+                            >> std::quoted(material.emissiveMap);
+                        // Map paths were added later; old scene Material lines
+                        // remain valid and simply use their scalar values.
+                        materialLine.clear();
                         m_Scene.AddComponent<MaterialComponent>(entity, material);
                     }
                 }

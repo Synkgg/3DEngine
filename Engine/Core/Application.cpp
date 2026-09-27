@@ -546,6 +546,12 @@ void Application::Run()
                 MaterialComponent* material =
                     m_Scene.GetComponent<MaterialComponent>(entity);
 
+                Texture2D* normalMap = material && !material->normalMap.empty() ? m_Renderer.LoadTexture(material->normalMap) : nullptr;
+                Texture2D* metallicMap = material && !material->metallicMap.empty() ? m_Renderer.LoadTexture(material->metallicMap) : nullptr;
+                Texture2D* roughnessMap = material && !material->roughnessMap.empty() ? m_Renderer.LoadTexture(material->roughnessMap) : nullptr;
+                Texture2D* aoMap = material && !material->aoMap.empty() ? m_Renderer.LoadTexture(material->aoMap) : nullptr;
+                Texture2D* emissiveMap = material && !material->emissiveMap.empty() ? m_Renderer.LoadTexture(material->emissiveMap) : nullptr;
+
                 if (!mesh->modelPath.empty())
                 {
                     m_Renderer.DrawModel(
@@ -554,7 +560,8 @@ void Application::Run()
                         material ? material->metallic : 0.0f,
                         material ? material->roughness : 0.65f,
                         material ? material->ambientOcclusion : 1.0f,
-                        material ? material->emissive : 0.0f
+                        material ? material->emissive : 0.0f,
+                        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap
                     );
                 }
                 else
@@ -565,7 +572,8 @@ void Application::Run()
                         material ? material->metallic : 0.0f,
                         material ? material->roughness : 0.65f,
                         material ? material->ambientOcclusion : 1.0f,
-                        material ? material->emissive : 0.0f
+                        material ? material->emissive : 0.0f,
+                        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap
                     );
                 }
             }

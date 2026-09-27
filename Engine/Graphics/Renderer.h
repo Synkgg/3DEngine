@@ -77,7 +77,12 @@ public:
         float metallic = 0.0f,
         float roughness = 0.65f,
         float ambientOcclusion = 1.0f,
-        float emissive = 0.0f
+        float emissive = 0.0f,
+        const Texture2D* normalMap = nullptr,
+        const Texture2D* metallicMap = nullptr,
+        const Texture2D* roughnessMap = nullptr,
+        const Texture2D* aoMap = nullptr,
+        const Texture2D* emissiveMap = nullptr
     );
 
     void DrawModel(
@@ -86,7 +91,10 @@ public:
         float red, float green, float blue, float alpha,
         const Texture2D* texture = nullptr,
         float metallic = 0.0f, float roughness = 0.65f,
-        float ambientOcclusion = 1.0f, float emissive = 0.0f
+        float ambientOcclusion = 1.0f, float emissive = 0.0f,
+        const Texture2D* normalMap = nullptr, const Texture2D* metallicMap = nullptr,
+        const Texture2D* roughnessMap = nullptr, const Texture2D* aoMap = nullptr,
+        const Texture2D* emissiveMap = nullptr
     );
     void DrawShadowModel(const Transform& transform, const std::string& modelPath);
     unsigned int RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
@@ -212,7 +220,7 @@ private:
 
     Mesh* GetPrimitiveMesh(PrimitiveType primitive);
     Mesh* GetModelMesh(const std::string& modelPath);
-    void DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha, const Texture2D* texture, float metallic, float roughness, float ambientOcclusion, float emissive);
+    void DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha, const Texture2D* texture, float metallic, float roughness, float ambientOcclusion, float emissive, const Texture2D* normalMap, const Texture2D* metallicMap, const Texture2D* roughnessMap, const Texture2D* aoMap, const Texture2D* emissiveMap);
 
     bool CreateShadowTarget();
     void DestroyShadowTarget();
