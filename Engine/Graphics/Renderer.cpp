@@ -239,10 +239,14 @@ void main()
 
     vec3 R = reflect(-V, N);
     float sunReflection = pow(max(dot(R, sunL), 0.0), mix(8.0, 512.0, 1.0 - roughness));
-    vec3 horizonReflection = mix(vec3(0.055, 0.045, 0.035), vec3(0.22, 0.32, 0.48),
-                                 clamp(R.y * 0.5 + 0.5, 0.0, 1.0));
-    vec3 envSpecular = Fenv * horizonReflection * mix(0.18, 0.85, 1.0 - roughness);
-    envSpecular += Fenv * u_LightColor * sunReflection * u_LightIntensity * (1.0 - roughness) * 1.6;
+    float reflectionHeight = clamp(R.y * 0.5 + 0.5, 0.0, 1.0);
+    float reflectionHorizon = exp(-abs(R.y) * 6.0);
+    vec3 horizonReflection = mix(vec3(0.055, 0.045, 0.035), vec3(0.20, 0.34, 0.62), reflectionHeight);
+    horizonReflection += vec3(0.16, 0.11, 0.065) * reflectionHorizon;
+    // Rough surfaces integrate a broader, dimmer environment lobe while
+    // smooth metals retain a sharper sky/sun response.
+    vec3 envSpecular = Fenv * horizonReflection * mix(0.16, 0.95, 1.0 - roughness);
+    envSpecular += Fenv * u_LightColor * sunReflection * u_LightIntensity * (1.0 - roughness) * 1.8;
     lighting += (envDiffuse + envSpecular) * ao;
 
     float emissiveAmount = u_UseEmissiveMap != 0 ? texture(u_EmissiveMap, v_UV).r : max(u_Emissive, 0.0);
@@ -311,6 +315,14 @@ uniform sampler2D u_Bloom;
 uniform sampler2D u_Depth;
  uniform float u_Exposure;
 uniform float u_BloomStrength;
+uniform vec3 u_CameraForward;
+uniform vec3 u_CameraRight;
+uniform vec3 u_CameraUp;
+uniform vec3 u_SunDirection;
+uniform vec3 u_SunColor;
+uniform float u_SunIntensity;
+uniform float u_TanHalfFov;
+uniform float u_Aspect;
  
 float LinearizeDepth(float d)
 {
@@ -363,6 +375,26 @@ void main()
     float ao = ScreenAO(v_UV);
     hdr *= mix(1.0, ao, 0.72);
 
+    // Atmospheric aerial perspective and forward scattering. This is derived
+    // from depth and the procedural sun, so it works in every existing scene
+    // without requiring authored fog volumes.
+    float rawDepth = texture(u_Depth, v_UV).r;
+    if (rawDepth < 0.99999)
+    {
+        float distanceToSurface = LinearizeDepth(rawDepth);
+        vec2 ndc = v_UV * 2.0 - 1.0;
+        vec3 ray = normalize(u_CameraForward +
+            u_CameraRight * (ndc.x * u_TanHalfFov * u_Aspect) +
+            u_CameraUp * (ndc.y * u_TanHalfFov));
+        vec3 sunDir = normalize(-u_SunDirection);
+        float phase = 0.035 + 0.24 * pow(max(dot(ray, sunDir), 0.0), 5.0);
+        float aerial = 1.0 - exp(-distanceToSurface * 0.00115);
+        vec3 atmosphere = mix(vec3(0.18,0.28,0.42), max(u_SunColor, vec3(0.65,0.48,0.30)),
+                              pow(max(dot(ray, sunDir),0.0), 8.0));
+        hdr = mix(hdr, atmosphere * (0.7 + phase * max(u_SunIntensity,0.25)),
+                  clamp(aerial * 0.42, 0.0, 0.42));
+    }
+
     // Filmic exposure and tone mapping.
     vec3 mapped = ACESFilm(hdr * max(u_Exposure, 0.001));
 
@@ -379,9 +411,26 @@ void main()
 
     mapped = pow(clamp(mapped,0.0,1.0), vec3(1.0/2.2));
 
-    // Do not blend previous screen-space pixels here. Without motion vectors
-    // and camera reprojection that produces visible ghosting/jitter while looking.
-    // MSAA remains the stable anti-aliasing path until full motion-vector TAA exists.
+    // Edge-aware post AA. It is intentionally spatial rather than blind
+    // history blending, so camera motion stays crisp and does not reintroduce
+    // the ghosting that the old history experiment caused.
+    vec2 texel = 1.0 / vec2(textureSize(u_Scene, 0));
+    float d0 = texture(u_Depth, v_UV).r;
+    float dl = texture(u_Depth, v_UV - vec2(texel.x,0)).r;
+    float dr = texture(u_Depth, v_UV + vec2(texel.x,0)).r;
+    float du = texture(u_Depth, v_UV + vec2(0,texel.y)).r;
+    float dd = texture(u_Depth, v_UV - vec2(0,texel.y)).r;
+    float edge = clamp((abs(d0-dl)+abs(d0-dr)+abs(d0-du)+abs(d0-dd))*420.0,0.0,1.0);
+    if(edge > 0.02)
+    {
+        vec3 n1 = ACESFilm(max(texture(u_Scene,v_UV+vec2(texel.x,0)).rgb,vec3(0.0))*max(u_Exposure,0.001));
+        vec3 n2 = ACESFilm(max(texture(u_Scene,v_UV-vec2(texel.x,0)).rgb,vec3(0.0))*max(u_Exposure,0.001));
+        vec3 n3 = ACESFilm(max(texture(u_Scene,v_UV+vec2(0,texel.y)).rgb,vec3(0.0))*max(u_Exposure,0.001));
+        vec3 n4 = ACESFilm(max(texture(u_Scene,v_UV-vec2(0,texel.y)).rgb,vec3(0.0))*max(u_Exposure,0.001));
+        vec3 neighbor = (n1+n2+n3+n4)*0.25;
+        neighbor = pow(clamp(neighbor,0.0,1.0),vec3(1.0/2.2));
+        mapped = mix(mapped, neighbor, edge * 0.16);
+    }
     FragColor = vec4(mapped,1.0);
 }
 )";
@@ -1422,8 +1471,19 @@ void Renderer::UpdateLightSpaceMatrix()
     if (std::abs(Vec3::Dot(direction, up)) > 0.96f)
         up = Vec3(0.0f, 0.0f, 1.0f);
 
-    const Mat4 lightView = Mat4::LookAt(lightPosition, center, up);
     const float extent = distance * 0.62f;
+    // Snap the shadow focus to shadow-map texels. This removes the crawling
+    // shimmer that otherwise appears whenever the camera translates.
+    const float worldUnitsPerTexel = (extent * 2.0f) / static_cast<float>(std::max(1u, m_ShadowMapSize));
+    Vec3 stableCenter = center;
+    if (worldUnitsPerTexel > 0.000001f)
+    {
+        stableCenter.x = std::floor(stableCenter.x / worldUnitsPerTexel + 0.5f) * worldUnitsPerTexel;
+        stableCenter.y = std::floor(stableCenter.y / worldUnitsPerTexel + 0.5f) * worldUnitsPerTexel;
+        stableCenter.z = std::floor(stableCenter.z / worldUnitsPerTexel + 0.5f) * worldUnitsPerTexel;
+    }
+    const Vec3 stableLightPosition = stableCenter - direction * distance;
+    const Mat4 lightView = Mat4::LookAt(stableLightPosition, stableCenter, up);
     const Mat4 lightProjection = Mat4::Orthographic(-extent, extent, -extent, extent, 0.1f, distance * 2.5f);
     m_LightSpaceMatrix = lightProjection * lightView;
 }
@@ -1522,7 +1582,7 @@ bool Renderer::CreatePostProcessTarget()
     glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
     glGenTextures(1, &m_PostColorTexture);
     glBindTexture(GL_TEXTURE_2D, m_PostColorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1650,6 +1710,19 @@ void Renderer::RenderPostProcess()
     m_PostShader.SetInt("u_Depth", 2);
     m_PostShader.SetFloat("u_BloomStrength", bloomTexture ? m_RenderSettings.bloomStrength : 0.0f);
     m_PostShader.SetFloat("u_Exposure", m_RenderSettings.exposure);
+    const Vec3 postForward = m_Camera.GetForward();
+    const Vec3 postRight = m_Camera.GetRight();
+    const Vec3 postUp = Vec3::Cross(postRight, postForward).Normalized();
+    const float postTanHalfFov = std::tan(m_Camera.GetFovDegrees() * 0.5f * 0.017453292519943295f);
+    const float postAspect = m_ViewportHeight > 0 ? static_cast<float>(m_ViewportWidth) / static_cast<float>(m_ViewportHeight) : 1.0f;
+    m_PostShader.SetVec3("u_CameraForward", postForward.x, postForward.y, postForward.z);
+    m_PostShader.SetVec3("u_CameraRight", postRight.x, postRight.y, postRight.z);
+    m_PostShader.SetVec3("u_CameraUp", postUp.x, postUp.y, postUp.z);
+    m_PostShader.SetVec3("u_SunDirection", m_LightDirection.x, m_LightDirection.y, m_LightDirection.z);
+    m_PostShader.SetVec3("u_SunColor", m_LightColor.x, m_LightColor.y, m_LightColor.z);
+    m_PostShader.SetFloat("u_SunIntensity", m_LightIntensity);
+    m_PostShader.SetFloat("u_TanHalfFov", postTanHalfFov);
+    m_PostShader.SetFloat("u_Aspect", postAspect);
     glBindVertexArray(m_PostVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
