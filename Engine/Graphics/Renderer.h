@@ -21,6 +21,7 @@
 #include "../Math/Vec3.h"
 #include "DebugRenderer.h"
 #include "TextureManager.h"
+#include "Environment/EnvironmentSystem.h"
 #include "../UI/UIRenderer.h"
 
 class Window;
@@ -226,6 +227,7 @@ private:
     DebugRenderer m_DebugRenderer;
 
     TextureManager m_TextureManager;
+    EnvironmentSystem m_EnvironmentSystem;
     UIRenderer m_UIRenderer;
 
     Mesh* GetPrimitiveMesh(PrimitiveType primitive);
