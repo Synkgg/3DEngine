@@ -28,6 +28,9 @@ bool ProjectSettings::Load(const std::string& path)
         else if(key=="AtmosphereStrength") file>>m_RenderSettings.atmosphereStrength;
         else if(key=="ColorSaturation") file>>m_RenderSettings.colorSaturation;
         else if(key=="Contrast") file>>m_RenderSettings.contrast;
+        else if(key=="ScreenSpaceReflections") file>>m_RenderSettings.screenSpaceReflections;
+        else if(key=="ScreenSpaceReflectionStrength") file>>m_RenderSettings.screenSpaceReflectionStrength;
+        else if(key=="GIStrength") file>>m_RenderSettings.giStrength;
         else { std::string ignored; std::getline(file,ignored); }
     }
     return true;
@@ -54,7 +57,10 @@ bool ProjectSettings::Save(const std::string& path) const
          << "SkyIntensity " << m_RenderSettings.skyIntensity << '\n'
          << "AtmosphereStrength " << m_RenderSettings.atmosphereStrength << '\n'
          << "ColorSaturation " << m_RenderSettings.colorSaturation << '\n'
-         << "Contrast " << m_RenderSettings.contrast << '\n';
+         << "Contrast " << m_RenderSettings.contrast << '\n'
+         << "ScreenSpaceReflections " << m_RenderSettings.screenSpaceReflections << '\n'
+         << "ScreenSpaceReflectionStrength " << m_RenderSettings.screenSpaceReflectionStrength << '\n'
+         << "GIStrength " << m_RenderSettings.giStrength << '\n';
     return file.good();
 }
 
