@@ -99,7 +99,8 @@ public:
     Vec3 GetCameraRight() const;
     void SetCameraRotation(float yaw, float pitch);
     void RotateCamera(float yawDelta, float pitchDelta);
-    void MoveCamera( float forward, float right, float up, float deltaTime);
+    void SetCameraMoveSpeed(float speed);
+    void MoveCamera(float forward, float right, float up, float deltaTime);
     void ResetCamera();
     void SetCameraFov(float degrees) { m_Camera.SetFovDegrees(degrees); }
     float GetCameraFov() const { return m_Camera.GetFovDegrees(); }
