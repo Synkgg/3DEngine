@@ -402,37 +402,40 @@ float LinearizeDepth(float d)
     return (2.0 * nearPlane * farPlane) / max(farPlane + nearPlane - z * (farPlane - nearPlane), 0.0001);
 }
 
+vec3 ReconstructWorldPosition(vec2 uv, float linearDepth)
+{
+    vec2 ndc = uv * 2.0 - 1.0;
+    vec3 ray = normalize(u_CameraForward +
+        u_CameraRight * (ndc.x * u_TanHalfFov * u_Aspect) +
+        u_CameraUp * (ndc.y * u_TanHalfFov));
+    float forwardAmount = max(dot(ray, u_CameraForward), 0.05);
+    return ray * (linearDepth / forwardAmount);
+}
+
 float ScreenAO(vec2 uv)
 {
-    vec3 centerNormal = normalize(texture(u_NormalRoughness, uv).xyz * 2.0 - 1.0);
     float centerRaw = texture(u_Depth, uv).r;
     if (centerRaw >= 0.99999) return 1.0;
-    float center = LinearizeDepth(centerRaw);
+    float centerDepth = LinearizeDepth(centerRaw);
+    vec3 centerPos = ReconstructWorldPosition(uv, centerDepth);
+    vec3 N = normalize(texture(u_NormalRoughness, uv).xyz * 2.0 - 1.0);
     vec2 texel = 1.0 / vec2(textureSize(u_Depth, 0));
-    float occ = 0.0;
-    float samples = 0.0;
-    const vec2 dirs[8] = vec2[8](
-        vec2(1,0),vec2(-1,0),vec2(0,1),vec2(0,-1),
-        vec2(0.707,0.707),vec2(-0.707,0.707),vec2(0.707,-0.707),vec2(-0.707,-0.707));
-    for(int ring=1; ring<=2; ++ring)
+    const vec2 dirs[12] = vec2[12](vec2(1,0),vec2(.866,.5),vec2(.5,.866),vec2(0,1),vec2(-.5,.866),vec2(-.866,.5),vec2(-1,0),vec2(-.866,-.5),vec2(-.5,-.866),vec2(0,-1),vec2(.5,-.866),vec2(.866,-.5));
+    float visibility = 0.0, weight = 0.0;
+    float pixelRadius = clamp(22.0 / max(centerDepth, 1.0), 2.0, 12.0);
+    for(int ring=1; ring<=3; ++ring) for(int i=0;i<12;++i)
     {
-        float radius = float(ring) * 1.35;
-        for(int i=0;i<8;++i)
-        {
-            float sampleRaw = texture(u_Depth, uv + dirs[i] * texel * radius).r;
-            if(sampleRaw >= 0.99999) continue; // never darken an object silhouette against sky
-            float sd = LinearizeDepth(sampleRaw);
-            float delta = center - sd;
-            float thickness = max(0.08, center * 0.012);
-            float range = 1.0 - smoothstep(thickness, thickness * 5.0, abs(delta));
-            vec3 sampleNormal = normalize(texture(u_NormalRoughness, uv + dirs[i] * texel * radius).xyz * 2.0 - 1.0);
-            float normalWeight = 0.35 + 0.65 * (1.0 - max(dot(centerNormal, sampleNormal), 0.0));
-            occ += smoothstep(0.015, thickness, delta) * range * normalWeight;
-            samples += 1.0;
-        }
+        vec2 suv = uv + dirs[i] * texel * pixelRadius * float(ring);
+        if(any(lessThanEqual(suv,vec2(0.001))) || any(greaterThanEqual(suv,vec2(0.999)))) continue;
+        float sdRaw=texture(u_Depth,suv).r; if(sdRaw>=0.99999) continue;
+        float sd=LinearizeDepth(sdRaw); vec3 samplePos=ReconstructWorldPosition(suv,sd);
+        vec3 delta=samplePos-centerPos; float dist=length(delta); if(dist<0.001) continue;
+        vec3 dir=delta/dist; float horizon=max(dot(N,dir)-0.08,0.0);
+        float range=exp(-dist*0.55); float depthReject=1.0-smoothstep(1.5,6.0,abs(sd-centerDepth));
+        visibility += horizon*range*depthReject; weight += range*depthReject;
     }
-    if(samples < 1.0) return 1.0;
-    return clamp(1.0 - (occ / samples) * 0.42, 0.82, 1.0);
+    float occ = weight>0.001 ? visibility/weight : 0.0;
+    return clamp(1.0-occ*1.35,0.72,1.0);
 }
 
 vec3 ScreenSpaceGI(vec2 uv, float centerDepth)
@@ -464,25 +467,27 @@ vec3 ScreenSpaceGI(vec2 uv, float centerDepth)
 
 vec3 ScreenSpaceReflection(vec2 uv, vec3 ray, float centerDepth)
 {
-    // Lightweight depth-guided reflection trace in screen space. It is kept
-    // deliberately conservative to avoid the silhouette halos that broad
-    // depth filtering caused in the previous renderer.
-    vec2 dir = normalize(vec2(ray.x, -ray.y) + vec2(0.0001));
-    vec2 texel = 1.0 / vec2(textureSize(u_Scene,0));
-    for(int stepIndex=1; stepIndex<=12; ++stepIndex)
+    vec3 origin = ReconstructWorldPosition(uv, centerDepth);
+    vec3 direction = normalize(ray);
+    float travel = max(0.12, centerDepth * 0.006);
+    float stride = max(0.18, centerDepth * 0.012);
+    for(int i=0;i<40;++i)
     {
-        float stride = float(stepIndex) * 2.5;
-        vec2 suv = uv + dir * texel * stride;
-        if(any(lessThan(suv,vec2(0.01))) || any(greaterThan(suv,vec2(0.99)))) break;
-        float sampleRaw = texture(u_Depth,suv).r;
-        if(sampleRaw >= 0.99999) continue;
-        float sampleDepth = LinearizeDepth(sampleRaw);
-        float expected = centerDepth + stride * 0.035 * max(abs(ray.z),0.2);
-        float hit = abs(sampleDepth-expected);
-        if(hit < max(0.12, centerDepth * 0.012))
+        travel += stride * (1.0 + float(i) * 0.035);
+        vec3 p = origin + direction * travel;
+        float forwardDepth = dot(p, u_CameraForward); if(forwardDepth <= 0.1) break;
+        float x = dot(p,u_CameraRight)/(forwardDepth*u_TanHalfFov*u_Aspect);
+        float y = dot(p,u_CameraUp)/(forwardDepth*u_TanHalfFov);
+        vec2 suv=vec2(x,y)*0.5+0.5;
+        if(any(lessThan(suv,vec2(0.005)))||any(greaterThan(suv,vec2(0.995)))) break;
+        float raw=texture(u_Depth,suv).r; if(raw>=0.99999) continue;
+        float sceneDepth=LinearizeDepth(raw); float thickness=max(0.10,sceneDepth*0.008);
+        float delta=forwardDepth-sceneDepth;
+        if(delta>=0.0 && delta<thickness)
         {
-            float edgeFade = smoothstep(0.0,0.12,min(min(suv.x,suv.y),min(1.0-suv.x,1.0-suv.y)));
-            return max(texture(u_Scene,suv).rgb,vec3(0.0)) * edgeFade;
+            float edge=min(min(suv.x,suv.y),min(1.0-suv.x,1.0-suv.y));
+            float edgeFade=smoothstep(0.01,0.12,edge); float distanceFade=1.0-smoothstep(15.0,90.0,travel);
+            return max(texture(u_Scene,suv).rgb,vec3(0.0))*edgeFade*distanceFade;
         }
     }
     return vec3(0.0);
