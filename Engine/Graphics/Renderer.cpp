@@ -287,11 +287,9 @@ out vec4 FragColor;
 uniform sampler2D u_Scene;
 uniform sampler2D u_Bloom;
 uniform sampler2D u_Depth;
-uniform sampler2D u_History;
-uniform float u_Exposure;
+ uniform float u_Exposure;
 uniform float u_BloomStrength;
-uniform int u_HistoryValid;
-
+ 
 float LinearizeDepth(float d)
 {
     const float nearPlane = 0.1;
@@ -359,21 +357,9 @@ void main()
 
     mapped = pow(clamp(mapped,0.0,1.0), vec3(1.0/2.2));
 
-    // Temporal resolve. Neighborhood clipping prevents stale history from
-    // dominating disocclusions; this is a conservative TAA foundation until
-    // per-object motion vectors are available.
-    if (u_HistoryValid != 0)
-    {
-        vec2 texel = 1.0 / vec2(textureSize(u_Scene, 0));
-        vec3 mn = mapped, mx = mapped;
-        for(int x=-1;x<=1;++x) for(int y=-1;y<=1;++y)
-        {
-            vec3 s = pow(clamp(texture(u_Scene, v_UV + vec2(x,y)*texel).rgb,0.0,1.0), vec3(1.0/2.2));
-            mn = min(mn,s); mx = max(mx,s);
-        }
-        vec3 history = clamp(texture(u_History, v_UV).rgb, mn - 0.025, mx + 0.025);
-        mapped = mix(mapped, history, 0.14);
-    }
+    // Do not blend previous screen-space pixels here. Without motion vectors
+    // and camera reprojection that produces visible ghosting/jitter while looking.
+    // MSAA remains the stable anti-aliasing path until full motion-vector TAA exists.
     FragColor = vec4(mapped,1.0);
 }
 )";
@@ -1616,10 +1602,6 @@ void Renderer::RenderPostProcess()
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetDepthTexture());
     m_PostShader.SetInt("u_Depth", 2);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, m_HistoryTexture);
-    m_PostShader.SetInt("u_History", 3);
-    m_PostShader.SetInt("u_HistoryValid", m_HistoryValid ? 1 : 0);
     m_PostShader.SetFloat("u_BloomStrength", bloomTexture ? m_RenderSettings.bloomStrength : 0.0f);
     m_PostShader.SetFloat("u_Exposure", m_RenderSettings.exposure);
     glBindVertexArray(m_PostVAO);
@@ -1628,16 +1610,6 @@ void Renderer::RenderPostProcess()
     glBindTexture(GL_TEXTURE_2D, 0);
     m_PostShader.Unbind();
 
-    // Save the resolved post image for the next frame's temporal resolve.
-    if (m_HistoryFramebuffer && m_PostFramebuffer)
-    {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_PostFramebuffer);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_HistoryFramebuffer);
-        glBlitFramebuffer(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight),
-                          0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight),
-                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        m_HistoryValid = true;
-    }
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
