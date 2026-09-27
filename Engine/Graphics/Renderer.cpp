@@ -161,8 +161,10 @@ void main()
     if (u_UseTexture != 0)
         baseColor *= texture(u_Texture, v_UV);
 
-    // Treat authored colors/textures as display-space inputs and shade in linear space.
-    vec3 albedo = pow(max(baseColor.rgb, vec3(0.0)), vec3(2.2));
+    // Scene colors and texture samples are already authored in the engine's
+    // working color space. Converting them with pow(2.2) here crushes the
+    // deliberately dark/saturated palette used by existing scenes.
+    vec3 albedo = max(baseColor.rgb, vec3(0.0));
     float metallic = clamp(u_Metallic, 0.0, 1.0);
     float roughness = clamp(u_Roughness, 0.045, 1.0);
     float ao = clamp(u_AO, 0.0, 1.0);
