@@ -6,7 +6,7 @@
 #include "../UISlider.h"
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
-#include "../Graphics/Texture2D.h"
+#include "../../Graphics/Texture2D.h"
 #include "../../Audio/AudioEngine.h"
 #include <glad/gl.h>
 #include <algorithm>
