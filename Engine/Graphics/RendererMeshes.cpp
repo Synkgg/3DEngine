@@ -233,8 +233,8 @@ void Renderer::DrawMeshInternal(
     m_Shader.SetInt("u_UseEnvironmentMap", hasEnvironment ? 1 : 0);
     if (hasEnvironment)
     {
-        m_EnvironmentSystem.Bind(9);
-        m_Shader.SetInt("u_EnvironmentMap", 9);
+        m_EnvironmentSystem.Bind(9); m_Shader.SetInt("u_EnvironmentMap", 9);
+        m_EnvironmentSystem.BindIrradiance(10); m_Shader.SetInt("u_IrradianceMap", 10);
     }
     const Texture2D* maps[5] = { normalMap, metallicMap, roughnessMap, aoMap, emissiveMap };
     const char* samplers[5] = { "u_NormalMap", "u_MetallicMap", "u_RoughnessMap", "u_AOMap", "u_EmissiveMap" };
