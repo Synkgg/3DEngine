@@ -551,13 +551,27 @@ void main()
         const float g = 0.76;
         float miePhase = 0.0795775 * (1.0 - g*g) /
             max(pow(1.0 + g*g - 2.0*g*mu, 1.5), 0.001);
-        float density = exp(-max(0.0, dot(ray, u_CameraUp)) * 1.8);
-        float opticalDepth = distanceToSurface * 0.00105 * density * u_AtmosphereStrength;
-        vec3 extinction = exp(-vec3(0.34,0.19,0.085) * opticalDepth);
-        vec3 rayleighColor = vec3(0.20,0.38,0.72) * rayleighPhase;
-        vec3 mieColor = max(u_SunColor, vec3(0.72,0.52,0.32)) * miePhase * max(u_SunIntensity,0.25);
-        vec3 inscatter = (rayleighColor + mieColor) * (vec3(1.0) - extinction) * 1.55;
-        hdr = hdr * extinction + inscatter;
+        vec3 betaR = vec3(0.34,0.19,0.085) * 0.00105 * u_AtmosphereStrength;
+        vec3 betaM = vec3(0.075) * 0.00105 * u_AtmosphereStrength;
+        vec3 transmittance = vec3(1.0);
+        vec3 inscatter = vec3(0.0);
+        const int atmosphereSteps = 8;
+        float stepLength = distanceToSurface / float(atmosphereSteps);
+        for(int stepIndex=0; stepIndex<atmosphereSteps; ++stepIndex)
+        {
+            float t=(float(stepIndex)+0.5)*stepLength;
+            vec3 sampleOffset=ray*t;
+            float relativeHeight=max(sampleOffset.y,0.0);
+            float rayleighDensity=exp(-relativeHeight*0.018);
+            float mieDensity=exp(-relativeHeight*0.065);
+            vec3 extinction=(betaR*rayleighDensity+betaM*mieDensity)*stepLength;
+            vec3 stepTrans=exp(-extinction);
+            vec3 scatter=betaR*rayleighDensity*vec3(0.20,0.38,0.72)*rayleighPhase +
+                         betaM*mieDensity*max(u_SunColor,vec3(0.72,0.52,0.32))*miePhase*max(u_SunIntensity,0.25);
+            inscatter += transmittance*scatter*stepLength;
+            transmittance *= stepTrans;
+        }
+        hdr = hdr * transmittance + inscatter * 1.35;
     }
 
     // Filmic exposure and tone mapping.
