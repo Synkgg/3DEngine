@@ -122,6 +122,57 @@ void Renderer::DestroyModelPreviewCache()
     m_ModelPreviewCache.clear();
 }
 
+void Renderer::UploadFrameShaderState()
+{
+    m_Shader.Bind();
+    for (int i = 0; i < ShadowCascadeCount; ++i)
+    {
+        static const char* matrixNames[ShadowCascadeCount] = { "u_LightSpaceMatrices[0]", "u_LightSpaceMatrices[1]", "u_LightSpaceMatrices[2]" };
+        static const char* splitNames[ShadowCascadeCount] = { "u_ShadowCascadeSplits[0]", "u_ShadowCascadeSplits[1]", "u_ShadowCascadeSplits[2]" };
+        static const char* samplerNames[ShadowCascadeCount] = { "u_ShadowMaps[0]", "u_ShadowMaps[1]", "u_ShadowMaps[2]" };
+        m_Shader.SetMat4(matrixNames[i], m_LightSpaceMatrices[i]);
+        m_Shader.SetFloat(splitNames[i], m_ShadowCascadeSplits[i]);
+        glActiveTexture(GL_TEXTURE1 + i);
+        glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTextures[i]);
+        m_Shader.SetInt(samplerNames[i], 1 + i);
+    }
+    m_Shader.SetInt("u_ShadowsEnabled", (m_RenderSettings.shadows && m_ShadowMapReady) ? 1 : 0);
+    m_Shader.SetInt("u_ShadowPCFRadius", std::clamp(m_RenderSettings.shadowQuality + 1, 1, 3));
+    m_Shader.SetVec3("u_LightDirection", m_LightDirection.x, m_LightDirection.y, m_LightDirection.z);
+    m_Shader.SetVec3("u_LightColor", m_LightColor.x, m_LightColor.y, m_LightColor.z);
+    m_Shader.SetFloat("u_LightIntensity", m_LightIntensity);
+    const Vec3 cameraPosition = m_Camera.GetPosition();
+    m_Shader.SetVec3("u_CameraPosition", cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    m_Shader.SetFloat("u_IndirectLightStrength", m_RenderSettings.indirectLightStrength);
+    m_Shader.SetFloat("u_ReflectionStrength", m_RenderSettings.reflectionStrength);
+    m_Shader.SetFloat("u_ContactShadowStrength", m_RenderSettings.contactShadowStrength);
+    m_Shader.SetFloat("u_SkyIntensity", m_RenderSettings.skyIntensity);
+    m_Shader.SetInt("u_FogEnabled", m_RenderSettings.fog ? 1 : 0);
+    m_Shader.SetFloat("u_FogDensity", m_RenderSettings.fogDensity);
+    m_Shader.SetFloat("u_ViewDistance", m_RenderSettings.viewDistance);
+    m_Shader.SetInt("u_PointLightCount", m_PointLightCount);
+    m_Shader.SetInt("u_SpotLightCount", m_SpotLightCount);
+    static const char* pointPosition[8]={"u_PointLights[0].position","u_PointLights[1].position","u_PointLights[2].position","u_PointLights[3].position","u_PointLights[4].position","u_PointLights[5].position","u_PointLights[6].position","u_PointLights[7].position"};
+    static const char* pointColor[8]={"u_PointLights[0].color","u_PointLights[1].color","u_PointLights[2].color","u_PointLights[3].color","u_PointLights[4].color","u_PointLights[5].color","u_PointLights[6].color","u_PointLights[7].color"};
+    static const char* pointIntensity[8]={"u_PointLights[0].intensity","u_PointLights[1].intensity","u_PointLights[2].intensity","u_PointLights[3].intensity","u_PointLights[4].intensity","u_PointLights[5].intensity","u_PointLights[6].intensity","u_PointLights[7].intensity"};
+    static const char* pointRange[8]={"u_PointLights[0].range","u_PointLights[1].range","u_PointLights[2].range","u_PointLights[3].range","u_PointLights[4].range","u_PointLights[5].range","u_PointLights[6].range","u_PointLights[7].range"};
+    for(int i=0;i<m_PointLightCount;i++){const auto& l=m_PointLights[i];m_Shader.SetVec3(pointPosition[i],l.position.x,l.position.y,l.position.z);m_Shader.SetVec3(pointColor[i],l.color.x,l.color.y,l.color.z);m_Shader.SetFloat(pointIntensity[i],l.intensity);m_Shader.SetFloat(pointRange[i],l.range);}
+    static const char* spotPosition[4]={"u_SpotLights[0].position","u_SpotLights[1].position","u_SpotLights[2].position","u_SpotLights[3].position"};
+    static const char* spotDirection[4]={"u_SpotLights[0].direction","u_SpotLights[1].direction","u_SpotLights[2].direction","u_SpotLights[3].direction"};
+    static const char* spotColor[4]={"u_SpotLights[0].color","u_SpotLights[1].color","u_SpotLights[2].color","u_SpotLights[3].color"};
+    static const char* spotIntensity[4]={"u_SpotLights[0].intensity","u_SpotLights[1].intensity","u_SpotLights[2].intensity","u_SpotLights[3].intensity"};
+    static const char* spotRange[4]={"u_SpotLights[0].range","u_SpotLights[1].range","u_SpotLights[2].range","u_SpotLights[3].range"};
+    static const char* spotInner[4]={"u_SpotLights[0].innerCos","u_SpotLights[1].innerCos","u_SpotLights[2].innerCos","u_SpotLights[3].innerCos"};
+    static const char* spotOuter[4]={"u_SpotLights[0].outerCos","u_SpotLights[1].outerCos","u_SpotLights[2].outerCos","u_SpotLights[3].outerCos"};
+    for(int i=0;i<m_SpotLightCount;i++){const auto& l=m_SpotLights[i];m_Shader.SetVec3(spotPosition[i],l.position.x,l.position.y,l.position.z);m_Shader.SetVec3(spotDirection[i],l.direction.x,l.direction.y,l.direction.z);m_Shader.SetVec3(spotColor[i],l.color.x,l.color.y,l.color.z);m_Shader.SetFloat(spotIntensity[i],l.intensity);m_Shader.SetFloat(spotRange[i],l.range);m_Shader.SetFloat(spotInner[i],l.innerCos);m_Shader.SetFloat(spotOuter[i],l.outerCos);}
+    const bool hasEnvironment=m_EnvironmentSystem.GetEnvironmentMap()!=0;
+    m_Shader.SetInt("u_UseEnvironmentMap",hasEnvironment?1:0);
+    if(hasEnvironment){m_EnvironmentSystem.Bind(9);m_Shader.SetInt("u_EnvironmentMap",9);m_EnvironmentSystem.BindIrradiance(10);m_Shader.SetInt("u_IrradianceMap",10);}
+    glActiveTexture(GL_TEXTURE0);
+    m_Shader.Unbind();
+    m_FrameShaderStateReady=true;
+}
+
 void Renderer::DrawMeshInternal(
     Mesh* mesh, const Transform& transform,
     float red, float green, float blue, float alpha,
@@ -130,164 +181,24 @@ void Renderer::DrawMeshInternal(
     const Texture2D* metallicMap, const Texture2D* roughnessMap,
     const Texture2D* aoMap, const Texture2D* emissiveMap)
 {
-    if (!mesh) return;	Mat4 model =
-		transform.GetMatrix();
-
-	Mat4 view =
-		m_Camera.GetViewMatrix();
-
-	Mat4 projection =
-		m_Camera.GetProjectionMatrix();
-
-	Mat4 cameraTransform =
-		projection * view * model;
-
-	mesh->Bind();
-	m_Shader.Bind();
-
-	if (texture != nullptr &&
-		texture->IsLoaded())
-	{
-		texture->Bind(0);
-
-		m_Shader.SetInt(
-			"u_Texture",
-			0
-		);
-
-		m_Shader.SetInt(
-			"u_UseTexture",
-			1
-		);
-	}
-	else
-	{
-		m_Shader.SetInt(
-			"u_UseTexture",
-			0
-		);
-	}
-
-	m_Shader.SetMat4(
-		"u_Transform",
-		cameraTransform
-	);
-
-	m_Shader.SetVec4(
-		"u_Color",
-		red,
-		green,
-		blue,
-		alpha
-	);
-
-	m_Shader.SetMat4(
-		"u_Model",
-		model
-	);
-    for (int i = 0; i < ShadowCascadeCount; ++i) {
-        m_Shader.SetMat4(("u_LightSpaceMatrices[" + std::to_string(i) + "]").c_str(), m_LightSpaceMatrices[i]);
-        m_Shader.SetFloat(("u_ShadowCascadeSplits[" + std::to_string(i) + "]").c_str(), m_ShadowCascadeSplits[i]);
-        glActiveTexture(GL_TEXTURE1 + i); glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTextures[i]);
-        m_Shader.SetInt(("u_ShadowMaps[" + std::to_string(i) + "]").c_str(), 1 + i);
-    }
-    m_Shader.SetInt("u_ShadowsEnabled", (m_RenderSettings.shadows && m_ShadowMapReady) ? 1 : 0);
-    m_Shader.SetInt("u_ShadowPCFRadius", std::clamp(m_RenderSettings.shadowQuality + 1, 1, 3));
+    if (!mesh) return;
+    const Mat4 model = transform.GetMatrix();
+    const Mat4 cameraTransform = m_FrameViewProjection * model;
+    mesh->Bind();
+    m_Shader.Bind();
+    if (texture && texture->IsLoaded()){texture->Bind(0);m_Shader.SetInt("u_Texture",0);m_Shader.SetInt("u_UseTexture",1);}else m_Shader.SetInt("u_UseTexture",0);
+    m_Shader.SetMat4("u_Transform",cameraTransform);
+    m_Shader.SetVec4("u_Color",red,green,blue,alpha);
+    m_Shader.SetMat4("u_Model",model);
+    m_Shader.SetFloat("u_Metallic",metallic);m_Shader.SetFloat("u_Roughness",roughness);m_Shader.SetFloat("u_AO",ambientOcclusion);m_Shader.SetFloat("u_Emissive",emissive);
+    const Texture2D* maps[5]={normalMap,metallicMap,roughnessMap,aoMap,emissiveMap};
+    static const char* samplers[5]={"u_NormalMap","u_MetallicMap","u_RoughnessMap","u_AOMap","u_EmissiveMap"};
+    static const char* toggles[5]={"u_UseNormalMap","u_UseMetallicMap","u_UseRoughnessMap","u_UseAOMap","u_UseEmissiveMap"};
+    for(int i=0;i<5;i++){const bool valid=maps[i]&&maps[i]->IsLoaded();m_Shader.SetInt(toggles[i],valid?1:0);if(valid){maps[i]->Bind(4+i);m_Shader.SetInt(samplers[i],4+i);}}
     glActiveTexture(GL_TEXTURE0);
-
-	m_Shader.SetVec3(
-		"u_LightDirection",
-		m_LightDirection.x,
-		m_LightDirection.y,
-		m_LightDirection.z
-	);
-
-	m_Shader.SetVec3(
-		"u_LightColor",
-		m_LightColor.x,
-		m_LightColor.y,
-		m_LightColor.z
-	);
-
-	m_Shader.SetFloat(
-		"u_LightIntensity",
-		m_LightIntensity
-	);
-
-	const Vec3 cameraPosition = m_Camera.GetPosition();
-	m_Shader.SetVec3(
-		"u_CameraPosition",
-		cameraPosition.x,
-		cameraPosition.y,
-		cameraPosition.z
-	);
-	m_Shader.SetFloat("u_Metallic", metallic);
-	m_Shader.SetFloat("u_Roughness", roughness);
-	m_Shader.SetFloat("u_AO", ambientOcclusion);
-	m_Shader.SetFloat("u_Emissive", emissive);
-    m_Shader.SetFloat("u_IndirectLightStrength", m_RenderSettings.indirectLightStrength);
-    m_Shader.SetFloat("u_ReflectionStrength", m_RenderSettings.reflectionStrength);
-    m_Shader.SetFloat("u_ContactShadowStrength", m_RenderSettings.contactShadowStrength);
-    m_Shader.SetFloat("u_SkyIntensity", m_RenderSettings.skyIntensity);
-    const bool hasEnvironment = m_EnvironmentSystem.GetEnvironmentMap() != 0;
-    m_Shader.SetInt("u_UseEnvironmentMap", hasEnvironment ? 1 : 0);
-    if (hasEnvironment)
-    {
-        m_EnvironmentSystem.Bind(9); m_Shader.SetInt("u_EnvironmentMap", 9);
-        m_EnvironmentSystem.BindIrradiance(10); m_Shader.SetInt("u_IrradianceMap", 10);
-    }
-    const Texture2D* maps[5] = { normalMap, metallicMap, roughnessMap, aoMap, emissiveMap };
-    const char* samplers[5] = { "u_NormalMap", "u_MetallicMap", "u_RoughnessMap", "u_AOMap", "u_EmissiveMap" };
-    const char* toggles[5] = { "u_UseNormalMap", "u_UseMetallicMap", "u_UseRoughnessMap", "u_UseAOMap", "u_UseEmissiveMap" };
-    for (int mapIndex = 0; mapIndex < 5; ++mapIndex)
-    {
-        const bool valid = maps[mapIndex] && maps[mapIndex]->IsLoaded();
-        m_Shader.SetInt(toggles[mapIndex], valid ? 1 : 0);
-        if (valid)
-        {
-            maps[mapIndex]->Bind(4 + mapIndex);
-            m_Shader.SetInt(samplers[mapIndex], 4 + mapIndex);
-        }
-    }
-    glActiveTexture(GL_TEXTURE0);
-	m_Shader.SetInt("u_FogEnabled", m_RenderSettings.fog ? 1 : 0);
-	m_Shader.SetFloat("u_FogDensity", m_RenderSettings.fogDensity);
-    m_Shader.SetFloat("u_ViewDistance", m_RenderSettings.viewDistance);
-	m_Shader.SetInt("u_PointLightCount", m_PointLightCount);
-	m_Shader.SetInt("u_SpotLightCount", m_SpotLightCount);
-	for(int i=0;i<m_PointLightCount;i++) {
-		std::string b="u_PointLights["+std::to_string(i)+"]";
-		m_Shader.SetVec3((b+".position").c_str(),m_PointLights[i].position.x,m_PointLights[i].position.y,m_PointLights[i].position.z);
-		m_Shader.SetVec3((b+".color").c_str(),m_PointLights[i].color.x,m_PointLights[i].color.y,m_PointLights[i].color.z);
-		m_Shader.SetFloat((b+".intensity").c_str(),m_PointLights[i].intensity); m_Shader.SetFloat((b+".range").c_str(),m_PointLights[i].range);
-	}
-	for(int i=0;i<m_SpotLightCount;i++) {
-		std::string b="u_SpotLights["+std::to_string(i)+"]";
-		m_Shader.SetVec3((b+".position").c_str(),m_SpotLights[i].position.x,m_SpotLights[i].position.y,m_SpotLights[i].position.z);
-		m_Shader.SetVec3((b+".direction").c_str(),m_SpotLights[i].direction.x,m_SpotLights[i].direction.y,m_SpotLights[i].direction.z);
-		m_Shader.SetVec3((b+".color").c_str(),m_SpotLights[i].color.x,m_SpotLights[i].color.y,m_SpotLights[i].color.z);
-		m_Shader.SetFloat((b+".intensity").c_str(),m_SpotLights[i].intensity);m_Shader.SetFloat((b+".range").c_str(),m_SpotLights[i].range);
-		m_Shader.SetFloat((b+".innerCos").c_str(),m_SpotLights[i].innerCos);m_Shader.SetFloat((b+".outerCos").c_str(),m_SpotLights[i].outerCos);
-	}
-
-	glDrawElements(
-		GL_TRIANGLES,
-		static_cast<GLsizei>(
-			mesh->GetIndexCount()
-			),
-		GL_UNSIGNED_INT,
-		nullptr
-	);
-
-	if (texture != nullptr &&
-		texture->IsLoaded())
-	{
-		texture->Unbind();
-	}
-
-	m_Shader.Unbind();
-	mesh->Unbind();
-
+    glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(mesh->GetIndexCount()),GL_UNSIGNED_INT,nullptr);
+    if(texture&&texture->IsLoaded())texture->Unbind();
+    m_Shader.Unbind();mesh->Unbind();
 }
 
 void Renderer::DrawMesh(
