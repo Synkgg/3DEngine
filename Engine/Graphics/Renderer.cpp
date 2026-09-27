@@ -82,6 +82,7 @@ uniform float u_ReflectionStrength;
 uniform float u_ContactShadowStrength;
 uniform float u_SkyIntensity;
 uniform samplerCube u_EnvironmentMap;
+uniform samplerCube u_IrradianceMap;
 uniform int u_UseEnvironmentMap;
 
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
@@ -283,7 +284,7 @@ void main()
     // the reflection vector, giving metals and glossy surfaces a coherent world.
     vec3 R = reflect(-V, N);
     vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 envN = u_UseEnvironmentMap != 0 ? textureLod(u_EnvironmentMap, N, 4.0).rgb * u_SkyIntensity : SampleEnvironment(N, sunL);
+    vec3 envN = u_UseEnvironmentMap != 0 ? texture(u_IrradianceMap, N).rgb * u_SkyIntensity : SampleEnvironment(N, sunL);
     vec3 envR = u_UseEnvironmentMap != 0 ? textureLod(u_EnvironmentMap, R, roughness * 6.0).rgb * u_SkyIntensity : SampleEnvironment(R, sunL);
 
     vec3 localBounce = vec3(0.0);
