@@ -245,6 +245,7 @@ void Application::Run()
                     up -= 1.0f;
                 }
 
+                m_Renderer.SetCameraMoveSpeed(m_Editor.GetEditorCameraSpeed());
                 m_Renderer.MoveCamera(
                     forward,
                     right,
@@ -392,7 +393,7 @@ void Application::Run()
 
         m_Renderer.DrawSky();
 
-        if (!m_Runtime.IsRunning())
+        if (!m_Runtime.IsRunning() && m_Editor.IsGridVisible())
         {
             m_Renderer.DrawGrid();
         }
