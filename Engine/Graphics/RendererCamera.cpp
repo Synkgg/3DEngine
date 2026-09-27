@@ -37,6 +37,7 @@ void Renderer::MoveCamera(
 void Renderer::ResetCamera()
 {
 	m_Camera.Reset();
+	InvalidateTemporalHistory();
 }
 
 void Renderer::DrawSky()
@@ -124,6 +125,7 @@ void Renderer::SetCameraPosition(
 	const Vec3& position)
 {
 	m_Camera.SetPosition(position);
+	InvalidateTemporalHistory();
 }
 
 float Renderer::GetCameraYaw() const
@@ -149,6 +151,7 @@ Vec3 Renderer::GetCameraRight() const
 void Renderer::SetCameraRotation(float yaw, float pitch)
 {
 	m_Camera.SetRotation(yaw, pitch);
+	InvalidateTemporalHistory();
 }
 
 Vec3 Renderer::GetCameraRayDirection(
