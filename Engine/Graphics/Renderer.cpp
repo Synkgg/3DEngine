@@ -129,6 +129,15 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) *
         pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
+vec2 EnvBRDFApprox(float roughness, float nDotV)
+{
+    const vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);
+    const vec4 c1 = vec4(1.0, 0.0425, 1.04, -0.04);
+    vec4 r = roughness * c0 + c1;
+    float a004 = min(r.x * r.x, exp2(-9.28 * nDotV)) * r.x + r.y;
+    return vec2(-1.04, 1.04) * a004 + r.zw;
+}
+
 vec3 SampleEnvironment(vec3 dir, vec3 sunL)
 {
     dir = normalize(dir);
@@ -297,7 +306,8 @@ void main()
     vec3 envDiffuse = kDenv * albedo * (envN + localBounce);
     // Roughness broadens and reduces the reflected environment lobe.
     float specularEnergy = mix(1.0, 0.34, roughness * roughness);
-    vec3 envSpecular = Fenv * envR * specularEnergy;
+    vec2 envBRDF = EnvBRDFApprox(roughness, max(dot(N, V), 0.0));
+    vec3 envSpecular = envR * (Fenv * envBRDF.x + envBRDF.y) * specularEnergy;
     lighting += (envDiffuse * u_IndirectLightStrength +
                  envSpecular * u_ReflectionStrength) * ao;
 
