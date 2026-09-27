@@ -28,7 +28,24 @@ bool EnvironmentSystem::Initialize(){
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+f,0,GL_RGB16F,S,S,0,GL_RGB,GL_FLOAT,px.data());}
     glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_R,GL_CLAMP_TO_EDGE);
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);glBindTexture(GL_TEXTURE_CUBE_MAP,0);return m_EnvironmentMap!=0;
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    // Build a low-frequency diffuse irradiance cubemap on the CPU. This keeps
+    // the environment system self-contained while giving diffuse PBR lighting
+    // a genuinely convolved hemisphere instead of an arbitrary high mip.
+    constexpr int I=16; std::vector<float> irr(I*I*3);
+    glGenTextures(1,&m_IrradianceMap); glBindTexture(GL_TEXTURE_CUBE_MAP,m_IrradianceMap);
+    const V tangentUp{0,1,0};
+    for(int f=0;f<6;++f){for(int y=0;y<I;++y)for(int x=0;x<I;++x){
+        float u=(2.f*(x+.5f)/I)-1.f,v=(2.f*(y+.5f)/I)-1.f; V n=faceDir(f,u,v); V sum{0,0,0}; float wsum=0;
+        for(int sy=0;sy<8;++sy)for(int sx=0;sx<16;++sx){float phi=6.2831853f*(sx+.5f)/16.f;float ct=(sy+.5f)/8.f;float st=std::sqrt(std::max(0.f,1.f-ct*ct));
+            V helper=std::abs(n.y)<.99f?tangentUp:V{1,0,0}; V t=norm({helper.y*n.z-helper.z*n.y,helper.z*n.x-helper.x*n.z,helper.x*n.y-helper.y*n.x}); V b={n.y*t.z-n.z*t.y,n.z*t.x-n.x*t.z,n.x*t.y-n.y*t.x};
+            V d=norm({t.x*std::cos(phi)*st+b.x*std::sin(phi)*st+n.x*ct,t.y*std::cos(phi)*st+b.y*std::sin(phi)*st+n.y*ct,t.z*std::cos(phi)*st+b.z*std::sin(phi)*st+n.z*ct}); V s=sky(d); float w=ct;sum.x+=s.x*w;sum.y+=s.y*w;sum.z+=s.z*w;wsum+=w;}
+        int i=(y*I+x)*3;irr[i]=sum.x/wsum;irr[i+1]=sum.y/wsum;irr[i+2]=sum.z/wsum;}
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+f,0,GL_RGB16F,I,I,0,GL_RGB,GL_FLOAT,irr.data());}
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR);glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_R,GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_CUBE_MAP,0);return m_EnvironmentMap!=0&&m_IrradianceMap!=0;
 }
-void EnvironmentSystem::Shutdown(){if(m_EnvironmentMap)glDeleteTextures(1,&m_EnvironmentMap);m_EnvironmentMap=0;}
+void EnvironmentSystem::Shutdown(){if(m_EnvironmentMap)glDeleteTextures(1,&m_EnvironmentMap);if(m_IrradianceMap)glDeleteTextures(1,&m_IrradianceMap);m_EnvironmentMap=m_IrradianceMap=0;}
 void EnvironmentSystem::Bind(unsigned int slot)const{glActiveTexture(GL_TEXTURE0+slot);glBindTexture(GL_TEXTURE_CUBE_MAP,m_EnvironmentMap);}
+
+void EnvironmentSystem::BindIrradiance(unsigned int slot)const{glActiveTexture(GL_TEXTURE0+slot);glBindTexture(GL_TEXTURE_CUBE_MAP,m_IrradianceMap);}
