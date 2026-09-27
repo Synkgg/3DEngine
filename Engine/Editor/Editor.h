@@ -29,6 +29,8 @@ public:
     );
 
     bool IsViewportHovered() const;
+    bool IsGridVisible() const { return m_ShowGrid; }
+    float GetEditorCameraSpeed() const { return m_EditorCameraSpeed; }
 
     ImVec2 GetViewportPosition() const;
     ImVec2 GetViewportSize() const;
