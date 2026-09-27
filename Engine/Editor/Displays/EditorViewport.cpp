@@ -656,7 +656,10 @@ void Editor::RenderViewport(
 		changed |= ImGui::SliderFloat("Exposure", &settings.exposure, 0.1f, 4.0f, "%.2f");
 		changed |= ImGui::SliderFloat("Bloom Strength", &settings.bloomStrength, 0.0f, 2.0f, "%.2f");
 		changed |= ImGui::SliderFloat("SSR Strength", &settings.screenSpaceReflectionStrength, 0.0f, 1.0f, "%.2f");
-		changed |= ImGui::SliderFloat("GI Strength", &settings.giStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Indirect Diffuse", &settings.indirectLightStrength, 0.0f, 2.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Environment Reflections", &settings.environmentReflectionStrength, 0.0f, 2.0f, "%.2f");
+        changed |= ImGui::SliderFloat("Reflection Strength", &settings.reflectionStrength, 0.0f, 2.0f, "%.2f");
+        changed |= ImGui::SliderFloat("GI Strength", &settings.giStrength, 0.0f, 2.0f, "%.2f");
 		changed |= ImGui::SliderFloat("Atmosphere", &settings.atmosphereStrength, 0.0f, 2.0f, "%.2f");
 		changed |= ImGui::SliderFloat("Sky", &settings.skyIntensity, 0.0f, 3.0f, "%.2f");
 		if (changed)

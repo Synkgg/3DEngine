@@ -144,6 +144,7 @@ void Renderer::UploadFrameShaderState()
     const Vec3 cameraPosition = m_Camera.GetPosition();
     m_Shader.SetVec3("u_CameraPosition", cameraPosition.x, cameraPosition.y, cameraPosition.z);
     m_Shader.SetFloat("u_IndirectLightStrength", m_RenderSettings.indirectLightStrength);
+    m_Shader.SetFloat("u_EnvironmentReflectionStrength", m_RenderSettings.environmentReflectionStrength);
     m_Shader.SetFloat("u_ReflectionStrength", m_RenderSettings.reflectionStrength);
     m_Shader.SetFloat("u_ContactShadowStrength", m_RenderSettings.contactShadowStrength);
     m_Shader.SetFloat("u_SkyIntensity", m_RenderSettings.skyIntensity);

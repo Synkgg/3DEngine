@@ -78,6 +78,7 @@ uniform float u_ShadowCascadeSplits[3];
 uniform int u_ShadowsEnabled;
 uniform int u_ShadowPCFRadius;
 uniform float u_IndirectLightStrength;
+uniform float u_EnvironmentReflectionStrength;
 uniform float u_ReflectionStrength;
 uniform float u_ContactShadowStrength;
 uniform float u_SkyIntensity;
@@ -262,8 +263,8 @@ void main()
     // the reflection vector, giving metals and glossy surfaces a coherent world.
     vec3 R = reflect(-V, N);
     vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 envN = u_UseEnvironmentMap != 0 ? texture(u_IrradianceMap, N).rgb * u_SkyIntensity : SampleEnvironment(N, sunL);
-    vec3 envR = u_UseEnvironmentMap != 0 ? textureLod(u_EnvironmentMap, R, roughness * 6.0).rgb * u_SkyIntensity : SampleEnvironment(R, sunL);
+    vec3 envN = u_UseEnvironmentMap != 0 ? texture(u_IrradianceMap, N).rgb : SampleEnvironment(N, sunL);
+    vec3 envR = u_UseEnvironmentMap != 0 ? textureLod(u_EnvironmentMap, R, roughness * 6.0).rgb : SampleEnvironment(R, sunL);
 
     vec3 localBounce = vec3(0.0);
     for (int i = 0; i < u_PointLightCount; ++i)
@@ -288,7 +289,7 @@ void main()
     vec2 envBRDF = EnvBRDFApprox(roughness, max(dot(N, V), 0.0));
     vec3 envSpecular = envR * (Fenv * envBRDF.x + envBRDF.y) * specularEnergy;
     lighting += (envDiffuse * u_IndirectLightStrength +
-                 envSpecular * u_ReflectionStrength) * ao;
+                 envSpecular * u_EnvironmentReflectionStrength * u_ReflectionStrength) * ao;
 
     float emissiveAmount = u_UseEmissiveMap != 0 ? texture(u_EmissiveMap, v_UV).r : max(u_Emissive, 0.0);
     lighting += albedo * emissiveAmount * 2.0;

@@ -22,6 +22,7 @@ bool ProjectSettings::Load(const std::string& path)
         else if(key=="ShadowQuality") file>>m_RenderSettings.shadowQuality;
         else if(key=="ShadowDistance") file>>m_RenderSettings.shadowDistance;
         else if(key=="IndirectLightStrength") file>>m_RenderSettings.indirectLightStrength;
+        else if(key=="EnvironmentReflectionStrength") file>>m_RenderSettings.environmentReflectionStrength;
         else if(key=="ReflectionStrength") file>>m_RenderSettings.reflectionStrength;
         else if(key=="ContactShadowStrength") file>>m_RenderSettings.contactShadowStrength;
         else if(key=="SkyIntensity") file>>m_RenderSettings.skyIntensity;
@@ -52,6 +53,7 @@ bool ProjectSettings::Save(const std::string& path) const
          << "ShadowQuality " << m_RenderSettings.shadowQuality << '\n'
          << "ShadowDistance " << m_RenderSettings.shadowDistance << '\n'
          << "IndirectLightStrength " << m_RenderSettings.indirectLightStrength << '\n'
+         << "EnvironmentReflectionStrength " << m_RenderSettings.environmentReflectionStrength << '\n'
          << "ReflectionStrength " << m_RenderSettings.reflectionStrength << '\n'
          << "ContactShadowStrength " << m_RenderSettings.contactShadowStrength << '\n'
          << "SkyIntensity " << m_RenderSettings.skyIntensity << '\n'
