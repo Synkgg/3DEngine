@@ -75,6 +75,9 @@ uniform float u_ViewDistance;
 uniform sampler2D u_ShadowMap;
 uniform int u_ShadowsEnabled;
 uniform int u_ShadowPCFRadius;
+uniform float u_IndirectLightStrength;
+uniform float u_ReflectionStrength;
+uniform float u_ContactShadowStrength;
 
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
@@ -146,7 +149,11 @@ float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
             weight += w;
         }
     }
-    return clamp(shadow / max(weight, 0.0001), 0.0, 0.88);
+    float result = clamp(shadow / max(weight, 0.0001), 0.0, 0.88);
+    // Grazing surfaces need less aggressive shadowing to avoid large black
+    // bands while contact-facing surfaces retain full depth.
+    result *= mix(0.72, 1.0, nDotL);
+    return clamp(result * u_ContactShadowStrength, 0.0, 0.88);
 }
 
 vec3 EvaluateBRDF(vec3 N, vec3 V, vec3 L, vec3 radiance, vec3 albedo, float metallic, float roughness, vec3 F0)
@@ -230,25 +237,47 @@ void main()
         }
     }
 
-    // Cheap environment lighting gives materials readable indirect light until
-    // cubemap IBL is added. Up-facing surfaces receive sky light, downward
-    // surfaces receive warmer ground bounce, and grazing angles retain Fresnel.
-    float skyWeight = N.y * 0.5 + 0.5;
-    vec3 skyIrradiance = mix(vec3(0.055, 0.045, 0.035), vec3(0.22, 0.32, 0.48), skyWeight);
+    // Hemispherical environment integration. It acts as a stable probe for
+    // scenes that do not yet provide an authored HDR cubemap.
+    float skyWeight = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 groundIrradiance = vec3(0.060, 0.050, 0.040);
+    vec3 skyIrradiance = vec3(0.20, 0.32, 0.54);
+    vec3 hemiIrradiance = mix(groundIrradiance, skyIrradiance, skyWeight);
+    float sunBounce = max(dot(N, -sunL), 0.0);
+    hemiIrradiance += u_LightColor * u_LightIntensity * sunBounce * 0.025;
+
+    // Approximate first-bounce energy from local lights. This is deliberately
+    // low frequency so it reads as indirect illumination rather than a second
+    // direct-light term.
+    vec3 localBounce = vec3(0.0);
+    for (int i = 0; i < u_PointLightCount; ++i)
+    {
+        float d = length(u_PointLights[i].position - v_WorldPosition);
+        float influence = clamp(1.0 - d / max(u_PointLights[i].range * 1.35, 0.001), 0.0, 1.0);
+        localBounce += u_PointLights[i].color * u_PointLights[i].intensity * influence * influence * 0.018;
+    }
+    for (int i = 0; i < u_SpotLightCount; ++i)
+    {
+        float d = length(u_SpotLights[i].position - v_WorldPosition);
+        float influence = clamp(1.0 - d / max(u_SpotLights[i].range * 1.25, 0.001), 0.0, 1.0);
+        localBounce += u_SpotLights[i].color * u_SpotLights[i].intensity * influence * influence * 0.012;
+    }
+
     vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 envDiffuse = albedo * (1.0 - metallic) * max(skyIrradiance, vec3(0.085, 0.095, 0.11));
+    vec3 envDiffuse = albedo * (1.0 - metallic) *
+        max(hemiIrradiance + localBounce, vec3(0.085, 0.095, 0.11));
 
     vec3 R = reflect(-V, N);
-    float sunReflection = pow(max(dot(R, sunL), 0.0), mix(8.0, 512.0, 1.0 - roughness));
+    float sunReflection = pow(max(dot(R, sunL), 0.0), mix(8.0, 768.0, 1.0 - roughness));
     float reflectionHeight = clamp(R.y * 0.5 + 0.5, 0.0, 1.0);
     float reflectionHorizon = exp(-abs(R.y) * 6.0);
-    vec3 horizonReflection = mix(vec3(0.055, 0.045, 0.035), vec3(0.20, 0.34, 0.62), reflectionHeight);
+    vec3 horizonReflection = mix(groundIrradiance, skyIrradiance, reflectionHeight);
     horizonReflection += vec3(0.16, 0.11, 0.065) * reflectionHorizon;
-    // Rough surfaces integrate a broader, dimmer environment lobe while
-    // smooth metals retain a sharper sky/sun response.
-    vec3 envSpecular = Fenv * horizonReflection * mix(0.16, 0.95, 1.0 - roughness);
-    envSpecular += Fenv * u_LightColor * sunReflection * u_LightIntensity * (1.0 - roughness) * 1.8;
-    lighting += (envDiffuse + envSpecular) * ao;
+    vec3 envSpecular = Fenv * horizonReflection * mix(0.12, 1.0, 1.0 - roughness);
+    envSpecular += Fenv * u_LightColor * sunReflection * u_LightIntensity *
+                   (1.0 - roughness) * 1.8;
+    lighting += (envDiffuse * u_IndirectLightStrength +
+                 envSpecular * u_ReflectionStrength) * ao;
 
     float emissiveAmount = u_UseEmissiveMap != 0 ? texture(u_EmissiveMap, v_UV).r : max(u_Emissive, 0.0);
     lighting += albedo * emissiveAmount * 2.0;
@@ -1062,6 +1091,9 @@ void Renderer::DrawMeshInternal(
 	m_Shader.SetFloat("u_Roughness", roughness);
 	m_Shader.SetFloat("u_AO", ambientOcclusion);
 	m_Shader.SetFloat("u_Emissive", emissive);
+    m_Shader.SetFloat("u_IndirectLightStrength", m_RenderSettings.indirectLightStrength);
+    m_Shader.SetFloat("u_ReflectionStrength", m_RenderSettings.reflectionStrength);
+    m_Shader.SetFloat("u_ContactShadowStrength", m_RenderSettings.contactShadowStrength);
     const Texture2D* maps[5] = { normalMap, metallicMap, roughnessMap, aoMap, emissiveMap };
     const char* samplers[5] = { "u_NormalMap", "u_MetallicMap", "u_RoughnessMap", "u_AOMap", "u_EmissiveMap" };
     const char* toggles[5] = { "u_UseNormalMap", "u_UseMetallicMap", "u_UseRoughnessMap", "u_UseAOMap", "u_UseEmissiveMap" };
@@ -1416,9 +1448,13 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     m_RenderSettings.antiAliasingSamples = std::clamp(m_RenderSettings.antiAliasingSamples, 1, 8);
     m_RenderSettings.shadowQuality = std::clamp(m_RenderSettings.shadowQuality, 0, 3);
     m_RenderSettings.shadowDistance = std::clamp(m_RenderSettings.shadowDistance, 10.0f, 500.0f);
+    m_RenderSettings.indirectLightStrength = std::clamp(m_RenderSettings.indirectLightStrength, 0.0f, 2.5f);
+    m_RenderSettings.reflectionStrength = std::clamp(m_RenderSettings.reflectionStrength, 0.0f, 2.5f);
+    m_RenderSettings.contactShadowStrength = std::clamp(m_RenderSettings.contactShadowStrength, 0.0f, 1.5f);
     const unsigned int desiredShadowSize =
         m_RenderSettings.shadowQuality <= 0 ? 1024u :
-        m_RenderSettings.shadowQuality == 1 ? 2048u : 4096u;
+        m_RenderSettings.shadowQuality == 1 ? 2048u :
+        m_RenderSettings.shadowQuality == 2 ? 4096u : 8192u;
     if (desiredShadowSize != m_ShadowMapSize)
     {
         m_ShadowMapSize = desiredShadowSize;

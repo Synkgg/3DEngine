@@ -41,6 +41,9 @@ struct RenderSettings
     float bloomStrength = 0.32f;
     int shadowQuality = 2;
     float shadowDistance = 80.0f;
+    float indirectLightStrength = 1.0f;
+    float reflectionStrength = 1.0f;
+    float contactShadowStrength = 1.0f;
 };
 
 struct SpotLightData { Vec3 position; Vec3 direction; Vec3 color; float intensity=1.0f; float range=15.0f; float innerCos=0.92f; float outerCos=0.82f; };
