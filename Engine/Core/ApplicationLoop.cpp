@@ -356,7 +356,9 @@ void Application::Run()
 
         // Directional shadow depth pass. Keep this separate from the color pass
         // so the material shader can sample a stable light-space depth map.
-        m_Renderer.BeginShadowPass();
+        for (int shadowCascade = 0; shadowCascade < Renderer::ShadowCascadeCount; ++shadowCascade)
+        {
+            m_Renderer.BeginShadowPass(shadowCascade);
         for (const Entity& entity : m_Scene.GetEntities())
         {
             TransformComponent* transform =
@@ -383,7 +385,8 @@ void Application::Run()
             else
                 m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
         }
-        m_Renderer.EndShadowPass();
+            m_Renderer.EndShadowPass();
+        }
 
         m_Renderer.BeginFrame();
 
