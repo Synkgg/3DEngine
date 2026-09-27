@@ -117,7 +117,7 @@ end
 local function randomCorePosition()
     -- Keep the core inside a 75-unit radius around midfield.
     local angle=math.random()*math.pi*2.0
-    local radius=math.sqrt(math.random())*75.0
+    local radius=math.sqrt(math.random())*35.0
     return math.cos(angle)*radius,0.65,math.sin(angle)*radius
 end
 
