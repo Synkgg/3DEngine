@@ -30,6 +30,16 @@ class Texture2D;
 #include "Lighting/LightTypes.h"
 #include "Rendering/RenderSettings.h"
 
+enum class RenderDebugView
+{
+    Lit = 0,
+    Normals,
+    Roughness,
+    Depth,
+    AmbientOcclusion,
+    Reflections
+};
+
 class Renderer
 {
 public:
@@ -118,6 +128,9 @@ public:
     void AddSpotLight(const SpotLightData& light);
     void SetRenderSettings(const RenderSettings& settings);
     const RenderSettings& GetRenderSettings() const;
+    void SetDebugView(RenderDebugView view) { m_DebugView = view; m_HistoryValid = false; }
+    RenderDebugView GetDebugView() const { return m_DebugView; }
+    void InvalidateTemporalHistory() { m_HistoryValid = false; }
     void DrawDirectionalLight(const Vec3& position, const Vec3& direction);
     void DrawCollider(const Transform& transform, float width, float height, float depth);
 
@@ -209,6 +222,7 @@ private:
     int m_PointLightCount = 0;
     int m_SpotLightCount = 0;
     RenderSettings m_RenderSettings{};
+    RenderDebugView m_DebugView = RenderDebugView::Lit;
 
     DebugRenderer m_DebugRenderer;
 
