@@ -168,7 +168,7 @@ void Renderer::DestroyShadowTarget()
 void Renderer::BeginShadowPass(int cascadeIndex)
 {
     if (cascadeIndex == 0) { m_ShadowMapReady = false; UpdateLightSpaceMatrices(); }
-    if (!m_RenderSettings.shadows || cascadeIndex < 0 || cascadeIndex >= ShadowCascadeCount || !m_ShadowFramebuffers[m_ActiveShadowCascade]s[cascadeIndex]) return;
+    if (!m_RenderSettings.shadows || cascadeIndex < 0 || cascadeIndex >= ShadowCascadeCount || !m_ShadowFramebuffers[cascadeIndex]) return;
     m_ActiveShadowCascade = cascadeIndex;
     glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffers[cascadeIndex]);
     glViewport(0, 0, static_cast<int>(m_ShadowMapSizes[cascadeIndex]), static_cast<int>(m_ShadowMapSizes[cascadeIndex]));
