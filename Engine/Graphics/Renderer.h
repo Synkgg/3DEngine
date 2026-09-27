@@ -48,6 +48,9 @@ struct RenderSettings
     float atmosphereStrength = 1.0f;
     float colorSaturation = 1.04f;
     float contrast = 1.025f;
+    bool screenSpaceReflections = true;
+    float screenSpaceReflectionStrength = 0.22f;
+    float giStrength = 0.35f;
 };
 
 struct SpotLightData { Vec3 position; Vec3 direction; Vec3 color; float intensity=1.0f; float range=15.0f; float innerCos=0.92f; float outerCos=0.82f; };

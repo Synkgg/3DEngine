@@ -369,6 +369,8 @@ uniform float u_Aspect;
 uniform float u_AtmosphereStrength;
 uniform float u_ColorSaturation;
 uniform float u_Contrast;
+uniform float u_SSRStrength;
+uniform float u_GIStrength;
  
 float LinearizeDepth(float d)
 {
@@ -408,6 +410,59 @@ float ScreenAO(vec2 uv)
     return clamp(1.0 - (occ / samples) * 0.42, 0.82, 1.0);
 }
 
+vec3 ScreenSpaceGI(vec2 uv, float centerDepth)
+{
+    vec2 texel = 1.0 / vec2(textureSize(u_Scene, 0));
+    vec3 sum = vec3(0.0);
+    float weight = 0.0;
+    const vec2 dirs[8] = vec2[8](
+        vec2(1,0),vec2(-1,0),vec2(0,1),vec2(0,-1),
+        vec2(.707,.707),vec2(-.707,.707),vec2(.707,-.707),vec2(-.707,-.707));
+    for(int ring=1; ring<=3; ++ring)
+    {
+        float radius = float(ring) * 5.0;
+        for(int i=0;i<8;++i)
+        {
+            vec2 suv = uv + dirs[i] * texel * radius;
+            if(any(lessThan(suv,vec2(0.002))) || any(greaterThan(suv,vec2(0.998)))) continue;
+            float sdRaw = texture(u_Depth,suv).r;
+            if(sdRaw >= 0.99999) continue;
+            float sd = LinearizeDepth(sdRaw);
+            float depthWeight = exp(-abs(sd-centerDepth) * 0.22);
+            float w = depthWeight / float(ring);
+            sum += max(texture(u_Scene,suv).rgb,vec3(0.0)) * w;
+            weight += w;
+        }
+    }
+    return weight > 0.001 ? sum / weight : vec3(0.0);
+}
+
+vec3 ScreenSpaceReflection(vec2 uv, vec3 ray, float centerDepth)
+{
+    // Lightweight depth-guided reflection trace in screen space. It is kept
+    // deliberately conservative to avoid the silhouette halos that broad
+    // depth filtering caused in the previous renderer.
+    vec2 dir = normalize(vec2(ray.x, -ray.y) + vec2(0.0001));
+    vec2 texel = 1.0 / vec2(textureSize(u_Scene,0));
+    for(int stepIndex=1; stepIndex<=12; ++stepIndex)
+    {
+        float stride = float(stepIndex) * 2.5;
+        vec2 suv = uv + dir * texel * stride;
+        if(any(lessThan(suv,vec2(0.01))) || any(greaterThan(suv,vec2(0.99)))) break;
+        float sampleRaw = texture(u_Depth,suv).r;
+        if(sampleRaw >= 0.99999) continue;
+        float sampleDepth = LinearizeDepth(sampleRaw);
+        float expected = centerDepth + stride * 0.035 * max(abs(ray.z),0.2);
+        float hit = abs(sampleDepth-expected);
+        if(hit < max(0.12, centerDepth * 0.012))
+        {
+            float edgeFade = smoothstep(0.0,0.12,min(min(suv.x,suv.y),min(1.0-suv.x,1.0-suv.y)));
+            return max(texture(u_Scene,suv).rgb,vec3(0.0)) * edgeFade;
+        }
+    }
+    return vec3(0.0);
+}
+
 vec3 ACESFilm(vec3 x)
 {
     const float a=2.51, b=0.03, c=2.43, d=0.59, e=0.14;
@@ -425,10 +480,28 @@ void main()
     float ao = ScreenAO(v_UV);
     hdr *= mix(1.0, ao, 0.34);
 
+    float rawDepth = texture(u_Depth, v_UV).r;
+    if(rawDepth < 0.99999)
+    {
+        float centerDepth = LinearizeDepth(rawDepth);
+        vec2 ndcReflect = v_UV * 2.0 - 1.0;
+        vec3 viewRay = normalize(u_CameraForward +
+            u_CameraRight * (ndcReflect.x * u_TanHalfFov * u_Aspect) +
+            u_CameraUp * (ndcReflect.y * u_TanHalfFov));
+
+        // Low-frequency screen-space bounce gives nearby colored surfaces a
+        // restrained indirect contribution. AO masks it into contact regions.
+        vec3 gi = ScreenSpaceGI(v_UV, centerDepth);
+        hdr += gi * (1.0 - ao) * u_GIStrength;
+
+        vec3 reflected = ScreenSpaceReflection(v_UV, reflect(viewRay, u_CameraUp), centerDepth);
+        float grazing = pow(1.0 - abs(dot(viewRay,u_CameraUp)), 2.0);
+        hdr = mix(hdr, hdr + reflected * 0.22, clamp(grazing * u_SSRStrength,0.0,0.28));
+    }
+
     // Atmospheric aerial perspective and forward scattering. This is derived
     // from depth and the procedural sun, so it works in every existing scene
     // without requiring authored fog volumes.
-    float rawDepth = texture(u_Depth, v_UV).r;
     if (rawDepth < 0.99999)
     {
         float distanceToSurface = LinearizeDepth(rawDepth);
@@ -1474,6 +1547,8 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     m_RenderSettings.atmosphereStrength = std::clamp(m_RenderSettings.atmosphereStrength, 0.0f, 2.0f);
     m_RenderSettings.colorSaturation = std::clamp(m_RenderSettings.colorSaturation, 0.0f, 2.0f);
     m_RenderSettings.contrast = std::clamp(m_RenderSettings.contrast, 0.5f, 1.6f);
+    m_RenderSettings.screenSpaceReflectionStrength = std::clamp(m_RenderSettings.screenSpaceReflectionStrength, 0.0f, 1.0f);
+    m_RenderSettings.giStrength = std::clamp(m_RenderSettings.giStrength, 0.0f, 1.5f);
     const unsigned int desiredShadowSize =
         m_RenderSettings.shadowQuality <= 0 ? 1024u :
         m_RenderSettings.shadowQuality == 1 ? 2048u :
@@ -1772,6 +1847,8 @@ void Renderer::RenderPostProcess()
     m_PostShader.SetFloat("u_AtmosphereStrength", m_RenderSettings.atmosphereStrength);
     m_PostShader.SetFloat("u_ColorSaturation", m_RenderSettings.colorSaturation);
     m_PostShader.SetFloat("u_Contrast", m_RenderSettings.contrast);
+    m_PostShader.SetFloat("u_SSRStrength", m_RenderSettings.screenSpaceReflections ? m_RenderSettings.screenSpaceReflectionStrength : 0.0f);
+    m_PostShader.SetFloat("u_GIStrength", m_RenderSettings.giStrength);
     glBindVertexArray(m_PostVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
