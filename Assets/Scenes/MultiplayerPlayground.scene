@@ -1,6 +1,6 @@
 MyEngineScene
-Environment 1 4 1 1 1 420 1.12 0.0015 0.42 2 125
-Entities 94
+Environment 1 4 1 1 1 360 1.04 0.0008 0.30 2 105
+Entities 109
 Entity 1
 Name PlaygroundController
 Position 0 0 0
@@ -1105,7 +1105,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.95 0.04 0.02 0 -1 0 2.2 1 17 23 35 0
+Light 1 1.0 0.07 0.025 0 -1 0 1.55 1 13 23 35 0
 Collider 0
 Scripts 0
 Entity 66
@@ -1190,7 +1190,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.04 0.30 1 0 -1 0 2.2 1 17 23 35 0
+Light 1 0.035 0.32 1 0 -1 0 1.55 1 13 23 35 0
 Collider 0
 Scripts 0
 Entity 71
@@ -1329,210 +1329,6 @@ CharacterController 0
 Light 0
 Collider 1 1.8 2 1.8
 Scripts 0
-Entity 79
-Name WestCatwalk-12
-Position -25 2.4 -12
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 80
-Name WestCatwalk-4
-Position -25 2.4 -4
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 81
-Name WestCatwalk4
-Position -25 2.4 4
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 82
-Name WestCatwalk12
-Position -25 2.4 12
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 83
-Name WestRampN
-Position -25 0 -20
-Rotation 0 0 0
-Scale 1.25 1.2 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 2.8 5
-Scripts 0
-Entity 84
-Name WestRampS
-Position -25 0 20
-Rotation 0 3.14159 0
-Scale 1.25 1.2 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 2.8 5
-Scripts 0
-Entity 85
-Name EastCatwalk-12
-Position 25 2.4 -12
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 86
-Name EastCatwalk-4
-Position 25 2.4 -4
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 87
-Name EastCatwalk4
-Position 25 2.4 4
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 88
-Name EastCatwalk12
-Position 25 2.4 12
-Rotation 0 0 0
-Scale 1.25 1 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Rails_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 .35 4.8
-Scripts 0
-Entity 89
-Name EastRampN
-Position 25 0 -20
-Rotation 0 0 0
-Scale 1.25 1.2 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 2.8 5
-Scripts 0
-Entity 90
-Name EastRampS
-Position 25 0 20
-Rotation 0 3.14159 0
-Scale 1.25 1.2 1.25
-Parent 0
-PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Ramp_4Wide.obj"
-Color 1 0.50 0.56 0.62 1
-Texture 0
-Material 1 0.70 0.30 0.95 0
-Interactable 0
-Player 0
-CharacterController 0
-Light 0
-Collider 1 2.7 2.8 5
-Scripts 0
 Entity 91
 Name ArenaKey
 Position 0 24 0
@@ -1547,7 +1343,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.28 0.38 0.52 -0.25 -1 -0.15 0.72 0 180 23 35 0
+Light 1 0.46 0.52 0.62 -0.28 -1 -0.18 0.88 0 160 23 35 0
 Collider 0
 Scripts 0
 Entity 92
@@ -1564,7 +1360,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1.0 0.58 0.10 0 -1 0 3.1 1 18 23 35 0
+Light 1 1.0 0.48 0.08 0 -1 0 2.25 1 15 23 35 0
 Collider 0
 Scripts 0
 Entity 93
@@ -1581,7 +1377,7 @@ Material 1 0.40 0.18 1 0.75
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.04 0.52 1 0 -1 0 1.7 1 14 23 35 0
+Light 1 0.03 0.42 0.85 0 -1 0 1.15 1 11 23 35 0
 Collider 0
 Scripts 0
 Entity 94
@@ -1598,7 +1394,466 @@ Material 1 0.40 0.18 1 0.75
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.85 0.05 0.42 0 -1 0 1.7 1 14 23 35 0
+Light 1 0.72 0.035 0.30 0 -1 0 1.15 1 11 23 35 0
+Collider 0
+Scripts 0
+Entity 95
+Name MidWallNW
+Position -12 0 -10
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 96
+Name MidWallNE
+Position 12 0 -10
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 97
+Name MidWallSW
+Position -12 0 10
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 98
+Name MidWallSE
+Position 12 0 10
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 99
+Name WestDividerA
+Position -24 0 -18
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 100
+Name WestDividerB
+Position -24 0 18
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 101
+Name EastDividerA
+Position 24 0 -18
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 102
+Name EastDividerB
+Position 24 0 18
+Rotation 0 0 0
+Scale 1.5 1.5 1.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/ShortWall_AccentStrip_Straight.obj"
+Color 1 0.20 0.23 0.27 1
+Texture 0
+Material 1 0.52 0.38 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .8 1.5 3
+Scripts 0
+Entity 103
+Name RedStripL
+Position -6 0.002 -27
+Rotation 0 0 0
+Scale 2.5 1 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
+Color 1 0.9 0.05 0.02 1
+Texture 0
+Material 1 0.55 0.16 1 1.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 104
+Name RedStripR
+Position 6 0.002 -27
+Rotation 0 0 0
+Scale 2.5 1 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
+Color 1 0.9 0.05 0.02 1
+Texture 0
+Material 1 0.55 0.16 1 1.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 105
+Name BlueStripL
+Position -6 0.002 27
+Rotation 0 0 0
+Scale 2.5 1 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
+Color 1 0.02 0.28 1 1
+Texture 0
+Material 1 0.55 0.16 1 1.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 106
+Name BlueStripR
+Position 6 0.002 27
+Rotation 0 0 0
+Scale 2.5 1 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
+Color 1 0.02 0.28 1 1
+Texture 0
+Material 1 0.55 0.16 1 1.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 107
+Name CoreStripW
+Position -5 0.002 0
+Rotation 0 1.5708 0
+Scale 2.5 1 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
+Color 1 1 0.55 0.05 1
+Texture 0
+Material 1 0.55 0.16 1 1.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 108
+Name CoreStripE
+Position 5 0.002 0
+Rotation 0 1.5708 0
+Scale 2.5 1 2.5
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
+Color 1 1 0.55 0.05 1
+Texture 0
+Material 1 0.55 0.16 1 1.1
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 109
+Name BarrelA
+Position -17 -0.01636 -14
+Rotation 0 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Barrel_Large.obj"
+Color 1 0.28 0.31 0.34 1
+Texture 0
+Material 1 0.68 0.32 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .7 2.2 .7
+Scripts 0
+Entity 110
+Name BarrelB
+Position 17 -0.01636 14
+Rotation 0 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Barrel_Large.obj"
+Color 1 0.28 0.31 0.34 1
+Texture 0
+Material 1 0.68 0.32 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .7 2.2 .7
+Scripts 0
+Entity 111
+Name BarrelC
+Position -17 -0.01636 14
+Rotation 0 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Barrel_Large.obj"
+Color 1 0.28 0.31 0.34 1
+Texture 0
+Material 1 0.68 0.32 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .7 2.2 .7
+Scripts 0
+Entity 112
+Name BarrelD
+Position 17 -0.01636 -14
+Rotation 0 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Barrel_Large.obj"
+Color 1 0.28 0.31 0.34 1
+Texture 0
+Material 1 0.68 0.32 0.9 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 1 .7 2.2 .7
+Scripts 0
+Entity 113
+Name SupportNW
+Position -30 4 -30
+Rotation 1.5708 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.11 0.13 0.16 1
+Texture 0
+Material 1 0.72 0.28 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 114
+Name SupportNE
+Position 30 4 -30
+Rotation 1.5708 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.11 0.13 0.16 1
+Texture 0
+Material 1 0.72 0.28 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 115
+Name SupportSW
+Position -30 4 30
+Rotation 1.5708 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.11 0.13 0.16 1
+Texture 0
+Material 1 0.72 0.28 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 116
+Name SupportSE
+Position 30 4 30
+Rotation 1.5708 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.11 0.13 0.16 1
+Texture 0
+Material 1 0.72 0.28 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 117
+Name SupportW
+Position -30 4 0
+Rotation 1.5708 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.11 0.13 0.16 1
+Texture 0
+Material 1 0.72 0.28 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 118
+Name SupportE
+Position 30 4 0
+Rotation 1.5708 0 0
+Scale 2 2 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.11 0.13 0.16 1
+Texture 0
+Material 1 0.72 0.28 0.95 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 119
+Name BeamNorth
+Position 0 7.2 -22
+Rotation 0 1.5708 0
+Scale 1.8 1.8 15
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.08 0.10 0.13 1
+Texture 0
+Material 1 0.76 0.24 0.96 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 120
+Name BeamMid
+Position 0 7.2 0
+Rotation 0 1.5708 0
+Scale 1.8 1.8 15
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.08 0.10 0.13 1
+Texture 0
+Material 1 0.76 0.24 0.96 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 121
+Name BeamSouth
+Position 0 7.2 22
+Rotation 0 1.5708 0
+Scale 1.8 1.8 15
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Columns/Column_MetalSupport.obj"
+Color 1 0.08 0.10 0.13 1
+Texture 0
+Material 1 0.76 0.24 0.96 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
 Collider 0
 Scripts 0
 HierarchyFolders 0
