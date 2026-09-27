@@ -27,34 +27,8 @@
 class Window;
 class Texture2D;
 
-struct PointLightData { Vec3 position; Vec3 color; float intensity=1.0f; float range=10.0f; };
-struct RenderSettings
-{
-    bool antiAliasing = true;
-    int antiAliasingSamples = 4;
-    bool shadows = true;
-    // Optional post effects stay off until they have dedicated post-process passes.
-    bool fog = false;
-    bool bloom = true;
-    float viewDistance = 1000.0f;
-    float exposure = 1.0f;
-    float fogDensity = 0.003f;
-    float bloomStrength = 0.32f;
-    int shadowQuality = 2;
-    float shadowDistance = 80.0f;
-    float indirectLightStrength = 1.0f;
-    float reflectionStrength = 1.0f;
-    float contactShadowStrength = 1.0f;
-    float skyIntensity = 1.0f;
-    float atmosphereStrength = 1.0f;
-    float colorSaturation = 1.04f;
-    float contrast = 1.025f;
-    bool screenSpaceReflections = true;
-    float screenSpaceReflectionStrength = 0.22f;
-    float giStrength = 0.35f;
-};
-
-struct SpotLightData { Vec3 position; Vec3 direction; Vec3 color; float intensity=1.0f; float range=15.0f; float innerCos=0.92f; float outerCos=0.82f; };
+#include "Lighting/LightTypes.h"
+#include "Rendering/RenderSettings.h"
 
 class Renderer
 {
