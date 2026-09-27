@@ -157,8 +157,9 @@ private:
 
     unsigned int m_PostFramebuffer = 0;
     unsigned int m_PostColorTexture = 0;
-    unsigned int m_HistoryFramebuffer = 0;
-    unsigned int m_HistoryTexture = 0;
+    unsigned int m_HistoryFramebuffer[2]{ 0, 0 };
+    unsigned int m_HistoryTexture[2]{ 0, 0 };
+    int m_HistoryReadIndex = 0;
     bool m_HistoryValid = false;
     Vec3 m_PreviousCameraPosition{};
     Vec3 m_PreviousCameraForward{};
