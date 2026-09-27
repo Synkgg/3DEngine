@@ -539,12 +539,20 @@ void main()
             u_CameraRight * (ndc.x * u_TanHalfFov * u_Aspect) +
             u_CameraUp * (ndc.y * u_TanHalfFov));
         vec3 sunDir = normalize(-u_SunDirection);
-        float phase = 0.035 + 0.24 * pow(max(dot(ray, sunDir), 0.0), 5.0);
-        float aerial = 1.0 - exp(-distanceToSurface * 0.00115);
-        vec3 atmosphere = mix(vec3(0.18,0.28,0.42), max(u_SunColor, vec3(0.65,0.48,0.30)),
-                              pow(max(dot(ray, sunDir),0.0), 8.0));
-        hdr = mix(hdr, atmosphere * (0.7 + phase * max(u_SunIntensity,0.25)),
-                  clamp(aerial * 0.42 * u_AtmosphereStrength, 0.0, 0.48));
+        float mu = clamp(dot(ray, sunDir), -1.0, 1.0);
+        // Rayleigh + Henyey-Greenstein style Mie phase approximation. It is
+        // still a screen-space aerial pass, but responds physically to view/sun angle.
+        float rayleighPhase = 0.0596831 * (1.0 + mu * mu);
+        const float g = 0.76;
+        float miePhase = 0.0795775 * (1.0 - g*g) /
+            max(pow(1.0 + g*g - 2.0*g*mu, 1.5), 0.001);
+        float density = exp(-max(0.0, dot(ray, u_CameraUp)) * 1.8);
+        float opticalDepth = distanceToSurface * 0.00105 * density * u_AtmosphereStrength;
+        vec3 extinction = exp(-vec3(0.34,0.19,0.085) * opticalDepth);
+        vec3 rayleighColor = vec3(0.20,0.38,0.72) * rayleighPhase;
+        vec3 mieColor = max(u_SunColor, vec3(0.72,0.52,0.32)) * miePhase * max(u_SunIntensity,0.25);
+        vec3 inscatter = (rayleighColor + mieColor) * (vec3(1.0) - extinction) * 1.55;
+        hdr = hdr * extinction + inscatter;
     }
 
     // Filmic exposure and tone mapping.
