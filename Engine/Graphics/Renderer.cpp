@@ -215,7 +215,13 @@ void main()
     vec3 skyIrradiance = mix(vec3(0.055, 0.045, 0.035), vec3(0.22, 0.32, 0.48), skyWeight);
     vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
     vec3 envDiffuse = albedo * (1.0 - metallic) * skyIrradiance;
-    vec3 envSpecular = Fenv * mix(vec3(0.035), skyIrradiance * 0.55, 1.0 - roughness);
+
+    vec3 R = reflect(-V, N);
+    float sunReflection = pow(max(dot(R, sunL), 0.0), mix(8.0, 512.0, 1.0 - roughness));
+    vec3 horizonReflection = mix(vec3(0.055, 0.045, 0.035), vec3(0.22, 0.32, 0.48),
+                                 clamp(R.y * 0.5 + 0.5, 0.0, 1.0));
+    vec3 envSpecular = Fenv * horizonReflection * mix(0.18, 0.85, 1.0 - roughness);
+    envSpecular += Fenv * u_LightColor * sunReflection * u_LightIntensity * (1.0 - roughness) * 1.6;
     lighting += (envDiffuse + envSpecular) * ao;
 
     lighting += albedo * max(u_Emissive, 0.0) * 2.0;
@@ -301,8 +307,8 @@ void main()
     // Subtle cinematic color grade: preserve saturation in highlights while
     // avoiding the flat gray look of a plain gamma-only output.
     float luma = dot(mapped, vec3(0.2126,0.7152,0.0722));
-    mapped = mix(vec3(luma), mapped, 1.06);
-    mapped = (mapped - 0.5) * 1.035 + 0.5;
+    mapped = mix(vec3(luma), mapped, 1.10);
+    mapped = (mapped - 0.5) * 1.055 + 0.5;
 
     // Gentle vignette anchors the image without crushing the corners.
     vec2 q = v_UV * (1.0 - v_UV.yx);
@@ -323,7 +329,7 @@ void main()
 {
     vec3 color = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
     float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    float knee = smoothstep(0.85, 1.65, luminance);
+    float knee = smoothstep(0.62, 1.30, luminance);
     FragColor = vec4(color * knee, 1.0);
 }
 )";
@@ -361,26 +367,46 @@ static const char* skyFragmentShaderSource = R"(
 #version 450 core
 in vec2 v_UV;
 out vec4 FragColor;
+
+uniform vec3 u_CameraForward;
+uniform vec3 u_CameraRight;
+uniform vec3 u_CameraUp;
+uniform vec3 u_SunDirection;
+uniform vec3 u_SunColor;
+uniform float u_SunIntensity;
+uniform float u_TanHalfFov;
+uniform float u_Aspect;
+
 void main()
 {
-    float h = clamp(v_UV.y,0.0,1.0);
-    vec3 groundHaze = vec3(0.46,0.56,0.66);
-    vec3 horizon = vec3(0.32,0.50,0.72);
-    vec3 zenith = vec3(0.018,0.075,0.19);
-    vec3 sky = mix(horizon,zenith,smoothstep(0.18,1.0,h));
-    sky = mix(groundHaze,sky,smoothstep(0.0,0.24,h));
+    vec2 ndc = v_UV * 2.0 - 1.0;
+    vec3 ray = normalize(u_CameraForward +
+                         u_CameraRight * (ndc.x * u_TanHalfFov * u_Aspect) +
+                         u_CameraUp * (ndc.y * u_TanHalfFov));
 
-    vec2 sunPos=vec2(0.76,0.68);
-    vec2 delta=(v_UV-sunPos)*vec2(1.0,1.35);
-    float d=length(delta);
-    float sun=1.0-smoothstep(0.0,0.018,d);
-    float innerGlow=exp(-d*18.0);
-    float outerGlow=exp(-d*5.0);
-    sky += vec3(1.0,0.72,0.38)*(sun*5.0+innerGlow*0.75+outerGlow*0.10);
+    float height = clamp(ray.y * 0.5 + 0.5, 0.0, 1.0);
+    float horizon = exp(-abs(ray.y) * 7.0);
+    vec3 zenith = vec3(0.018, 0.070, 0.19);
+    vec3 midSky = vec3(0.12, 0.30, 0.58);
+    vec3 horizonColor = vec3(0.62, 0.72, 0.78);
+    vec3 sky = mix(horizonColor, midSky, smoothstep(0.48, 0.72, height));
+    sky = mix(sky, zenith, smoothstep(0.70, 1.0, height));
+    sky += vec3(0.12, 0.09, 0.055) * horizon;
 
-    float horizonGlow=exp(-abs(h-0.30)*11.0);
-    sky += vec3(0.18,0.11,0.055)*horizonGlow;
-    FragColor=vec4(max(sky,vec3(0.0)),1.0);
+    vec3 sunDir = normalize(-u_SunDirection);
+    float sunDot = max(dot(ray, sunDir), 0.0);
+    float sunDisk = smoothstep(0.99972, 0.99993, sunDot);
+    float sunGlow = pow(sunDot, 64.0);
+    float wideGlow = pow(sunDot, 8.0);
+    vec3 warmSun = max(u_SunColor, vec3(0.75, 0.55, 0.32));
+    sky += warmSun * (sunDisk * 7.0 + sunGlow * 0.85 + wideGlow * 0.055) *
+           max(u_SunIntensity, 0.25);
+
+    // A subtle opposite-horizon haze keeps the atmosphere from reading as a flat gradient.
+    float forwardScatter = pow(max(dot(ray, sunDir), 0.0), 3.0);
+    sky += vec3(0.16, 0.10, 0.055) * forwardScatter * horizon * 1.5;
+
+    FragColor = vec4(max(sky, vec3(0.0)), 1.0);
 }
 )";
 
@@ -1074,14 +1100,31 @@ void Renderer::ResetCamera()
 
 void Renderer::DrawSky()
 {
-	if (m_SkyVAO == 0) return;
-	glDisable(GL_DEPTH_TEST);
-	m_SkyShader.Bind();
-	glBindVertexArray(m_SkyVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	glBindVertexArray(0);
-	m_SkyShader.Unbind();
-	glEnable(GL_DEPTH_TEST);
+    if (m_SkyVAO == 0) return;
+
+    const Vec3 forward = m_Camera.GetForward();
+    const Vec3 right = m_Camera.GetRight();
+    const Vec3 up = Vec3::Cross(right, forward).Normalized();
+    const float tanHalfFov = std::tan(m_Camera.GetFovDegrees() * 0.5f * 0.017453292519943295f);
+    const float aspect = m_ViewportHeight > 0
+        ? static_cast<float>(m_ViewportWidth) / static_cast<float>(m_ViewportHeight)
+        : 1.0f;
+
+    glDisable(GL_DEPTH_TEST);
+    m_SkyShader.Bind();
+    m_SkyShader.SetVec3("u_CameraForward", forward.x, forward.y, forward.z);
+    m_SkyShader.SetVec3("u_CameraRight", right.x, right.y, right.z);
+    m_SkyShader.SetVec3("u_CameraUp", up.x, up.y, up.z);
+    m_SkyShader.SetVec3("u_SunDirection", m_LightDirection.x, m_LightDirection.y, m_LightDirection.z);
+    m_SkyShader.SetVec3("u_SunColor", m_LightColor.x, m_LightColor.y, m_LightColor.z);
+    m_SkyShader.SetFloat("u_SunIntensity", m_LightIntensity);
+    m_SkyShader.SetFloat("u_TanHalfFov", tanHalfFov);
+    m_SkyShader.SetFloat("u_Aspect", aspect);
+    glBindVertexArray(m_SkyVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+    m_SkyShader.Unbind();
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::DrawGrid()
