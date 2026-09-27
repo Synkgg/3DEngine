@@ -79,6 +79,8 @@ uniform float u_IndirectLightStrength;
 uniform float u_ReflectionStrength;
 uniform float u_ContactShadowStrength;
 uniform float u_SkyIntensity;
+uniform samplerCube u_EnvironmentMap;
+uniform int u_UseEnvironmentMap;
 
 struct PointLight { vec3 position; vec3 color; float intensity; float range; };
 struct SpotLight { vec3 position; vec3 direction; vec3 color; float intensity; float range; float innerCos; float outerCos; };
@@ -265,8 +267,8 @@ void main()
     // the reflection vector, giving metals and glossy surfaces a coherent world.
     vec3 R = reflect(-V, N);
     vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 envN = SampleEnvironment(N, sunL);
-    vec3 envR = SampleEnvironment(R, sunL);
+    vec3 envN = u_UseEnvironmentMap != 0 ? textureLod(u_EnvironmentMap, N, 4.0).rgb * u_SkyIntensity : SampleEnvironment(N, sunL);
+    vec3 envR = u_UseEnvironmentMap != 0 ? textureLod(u_EnvironmentMap, R, roughness * 6.0).rgb * u_SkyIntensity : SampleEnvironment(R, sunL);
 
     vec3 localBounce = vec3(0.0);
     for (int i = 0; i < u_PointLightCount; ++i)
@@ -737,6 +739,12 @@ bool Renderer::Initialize(Window& window)
         return false;
     }
 
+    if (!m_EnvironmentSystem.Initialize())
+    {
+        Logger::Error("Failed to initialize HDR environment cubemap.");
+        return false;
+    }
+
     if (!CreateShadowTarget())
     {
         Logger::Error("Failed to initialize directional shadow map.");
@@ -899,6 +907,7 @@ void Renderer::Shutdown()
     m_PostShader.Shutdown();
     m_BloomExtractShader.Shutdown();
     m_BloomBlurShader.Shutdown();
+    m_EnvironmentSystem.Shutdown();
     DestroyShadowTarget();
     m_ShadowShader.Shutdown();
 	m_SkyShader.Shutdown();
@@ -1185,6 +1194,13 @@ void Renderer::DrawMeshInternal(
     m_Shader.SetFloat("u_ReflectionStrength", m_RenderSettings.reflectionStrength);
     m_Shader.SetFloat("u_ContactShadowStrength", m_RenderSettings.contactShadowStrength);
     m_Shader.SetFloat("u_SkyIntensity", m_RenderSettings.skyIntensity);
+    const bool hasEnvironment = m_EnvironmentSystem.GetEnvironmentMap() != 0;
+    m_Shader.SetInt("u_UseEnvironmentMap", hasEnvironment ? 1 : 0);
+    if (hasEnvironment)
+    {
+        m_EnvironmentSystem.Bind(7);
+        m_Shader.SetInt("u_EnvironmentMap", 7);
+    }
     const Texture2D* maps[5] = { normalMap, metallicMap, roughnessMap, aoMap, emissiveMap };
     const char* samplers[5] = { "u_NormalMap", "u_MetallicMap", "u_RoughnessMap", "u_AOMap", "u_EmissiveMap" };
     const char* toggles[5] = { "u_UseNormalMap", "u_UseMetallicMap", "u_UseRoughnessMap", "u_UseAOMap", "u_UseEmissiveMap" };
