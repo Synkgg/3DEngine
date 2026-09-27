@@ -1,5 +1,5 @@
 MyEngineScene
-Environment 1 4 1 1 1 240 1.05 0.008 0.26 3 105
+Environment 1 4 1 1 1 300 1.18 0.0065 0.34 3 125
 Entities 139
 Entity 1
 Name GameController
@@ -412,7 +412,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.12 0.20 0.27 -0.35 -1 -0.25 0.42 0 120 23 35 0
+Light 1 0.16 0.24 0.34 -0.35 -1 -0.25 0.56 0 140 23 35 0
 Collider 0
 Scripts 0
 Entity 25
@@ -429,7 +429,7 @@ Material 1 0.15 0.75 0.4 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.95 0.50 0.18 0 -1 0 2.1 1 12 23 35 0
+Light 1 1.0 0.48 0.16 0 -1 0 2.65 1 14 23 35 0
 Collider 0
 Scripts 0
 Entity 26
@@ -446,7 +446,7 @@ Material 1 0.15 0.75 0.4 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.90 0.42 0.13 0 -1 0 1.65 1 11 23 35 0
+Light 1 0.95 0.40 0.11 0 -1 0 2.05 1 13 23 35 0
 Collider 0
 Scripts 0
 Entity 27
@@ -463,7 +463,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.10 0.34 0.40 0 -1 0 1.15 1 14 23 35 0
+Light 1 0.08 0.38 0.52 0 -1 0 1.65 1 17 23 35 0
 Collider 0
 Scripts 0
 Entity 28
