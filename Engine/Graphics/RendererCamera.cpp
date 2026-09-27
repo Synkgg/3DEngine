@@ -15,6 +15,11 @@ void Renderer::RotateCamera(float yawDelta, float pitchDelta)
 	m_Camera.Rotate(yawDelta, pitchDelta);
 }
 
+void Renderer::SetCameraMoveSpeed(float speed)
+{
+    m_Camera.SetMoveSpeed(speed);
+}
+
 void Renderer::MoveCamera(
 	float forward,
 	float right,
