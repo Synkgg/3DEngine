@@ -160,6 +160,9 @@ private:
 
     unsigned int m_PostFramebuffer = 0;
     unsigned int m_PostColorTexture = 0;
+    unsigned int m_HistoryFramebuffer = 0;
+    unsigned int m_HistoryTexture = 0;
+    bool m_HistoryValid = false;
     unsigned int m_BloomFramebuffer[2]{ 0, 0 };
     unsigned int m_BloomTexture[2]{ 0, 0 };
     unsigned int m_ModelPreviewFramebuffer = 0;

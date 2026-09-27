@@ -286,8 +286,45 @@ in vec2 v_UV;
 out vec4 FragColor;
 uniform sampler2D u_Scene;
 uniform sampler2D u_Bloom;
+uniform sampler2D u_Depth;
+uniform sampler2D u_History;
 uniform float u_Exposure;
 uniform float u_BloomStrength;
+uniform int u_HistoryValid;
+
+float LinearizeDepth(float d)
+{
+    const float nearPlane = 0.1;
+    const float farPlane = 1000.0;
+    float z = d * 2.0 - 1.0;
+    return (2.0 * nearPlane * farPlane) / max(farPlane + nearPlane - z * (farPlane - nearPlane), 0.0001);
+}
+
+float ScreenAO(vec2 uv)
+{
+    float centerRaw = texture(u_Depth, uv).r;
+    if (centerRaw >= 0.99999) return 1.0;
+    float center = LinearizeDepth(centerRaw);
+    vec2 texel = 1.0 / vec2(textureSize(u_Depth, 0));
+    float occ = 0.0;
+    float samples = 0.0;
+    const vec2 dirs[8] = vec2[8](
+        vec2(1,0),vec2(-1,0),vec2(0,1),vec2(0,-1),
+        vec2(0.707,0.707),vec2(-0.707,0.707),vec2(0.707,-0.707),vec2(-0.707,-0.707));
+    for(int ring=1; ring<=3; ++ring)
+    {
+        float radius = float(ring) * 2.25;
+        for(int i=0;i<8;++i)
+        {
+            float sd = LinearizeDepth(texture(u_Depth, uv + dirs[i] * texel * radius).r);
+            float delta = center - sd;
+            float range = 1.0 - smoothstep(0.0, 3.5, abs(delta));
+            occ += step(0.035, delta) * range;
+            samples += 1.0;
+        }
+    }
+    return clamp(1.0 - (occ / max(samples,1.0)) * 1.15, 0.48, 1.0);
+}
 
 vec3 ACESFilm(vec3 x)
 {
@@ -300,6 +337,11 @@ void main()
     vec3 hdr = max(texture(u_Scene, v_UV).rgb, vec3(0.0));
     vec3 bloom = max(texture(u_Bloom, v_UV).rgb, vec3(0.0));
     hdr += bloom * u_BloomStrength;
+
+    // Depth-aware screen-space ambient occlusion adds contact depth at corners
+    // and intersections without changing the authored material colors.
+    float ao = ScreenAO(v_UV);
+    hdr *= mix(1.0, ao, 0.72);
 
     // Filmic exposure and tone mapping.
     vec3 mapped = ACESFilm(hdr * max(u_Exposure, 0.001));
@@ -316,6 +358,22 @@ void main()
     mapped *= mix(0.88, 1.0, vignette);
 
     mapped = pow(clamp(mapped,0.0,1.0), vec3(1.0/2.2));
+
+    // Temporal resolve. Neighborhood clipping prevents stale history from
+    // dominating disocclusions; this is a conservative TAA foundation until
+    // per-object motion vectors are available.
+    if (u_HistoryValid != 0)
+    {
+        vec2 texel = 1.0 / vec2(textureSize(u_Scene, 0));
+        vec3 mn = mapped, mx = mapped;
+        for(int x=-1;x<=1;++x) for(int y=-1;y<=1;++y)
+        {
+            vec3 s = pow(clamp(texture(u_Scene, v_UV + vec2(x,y)*texel).rgb,0.0,1.0), vec3(1.0/2.2));
+            mn = min(mn,s); mx = max(mx,s);
+        }
+        vec3 history = clamp(texture(u_History, v_UV).rgb, mn - 0.025, mx + 0.025);
+        mapped = mix(mapped, history, 0.14);
+    }
     FragColor = vec4(mapped,1.0);
 }
 )";
@@ -1461,6 +1519,23 @@ bool Renderer::CreatePostProcessTarget()
             return false;
         }
     }
+    glGenFramebuffers(1, &m_HistoryFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_HistoryFramebuffer);
+    glGenTextures(1, &m_HistoryTexture);
+    glBindTexture(GL_TEXTURE_2D, m_HistoryTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_HistoryTexture, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        DestroyPostProcessTarget();
+        return false;
+    }
+    m_HistoryValid = false;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return true;
 }
@@ -1471,6 +1546,11 @@ void Renderer::DestroyPostProcessTarget()
     if (m_BloomFramebuffer[0] || m_BloomFramebuffer[1]) glDeleteFramebuffers(2, m_BloomFramebuffer);
     m_BloomTexture[0] = m_BloomTexture[1] = 0;
     m_BloomFramebuffer[0] = m_BloomFramebuffer[1] = 0;
+    if (m_HistoryTexture) glDeleteTextures(1, &m_HistoryTexture);
+    if (m_HistoryFramebuffer) glDeleteFramebuffers(1, &m_HistoryFramebuffer);
+    m_HistoryTexture = 0;
+    m_HistoryFramebuffer = 0;
+    m_HistoryValid = false;
     if (m_PostColorTexture) glDeleteTextures(1, &m_PostColorTexture);
     if (m_PostFramebuffer) glDeleteFramebuffers(1, &m_PostFramebuffer);
     m_PostColorTexture = 0;
@@ -1533,6 +1613,13 @@ void Renderer::RenderPostProcess()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, bloomTexture);
     m_PostShader.SetInt("u_Bloom", 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetDepthTexture());
+    m_PostShader.SetInt("u_Depth", 2);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, m_HistoryTexture);
+    m_PostShader.SetInt("u_History", 3);
+    m_PostShader.SetInt("u_HistoryValid", m_HistoryValid ? 1 : 0);
     m_PostShader.SetFloat("u_BloomStrength", bloomTexture ? m_RenderSettings.bloomStrength : 0.0f);
     m_PostShader.SetFloat("u_Exposure", m_RenderSettings.exposure);
     glBindVertexArray(m_PostVAO);
@@ -1540,6 +1627,18 @@ void Renderer::RenderPostProcess()
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     m_PostShader.Unbind();
+
+    // Save the resolved post image for the next frame's temporal resolve.
+    if (m_HistoryFramebuffer && m_PostFramebuffer)
+    {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_PostFramebuffer);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_HistoryFramebuffer);
+        glBlitFramebuffer(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight),
+                          0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight),
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        m_HistoryValid = true;
+    }
+    glActiveTexture(GL_TEXTURE0);
     glEnable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

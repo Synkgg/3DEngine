@@ -15,6 +15,7 @@ public:
     void Shutdown();
 
     unsigned int GetColorTexture() const;
+    unsigned int GetDepthTexture() const;
     unsigned int GetSamples() const;
 
 private:
@@ -25,6 +26,8 @@ private:
     unsigned int m_DepthStencilID = 0;
     unsigned int m_ResolveFramebufferID = 0;
     unsigned int m_ResolveColorTextureID = 0;
+    unsigned int m_DepthTextureID = 0;
+    unsigned int m_ResolveDepthTextureID = 0;
 
     unsigned int m_Width = 0;
     unsigned int m_Height = 0;
