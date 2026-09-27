@@ -596,6 +596,33 @@ void main()
 }
 )";
 
+static const char* taaFragmentShaderSource = R"(
+#version 450 core
+in vec2 v_UV;
+out vec4 FragColor;
+uniform sampler2D u_Current;
+uniform sampler2D u_History;
+uniform sampler2D u_Depth;
+uniform vec3 u_CameraForward, u_CameraRight, u_CameraUp, u_CameraPosition;
+uniform vec3 u_PreviousForward, u_PreviousRight, u_PreviousUp, u_PreviousPosition;
+uniform float u_TanHalfFov, u_Aspect, u_PreviousTanHalfFov, u_PreviousAspect;
+uniform int u_HistoryValid;
+float LinearizeDepth(float d){const float n=.1,f=1000.;float z=d*2.-1.;return (2.*n*f)/max(f+n-z*(f-n),.0001);}
+vec3 ReconstructWorld(vec2 uv,float depth){vec2 ndc=uv*2.-1.;vec3 ray=normalize(u_CameraForward+u_CameraRight*(ndc.x*u_TanHalfFov*u_Aspect)+u_CameraUp*(ndc.y*u_TanHalfFov));float fd=max(dot(ray,u_CameraForward),.05);return u_CameraPosition+ray*(depth/fd);}
+void main(){
+ vec3 current=texture(u_Current,v_UV).rgb; if(u_HistoryValid==0){FragColor=vec4(current,1);return;}
+ float raw=texture(u_Depth,v_UV).r; if(raw>=.99999){FragColor=vec4(current,1);return;}
+ float depth=LinearizeDepth(raw); vec3 world=ReconstructWorld(v_UV,depth); vec3 rel=world-u_PreviousPosition; float z=dot(rel,u_PreviousForward);
+ if(z<=.1){FragColor=vec4(current,1);return;} vec2 prevNdc=vec2(dot(rel,u_PreviousRight)/(z*u_PreviousTanHalfFov*u_PreviousAspect),dot(rel,u_PreviousUp)/(z*u_PreviousTanHalfFov)); vec2 prevUV=prevNdc*.5+.5;
+ if(any(lessThan(prevUV,vec2(.002)))||any(greaterThan(prevUV,vec2(.998)))){FragColor=vec4(current,1);return;}
+ vec2 texel=1./vec2(textureSize(u_Current,0)); vec3 mn=current,mx=current,mean=vec3(0); float count=0;
+ for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){vec3 s=texture(u_Current,v_UV+vec2(x,y)*texel).rgb;mn=min(mn,s);mx=max(mx,s);mean+=s;count+=1.;}
+ mean/=count; vec3 history=clamp(texture(u_History,prevUV).rgb,mn,mx); float motion=length(prevUV-v_UV); float feedback=clamp(.92-motion*10.,.55,.92);
+ vec3 delta=abs(history-mean); float rejection=smoothstep(.08,.45,max(delta.r,max(delta.g,delta.b))); feedback*=1.-rejection*.75;
+ FragColor=vec4(mix(current,history,feedback),1);
+}
+)";
+
 static const char* bloomExtractFragmentShaderSource = R"(
 #version 450 core
 in vec2 v_UV;
@@ -807,7 +834,8 @@ bool Renderer::Initialize(Window& window)
 
     if (!m_PostShader.Initialize(postVertexShaderSource, postFragmentShaderSource) ||
         !m_BloomExtractShader.Initialize(postVertexShaderSource, bloomExtractFragmentShaderSource) ||
-        !m_BloomBlurShader.Initialize(postVertexShaderSource, bloomBlurFragmentShaderSource))
+        !m_BloomBlurShader.Initialize(postVertexShaderSource, bloomBlurFragmentShaderSource) ||
+        !m_TAAShader.Initialize(postVertexShaderSource, taaFragmentShaderSource))
     {
         Logger::Error("Failed to initialize post-process shaders.");
         return false;
@@ -961,6 +989,7 @@ void Renderer::Shutdown()
     m_PostShader.Shutdown();
     m_BloomExtractShader.Shutdown();
     m_BloomBlurShader.Shutdown();
+    m_TAAShader.Shutdown();
     m_EnvironmentSystem.Shutdown();
     DestroyShadowTarget();
     m_ShadowShader.Shutdown();
