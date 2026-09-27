@@ -1,13 +1,12 @@
 #include <iostream>
-#include "Core/Application.h"
-#include "Core/Logger.h"
+#include "../Application.h"
+#include "../Logger.h"
 
 int main()
 {
-    Logger::Info("MyEngine starting...");
+    Logger::Info("Engine starting...");
 
     Application app;
-
     if (!app.Initialize())
     {
         Logger::Error("Engine initialization failed. Run loop was not started.");
@@ -16,6 +15,5 @@ int main()
 
     app.Run();
     app.Shutdown();
-
     return 0;
 }

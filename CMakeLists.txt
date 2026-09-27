@@ -124,6 +124,14 @@ file(
     "${CMAKE_CURRENT_SOURCE_DIR}/Engine/*.h"
 )
 
+# Mirror the physical Engine directory hierarchy in IDE generators (Visual
+# Studio/Xcode) instead of presenting the engine as one flat source list.
+source_group(
+    TREE "${CMAKE_CURRENT_SOURCE_DIR}/Engine"
+    PREFIX "Engine"
+    FILES ${ENGINE_SOURCES}
+)
+
 #
 # Main executable
 #
