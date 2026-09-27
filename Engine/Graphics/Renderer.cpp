@@ -1010,6 +1010,9 @@ void Renderer::Shutdown()
 
 void Renderer::BeginFrame()
 {
+    m_FrameViewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
+    m_FrameShaderStateReady = false;
+    UploadFrameShaderState();
 	m_Framebuffer.Bind();
 
 	glViewport(
