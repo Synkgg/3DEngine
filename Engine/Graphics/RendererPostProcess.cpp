@@ -165,7 +165,7 @@ void Renderer::RenderPostProcess()
         ResolveTAA();
     else
         m_HistoryValid = false;
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST); 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
