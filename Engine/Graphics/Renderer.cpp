@@ -371,6 +371,7 @@ uniform float u_ColorSaturation;
 uniform float u_Contrast;
 uniform float u_SSRStrength;
 uniform float u_GIStrength;
+uniform int u_DebugView;
  
 float LinearizeDepth(float d)
 {
@@ -550,6 +551,22 @@ void main()
             transmittance *= stepTrans;
         }
         hdr = hdr * transmittance + inscatter * 1.35;
+    }
+
+    if (u_DebugView != 0)
+    {
+        float debugDepth = texture(u_Depth, v_UV).r;
+        vec4 nr = texture(u_NormalRoughness, v_UV);
+        if (u_DebugView == 1) { FragColor = vec4(normalize(nr.xyz * 2.0 - 1.0) * 0.5 + 0.5, 1.0); return; }
+        if (u_DebugView == 2) { FragColor = vec4(vec3(nr.w), 1.0); return; }
+        if (u_DebugView == 3) { float d = debugDepth >= 0.99999 ? 1.0 : clamp(LinearizeDepth(debugDepth) / 100.0, 0.0, 1.0); FragColor = vec4(vec3(d), 1.0); return; }
+        if (u_DebugView == 4) { FragColor = vec4(vec3(ScreenAO(v_UV)), 1.0); return; }
+        if (u_DebugView == 5)
+        {
+            if (debugDepth >= 0.99999) { FragColor = vec4(0,0,0,1); return; }
+            float cd=LinearizeDepth(debugDepth); vec2 ndc=v_UV*2.0-1.0; vec3 vr=normalize(u_CameraForward+u_CameraRight*(ndc.x*u_TanHalfFov*u_Aspect)+u_CameraUp*(ndc.y*u_TanHalfFov));
+            vec3 n=normalize(nr.xyz*2.0-1.0); vec3 reflected=nr.w<0.82?ScreenSpaceReflection(v_UV,reflect(vr,n),cd):vec3(0.0); FragColor=vec4(reflected,1.0); return;
+        }
     }
 
     // Filmic exposure and tone mapping.
