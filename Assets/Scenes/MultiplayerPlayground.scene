@@ -1,6 +1,6 @@
 MyEngineScene
 Environment 1 4 1 1 1 260 0.78 0.0004 0.16 1 85
-Entities 109
+Entities 156
 Entity 1
 Name PlaygroundController
 Position 0 0 0
@@ -1854,6 +1854,805 @@ Interactable 0
 Player 0
 CharacterController 0
 Light 0
+Collider 0
+Scripts 0
+Entity 122
+Name Ceiling_-24_-28
+Position -24 9 -28
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 123
+Name Ceiling_-24_0
+Position -24 9 0
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 124
+Name Ceiling_-24_28
+Position -24 9 28
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 125
+Name Ceiling_0_-28
+Position 0 9 -28
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 126
+Name Ceiling_0_0
+Position 0 9 0
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 127
+Name Ceiling_0_28
+Position 0 9 28
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 128
+Name Ceiling_24_-28
+Position 24 9 -28
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 129
+Name Ceiling_24_0
+Position 24 9 0
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 130
+Name Ceiling_24_28
+Position 24 9 28
+Rotation 3.14159 0 0
+Scale 6 1 7
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_Simple.obj"
+Color 1 0.075 0.085 0.105 1
+Texture 0
+Material 1 0.08 0.86 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 131
+Name UpperNorth_-28
+Position -28 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 132
+Name UpperSouth_-28
+Position -28 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 133
+Name UpperNorth_-20
+Position -20 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 134
+Name UpperSouth_-20
+Position -20 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 135
+Name UpperNorth_-12
+Position -12 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 136
+Name UpperSouth_-12
+Position -12 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 137
+Name UpperNorth_-4
+Position -4 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 138
+Name UpperSouth_-4
+Position -4 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 139
+Name UpperNorth_4
+Position 4 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 140
+Name UpperSouth_4
+Position 4 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 141
+Name UpperNorth_12
+Position 12 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 142
+Name UpperSouth_12
+Position 12 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 143
+Name UpperNorth_20
+Position 20 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 144
+Name UpperSouth_20
+Position 20 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 145
+Name UpperNorth_28
+Position 28 1.5 -39.8
+Rotation 0 1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 146
+Name UpperSouth_28
+Position 28 1.5 43.8
+Rotation 0 -1.5708 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 147
+Name UpperWest_-32
+Position -31.6 1.5 -32
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 148
+Name UpperEast_-32
+Position 31.6 1.5 -32
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 149
+Name UpperWest_-24
+Position -31.6 1.5 -24
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 150
+Name UpperEast_-24
+Position 31.6 1.5 -24
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 151
+Name UpperWest_-16
+Position -31.6 1.5 -16
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 152
+Name UpperEast_-16
+Position 31.6 1.5 -16
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 153
+Name UpperWest_-8
+Position -31.6 1.5 -8
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 154
+Name UpperEast_-8
+Position 31.6 1.5 -8
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 155
+Name UpperWest_0
+Position -31.6 1.5 0
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 156
+Name UpperEast_0
+Position 31.6 1.5 0
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 157
+Name UpperWest_8
+Position -31.6 1.5 8
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 158
+Name UpperEast_8
+Position 31.6 1.5 8
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 159
+Name UpperWest_16
+Position -31.6 1.5 16
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 160
+Name UpperEast_16
+Position 31.6 1.5 16
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 161
+Name UpperWest_24
+Position -31.6 1.5 24
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 162
+Name UpperEast_24
+Position 31.6 1.5 24
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 163
+Name UpperWest_32
+Position -31.6 1.5 32
+Rotation 0 0 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 164
+Name UpperEast_32
+Position 31.6 1.5 32
+Rotation 0 3.14159 0
+Scale 1.5 1.5 2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/TopSimple_Straight.obj"
+Color 1 0.10 0.12 0.15 1
+Texture 0
+Material 1 0.12 0.78 1 0
+Interactable 0
+Player 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 165
+Name CeilingLightNW
+Position -14 8.65 -18
+Rotation 3.14159 0 0
+Scale 2.2 2.2 2.2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
+Color 1 0.55 0.60 0.68 1
+Texture 0
+Material 1 0.06 0.65 1 0.35
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.58 0.66 0.78 0 -1 0 0.48 1 10 23 35 0
+Collider 0
+Scripts 0
+Entity 166
+Name CeilingLightNE
+Position 14 8.65 -18
+Rotation 3.14159 0 0
+Scale 2.2 2.2 2.2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
+Color 1 0.55 0.60 0.68 1
+Texture 0
+Material 1 0.06 0.65 1 0.35
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.58 0.66 0.78 0 -1 0 0.48 1 10 23 35 0
+Collider 0
+Scripts 0
+Entity 167
+Name CeilingLightSW
+Position -14 8.65 18
+Rotation 3.14159 0 0
+Scale 2.2 2.2 2.2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
+Color 1 0.55 0.60 0.68 1
+Texture 0
+Material 1 0.06 0.65 1 0.35
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.58 0.66 0.78 0 -1 0 0.48 1 10 23 35 0
+Collider 0
+Scripts 0
+Entity 168
+Name CeilingLightSE
+Position 14 8.65 18
+Rotation 3.14159 0 0
+Scale 2.2 2.2 2.2
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
+Color 1 0.55 0.60 0.68 1
+Texture 0
+Material 1 0.06 0.65 1 0.35
+Interactable 0
+Player 0
+CharacterController 0
+Light 1 0.58 0.66 0.78 0 -1 0 0.48 1 10 23 35 0
 Collider 0
 Scripts 0
 HierarchyFolders 0
