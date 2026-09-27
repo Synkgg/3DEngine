@@ -39,7 +39,8 @@ public:
     bool Initialize(Window& window);
     void Shutdown();
 
-    void BeginShadowPass();
+    static constexpr int ShadowCascadeCount = 3;
+    void BeginShadowPass(int cascadeIndex = 0);
     void DrawShadowMesh(const Transform& transform, PrimitiveType primitive);
     void EndShadowPass();
 
@@ -145,10 +146,12 @@ private:
     unsigned int m_SkyVBO = 0;
     unsigned int m_PostVAO = 0;
     unsigned int m_PostVBO = 0;
-    unsigned int m_ShadowFramebuffer = 0;
-    unsigned int m_ShadowDepthTexture = 0;
-    unsigned int m_ShadowMapSize = 2048;
-    Mat4 m_LightSpaceMatrix = Mat4::Identity();
+    std::array<unsigned int, ShadowCascadeCount> m_ShadowFramebuffers{};
+    std::array<unsigned int, ShadowCascadeCount> m_ShadowDepthTextures{};
+    std::array<unsigned int, ShadowCascadeCount> m_ShadowMapSizes{ 2048u, 2048u, 1024u };
+    std::array<Mat4, ShadowCascadeCount> m_LightSpaceMatrices{ Mat4::Identity(), Mat4::Identity(), Mat4::Identity() };
+    std::array<float, ShadowCascadeCount> m_ShadowCascadeSplits{ 12.0f, 32.0f, 80.0f };
+    int m_ActiveShadowCascade = 0;
     bool m_ShadowMapReady = false;
 
     unsigned int m_PostFramebuffer = 0;
@@ -210,7 +213,7 @@ private:
 
     bool CreateShadowTarget();
     void DestroyShadowTarget();
-    void UpdateLightSpaceMatrix();
+    void UpdateLightSpaceMatrices();
 
     bool CreatePostProcessTarget();
     void DestroyPostProcessTarget();
