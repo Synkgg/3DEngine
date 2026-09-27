@@ -143,6 +143,9 @@ void Renderer::RenderPostProcess()
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetDepthTexture());
     m_PostShader.SetInt("u_Depth", 2);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetNormalTexture());
+    m_PostShader.SetInt("u_NormalRoughness", 3);
     m_PostShader.SetFloat("u_BloomStrength", bloomTexture ? m_RenderSettings.bloomStrength : 0.0f);
     m_PostShader.SetFloat("u_Exposure", m_RenderSettings.exposure);
     const Vec3 postForward = m_Camera.GetForward();
