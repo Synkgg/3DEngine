@@ -159,40 +159,18 @@ vec3 SampleEnvironment(vec3 dir, vec3 sunL)
     return result * u_SkyIntensity;
 }
 
+float SampleShadowCascade(int cascade, vec3 N, vec3 L)
+{
+    vec4 lightSpacePosition=v_LightSpacePosition[cascade]; vec3 p=lightSpacePosition.xyz/max(lightSpacePosition.w,0.0001);p=p*.5+.5;
+    if(p.z<=0.0||p.z>=1.0||p.x<=0.0||p.x>=1.0||p.y<=0.0||p.y>=1.0)return 0.0;
+    float nDotL=max(dot(N,L),0.0);float bias=max(0.00065*(1.0-nDotL),0.00032);vec2 texel=1.0/vec2(textureSize(u_ShadowMaps[cascade],0));int radius=clamp(u_ShadowPCFRadius,1,3);float shadow=0.0,weight=0.0;
+    for(int x=-3;x<=3;++x)for(int y=-3;y<=3;++y){if(abs(x)>radius||abs(y)>radius)continue;float w=1.0/(1.0+0.32*float(x*x+y*y));float closest=texture(u_ShadowMaps[cascade],p.xy+vec2(x,y)*texel).r;shadow+=(p.z-bias>closest?1.0:0.0)*w;weight+=w;}
+    float result=clamp(shadow/max(weight,0.0001),0.0,0.88);return clamp(result*mix(0.72,1.0,nDotL)*u_ContactShadowStrength,0.0,0.88);
+}
 float CalculateShadow(vec3 N, vec3 L)
 {
-    float cameraDistance = length(u_CameraPosition - v_WorldPosition);
-    int cascade = cameraDistance <= u_ShadowCascadeSplits[0] ? 0 :
-                  cameraDistance <= u_ShadowCascadeSplits[1] ? 1 : 2;
-    vec4 lightSpacePosition = v_LightSpacePosition[cascade];
-    if (u_ShadowsEnabled == 0) return 0.0;
-    vec3 p = lightSpacePosition.xyz / max(lightSpacePosition.w, 0.0001);
-    p = p * 0.5 + 0.5;
-    if (p.z <= 0.0 || p.z >= 1.0 || p.x <= 0.0 || p.x >= 1.0 || p.y <= 0.0 || p.y >= 1.0)
-        return 0.0;
-
-    float nDotL = max(dot(N, L), 0.0);
-    float bias = max(0.00065 * (1.0 - nDotL), 0.00032);
-    vec2 texel = 1.0 / vec2(textureSize(u_ShadowMaps[cascade], 0));
-    int radius = clamp(u_ShadowPCFRadius, 1, 3);
-    float shadow = 0.0;
-    float weight = 0.0;
-    for (int x = -3; x <= 3; ++x)
-    {
-        for (int y = -3; y <= 3; ++y)
-        {
-            if (abs(x) > radius || abs(y) > radius) continue;
-            float w = 1.0 / (1.0 + 0.32 * float(x*x + y*y));
-            float closest = texture(u_ShadowMaps[cascade], p.xy + vec2(x,y) * texel).r;
-            shadow += (p.z - bias > closest ? 1.0 : 0.0) * w;
-            weight += w;
-        }
-    }
-    float result = clamp(shadow / max(weight, 0.0001), 0.0, 0.88);
-    // Grazing surfaces need less aggressive shadowing to avoid large black
-    // bands while contact-facing surfaces retain full depth.
-    result *= mix(0.72, 1.0, nDotL);
-    return clamp(result * u_ContactShadowStrength, 0.0, 0.88);
+    if(u_ShadowsEnabled==0)return 0.0;float d=length(u_CameraPosition-v_WorldPosition);int cascade=d<=u_ShadowCascadeSplits[0]?0:d<=u_ShadowCascadeSplits[1]?1:2;float s=SampleShadowCascade(cascade,N,L);
+    if(cascade<2){float split=u_ShadowCascadeSplits[cascade];float previous=cascade==0?0.0:u_ShadowCascadeSplits[cascade-1];float band=max((split-previous)*0.12,1.0);float blend=smoothstep(split-band,split,d);if(blend>0.0)s=mix(s,SampleShadowCascade(cascade+1,N,L),blend);}return s;
 }
 
 vec3 EvaluateBRDF(vec3 N, vec3 V, vec3 L, vec3 radiance, vec3 albedo, float metallic, float roughness, vec3 F0)
@@ -420,10 +398,10 @@ float ScreenAO(vec2 uv)
     vec3 centerPos = ReconstructWorldPosition(uv, centerDepth);
     vec3 N = normalize(texture(u_NormalRoughness, uv).xyz * 2.0 - 1.0);
     vec2 texel = 1.0 / vec2(textureSize(u_Depth, 0));
-    const vec2 dirs[12] = vec2[12](vec2(1,0),vec2(.866,.5),vec2(.5,.866),vec2(0,1),vec2(-.5,.866),vec2(-.866,.5),vec2(-1,0),vec2(-.866,-.5),vec2(-.5,-.866),vec2(0,-1),vec2(.5,-.866),vec2(.866,-.5));
+    const vec2 dirs[8] = vec2[8](vec2(1,0),vec2(.707,.707),vec2(0,1),vec2(-.707,.707),vec2(-1,0),vec2(-.707,-.707),vec2(0,-1),vec2(.707,-.707));
     float visibility = 0.0, weight = 0.0;
-    float pixelRadius = clamp(22.0 / max(centerDepth, 1.0), 2.0, 12.0);
-    for(int ring=1; ring<=3; ++ring) for(int i=0;i<12;++i)
+    float pixelRadius = clamp(26.0 / max(centerDepth, 1.0), 2.5, 13.0);
+    for(int ring=1; ring<=2; ++ring) for(int i=0;i<8;++i)
     {
         vec2 suv = uv + dirs[i] * texel * pixelRadius * float(ring);
         if(any(lessThanEqual(suv,vec2(0.001))) || any(greaterThanEqual(suv,vec2(0.999)))) continue;
@@ -471,7 +449,7 @@ vec3 ScreenSpaceReflection(vec2 uv, vec3 ray, float centerDepth)
     vec3 direction = normalize(ray);
     float travel = max(0.12, centerDepth * 0.006);
     float stride = max(0.18, centerDepth * 0.012);
-    for(int i=0;i<40;++i)
+    for(int i=0;i<28;++i)
     {
         travel += stride * (1.0 + float(i) * 0.035);
         vec3 p = origin + direction * travel;
@@ -528,7 +506,7 @@ void main()
         vec3 surfaceNormal = normalize(normalRoughness.xyz * 2.0 - 1.0);
         float surfaceRoughness = normalRoughness.w;
         vec3 reflectionRay = reflect(viewRay, surfaceNormal);
-        vec3 reflected = ScreenSpaceReflection(v_UV, reflectionRay, centerDepth);
+        vec3 reflected = surfaceRoughness < 0.82 ? ScreenSpaceReflection(v_UV, reflectionRay, centerDepth) : vec3(0.0);
         float grazing = pow(1.0 - abs(dot(-viewRay, surfaceNormal)), 2.0) * (1.0 - surfaceRoughness);
         hdr = mix(hdr, hdr + reflected * 0.22, clamp(grazing * u_SSRStrength,0.0,0.28));
     }
