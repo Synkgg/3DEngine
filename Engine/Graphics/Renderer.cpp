@@ -581,6 +581,7 @@ out vec4 FragColor;
 uniform sampler2D u_Current;
 uniform sampler2D u_History;
 uniform sampler2D u_Depth;
+uniform sampler2D u_NormalRoughness;
 uniform vec3 u_CameraForward, u_CameraRight, u_CameraUp, u_CameraPosition;
 uniform vec3 u_PreviousForward, u_PreviousRight, u_PreviousUp, u_PreviousPosition;
 uniform float u_TanHalfFov, u_Aspect, u_PreviousTanHalfFov, u_PreviousAspect;
@@ -595,8 +596,11 @@ void main(){
  if(any(lessThan(prevUV,vec2(.002)))||any(greaterThan(prevUV,vec2(.998)))){FragColor=vec4(current,1);return;}
  vec2 texel=1./vec2(textureSize(u_Current,0)); vec3 mn=current,mx=current,mean=vec3(0); float count=0;
  for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){vec3 s=texture(u_Current,v_UV+vec2(x,y)*texel).rgb;mn=min(mn,s);mx=max(mx,s);mean+=s;count+=1.;}
- mean/=count; vec3 history=clamp(texture(u_History,prevUV).rgb,mn,mx); float motion=length(prevUV-v_UV); float feedback=clamp(.92-motion*10.,.55,.92);
- vec3 delta=abs(history-mean); float rejection=smoothstep(.08,.45,max(delta.r,max(delta.g,delta.b))); feedback*=1.-rejection*.75;
+ mean/=count; vec3 history=clamp(texture(u_History,prevUV).rgb,mn,mx); float motion=length(prevUV-v_UV); float feedback=clamp(.90-motion*12.,.45,.90);
+ vec3 delta=abs(history-mean); float rejection=smoothstep(.06,.32,max(delta.r,max(delta.g,delta.b)));
+ vec3 n=normalize(texture(u_NormalRoughness,v_UV).xyz*2.-1.); vec2 px=1./vec2(textureSize(u_Depth,0)); float edge=0.;
+ edge=max(edge,abs(LinearizeDepth(texture(u_Depth,v_UV+vec2(px.x,0)).r)-depth)); edge=max(edge,abs(LinearizeDepth(texture(u_Depth,v_UV+vec2(0,px.y)).r)-depth));
+ float edgeReject=smoothstep(max(.08,depth*.004),max(.35,depth*.018),edge); float grazing=1.-abs(dot(n,normalize(world-u_CameraPosition))); feedback*=1.-rejection*.82;feedback*=1.-edgeReject*.72;feedback*=1.-grazing*.10;
  FragColor=vec4(mix(current,history,feedback),1);
 }
 )";
