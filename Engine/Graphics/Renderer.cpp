@@ -129,7 +129,8 @@ float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
     if (p.z <= 0.0 || p.z >= 1.0 || p.x <= 0.0 || p.x >= 1.0 || p.y <= 0.0 || p.y >= 1.0)
         return 0.0;
 
-    float bias = max(0.0012 * (1.0 - max(dot(N, L), 0.0)), 0.00018);
+    float nDotL = max(dot(N, L), 0.0);
+    float bias = max(0.00065 * (1.0 - nDotL), 0.00032);
     vec2 texel = 1.0 / vec2(textureSize(u_ShadowMap, 0));
     int radius = clamp(u_ShadowPCFRadius, 1, 3);
     float shadow = 0.0;
@@ -145,7 +146,7 @@ float CalculateShadow(vec4 lightSpacePosition, vec3 N, vec3 L)
             weight += w;
         }
     }
-    return shadow / max(weight, 0.0001);
+    return clamp(shadow / max(weight, 0.0001), 0.0, 0.88);
 }
 
 vec3 EvaluateBRDF(vec3 N, vec3 V, vec3 L, vec3 radiance, vec3 albedo, float metallic, float roughness, vec3 F0)
@@ -235,7 +236,7 @@ void main()
     float skyWeight = N.y * 0.5 + 0.5;
     vec3 skyIrradiance = mix(vec3(0.055, 0.045, 0.035), vec3(0.22, 0.32, 0.48), skyWeight);
     vec3 Fenv = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 envDiffuse = albedo * (1.0 - metallic) * skyIrradiance;
+    vec3 envDiffuse = albedo * (1.0 - metallic) * max(skyIrradiance, vec3(0.085, 0.095, 0.11));
 
     vec3 R = reflect(-V, N);
     float sunReflection = pow(max(dot(R, sunL), 0.0), mix(8.0, 512.0, 1.0 - roughness));
@@ -343,19 +344,23 @@ float ScreenAO(vec2 uv)
     const vec2 dirs[8] = vec2[8](
         vec2(1,0),vec2(-1,0),vec2(0,1),vec2(0,-1),
         vec2(0.707,0.707),vec2(-0.707,0.707),vec2(0.707,-0.707),vec2(-0.707,-0.707));
-    for(int ring=1; ring<=3; ++ring)
+    for(int ring=1; ring<=2; ++ring)
     {
-        float radius = float(ring) * 2.25;
+        float radius = float(ring) * 1.35;
         for(int i=0;i<8;++i)
         {
-            float sd = LinearizeDepth(texture(u_Depth, uv + dirs[i] * texel * radius).r);
+            float sampleRaw = texture(u_Depth, uv + dirs[i] * texel * radius).r;
+            if(sampleRaw >= 0.99999) continue; // never darken an object silhouette against sky
+            float sd = LinearizeDepth(sampleRaw);
             float delta = center - sd;
-            float range = 1.0 - smoothstep(0.0, 3.5, abs(delta));
-            occ += step(0.035, delta) * range;
+            float thickness = max(0.08, center * 0.012);
+            float range = 1.0 - smoothstep(thickness, thickness * 5.0, abs(delta));
+            occ += smoothstep(0.015, thickness, delta) * range;
             samples += 1.0;
         }
     }
-    return clamp(1.0 - (occ / max(samples,1.0)) * 1.15, 0.48, 1.0);
+    if(samples < 1.0) return 1.0;
+    return clamp(1.0 - (occ / samples) * 0.42, 0.82, 1.0);
 }
 
 vec3 ACESFilm(vec3 x)
@@ -373,7 +378,7 @@ void main()
     // Depth-aware screen-space ambient occlusion adds contact depth at corners
     // and intersections without changing the authored material colors.
     float ao = ScreenAO(v_UV);
-    hdr *= mix(1.0, ao, 0.72);
+    hdr *= mix(1.0, ao, 0.34);
 
     // Atmospheric aerial perspective and forward scattering. This is derived
     // from depth and the procedural sun, so it works in every existing scene
@@ -411,26 +416,8 @@ void main()
 
     mapped = pow(clamp(mapped,0.0,1.0), vec3(1.0/2.2));
 
-    // Edge-aware post AA. It is intentionally spatial rather than blind
-    // history blending, so camera motion stays crisp and does not reintroduce
-    // the ghosting that the old history experiment caused.
-    vec2 texel = 1.0 / vec2(textureSize(u_Scene, 0));
-    float d0 = texture(u_Depth, v_UV).r;
-    float dl = texture(u_Depth, v_UV - vec2(texel.x,0)).r;
-    float dr = texture(u_Depth, v_UV + vec2(texel.x,0)).r;
-    float du = texture(u_Depth, v_UV + vec2(0,texel.y)).r;
-    float dd = texture(u_Depth, v_UV - vec2(0,texel.y)).r;
-    float edge = clamp((abs(d0-dl)+abs(d0-dr)+abs(d0-du)+abs(d0-dd))*420.0,0.0,1.0);
-    if(edge > 0.02)
-    {
-        vec3 n1 = ACESFilm(max(texture(u_Scene,v_UV+vec2(texel.x,0)).rgb,vec3(0.0))*max(u_Exposure,0.001));
-        vec3 n2 = ACESFilm(max(texture(u_Scene,v_UV-vec2(texel.x,0)).rgb,vec3(0.0))*max(u_Exposure,0.001));
-        vec3 n3 = ACESFilm(max(texture(u_Scene,v_UV+vec2(0,texel.y)).rgb,vec3(0.0))*max(u_Exposure,0.001));
-        vec3 n4 = ACESFilm(max(texture(u_Scene,v_UV-vec2(0,texel.y)).rgb,vec3(0.0))*max(u_Exposure,0.001));
-        vec3 neighbor = (n1+n2+n3+n4)*0.25;
-        neighbor = pow(clamp(neighbor,0.0,1.0),vec3(1.0/2.2));
-        mapped = mix(mapped, neighbor, edge * 0.16);
-    }
+    // MSAA handles geometry edges. Avoid depth-edge color filtering here:
+    // sampling across foreground/background silhouettes creates visible halos.
     FragColor = vec4(mapped,1.0);
 }
 )";
