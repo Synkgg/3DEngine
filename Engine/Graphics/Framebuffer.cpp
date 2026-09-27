@@ -116,6 +116,9 @@ void Framebuffer::Resolve()
     glBlitFramebuffer(0,0,m_Width,m_Height,0,0,m_Width,m_Height,GL_COLOR_BUFFER_BIT,GL_NEAREST);
     glReadBuffer(GL_COLOR_ATTACHMENT1); glDrawBuffer(GL_COLOR_ATTACHMENT1);
     glBlitFramebuffer(0,0,m_Width,m_Height,0,0,m_Width,m_Height,GL_COLOR_BUFFER_BIT,GL_NEAREST);
+    // Depth blits are independent of the active color draw buffer, but restore
+    // attachment zero first so subsequent code inherits the expected state.
+    glReadBuffer(GL_COLOR_ATTACHMENT0); glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBlitFramebuffer(0,0,m_Width,m_Height,0,0,m_Width,m_Height,GL_DEPTH_BUFFER_BIT,GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
