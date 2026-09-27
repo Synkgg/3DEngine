@@ -185,12 +185,14 @@ void Renderer::DrawMeshInternal(
 		"u_Model",
 		model
 	);
-    m_Shader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrix);
+    for (int i = 0; i < ShadowCascadeCount; ++i) {
+        m_Shader.SetMat4(("u_LightSpaceMatrices[" + std::to_string(i) + "]").c_str(), m_LightSpaceMatrices[i]);
+        m_Shader.SetFloat(("u_ShadowCascadeSplits[" + std::to_string(i) + "]").c_str(), m_ShadowCascadeSplits[i]);
+        glActiveTexture(GL_TEXTURE1 + i); glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTextures[i]);
+        m_Shader.SetInt(("u_ShadowMaps[" + std::to_string(i) + "]").c_str(), 1 + i);
+    }
     m_Shader.SetInt("u_ShadowsEnabled", (m_RenderSettings.shadows && m_ShadowMapReady) ? 1 : 0);
     m_Shader.SetInt("u_ShadowPCFRadius", std::clamp(m_RenderSettings.shadowQuality + 1, 1, 3));
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTexture);
-    m_Shader.SetInt("u_ShadowMap", 1);
     glActiveTexture(GL_TEXTURE0);
 
 	m_Shader.SetVec3(
@@ -231,8 +233,8 @@ void Renderer::DrawMeshInternal(
     m_Shader.SetInt("u_UseEnvironmentMap", hasEnvironment ? 1 : 0);
     if (hasEnvironment)
     {
-        m_EnvironmentSystem.Bind(7);
-        m_Shader.SetInt("u_EnvironmentMap", 7);
+        m_EnvironmentSystem.Bind(9);
+        m_Shader.SetInt("u_EnvironmentMap", 9);
     }
     const Texture2D* maps[5] = { normalMap, metallicMap, roughnessMap, aoMap, emissiveMap };
     const char* samplers[5] = { "u_NormalMap", "u_MetallicMap", "u_RoughnessMap", "u_AOMap", "u_EmissiveMap" };
@@ -243,8 +245,8 @@ void Renderer::DrawMeshInternal(
         m_Shader.SetInt(toggles[mapIndex], valid ? 1 : 0);
         if (valid)
         {
-            maps[mapIndex]->Bind(2 + mapIndex);
-            m_Shader.SetInt(samplers[mapIndex], 2 + mapIndex);
+            maps[mapIndex]->Bind(4 + mapIndex);
+            m_Shader.SetInt(samplers[mapIndex], 4 + mapIndex);
         }
     }
     glActiveTexture(GL_TEXTURE0);
