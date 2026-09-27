@@ -176,6 +176,8 @@ void Renderer::BeginShadowPass(int cascadeIndex)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
+    m_ShadowShader.Bind();
+    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrices[cascadeIndex]);
 }
 
 void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitive)
@@ -187,11 +189,8 @@ void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitiv
     if (!mesh) return;
 
     mesh->Bind();
-    m_ShadowShader.Bind();
     m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrices[m_ActiveShadowCascade]);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
-    m_ShadowShader.Unbind();
     mesh->Unbind();
 }
 
@@ -201,17 +200,15 @@ void Renderer::DrawShadowModel(const Transform& transform, const std::string& mo
     Mesh* mesh = GetModelMesh(modelPath);
     if (!mesh) return;
     mesh->Bind();
-    m_ShadowShader.Bind();
     m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrices[m_ActiveShadowCascade]);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
-    m_ShadowShader.Unbind();
     mesh->Unbind();
 }
 
 void Renderer::EndShadowPass()
 {
     if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade]) return;
+    m_ShadowShader.Unbind();
     glCullFace(GL_BACK);
     glDisable(GL_CULL_FACE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
