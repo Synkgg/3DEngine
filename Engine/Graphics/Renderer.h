@@ -223,6 +223,8 @@ private:
     int m_SpotLightCount = 0;
     RenderSettings m_RenderSettings{};
     RenderDebugView m_DebugView = RenderDebugView::Lit;
+    Mat4 m_FrameViewProjection = Mat4::Identity();
+    bool m_FrameShaderStateReady = false;
 
     DebugRenderer m_DebugRenderer;
 
@@ -233,6 +235,7 @@ private:
     Mesh* GetPrimitiveMesh(PrimitiveType primitive);
     Mesh* GetModelMesh(const std::string& modelPath);
     void DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha, const Texture2D* texture, float metallic, float roughness, float ambientOcclusion, float emissive, const Texture2D* normalMap, const Texture2D* metallicMap, const Texture2D* roughnessMap, const Texture2D* aoMap, const Texture2D* emissiveMap);
+    void UploadFrameShaderState();
 
     bool CreateShadowTarget();
     void DestroyShadowTarget();
