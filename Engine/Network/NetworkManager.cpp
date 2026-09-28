@@ -62,7 +62,7 @@ void NetworkManager::SendMessageTo(const Endpoint& e,std::uint32_t senderID,std:
  MessagePacket p{};p.header={Magic,Message};p.senderID=senderID;p.channel=channel;p.size=static_cast<std::uint16_t>(std::min(payload.size(),MaxMessagePayload));std::memcpy(p.payload,payload.data(),p.size);
  sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);const int bytes=static_cast<int>(sizeof(PacketHeader)+sizeof(p.senderID)+sizeof(p.channel)+sizeof(p.size)+p.size);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),bytes,0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
 }
-void NetworkManager::SendMessage(std::uint16_t channel,const std::string& payload){
+void NetworkManager::SendNetworkMessage(std::uint16_t channel,const std::string& payload){
  if(m_Mode==Mode::Offline||!IsHandshakeComplete())return;const std::string clipped=payload.substr(0,MaxMessagePayload);const auto sender=GetLocalPlayerID();
  if(m_Mode==Mode::Host){m_Messages.push_back({sender,channel,clipped});for(const auto& c:m_Clients)SendMessageTo(c,sender,channel,clipped);}
  else SendMessageTo(m_Server,sender,channel,clipped);

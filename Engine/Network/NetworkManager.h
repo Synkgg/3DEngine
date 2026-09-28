@@ -30,7 +30,7 @@ public:
 
     // Generic replication primitives. Gameplay decides what these values mean.
     void SendLocalTransform(const NetworkTransformState& state);
-    void SendMessage(std::uint16_t channel, const std::string& payload);
+    void SendNetworkMessage(std::uint16_t channel, const std::string& payload);
     std::vector<NetworkMessage> ConsumeMessages();
 
     const std::unordered_map<std::uint32_t, NetworkTransformState>& GetRemoteTransforms() const { return m_RemoteTransforms; }
