@@ -105,7 +105,7 @@ local function updateNetworking(dt)
             sendTimer=0
             local p=transform.GetPosition()
             local forward=Camera.GetForward()
-            local bodyYaw=math.deg(math.atan2(-forward.x,-forward.z))
+            local bodyYaw=math.deg(math.atan(-forward.x,-forward.z))
             Network.SendTransform(p.x,p.y,p.z,0.0,bodyYaw,0.0)
         end
     end
