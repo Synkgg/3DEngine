@@ -22,10 +22,16 @@ end
 local function movePlayerToStart(playerID)
     local start=Controller.GetPlayerStart(playerID)
     if not start.valid then return end
-    if playerID==Controller.GetLocalID() then transform.SetPosition(start.x,start.y,start.z)
+    if playerID==Controller.GetLocalID() then
+        transform.SetPosition(start.x,start.y,start.z)
+        CharacterController.Move(0.0,0.0)
+        Camera.SetPosition(start.x,start.y+cameraHeight,start.z)
     else
         local entityID=remotePawns[playerID]
-        if entityID and entityID~=0 then Scene.SetPosition(entityID,start.x,start.y,start.z) end
+        if entityID and entityID~=0 then
+            Scene.SetPosition(entityID,start.x,start.y,start.z)
+            remoteTargets[playerID]=nil
+        end
     end
 end
 
@@ -191,8 +197,18 @@ function OnUpdate(dt)
 
     if not Controller.IsLocallyControlled(self.id) then return end
 
-    if Input.IsKeyPressed("Escape") then setPaused(not paused); return end
+    -- Camera and controller state must keep following the live pawn even while
+    -- an online menu owns input. The world is still simulating.
+    local livePosition=transform.GetPosition()
+    Camera.SetPosition(livePosition.x,livePosition.y+cameraHeight,livePosition.z)
+
+    if Input.IsKeyPressed("Escape") then
+        setPaused(not paused)
+        if paused then CharacterController.Move(0.0,0.0) end
+        return
+    end
     if paused then
+        CharacterController.Move(0.0,0.0)
         if UI.WasClicked("ResumeButton") then setPaused(false)
         elseif UI.WasClicked("DisconnectButton") then
             setPaused(false)
@@ -253,7 +269,5 @@ function OnUpdate(dt)
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
 
-    local p=transform.GetPosition()
-    Camera.SetPosition(p.x,p.y+cameraHeight,p.z)
     if Input.IsMouseButtonDown(1) then fire() end
 end
