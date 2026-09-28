@@ -2,16 +2,37 @@ local walkSpeed = 5.0
 local sprintSpeed = 8.0
 local sensitivity = 0.01
 local cameraHeight = 0.55
+local paused = false
+
+local function setPaused(value)
+    paused = value
+    Scene.SetPaused(value)
+    UI.SetVisible("PauseMenu", value)
+    Input.SetCursorVisible(value)
+end
 
 function OnCreate()
     State.SetNumber("mouse_sensitivity", tonumber(Preferences.LoadString("mouse_sensitivity", "0.01")) or 0.01)
     State.SetBool("invert_y", Preferences.LoadString("invert_y", "0") == "1")
     Controller.Possess(self.id)
+    UI.Load("Assets/UI/Pause.ui")
+    UI.SetVisible("PauseMenu", false)
+    Scene.SetPaused(false)
     Input.SetCursorVisible(false)
 end
 
 function OnUpdate(dt)
     if not Controller.IsLocallyControlled(self.id) then return end
+
+    if Input.IsKeyPressed("Escape") then
+        setPaused(not paused)
+        return
+    end
+
+    if paused then
+        if UI.WasClicked("ResumeButton") then setPaused(false) end
+        return
+    end
     sensitivity = State.GetNumber("mouse_sensitivity", 0.01)
     local invert = State.GetBool("invert_y", false) and 1.0 or -1.0
     Camera.Rotate(Input.GetMouseDeltaX() * sensitivity, Input.GetMouseDeltaY() * sensitivity * invert)
