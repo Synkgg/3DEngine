@@ -1105,7 +1105,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1.0 0.06 0.02 0 -1 0 0.82 1 9 23 35 0
+Light 1 0.72 0.10 0.06 0 -1 0 0.48 1 7 23 35 0
 Collider 0
 Scripts 0
 Entity 66
@@ -1190,7 +1190,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.03 0.28 1 0 -1 0 0.82 1 9 23 35 0
+Light 1 0.06 0.20 0.72 0 -1 0 0.48 1 7 23 35 0
 Collider 0
 Scripts 0
 Entity 71
@@ -1360,7 +1360,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1.0 0.56 0.08 0 -1 0 2.2 1 9 23 35 0
+Light 1 1.0 0.52 0.07 0 -1 0 1.65 1 6.5 23 35 0
 Collider 0
 Scripts 0
 Entity 93
@@ -1377,7 +1377,7 @@ Material 1 0.12 0.58 1 0.38
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.03 0.32 0.72 0 -1 0 0.55 1 8 23 35 0
+Light 1 0.10 0.16 0.22 0 -1 0 0.12 1 4 23 35 0
 Collider 0
 Scripts 0
 Entity 94
@@ -1394,7 +1394,7 @@ Material 1 0.12 0.58 1 0.38
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.58 0.03 0.24 0 -1 0 0.55 1 8 23 35 0
+Light 1 0.18 0.08 0.10 0 -1 0 0.12 1 4 23 35 0
 Collider 0
 Scripts 0
 Entity 95
@@ -1807,9 +1807,9 @@ Collider 0
 Scripts 0
 Entity 119
 Name WarehouseNorth_-28
-Position -28 0 -38
+Position -28 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1824,9 +1824,9 @@ Collider 0
 Scripts 0
 Entity 120
 Name WarehouseSouth_-28
-Position -28 0 42
+Position -28 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1841,9 +1841,9 @@ Collider 0
 Scripts 0
 Entity 121
 Name WarehouseNorth_-20
-Position -20 0 -38
+Position -20 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1858,9 +1858,9 @@ Collider 0
 Scripts 0
 Entity 122
 Name WarehouseSouth_-20
-Position -20 0 42
+Position -20 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1875,9 +1875,9 @@ Collider 0
 Scripts 0
 Entity 123
 Name WarehouseNorth_-12
-Position -12 0 -38
+Position -12 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1892,9 +1892,9 @@ Collider 0
 Scripts 0
 Entity 124
 Name WarehouseSouth_-12
-Position -12 0 42
+Position -12 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1909,9 +1909,9 @@ Collider 0
 Scripts 0
 Entity 125
 Name WarehouseNorth_-4
-Position -4 0 -38
+Position -4 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1926,9 +1926,9 @@ Collider 0
 Scripts 0
 Entity 126
 Name WarehouseSouth_-4
-Position -4 0 42
+Position -4 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1943,9 +1943,9 @@ Collider 0
 Scripts 0
 Entity 127
 Name WarehouseNorth_4
-Position 4 0 -38
+Position 4 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1960,9 +1960,9 @@ Collider 0
 Scripts 0
 Entity 128
 Name WarehouseSouth_4
-Position 4 0 42
+Position 4 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1977,9 +1977,9 @@ Collider 0
 Scripts 0
 Entity 129
 Name WarehouseNorth_12
-Position 12 0 -38
+Position 12 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -1994,9 +1994,9 @@ Collider 0
 Scripts 0
 Entity 130
 Name WarehouseSouth_12
-Position 12 0 42
+Position 12 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2011,9 +2011,9 @@ Collider 0
 Scripts 0
 Entity 131
 Name WarehouseNorth_20
-Position 20 0 -38
+Position 20 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2028,9 +2028,9 @@ Collider 0
 Scripts 0
 Entity 132
 Name WarehouseSouth_20
-Position 20 0 42
+Position 20 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2045,9 +2045,9 @@ Collider 0
 Scripts 0
 Entity 133
 Name WarehouseNorth_28
-Position 28 0 -38
+Position 28 0 -33.8
 Rotation 0 1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2062,9 +2062,9 @@ Collider 0
 Scripts 0
 Entity 134
 Name WarehouseSouth_28
-Position 28 0 42
+Position 28 0 37.8
 Rotation 0 -1.5708 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2079,9 +2079,9 @@ Collider 0
 Scripts 0
 Entity 135
 Name WarehouseWest_-32
-Position -30 0 -32
+Position -25.8 0 -32
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2096,9 +2096,9 @@ Collider 0
 Scripts 0
 Entity 136
 Name WarehouseEast_-32
-Position 30 0 -32
+Position 25.8 0 -32
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2113,9 +2113,9 @@ Collider 0
 Scripts 0
 Entity 137
 Name WarehouseWest_-24
-Position -30 0 -24
+Position -25.8 0 -24
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2130,9 +2130,9 @@ Collider 0
 Scripts 0
 Entity 138
 Name WarehouseEast_-24
-Position 30 0 -24
+Position 25.8 0 -24
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2147,9 +2147,9 @@ Collider 0
 Scripts 0
 Entity 139
 Name WarehouseWest_-16
-Position -30 0 -16
+Position -25.8 0 -16
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2164,9 +2164,9 @@ Collider 0
 Scripts 0
 Entity 140
 Name WarehouseEast_-16
-Position 30 0 -16
+Position 25.8 0 -16
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2181,9 +2181,9 @@ Collider 0
 Scripts 0
 Entity 141
 Name WarehouseWest_-8
-Position -30 0 -8
+Position -25.8 0 -8
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2198,9 +2198,9 @@ Collider 0
 Scripts 0
 Entity 142
 Name WarehouseEast_-8
-Position 30 0 -8
+Position 25.8 0 -8
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2215,9 +2215,9 @@ Collider 0
 Scripts 0
 Entity 143
 Name WarehouseWest_0
-Position -30 0 0
+Position -25.8 0 0
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2232,9 +2232,9 @@ Collider 0
 Scripts 0
 Entity 144
 Name WarehouseEast_0
-Position 30 0 0
+Position 25.8 0 0
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2249,9 +2249,9 @@ Collider 0
 Scripts 0
 Entity 145
 Name WarehouseWest_8
-Position -30 0 8
+Position -25.8 0 8
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2266,9 +2266,9 @@ Collider 0
 Scripts 0
 Entity 146
 Name WarehouseEast_8
-Position 30 0 8
+Position 25.8 0 8
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2283,9 +2283,9 @@ Collider 0
 Scripts 0
 Entity 147
 Name WarehouseWest_16
-Position -30 0 16
+Position -25.8 0 16
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2300,9 +2300,9 @@ Collider 0
 Scripts 0
 Entity 148
 Name WarehouseEast_16
-Position 30 0 16
+Position 25.8 0 16
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2317,9 +2317,9 @@ Collider 0
 Scripts 0
 Entity 149
 Name WarehouseWest_24
-Position -30 0 24
+Position -25.8 0 24
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2334,9 +2334,9 @@ Collider 0
 Scripts 0
 Entity 150
 Name WarehouseEast_24
-Position 30 0 24
+Position 25.8 0 24
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2351,9 +2351,9 @@ Collider 0
 Scripts 0
 Entity 151
 Name WarehouseWest_32
-Position -30 0 32
+Position -25.8 0 32
 Rotation 0 0 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2368,9 +2368,9 @@ Collider 0
 Scripts 0
 Entity 152
 Name WarehouseEast_32
-Position 30 0 32
+Position 25.8 0 32
 Rotation 0 3.14159 0
-Scale 2 2 2
+Scale 2 2 2.04
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Walls/WallBand_Straight.obj"
@@ -2557,7 +2557,7 @@ Entity 163
 Name WarehouseCeiling_-20_-30
 Position -20 6.2 -30
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2574,7 +2574,7 @@ Entity 164
 Name WarehouseCeiling_-20_-10
 Position -20 6.2 -10
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2591,7 +2591,7 @@ Entity 165
 Name WarehouseCeiling_-20_10
 Position -20 6.2 10
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2608,7 +2608,7 @@ Entity 166
 Name WarehouseCeiling_-20_30
 Position -20 6.2 30
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2625,7 +2625,7 @@ Entity 167
 Name WarehouseCeiling_0_-30
 Position 0 6.2 -30
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2642,7 +2642,7 @@ Entity 168
 Name WarehouseCeiling_0_-10
 Position 0 6.2 -10
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2659,7 +2659,7 @@ Entity 169
 Name WarehouseCeiling_0_10
 Position 0 6.2 10
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2676,7 +2676,7 @@ Entity 170
 Name WarehouseCeiling_0_30
 Position 0 6.2 30
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2693,7 +2693,7 @@ Entity 171
 Name WarehouseCeiling_20_-30
 Position 20 6.2 -30
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2710,7 +2710,7 @@ Entity 172
 Name WarehouseCeiling_20_-10
 Position 20 6.2 -10
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2727,7 +2727,7 @@ Entity 173
 Name WarehouseCeiling_20_10
 Position 20 6.2 10
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2744,7 +2744,7 @@ Entity 174
 Name WarehouseCeiling_20_30
 Position 20 6.2 30
 Rotation 3.14159 0 0
-Scale 5 1 5
+Scale 5.08 1 5.08
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
@@ -2850,13 +2850,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 181
@@ -2867,13 +2867,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 182
@@ -2884,13 +2884,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 183
@@ -2901,13 +2901,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 184
@@ -2918,13 +2918,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 185
@@ -2935,13 +2935,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 186
@@ -2952,13 +2952,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 187
@@ -2969,13 +2969,13 @@ Scale 2.4 2.4 2.4
 Parent 0
 PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
-Color 1 0.72 0.75 0.72 1
+Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.55 1 0.55
+Material 1 0.02 0.62 1 0.72
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.72 0.78 0.72 0 -1 0 0.42 1 9 23 35 0
+Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
 Collider 0
 Scripts 0
 Entity 188
