@@ -1,5 +1,4 @@
 MyEngineScene
-Environment 1 4 1 1 1 180 0.78 0.0004 0.12 1 85
 Entities 1
 Entity 1
 Name Main Menu
@@ -20,4 +19,5 @@ Light 0
 Collider 0
 Scripts 1
 Script Assets/Scripts/MainMenu.lua
+ScriptProperties 0
 HierarchyFolders 0
