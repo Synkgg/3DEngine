@@ -125,8 +125,8 @@ file(READ "${INTER_FONT_FILE}" INTER_FONT_HEX HEX)
 string(REGEX REPLACE "(..)" "0x\\1," INTER_FONT_BYTES "${INTER_FONT_HEX}")
 file(WRITE "${INTER_FONT_CPP}"
 "#include <cstddef>\n"
-"const unsigned char g_InterFontData[] = {${INTER_FONT_BYTES}};\n"
-"const std::size_t g_InterFontDataSize = sizeof(g_InterFontData);\n")
+"extern const unsigned char g_InterFontData[] = {${INTER_FONT_BYTES}};\n"
+"extern const std::size_t g_InterFontDataSize = sizeof(g_InterFontData);\n")
 unset(INTER_FONT_HEX)
 unset(INTER_FONT_BYTES)
 
