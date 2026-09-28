@@ -7,6 +7,8 @@ class ProjectManager
 public:
     bool Load(const std::string& descriptorPath);
     bool Create(const std::string& directory, const std::string& name);
+    bool Save();
+    bool SetStartupScene(const std::string& scenePath);
     void UseLegacyWorkspace();
     bool HasProject() const { return m_HasProject; }
     const Project& GetActiveProject() const { return m_Project; }
