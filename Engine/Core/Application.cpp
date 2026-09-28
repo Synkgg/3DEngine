@@ -87,6 +87,7 @@ bool Application::Initialize()
     m_Audio.Initialize();
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
     m_Runtime.SetAudioEngine(&m_Audio);
+    m_Runtime.SetProjectManager(&m_ProjectManager);
     if (!m_ProjectPath.empty())
     {
         if (!m_ProjectManager.Load(m_ProjectPath)) return false;
@@ -179,13 +180,23 @@ bool Application::ActivateProject(const std::string& descriptorPath)
     }
 
     const Project& project = m_ProjectManager.GetActiveProject();
-    if (!m_ProjectSettings.Load(project.GetSettingsPath().string()))
-        m_ProjectSettings.Save(project.GetSettingsPath().string());
 
-    m_Renderer.SetRenderSettings(m_ProjectSettings.GetRenderSettings());
-    m_Runtime.SetProjectSettings(&m_ProjectSettings);
-    m_Runtime.SetProjectManager(&m_ProjectManager);
+    // Keep legacy asset loaders working while project-aware loaders migrate:
+    // authored Assets/... references now resolve inside the selected project.
+    std::error_code workingDirectoryError;
+    std::filesystem::current_path(project.rootDirectory, workingDirectoryError);
+    if (workingDirectoryError)
+    {
+        m_ProjectHubError = "Project opened, but its root directory could not be activated.";
+        Logger::Error("Failed to activate project root: " + project.rootDirectory.string());
+        return false;
+    }
+
     m_Editor.ConfigureProject(project.GetAssetRoot(), project.GetSettingsPath());
+    ProjectSettings& liveProjectSettings = m_Editor.GetProjectSettings();
+    m_Renderer.SetRenderSettings(liveProjectSettings.GetRenderSettings());
+    m_Runtime.SetProjectSettings(&liveProjectSettings);
+    m_Runtime.SetProjectManager(&m_ProjectManager);
 
     if (!project.startupScene.empty() &&
         !m_Editor.OpenScene(m_Scene, project.GetStartupScenePath()))
