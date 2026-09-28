@@ -92,6 +92,8 @@ void Application::Run()
         const bool runtimeEscapePressed =
             m_Runtime.IsRunning() &&
             m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE);
+        const bool runtimeHadCursorBeforeUpdate =
+            m_Runtime.IsRunning() && m_Runtime.WantsCursor();
 
         const bool stopRuntimeBeforeUpdate =
             runtimeEscapePressed &&
@@ -356,7 +358,8 @@ void Application::Run()
             if (runtimeEscapePressed &&
                 m_Runtime.IsRunning() &&
                 !m_Runtime.IsPaused() &&
-                !m_Runtime.WantsCursor())
+                !m_Runtime.WantsCursor() &&
+                !runtimeHadCursorBeforeUpdate)
             {
                 // Give authored runtime UI/gameplay scripts first ownership of
                 // Escape. If they expose the cursor this frame, they consumed it.
