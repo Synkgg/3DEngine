@@ -220,41 +220,17 @@ bool Application::CreateProject(const std::string& parentDirectory, const std::s
         return false;
     }
 
-    namespace fs = std::filesystem;
-    const fs::path root = fs::path(parentDirectory) / name;
-    std::error_code ec;
-    fs::create_directories(root / "Assets" / "Scenes", ec);
-    fs::create_directories(root / "Assets" / "Scripts", ec);
-    fs::create_directories(root / "Assets" / "UI", ec);
-    if (ec)
+    const std::filesystem::path root =
+        (std::filesystem::path(parentDirectory) / name).lexically_normal();
+
+    if (!m_ProjectManager.Create(root.string(), name))
     {
-        m_ProjectHubError = "Could not create the project folders.";
+        m_ProjectHubError = "Could not create the project workspace.";
         return false;
     }
 
-    const fs::path descriptor = root / (name + ".project");
-    std::ofstream out(descriptor);
-    if (!out)
-    {
-        m_ProjectHubError = "Could not create the project descriptor.";
-        return false;
-    }
-
-    out << "Version 1\n"
-        << "Name " << std::quoted(name) << "\n"
-        << "AssetDirectory \"Assets\"\n"
-        << "StartupScene \"\"\n"
-        << "Settings \"ProjectSettings.cfg\"\n";
-    out.close();
-
-    ProjectSettings defaults;
-    if (!defaults.Save((root / "ProjectSettings.cfg").string()))
-    {
-        m_ProjectHubError = "Could not create project settings.";
-        return false;
-    }
-
-    return ActivateProject(descriptor.string());
+    return ActivateProject(
+        m_ProjectManager.GetActiveProject().descriptorPath.string());
 }
 
 void Application::RenderProjectHub()
