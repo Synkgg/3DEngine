@@ -102,6 +102,22 @@ bool Application::Initialize()
         std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", defaultLocation.c_str());
     }
     const Project& activeProject = m_ProjectManager.GetActiveProject();
+
+    // Asset references inside scenes, scripts and UI are intentionally stored
+    // as portable "Assets/..." paths. A real project therefore owns the
+    // working root used by all existing loaders (OBJ, textures, Lua and UI).
+    // Legacy workspace keeps the executable's existing working directory.
+    if (m_ProjectManager.HasProject())
+    {
+        std::error_code workingDirectoryError;
+        std::filesystem::current_path(activeProject.rootDirectory, workingDirectoryError);
+        if (workingDirectoryError)
+        {
+            Logger::Error("Failed to activate project root: " + activeProject.rootDirectory.string());
+            return false;
+        }
+    }
+
     m_Editor.ConfigureProject(activeProject.GetAssetRoot(), activeProject.GetSettingsPath());
 
     // The editor owns the live project settings instance. Runtime and renderer
