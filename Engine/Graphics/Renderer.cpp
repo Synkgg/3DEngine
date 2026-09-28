@@ -769,6 +769,16 @@ bool Renderer::Initialize(Window& window)
 		return false;
 	}
 
+    // The runtime/network loop currently shares the main thread with presentation.
+    // Never leave swap behavior to the graphics driver: background editor windows
+    // can otherwise block for long periods in SDL_GL_SwapWindow and starve network
+    // pumping while testing multiple local instances. A configurable frame limiter/
+    // VSync setting can replace this later without coupling simulation to swap.
+    if (!SDL_GL_SetSwapInterval(0))
+    {
+        Logger::Warning(std::string("Failed to disable swap interval: ") + SDL_GetError());
+    }
+
 	if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress))
 	{
 		Logger::Error("Failed to initialize GLAD.");
