@@ -30,6 +30,9 @@ public:
     void Shutdown();
 
     void StartRuntime();
+    bool ActivateProject(const std::string& descriptorPath);
+    bool CreateProject(const std::string& parentDirectory, const std::string& name);
+    void RenderProjectHub();
     void StopRuntime();
 
 private:
@@ -50,6 +53,10 @@ private:
     ProjectSettings m_ProjectSettings;
 
     std::string m_ProjectPath;
+    bool m_ShowProjectHub = false;
+    char m_NewProjectName[128]{ "New Project" };
+    char m_NewProjectLocation[512]{};
+    std::string m_ProjectHubError;
 
     bool m_CameraControlActive;
     bool m_RuntimeMouseCaptured;

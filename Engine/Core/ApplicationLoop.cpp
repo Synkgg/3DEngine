@@ -106,6 +106,16 @@ void Application::Run()
 
         m_ImGuiLayer.BeginFrame();
 
+        if (m_ShowProjectHub)
+        {
+            ImGuiIO& hubIO = ImGui::GetIO();
+            hubIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+            RenderProjectHub();
+            m_ImGuiLayer.EndFrame();
+            m_Renderer.EndFrame();
+            continue;
+        }
+
         // ImGui's SDL backend can still query the mouse every frame even when
         // motion events are filtered. Disable mouse interaction completely
         // while the game owns the cursor, then restore it for menus/editor.

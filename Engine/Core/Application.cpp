@@ -21,6 +21,10 @@
 #include "../UI/UITest.h"
 #include "../UI/UISerializer.h"
 #include "../UI/UIText.h"
+#include "../Platform/Windows/FileDialog.h"
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 
 Application::Application(const std::string& projectPath)
     : m_Running(false),
@@ -93,6 +97,9 @@ bool Application::Initialize()
     {
         m_ProjectManager.UseLegacyWorkspace();
         m_ProjectSettings.EnsureLoaded();
+        m_ShowProjectHub = true;
+        const std::string defaultLocation = (std::filesystem::current_path() / "Projects").string();
+        std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", defaultLocation.c_str());
     }
     m_Renderer.SetRenderSettings(m_ProjectSettings.GetRenderSettings());
     m_Runtime.SetProjectSettings(&m_ProjectSettings);
@@ -142,3 +149,144 @@ void Application::Shutdown()
 
 
 
+
+
+bool Application::ActivateProject(const std::string& descriptorPath)
+{
+    if (!m_ProjectManager.Load(descriptorPath))
+    {
+        m_ProjectHubError = "Could not open that project.";
+        return false;
+    }
+
+    const Project& project = m_ProjectManager.GetActiveProject();
+    if (!m_ProjectSettings.Load(project.GetSettingsPath().string()))
+        m_ProjectSettings.Save(project.GetSettingsPath().string());
+
+    m_Renderer.SetRenderSettings(m_ProjectSettings.GetRenderSettings());
+    m_Runtime.SetProjectSettings(&m_ProjectSettings);
+    m_Editor.ConfigureProject(project.GetAssetRoot(), project.GetSettingsPath());
+
+    if (!project.startupScene.empty() &&
+        !m_Editor.OpenScene(m_Scene, project.GetStartupScenePath()))
+    {
+        m_ProjectHubError = "Project opened, but its startup scene could not be loaded.";
+        return false;
+    }
+
+    m_ProjectPath = descriptorPath;
+    m_ShowProjectHub = false;
+    m_ProjectHubError.clear();
+    SDL_SetWindowTitle(m_Window.GetNativeWindow(), (project.name + " - Editor").c_str());
+    return true;
+}
+
+bool Application::CreateProject(const std::string& parentDirectory, const std::string& name)
+{
+    if (name.empty() || parentDirectory.empty())
+    {
+        m_ProjectHubError = "Project name and location are required.";
+        return false;
+    }
+
+    namespace fs = std::filesystem;
+    const fs::path root = fs::path(parentDirectory) / name;
+    std::error_code ec;
+    fs::create_directories(root / "Assets" / "Scenes", ec);
+    fs::create_directories(root / "Assets" / "Scripts", ec);
+    fs::create_directories(root / "Assets" / "UI", ec);
+    if (ec)
+    {
+        m_ProjectHubError = "Could not create the project folders.";
+        return false;
+    }
+
+    const fs::path descriptor = root / (name + ".project");
+    std::ofstream out(descriptor);
+    if (!out)
+    {
+        m_ProjectHubError = "Could not create the project descriptor.";
+        return false;
+    }
+
+    out << "Version 1\n"
+        << "Name " << std::quoted(name) << "\n"
+        << "AssetDirectory \"Assets\"\n"
+        << "StartupScene \"\"\n"
+        << "Settings \"ProjectSettings.cfg\"\n";
+    out.close();
+
+    ProjectSettings defaults;
+    if (!defaults.Save((root / "ProjectSettings.cfg").string()))
+    {
+        m_ProjectHubError = "Could not create project settings.";
+        return false;
+    }
+
+    return ActivateProject(descriptor.string());
+}
+
+void Application::RenderProjectHub()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(io.DisplaySize);
+    const ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoSavedSettings;
+
+    ImGui::Begin("Project Hub", nullptr, flags);
+    const float width = ImGui::GetContentRegionAvail().x;
+    ImGui::Dummy(ImVec2(0, 42));
+    ImGui::SetCursorPosX((width - 520.0f) * 0.5f);
+    ImGui::BeginChild("HubCard", ImVec2(520, 0), ImGuiChildFlags_Borders);
+
+    ImGui::Dummy(ImVec2(0, 20));
+    ImGui::SetWindowFontScale(1.45f);
+    ImGui::TextUnformatted("Projects");
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::TextDisabled("Create a game project or open an existing one.");
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (ImGui::Button("Open Project...", ImVec2(-1, 42)))
+    {
+        std::string path;
+        if (FileDialog::OpenProject(path))
+            ActivateProject(path);
+    }
+
+    ImGui::Spacing();
+    ImGui::TextUnformatted("New Project");
+    ImGui::InputText("Name", m_NewProjectName, sizeof(m_NewProjectName));
+    ImGui::InputText("Location", m_NewProjectLocation, sizeof(m_NewProjectLocation));
+    ImGui::SameLine();
+    if (ImGui::Button("Browse..."))
+    {
+        std::string folder;
+        if (FileDialog::SelectFolder(folder))
+            std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", folder.c_str());
+    }
+
+    if (ImGui::Button("Create Project", ImVec2(-1, 42)))
+        CreateProject(m_NewProjectLocation, m_NewProjectName);
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    if (ImGui::Button("Continue Legacy Workspace", ImVec2(-1, 34)))
+    {
+        m_ShowProjectHub = false;
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Editor - Legacy Workspace");
+    }
+
+    if (!m_ProjectHubError.empty())
+    {
+        ImGui::Spacing();
+        ImGui::TextWrapped("%s", m_ProjectHubError.c_str());
+    }
+
+    ImGui::EndChild();
+    ImGui::End();
+}
