@@ -19,6 +19,14 @@ public:
         const Vec3& direction
     );
 
+    void DrawLine(
+        const Mat4& view,
+        const Mat4& projection,
+        const Vec3& start,
+        const Vec3& end,
+        const Vec3& color
+    );
+
     void DrawBox(
         const Mat4& view,
         const Mat4& projection,
