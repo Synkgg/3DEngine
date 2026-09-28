@@ -24,6 +24,7 @@
 #include "../../Components/TransformComponent.h"
 #include "../../Components/CharacterControllerComponent.h"
 #include "../../Components/PawnComponent.h"
+#include "../../Components/PlayerStartComponent.h"
 #include "../../Components/MeshComponent.h"
 #include "../../Components/ColliderComponent.h"
 #include "../../Components/InteractableComponent.h"
@@ -998,6 +999,7 @@ void LuaScript::BindEngineAPI()
         return pawn ? pawn->controllerID : 0u;
     });
     controller.set_function("IsLocallyControlled", [this](std::uint32_t entityID) { return m_Runtime && m_Scene && m_Runtime->IsPawnLocallyControlled(*m_Scene, Entity(entityID)); });
+    controller.set_function("GetPlayerStart",[this](sol::optional<std::uint32_t> requestedSlot){sol::table out=m_Lua->create_table();out["valid"]=false;out["entityID"]=0u;out["slot"]=0u;out["x"]=0.0f;out["y"]=0.0f;out["z"]=0.0f;if(!m_Scene)return out;PlayerStartComponent* fallback=nullptr;Entity fallbackEntity;for(const Entity& entity:m_Scene->GetEntities()){auto* start=m_Scene->GetComponent<PlayerStartComponent>(entity);if(!start)continue;if(!fallback||start->slot==0){fallback=start;fallbackEntity=entity;}if(requestedSlot&&start->slot!=*requestedSlot)continue;if(auto* t=m_Scene->GetComponent<TransformComponent>(entity)){out["valid"]=true;out["entityID"]=entity.GetID();out["slot"]=start->slot;out["x"]=t->transform.position.x;out["y"]=t->transform.position.y;out["z"]=t->transform.position.z;return out;}}if(fallback)if(auto* t=m_Scene->GetComponent<TransformComponent>(fallbackEntity)){out["valid"]=true;out["entityID"]=fallbackEntity.GetID();out["slot"]=fallback->slot;out["x"]=t->transform.position.x;out["y"]=t->transform.position.y;out["z"]=t->transform.position.z;}return out;});
     (*m_Environment)["Controller"] = controller;
 
     /*
