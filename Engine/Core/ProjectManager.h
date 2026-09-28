@@ -11,6 +11,7 @@ public:
     bool HasProject() const { return m_HasProject; }
     const Project& GetActiveProject() const { return m_Project; }
     std::string ResolveAssetPath(const std::string& path) const;
+    std::string ResolveProjectPath(const std::string& path) const;
 private:
     Project m_Project;
     bool m_HasProject = false;
