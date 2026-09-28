@@ -880,7 +880,7 @@ PrefabSource ""
 Mesh 1 2 ""
 Color 1 1 0.72 0.08 1
 Texture 0
-Material 1 0.02 0.32 1 1.35
+Material 1 0.02 0.42 1 0.62
 Interactable 0
 Player 0
 CharacterController 0
@@ -1360,7 +1360,7 @@ Material 0
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 1.0 0.52 0.07 0 -1 0 1.65 1 6.5 23 35 0
+Light 1 1.0 0.50 0.06 0 -1 0 1.05 1 5.2 23 35 0
 Collider 0
 Scripts 0
 Entity 93
@@ -1373,7 +1373,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.32 0.35 0.39 1
 Texture 0
-Material 1 0.12 0.58 1 0.38
+Material 1 0.08 0.72 1 0.12
 Interactable 0
 Player 0
 CharacterController 0
@@ -1390,7 +1390,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.32 0.35 0.39 1
 Texture 0
-Material 1 0.12 0.58 1 0.38
+Material 1 0.08 0.72 1 0.12
 Interactable 0
 Player 0
 CharacterController 0
@@ -1543,7 +1543,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
 Color 1 0.9 0.05 0.02 1
 Texture 0
-Material 1 0.08 0.62 1 0.55
+Material 1 0.08 0.62 1 0.32
 Interactable 0
 Player 0
 CharacterController 0
@@ -1560,7 +1560,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
 Color 1 0.9 0.05 0.02 1
 Texture 0
-Material 1 0.08 0.62 1 0.55
+Material 1 0.08 0.62 1 0.32
 Interactable 0
 Player 0
 CharacterController 0
@@ -1577,7 +1577,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
 Color 1 0.02 0.28 1 1
 Texture 0
-Material 1 0.08 0.62 1 0.55
+Material 1 0.08 0.62 1 0.32
 Interactable 0
 Player 0
 CharacterController 0
@@ -1594,7 +1594,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
 Color 1 0.02 0.28 1 1
 Texture 0
-Material 1 0.08 0.62 1 0.55
+Material 1 0.08 0.62 1 0.32
 Interactable 0
 Player 0
 CharacterController 0
@@ -1611,7 +1611,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
 Color 1 1 0.72 0.06 1
 Texture 0
-Material 1 0.04 0.48 1 0.95
+Material 1 0.04 0.58 1 0.32
 Interactable 0
 Player 0
 CharacterController 0
@@ -1628,7 +1628,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Floor.obj"
 Color 1 1 0.72 0.06 1
 Texture 0
-Material 1 0.04 0.48 1 0.95
+Material 1 0.04 0.58 1 0.32
 Interactable 0
 Player 0
 CharacterController 0
@@ -2555,12 +2555,10 @@ Collider 0
 Scripts 0
 Entity 163
 Name WarehouseCeiling_-20_-30
-Position -20 6.2 -30
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position -20 6.35-30
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2572,12 +2570,10 @@ Collider 0
 Scripts 0
 Entity 164
 Name WarehouseCeiling_-20_-10
-Position -20 6.2 -10
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position -20 6.35-10
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2589,12 +2585,10 @@ Collider 0
 Scripts 0
 Entity 165
 Name WarehouseCeiling_-20_10
-Position -20 6.2 10
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position -20 6.3510
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2606,12 +2600,10 @@ Collider 0
 Scripts 0
 Entity 166
 Name WarehouseCeiling_-20_30
-Position -20 6.2 30
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position -20 6.3530
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2623,12 +2615,10 @@ Collider 0
 Scripts 0
 Entity 167
 Name WarehouseCeiling_0_-30
-Position 0 6.2 -30
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 0 6.35-30
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2640,12 +2630,10 @@ Collider 0
 Scripts 0
 Entity 168
 Name WarehouseCeiling_0_-10
-Position 0 6.2 -10
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 0 6.35-10
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2657,12 +2645,10 @@ Collider 0
 Scripts 0
 Entity 169
 Name WarehouseCeiling_0_10
-Position 0 6.2 10
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 0 6.3510
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2674,12 +2660,10 @@ Collider 0
 Scripts 0
 Entity 170
 Name WarehouseCeiling_0_30
-Position 0 6.2 30
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 0 6.3530
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2691,12 +2675,10 @@ Collider 0
 Scripts 0
 Entity 171
 Name WarehouseCeiling_20_-30
-Position 20 6.2 -30
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 20 6.35-30
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2708,12 +2690,10 @@ Collider 0
 Scripts 0
 Entity 172
 Name WarehouseCeiling_20_-10
-Position 20 6.2 -10
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 20 6.35-10
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2725,12 +2705,10 @@ Collider 0
 Scripts 0
 Entity 173
 Name WarehouseCeiling_20_10
-Position 20 6.2 10
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 20 6.3510
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2742,12 +2720,10 @@ Collider 0
 Scripts 0
 Entity 174
 Name WarehouseCeiling_20_30
-Position 20 6.2 30
-Rotation 3.14159 0 0
-Scale 5.08 1 5.08
+Position 20 6.3530
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Platforms/Platform_DarkPlates.obj"
+5.08 0.45 5.08$6Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2844,7 +2820,7 @@ Collider 0
 Scripts 0
 Entity 180
 Name WarehouseLight_-12_-24
-Position -12 5.82 -24
+Position -12 5.72 -24
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2852,16 +2828,16 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 181
 Name WarehouseLight_12_-24
-Position 12 5.82 -24
+Position 12 5.72 -24
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2869,16 +2845,16 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 182
 Name WarehouseLight_-12_-8
-Position -12 5.82 -8
+Position -12 5.72 -8
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2886,16 +2862,16 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 183
 Name WarehouseLight_12_-8
-Position 12 5.82 -8
+Position 12 5.72 -8
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2903,16 +2879,16 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 184
 Name WarehouseLight_-12_8
-Position -12 5.82 8
+Position -12 5.72 8
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2920,16 +2896,16 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 185
 Name WarehouseLight_12_8
-Position 12 5.82 8
+Position 12 5.72 8
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2937,16 +2913,16 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 186
 Name WarehouseLight_-12_24
-Position -12 5.82 24
+Position -12 5.72 24
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2954,16 +2930,16 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 187
 Name WarehouseLight_12_24
-Position 12 5.82 24
+Position 12 5.72 24
 Rotation 3.14159 0 0
 Scale 2.4 2.4 2.4
 Parent 0
@@ -2971,11 +2947,11 @@ PrefabSource ""
 Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_Light_Wide.obj"
 Color 1 0.82 0.86 0.90 1
 Texture 0
-Material 1 0.02 0.62 1 0.72
+Material 1 0.02 0.72 1 0.20
 Interactable 0
 Player 0
 CharacterController 0
-Light 1 0.82 0.88 0.96 0 -1 0 0.72 1 7.5 28 40 0
+Light 1 0.78 0.84 0.92 0 -1 0 0.38 1 5.8 28 40 0
 Collider 0
 Scripts 0
 Entity 188
