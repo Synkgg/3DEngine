@@ -3,6 +3,8 @@ local sensitivity, cameraHeight = 0.01, 0.55
 local paused, sendTimer, stateBroadcastTimer = false, 0.0, 0.0
 local possessedControllerID = 0
 local remotePawns, remotePlayersByEntity = {}, {}
+local remoteTargets = {}
+local REMOTE_INTERPOLATION_SPEED = 20.0
 
 local MAX_HEALTH, SHOT_DAMAGE = 100, 25
 local FIRE_INTERVAL, RESPAWN_DELAY, SCORE_LIMIT = 0.25, 2.0, 5
@@ -117,9 +119,30 @@ local function updateNetworking(dt)
         if remote.playerID~=localID then
             local entityID=getOrCreateRemotePawn(remote.playerID)
             if entityID~=0 then
-                Scene.SetPosition(entityID,remote.x,remote.y,remote.z)
-                Scene.SetRotation(entityID,remote.rx,remote.ry,remote.rz)
+                remoteTargets[remote.playerID]={
+                    x=remote.x,y=remote.y,z=remote.z,
+                    rx=remote.rx,ry=remote.ry,rz=remote.rz
+                }
             end
+        end
+    end
+end
+
+local function updateRemoteInterpolation(dt)
+    local alpha=math.min(1.0,dt*REMOTE_INTERPOLATION_SPEED)
+    for playerID,target in pairs(remoteTargets) do
+        local entityID=remotePawns[playerID]
+        if entityID and entityID~=0 then
+            local p=Scene.GetPosition(entityID)
+            Scene.SetPosition(
+                entityID,
+                p.x+(target.x-p.x)*alpha,
+                p.y+(target.y-p.y)*alpha,
+                p.z+(target.z-p.z)*alpha
+            )
+            -- Rotation is still applied immediately until the generic scene API
+            -- exposes GetRotation for arbitrary entities.
+            Scene.SetRotation(entityID,target.rx,target.ry,target.rz)
         end
     end
 end
@@ -175,6 +198,7 @@ function OnUpdate(dt)
 
     updatePossessionAndSpawn()
     updateNetworking(dt)
+    updateRemoteInterpolation(dt)
     processCombatMessages()
     updateHostRespawns(dt)
     fireCooldown=math.max(0,fireCooldown-dt)
