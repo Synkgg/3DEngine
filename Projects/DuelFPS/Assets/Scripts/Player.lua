@@ -98,16 +98,20 @@ end
 local function updateNetworking(dt)
     if not Network.IsConnected() or not Network.IsReady() then return end
     updatePossessionAndSpawn()
-    if not Controller.IsLocallyControlled(self.id) then return end
 
-    sendTimer=sendTimer+dt
-    if sendTimer>=1.0/30.0 then
-        sendTimer=0
-        local p=transform.GetPosition()
-        local r=self:GetRotation()
-        Network.SendTransform(p.x,p.y,p.z,r.x,r.y,r.z)
+    -- Publishing the local pawn requires local ownership.
+    if Controller.IsLocallyControlled(self.id) then
+        sendTimer=sendTimer+dt
+        if sendTimer>=1.0/30.0 then
+            sendTimer=0
+            local p=transform.GetPosition()
+            local r=self:GetRotation()
+            Network.SendTransform(p.x,p.y,p.z,r.x,r.y,r.z)
+        end
     end
 
+    -- Receiving remote pawns must NEVER depend on local ownership, input,
+    -- cursor state, or whether a local menu is open.
     local localID=Controller.GetLocalID()
     for _,remote in ipairs(Network.GetRemoteTransforms()) do
         if remote.playerID~=localID then
