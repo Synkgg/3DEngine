@@ -6,7 +6,7 @@ local orbX, orbY, orbZ = 0.0, 1.25, 0.0
 local carrierID = 0
 local winner = 0
 local matchStarted = 0
-local pickupRadius = 2.4
+local pickupRadius = 3.0
 local scoreLimit = 5
 local restartTimer = 0.0
 local actionCooldown = 0.0
@@ -114,11 +114,21 @@ local function playerPosition(id)
     return Network.GetRemotePlayerPosition(id)
 end
 
+local coreSpawnPoints = {
+    {-16.0, 1.15, -12.0}, {0.0, 1.15, -12.0}, {16.0, 1.15, -12.0},
+    {-16.0, 1.15,   0.0}, {0.0, 1.15,   0.0}, {16.0, 1.15,   0.0},
+    {-16.0, 1.15,  12.0}, {0.0, 1.15,  12.0}, {16.0, 1.15,  12.0}
+}
+local lastCoreSpawn = 0
+
 local function randomCorePosition()
-    -- Keep the core inside a 75-unit radius around midfield.
-    local angle=math.random()*math.pi*2.0
-    local radius=math.sqrt(math.random())*35.0
-    return math.cos(angle)*radius,0.65,math.sin(angle)*radius
+    local index = math.random(1, #coreSpawnPoints)
+    if #coreSpawnPoints > 1 and index == lastCoreSpawn then
+        index = index % #coreSpawnPoints + 1
+    end
+    lastCoreSpawn = index
+    local p = coreSpawnPoints[index]
+    return p[1], p[2], p[3]
 end
 
 local function resetCore()
@@ -191,7 +201,7 @@ local function updateHUD()
     elseif carrierID ~= 0 then
         UI.SetText("Objective","PLAYER "..tostring(carrierID).." HAS THE CORE // STOP THEM")
     else
-        UI.SetText("Objective","FIND THE GOLD CORE // IT SPAWNS RANDOMLY AROUND MIDFIELD // PRESS E")
+        UI.SetText("Objective","FIND THE GOLD CORE // SEARCH THE MIDFIELD LANES // PRESS E")
     end
 end
 
