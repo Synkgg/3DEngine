@@ -5,23 +5,18 @@
 #include <unordered_map>
 #include <vector>
 
-struct NetworkGameState
-{
-    std::uint32_t revision = 0;
-    int redScore = 0;
-    int blueScore = 0;
-    int roundSeconds = 180;
-    float orbX = 0, orbY = 1, orbZ = 0;
-    std::uint32_t carrierID = 0;
-    int winner = 0;
-    int matchStarted = 0;
-};
-
 struct NetworkTransformState
 {
     std::uint32_t playerID = 0;
     float x=0, y=0, z=0;
     float rx=0, ry=0, rz=0;
+};
+
+struct NetworkMessage
+{
+    std::uint32_t senderID = 0;
+    std::uint16_t channel = 0;
+    std::string payload;
 };
 
 class NetworkManager
@@ -32,13 +27,13 @@ public:
     bool Join(const std::string& address, std::uint16_t port = 7777);
     void Update();
     void Disconnect();
-    void SendLocalTransform(const NetworkTransformState& state);
-    void SetGameState(const NetworkGameState& state);
-    void SendGameAction(std::uint8_t action);
-    const NetworkGameState& GetGameState() const { return m_GameState; }
-    std::vector<std::pair<std::uint32_t, std::uint8_t>> ConsumeGameActions();
-    const std::unordered_map<std::uint32_t, NetworkTransformState>& GetRemoteTransforms() const { return m_RemoteTransforms; }
 
+    // Generic replication primitives. Gameplay decides what these values mean.
+    void SendLocalTransform(const NetworkTransformState& state);
+    void SendMessage(std::uint16_t channel, const std::string& payload);
+    std::vector<NetworkMessage> ConsumeMessages();
+
+    const std::unordered_map<std::uint32_t, NetworkTransformState>& GetRemoteTransforms() const { return m_RemoteTransforms; }
     bool IsHost() const { return m_Mode == Mode::Host; }
     bool IsConnected() const { return m_Mode != Mode::Offline; }
     bool IsHandshakeComplete() const { return m_Mode == Mode::Host || m_LocalPlayerID != 0; }
@@ -54,7 +49,7 @@ private:
     void SendHello();
     void SetError(const std::string& message);
     void SendTransformTo(const Endpoint& endpoint, const NetworkTransformState& state);
-    void SendGameStateTo(const Endpoint& endpoint);
+    void SendMessageTo(const Endpoint& endpoint, std::uint32_t senderID, std::uint16_t channel, const std::string& payload);
 
     Mode m_Mode=Mode::Offline;
 #ifdef _WIN32
@@ -65,10 +60,9 @@ private:
     Endpoint m_Server;
     std::vector<Endpoint> m_Clients;
     std::unordered_map<std::uint32_t, NetworkTransformState> m_RemoteTransforms;
+    std::vector<NetworkMessage> m_Messages;
     std::string m_LastError;
     std::uint32_t m_LocalPlayerID=0;
     std::uint32_t m_NextPlayerID=2;
-    NetworkGameState m_GameState{};
-    std::vector<std::pair<std::uint32_t, std::uint8_t>> m_GameActions;
     bool m_KickedByHost=false;
 };

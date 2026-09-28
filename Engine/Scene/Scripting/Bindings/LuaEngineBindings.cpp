@@ -27,6 +27,7 @@
 #include "../../Components/ColliderComponent.h"
 #include "../../Components/InteractableComponent.h"
 #include "../../Components/LightComponent.h"
+#include "../../Systems/CollisionSystem.h"
 
 void LuaScript::BindEngineAPI()
 {
@@ -935,56 +936,43 @@ void LuaScript::BindEngineAPI()
 
     (*m_Environment)["Scene"] = sceneApi;
 
-    /* Runtime networking. Transport only for now; entity replication comes next. */
-    sol::table network = m_Lua->create_table();
-    network.set_function("Host", [this](int port) { return m_Runtime && m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port)); });
-    network.set_function("Join", [this](const std::string& address, int port) { return m_Runtime && m_Runtime->GetNetwork().Join(address, static_cast<std::uint16_t>(port)); });
-    network.set_function("Disconnect", [this]() { if (m_Runtime) m_Runtime->GetNetwork().Disconnect(); });
-    network.set_function("IsHost", [this]() { return m_Runtime && m_Runtime->GetNetwork().IsHost(); });
-    network.set_function("IsConnected", [this]() { return m_Runtime && m_Runtime->GetNetwork().IsConnected(); });
-    network.set_function("WasKickedByHost", [this]() { return m_Runtime && m_Runtime->GetNetwork().WasKickedByHost(); });
-    network.set_function("GetPlayerCount", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetPlayerCount() : 1; });
-    network.set_function("GetLastError", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetLastError() : std::string(); });
-    network.set_function("GetLocalPlayerID", [this]() { return m_Runtime ? m_Runtime->GetNetwork().GetLocalPlayerID() : std::uint32_t(0); });
-    network.set_function("SetGameState", [this](int redScore, int blueScore, int roundSeconds, float orbX, float orbY, float orbZ)
-    {
-        if (!m_Runtime || !m_Runtime->GetNetwork().IsHost()) return false;
-        NetworkGameState state = m_Runtime->GetNetwork().GetGameState();
-        ++state.revision;
-        state.redScore=redScore; state.blueScore=blueScore; state.roundSeconds=roundSeconds;
-        state.orbX=orbX; state.orbY=orbY; state.orbZ=orbZ;
-        m_Runtime->GetNetwork().SetGameState(state);
-        return true;
-    });
-    network.set_function("GetGameState", [this]()
+    /*
+     * Physics queries are engine primitives. Projects decide whether a hit
+     * means damage, interaction, selection, AI visibility, etc.
+     */
+    sol::table physics = m_Lua->create_table();
+    physics.set_function("Raycast", [this](float ox,float oy,float oz,float dx,float dy,float dz,float maxDistance,sol::optional<std::uint32_t> ignoreID)
     {
         sol::table result=m_Lua->create_table();
-        NetworkGameState state=m_Runtime ? m_Runtime->GetNetwork().GetGameState() : NetworkGameState{};
-        result["revision"]=state.revision; result["redScore"]=state.redScore; result["blueScore"]=state.blueScore;
-        result["roundSeconds"]=state.roundSeconds; result["orbX"]=state.orbX; result["orbY"]=state.orbY; result["orbZ"]=state.orbZ;
-        result["carrierID"]=state.carrierID; result["winner"]=state.winner; result["matchStarted"]=state.matchStarted;
+        if(!m_Scene){result["hit"]=false;return result;}
+        Entity ignore=ignoreID?Entity(*ignoreID):Entity();
+        const RaycastHit hit=CollisionSystem::Raycast(*m_Scene,Vec3(ox,oy,oz),Vec3(dx,dy,dz),maxDistance,ignore);
+        result["hit"]=hit.hit;result["entityID"]=hit.hit?hit.entity.GetID():0u;result["distance"]=hit.distance;
+        result["x"]=hit.point.x;result["y"]=hit.point.y;result["z"]=hit.point.z;
+        result["normalX"]=hit.normal.x;result["normalY"]=hit.normal.y;result["normalZ"]=hit.normal.z;
         return result;
     });
-    network.set_function("SetCoreRushState", [this](int redScore, int blueScore, int roundSeconds, float orbX, float orbY, float orbZ, std::uint32_t carrierID, int winner, int matchStarted)
-    {
-        if (!m_Runtime || !m_Runtime->GetNetwork().IsHost()) return false;
-        NetworkGameState state=m_Runtime->GetNetwork().GetGameState(); ++state.revision;
-        state.redScore=redScore; state.blueScore=blueScore; state.roundSeconds=roundSeconds;
-        state.orbX=orbX; state.orbY=orbY; state.orbZ=orbZ; state.carrierID=carrierID; state.winner=winner; state.matchStarted=matchStarted;
-        m_Runtime->GetNetwork().SetGameState(state); return true;
-    });
-    network.set_function("SendGameAction", [this](int action) { if(m_Runtime)m_Runtime->GetNetwork().SendGameAction(static_cast<std::uint8_t>(action)); });
-    network.set_function("ConsumeGameActions", [this]()
-    {
-        sol::table result=m_Lua->create_table(); if(!m_Runtime)return result; int index=1;
-        for(const auto& action:m_Runtime->GetNetwork().ConsumeGameActions()){sol::table item=m_Lua->create_table();item["playerID"]=action.first;item["action"]=action.second;result[index++]=item;} return result;
-    });
-    network.set_function("GetRemotePlayerPosition", [this](std::uint32_t playerID)
-    {
-        sol::table result=m_Lua->create_table(); NetworkTransformState state{}; bool found=false;
-        if(m_Runtime){auto it=m_Runtime->GetNetwork().GetRemoteTransforms().find(playerID);if(it!=m_Runtime->GetNetwork().GetRemoteTransforms().end()){state=it->second;found=true;}}
-        result["valid"]=found;result["x"]=state.x;result["y"]=state.y;result["z"]=state.z;return result;
-    });
+    (*m_Environment)["Physics"] = physics;
+
+    /*
+     * Networking exposes transport/replication primitives only. Match rules,
+     * health, weapons, teams and game state belong to project scripts.
+     */
+    sol::table network = m_Lua->create_table();
+    network.set_function("Host", [this](int port){return m_Runtime&&m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port));});
+    network.set_function("Join", [this](const std::string& address,int port){return m_Runtime&&m_Runtime->GetNetwork().Join(address,static_cast<std::uint16_t>(port));});
+    network.set_function("Disconnect", [this](){if(m_Runtime)m_Runtime->GetNetwork().Disconnect();});
+    network.set_function("IsHost", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsHost();});
+    network.set_function("IsConnected", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsConnected();});
+    network.set_function("IsReady", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsHandshakeComplete();});
+    network.set_function("WasKickedByHost", [this](){return m_Runtime&&m_Runtime->GetNetwork().WasKickedByHost();});
+    network.set_function("GetPlayerCount", [this](){return m_Runtime?m_Runtime->GetNetwork().GetPlayerCount():1;});
+    network.set_function("GetLastError", [this](){return m_Runtime?m_Runtime->GetNetwork().GetLastError():std::string();});
+    network.set_function("GetLocalPlayerID", [this](){return m_Runtime?m_Runtime->GetNetwork().GetLocalPlayerID():std::uint32_t(0);});
+    network.set_function("SendMessage", [this](int channel,const std::string& payload){if(m_Runtime)m_Runtime->GetNetwork().SendMessage(static_cast<std::uint16_t>(std::max(0,std::min(channel,65535))),payload);});
+    network.set_function("ConsumeMessages", [this](){sol::table out=m_Lua->create_table();if(!m_Runtime)return out;int i=1;for(const auto& m:m_Runtime->GetNetwork().ConsumeMessages()){sol::table item=m_Lua->create_table();item["senderID"]=m.senderID;item["channel"]=m.channel;item["payload"]=m.payload;out[i++]=item;}return out;});
+    network.set_function("SendTransform", [this](float x,float y,float z,float rx,float ry,float rz){if(!m_Runtime)return;NetworkTransformState s{};s.x=x;s.y=y;s.z=z;s.rx=rx;s.ry=ry;s.rz=rz;m_Runtime->GetNetwork().SendLocalTransform(s);});
+    network.set_function("GetRemoteTransforms", [this](){sol::table out=m_Lua->create_table();if(!m_Runtime)return out;int i=1;for(const auto& [id,s]:m_Runtime->GetNetwork().GetRemoteTransforms()){sol::table item=m_Lua->create_table();item["playerID"]=id;item["x"]=s.x;item["y"]=s.y;item["z"]=s.z;item["rx"]=s.rx;item["ry"]=s.ry;item["rz"]=s.rz;out[i++]=item;}return out;});
     (*m_Environment)["Network"] = network;
 
     /*

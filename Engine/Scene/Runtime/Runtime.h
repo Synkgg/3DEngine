@@ -15,7 +15,6 @@
 #include "../../Network/NetworkManager.h"
 
 #include <string>
-#include <unordered_map>
 
 class Renderer;
 class Input;
@@ -102,12 +101,9 @@ private:
     ProjectSettings* m_ProjectSettings = nullptr;
     ProjectManager* m_ProjectManager = nullptr;
     NetworkManager m_Network;
-    std::unordered_map<std::uint32_t, std::uint32_t> m_RemotePlayerEntities;
-    float m_NetworkTransformSendTimer = 0.0f;
     float m_MouseSensitivity = 0.01f;
     bool m_InvertY = false;
     bool m_SprintToggle = false;
     bool m_CameraBob = true;
     bool m_ShowFPS = false;
-    void UpdateNetworkPlayers(Scene& scene, float deltaTime);
 };

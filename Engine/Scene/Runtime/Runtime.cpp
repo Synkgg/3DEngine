@@ -14,9 +14,7 @@
 #include "../../Core/ProjectManager.h"
 #include "../Components/NameComponent.h"
 #include "../Components/TransformComponent.h"
-#include "../Components/CharacterControllerComponent.h"
-#include "../Components/ColliderComponent.h"
-#include "../Components/ScriptComponent.h"
+#include "../Components/PlayerComponent.h"
 
 #include <memory>
 
@@ -84,7 +82,6 @@ void Runtime::Update(
 
 
     m_Network.Update();
-    UpdateNetworkPlayers(scene, deltaTime);
 
     m_LuaScriptSystem.Update(
         scene,
@@ -116,7 +113,6 @@ void Runtime::Update(
             m_UICanvas->Clear();
 
         scene = loadedScene;
-        m_RemotePlayerEntities.clear();
 
         if (m_Renderer && m_Input && m_UICanvas)
         {
@@ -171,7 +167,6 @@ void Runtime::Stop(Scene& scene)
     m_LuaScriptSystem.Stop();
     m_ScriptSystem.Stop();
     m_Network.Disconnect();
-    m_RemotePlayerEntities.clear();
 
     if (m_HasSnapshot)
     {
@@ -269,100 +264,14 @@ void Runtime::SetPaused(bool paused)
 bool Runtime::IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) const
 {
     if (!m_Running || !entity.IsValid()) return false;
-    Entity current=entity;
-    while(current.IsValid())
+    Entity current = entity;
+    while (current.IsValid())
     {
-        const NameComponent* name=scene.GetComponent<NameComponent>(current);
-        if(name && name->name=="Player") return true;
-        current=scene.GetParent(current);
+        if (scene.GetComponent<PlayerComponent>(current) != nullptr)
+            return true;
+        current = scene.GetParent(current);
     }
     return false;
-}
-
-void Runtime::UpdateNetworkPlayers(Scene& scene, float deltaTime)
-{
-    if (!m_Network.IsConnected() || !m_Network.IsHandshakeComplete()) return;
-
-    // NetworkManager removes a disconnected player's transform immediately,
-    // but the duplicated scene entity is owned by Runtime. Remove any remote
-    // entity whose player ID is no longer present in the network snapshot.
-    const auto& remoteTransforms = m_Network.GetRemoteTransforms();
-    for (auto it = m_RemotePlayerEntities.begin(); it != m_RemotePlayerEntities.end();)
-    {
-        if (remoteTransforms.find(it->first) == remoteTransforms.end())
-        {
-            Entity staleRemote = scene.FindEntityByID(it->second);
-            if (staleRemote.IsValid())
-                scene.DestroyEntityHierarchy(staleRemote);
-
-            Logger::Info("Network: despawned remote player " + std::to_string(it->first) + ".");
-            it = m_RemotePlayerEntities.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
-    Entity localPlayer=scene.FindEntityByName("Player");
-    TransformComponent* localTransform=localPlayer.IsValid()
-        ? scene.GetComponent<TransformComponent>(localPlayer) : nullptr;
-
-    // Replicate movement at a fixed network rate instead of once per rendered
-    // frame. This prevents high-FPS clients from flooding the UDP receive loop.
-    m_NetworkTransformSendTimer += std::max(0.0f, deltaTime);
-    if (localTransform && m_NetworkTransformSendTimer >= (1.0f / 30.0f))
-    {
-        m_NetworkTransformSendTimer = 0.0f;
-        NetworkTransformState state;
-        state.x=localTransform->transform.position.x;
-        state.y=localTransform->transform.position.y;
-        state.z=localTransform->transform.position.z;
-        state.rx=localTransform->transform.rotation.x;
-        state.ry=m_Renderer ? m_Renderer->GetCameraYaw() : localTransform->transform.rotation.y;
-        state.rz=localTransform->transform.rotation.z;
-        m_Network.SendLocalTransform(state);
-    }
-
-    for (const auto& [playerID,state] : m_Network.GetRemoteTransforms())
-    {
-        Entity remote;
-        auto existing=m_RemotePlayerEntities.find(playerID);
-        if(existing!=m_RemotePlayerEntities.end()) remote=scene.FindEntityByID(existing->second);
-
-        if(!remote.IsValid() && localPlayer.IsValid())
-        {
-            remote=scene.DuplicateEntity(localPlayer,true);
-            if(!remote.IsValid()) continue;
-            if(auto* name=scene.GetComponent<NameComponent>(remote))
-                name->name="RemotePlayer_"+std::to_string(playerID);
-
-            std::vector<Entity> stack{remote};
-            while(!stack.empty())
-            {
-                Entity e=stack.back();stack.pop_back();
-                scene.RemoveComponent<CharacterControllerComponent>(e);
-                scene.RemoveComponent<ColliderComponent>(e);
-                scene.RemoveComponent<ScriptComponent>(e);
-                for(Entity child:scene.GetChildren(e)) stack.push_back(child);
-            }
-            m_RemotePlayerEntities[playerID]=remote.GetID();
-            Logger::Info("Network: spawned remote player "+std::to_string(playerID)+".");
-        }
-
-        if(auto* transform=scene.GetComponent<TransformComponent>(remote))
-        {
-            // A small frame-rate-independent blend keeps UDP movement readable
-            // without introducing a separate snapshot buffer yet.
-            constexpr float blend=0.35f;
-            transform->transform.position.x += (state.x-transform->transform.position.x)*blend;
-            transform->transform.position.y += (state.y-transform->transform.position.y)*blend;
-            transform->transform.position.z += (state.z-transform->transform.position.z)*blend;
-            transform->transform.rotation.x=state.rx;
-            transform->transform.rotation.y=state.ry;
-            transform->transform.rotation.z=state.rz;
-        }
-    }
 }
 
 std::string Runtime::ResolveProjectPath(const std::string& path) const
