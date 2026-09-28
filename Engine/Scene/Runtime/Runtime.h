@@ -22,6 +22,7 @@ class Input;
 class UICanvas;
 class AudioEngine;
 class ProjectSettings;
+class ProjectManager;
 
 class Runtime
 {
@@ -58,6 +59,8 @@ public:
     void SetAudioEngine(AudioEngine* audio) { m_Audio = audio; }
     AudioEngine* GetAudioEngine() const { return m_Audio; }
     void SetProjectSettings(ProjectSettings* settings) { m_ProjectSettings = settings; }
+    void SetProjectManager(ProjectManager* projects) { m_ProjectManager = projects; }
+    std::string ResolveProjectPath(const std::string& path) const;
     NetworkManager& GetNetwork() { return m_Network; }
     bool IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) const;
     void SetMouseSensitivity(float value) { m_MouseSensitivity = value; }
@@ -97,6 +100,7 @@ private:
     UICanvas* m_UICanvas = nullptr;
     AudioEngine* m_Audio = nullptr;
     ProjectSettings* m_ProjectSettings = nullptr;
+    ProjectManager* m_ProjectManager = nullptr;
     NetworkManager m_Network;
     std::unordered_map<std::uint32_t, std::uint32_t> m_RemotePlayerEntities;
     float m_NetworkTransformSendTimer = 0.0f;
