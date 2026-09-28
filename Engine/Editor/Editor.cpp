@@ -125,6 +125,7 @@ Editor::Editor()
     m_ContentBrowserPath(
         (std::filesystem::current_path() / "Assets").string()
     ),
+    m_AssetRoot(std::filesystem::current_path() / "Assets"),
     m_SelectedAssetPath(""),
     m_ContentBrowserSearchBuffer{}
 {
@@ -352,3 +353,39 @@ void Editor::StopPlaying()
     );
 }
 
+
+
+void Editor::ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath)
+{
+    m_AssetRoot = std::filesystem::absolute(assetRoot).lexically_normal();
+    m_ContentBrowserPath = m_AssetRoot.string();
+    m_SelectedAssetPath.clear();
+
+    if (!m_ProjectSettings.Load(settingsPath.string()))
+    {
+        m_ProjectSettings.Save(settingsPath.string());
+    }
+}
+
+bool Editor::OpenScene(Scene& scene, const std::filesystem::path& path)
+{
+    std::vector<HierarchyFolder> folders;
+    Scene loadedScene;
+    SceneSerializer serializer(loadedScene);
+    const std::string scenePath = path.lexically_normal().string();
+
+    if (!serializer.Load(scenePath, folders))
+    {
+        Logger::Error("Failed to load project startup scene: " + scenePath);
+        return false;
+    }
+
+    scene = std::move(loadedScene);
+    m_HierarchyFolders = std::move(folders);
+    m_SceneFilePath = scenePath;
+    m_SelectedEntity = Entity();
+    m_NameEditEntityID = 0;
+    m_NameEditBuffer[0] = '\0';
+    Logger::Info("Loaded scene: " + path.filename().string());
+    return true;
+}
