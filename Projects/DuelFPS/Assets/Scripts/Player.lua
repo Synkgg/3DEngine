@@ -95,93 +95,17 @@ local function processCombatMessages()
 end
 
 local function updateNetworking(dt)
-    if not Network.IsConnected() then return end
-    updatePossessionAndSpawn()
-    if not Network.IsReady() or not Controller.IsLocallyControlled(self.id) then return end
-
-    sendTimer=sendTimer+dt
-    if sendTimer>=1.0/30.0 then
-        sendTimer=0.0
-        local p=transform.GetPosition(); local r=self:GetRotation()
-        Network.SendTransform(p.x,p.y,p.z,r.x,r.y,r.z)
-    end
-
-    local localID=Controller.GetLocalID()
-    for _,remote in ipairs(Network.GetRemoteTransforms()) do
-        if remote.playerID~=localID then
-            local entityID=getOrCreateRemotePawn(remote.playerID)
-            if entityID~=0 then
-                Scene.SetPosition(entityID,remote.x,remote.y,remote.z)
-                Scene.SetRotation(entityID,remote.rx,remote.ry,remote.rz)
-            end
-        end
-    end
-end
-
-local function updateHostRespawns(dt)
-    if not Network.IsHost() then return end
-    stateBroadcastTimer=stateBroadcastTimer+dt
-    if stateBroadcastTimer>=0.5 then stateBroadcastTimer=0; broadcastState() end
-    for playerID,timer in pairs(respawnTimers) do
-        timer=timer-dt
-        if timer<=0 then respawnTimers[playerID]=nil; respawnPlayer(playerID)
-        else respawnTimers[playerID]=timer end
-    end
-end
-
-local function fire()
-    if fireCooldown>0 or health[Controller.GetLocalID()]==0 or matchWinner~=0 then return end
-    fireCooldown=FIRE_INTERVAL
-    local c,f=Camera.GetPosition(),Camera.GetForward(); local range=100.0
-    local hit=Physics.Raycast(c.x,c.y,c.z,f.x,f.y,f.z,range,self.id)
-    if hit.hit then
-        Debug.DrawLine(c.x,c.y,c.z,hit.x,hit.y,hit.z,0.2,1.0,0.2,5.0)
-        local targetID=remotePlayersByEntity[hit.entityID]
-        if targetID then
-            if Network.IsHost() then applyHostShot(Controller.GetLocalID(),targetID)
-            else Network.SendMessage(CHANNEL_COMBAT,"SHOT:"..targetID) end
-        end
-    else
-        Debug.DrawLine(c.x,c.y,c.z,c.x+f.x*range,c.y+f.y*range,c.z+f.z*range,1.0,0.2,0.2,5.0)
-    end
-end
-
-function OnCreate()
-    State.SetNumber("mouse_sensitivity",tonumber(Preferences.LoadString("mouse_sensitivity","0.01")) or 0.01)
-    State.SetBool("invert_y",Preferences.LoadString("invert_y","0")=="1")
-    Controller.Possess(self.id); possessedControllerID=Controller.GetLocalID(); movePlayerToStart(possessedControllerID)
-    UI.Load("Assets/UI/Duel.ui")
-    UI.SetVisible("PauseMenu",false); UI.SetVisible("RestartMatchButton",false)
-    UI.SetVisible("Lobby",not Network.IsConnected()); Scene.SetPaused(false)
-    Input.SetCursorVisible(not Network.IsConnected())
-end
-
-function OnUpdate(dt)
     if not Network.IsConnected() then
-        UI.SetVisible("Lobby",true)
         Input.SetCursorVisible(true)
-        if UI.WasClicked("HostButton") then
-            if Network.Host(7777) then
-                UI.SetVisible("Lobby",false); Input.SetCursorVisible(false)
-                updatePossessionAndSpawn(); broadcastState()
-            else UI.SetText("NetworkStatus",Network.GetLastError()) end
-        elseif UI.WasClicked("JoinButton") then
-            local address=UI.GetText("AddressField")
-            if address=="" then address="127.0.0.1" end
-            if Network.Join(address,7777) then UI.SetText("NetworkStatus","CONNECTING TO "..address.." ...")
-            else UI.SetText("NetworkStatus",Network.GetLastError()) end
-        end
+        Scene.Load("Assets/Scenes/MainMenu.scene")
         return
-    elseif Network.IsReady() then
-        UI.SetVisible("Lobby",false)
-        if not enteredOnlineMatch then
-            enteredOnlineMatch=true
-            paused=false
-            Scene.SetPaused(false)
-            UI.SetVisible("PauseMenu",false)
-            Input.SetCursorVisible(false)
-            updatePossessionAndSpawn()
-        end
+    elseif Network.IsReady() and not enteredOnlineMatch then
+        enteredOnlineMatch=true
+        paused=false
+        Scene.SetPaused(false)
+        UI.SetVisible("PauseMenu",false)
+        Input.SetCursorVisible(false)
+        updatePossessionAndSpawn()
     end
 
     fireCooldown=math.max(0,fireCooldown-dt)
