@@ -478,7 +478,7 @@ void LuaScript::BindEngineAPI()
 
     preferences.set_function(
         "LoadString",
-        [](const std::string& key, const std::string& fallback)
+        [this](const std::string& key, const std::string& fallback)
         {
             std::string safeKey;
             for (char ch : key)
@@ -495,7 +495,10 @@ void LuaScript::BindEngineAPI()
             if (safeKey.empty())
                 return fallback;
 
-            std::ifstream file(std::filesystem::path("Saved") / (safeKey + ".txt"));
+            const std::filesystem::path savedPath = m_Runtime
+                ? std::filesystem::path(m_Runtime->ResolveProjectPath("Saved"))
+                : std::filesystem::path("Saved");
+            std::ifstream file(savedPath / (safeKey + ".txt"));
             if (!file.is_open())
                 return fallback;
 
@@ -507,7 +510,7 @@ void LuaScript::BindEngineAPI()
 
     preferences.set_function(
         "SaveString",
-        [](const std::string& key, const std::string& value)
+        [this](const std::string& key, const std::string& value)
         {
             std::string safeKey;
             for (char ch : key)
@@ -524,12 +527,15 @@ void LuaScript::BindEngineAPI()
             if (safeKey.empty())
                 return false;
 
+            const std::filesystem::path savedPath = m_Runtime
+                ? std::filesystem::path(m_Runtime->ResolveProjectPath("Saved"))
+                : std::filesystem::path("Saved");
             std::error_code error;
-            std::filesystem::create_directories("Saved", error);
+            std::filesystem::create_directories(savedPath, error);
             if (error)
                 return false;
 
-            std::ofstream file(std::filesystem::path("Saved") / (safeKey + ".txt"), std::ios::trunc);
+            std::ofstream file(savedPath / (safeKey + ".txt"), std::ios::trunc);
             if (!file.is_open())
                 return false;
 

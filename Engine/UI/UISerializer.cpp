@@ -136,7 +136,9 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     std::string magic;
     int version = 0;
     in >> magic >> version;
-    if (magic != "VORTEK_UI" || version < 1 || version > 6) return false;
+    // Read the old marker for existing assets, but all newly saved UI files use
+    // the engine-neutral marker.
+    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 6) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
