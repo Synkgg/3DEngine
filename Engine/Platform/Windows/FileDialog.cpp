@@ -49,21 +49,29 @@ namespace
         return result;
     }
 
-    bool InitializeCOM()
+    bool InitializeCOM(bool& shouldUninitialize)
     {
-        HRESULT result =
+        const HRESULT result =
             CoInitializeEx(
                 nullptr,
                 COINIT_APARTMENTTHREADED |
                 COINIT_DISABLE_OLE1DDE
             );
 
-        return SUCCEEDED(result);
+        shouldUninitialize = SUCCEEDED(result);
+
+        // The editor may already have COM initialized in another apartment
+        // model. File dialogs are still available in that case; only skip the
+        // matching CoUninitialize because this call did not initialize COM.
+        return SUCCEEDED(result) || result == RPC_E_CHANGED_MODE;
     }
 
-    void ShutdownCOM()
+    void ShutdownCOM(bool shouldUninitialize)
     {
-        CoUninitialize();
+        if (shouldUninitialize)
+        {
+            CoUninitialize();
+        }
     }
 }
 
@@ -71,7 +79,8 @@ namespace FileDialog
 {
     bool OpenScene(std::string& path)
     {
-        if (!InitializeCOM())
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize))
         {
             return false;
         }
@@ -88,7 +97,7 @@ namespace FileDialog
 
         if (FAILED(result))
         {
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -118,7 +127,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -130,7 +139,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -152,14 +161,15 @@ namespace FileDialog
         item->Release();
         dialog->Release();
 
-        ShutdownCOM();
+        ShutdownCOM(shouldUninitialize);
 
         return !path.empty();
     }
 
     bool SaveScene(std::string& path)
     {
-        if (!InitializeCOM())
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize))
         {
             return false;
         }
@@ -176,7 +186,7 @@ namespace FileDialog
 
         if (FAILED(result))
         {
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -219,7 +229,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -231,7 +241,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -253,20 +263,43 @@ namespace FileDialog
         item->Release();
         dialog->Release();
 
-        ShutdownCOM();
+        ShutdownCOM(shouldUninitialize);
 
         return !path.empty();
     }
 
     bool OpenProject(std::string& path)
     {
-        if (!InitializeCOM()) return false;
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize)) return false;
         IFileOpenDialog* dialog = nullptr;
         HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
-        if (FAILED(result)) { ShutdownCOM(); return false; }
-        const COMDLG_FILTERSPEC filters[] = { { L"Project Files (*.project)", L"*.project" }, { L"All Files (*.*)", L"*.*" } };
+        if (FAILED(result)) { ShutdownCOM(shouldUninitialize); return false; }
+        const COMDLG_FILTERSPEC filters[] =
+        {
+            { L"Project Files (*.project)", L"*.project" },
+            { L"All Files (*.*)", L"*.*" }
+        };
+
         dialog->SetFileTypes(2, filters);
+        dialog->SetFileTypeIndex(1);
         dialog->SetTitle(L"Open Project");
+
+        DWORD options = 0;
+        if (SUCCEEDED(dialog->GetOptions(&options)))
+        {
+            // Force a real filesystem browser. This keeps normal nested
+            // folders/files visible instead of allowing shell-only virtual
+            // locations to hide parts of the directory tree.
+            dialog->SetOptions(
+                options |
+                FOS_FORCEFILESYSTEM |
+                FOS_PATHMUSTEXIST |
+                FOS_FILEMUSTEXIST |
+                FOS_NOCHANGEDIR
+            );
+        }
+
         result = dialog->Show(nullptr);
         if (SUCCEEDED(result))
         {
@@ -283,16 +316,17 @@ namespace FileDialog
             }
         }
         dialog->Release();
-        ShutdownCOM();
+        ShutdownCOM(shouldUninitialize);
         return !path.empty();
     }
 
     bool SelectFolder(std::string& path)
     {
-        if (!InitializeCOM()) return false;
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize)) return false;
         IFileOpenDialog* dialog = nullptr;
         HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
-        if (FAILED(result)) { ShutdownCOM(); return false; }
+        if (FAILED(result)) { ShutdownCOM(shouldUninitialize); return false; }
         DWORD options = 0;
         dialog->GetOptions(&options);
         dialog->SetOptions(options | FOS_PICKFOLDERS | FOS_PATHMUSTEXIST);
@@ -313,7 +347,7 @@ namespace FileDialog
             }
         }
         dialog->Release();
-        ShutdownCOM();
+        ShutdownCOM(shouldUninitialize);
         return !path.empty();
     }
 }
