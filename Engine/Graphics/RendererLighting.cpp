@@ -214,3 +214,6 @@ void Renderer::EndShadowPass()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if (m_ActiveShadowCascade == ShadowCascadeCount - 1) m_ShadowMapReady = true;
 }
+
+void Renderer::AddDebugLine(const Vec3& start,const Vec3& end,const Vec3& color,float duration){m_DebugLines.push_back({start,end,color,duration});}
+void Renderer::DrawDebugLines(float deltaTime){for(const DebugLine& line:m_DebugLines)m_DebugRenderer.DrawLine(GetCameraViewMatrix(),GetCameraProjectionMatrix(),line.start,line.end,line.color);for(auto it=m_DebugLines.begin();it!=m_DebugLines.end();){if(it->remaining<=0.0f||(it->remaining-=deltaTime)<=0.0f)it=m_DebugLines.erase(it);else ++it;}}
