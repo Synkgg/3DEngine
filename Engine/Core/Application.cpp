@@ -311,40 +311,118 @@ void Application::RenderProjectHub()
         ImGuiWindowFlags_NoDecoration |
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoSavedSettings;
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+    // Hub-specific palette. Keep this local so opening a project restores the
+    // editor's normal theme without any global style mutation.
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.055f, 0.060f, 0.070f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.075f, 0.082f, 0.095f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.145f, 0.155f, 0.180f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.115f, 0.125f, 0.145f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.165f, 0.180f, 0.210f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.095f, 0.105f, 0.125f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.060f, 0.066f, 0.078f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.085f, 0.094f, 0.110f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.105f, 0.115f, 0.135f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.145f, 0.160f, 0.190f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.90f, 0.92f, 0.95f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImVec4(0.48f, 0.52f, 0.59f, 1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 9.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));
 
     ImGui::Begin("Project Hub", nullptr, flags);
 
-    const float panelWidth = 760.0f;
-    const float availableWidth = ImGui::GetContentRegionAvail().x;
-    ImGui::Dummy(ImVec2(0, 28));
-    ImGui::SetCursorPosX(std::max(16.0f, (availableWidth - panelWidth) * 0.5f));
-    ImGui::BeginChild("HubCard", ImVec2(std::min(panelWidth, availableWidth - 32.0f), 0), ImGuiChildFlags_Borders);
+    const float sidebarWidth = 238.0f;
+    const float footerHeight = 42.0f;
 
-    ImGui::Dummy(ImVec2(0, 18));
-    ImGui::SetWindowFontScale(1.55f);
-    ImGui::TextUnformatted("Projects");
+    // Left rail: identity and primary actions.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.040f, 0.044f, 0.052f, 1.0f));
+    ImGui::BeginChild("HubSidebar", ImVec2(sidebarWidth, 0), ImGuiChildFlags_None);
+    ImGui::PopStyleColor();
+
+    ImGui::SetCursorPos(ImVec2(24, 28));
+    ImGui::SetWindowFontScale(1.42f);
+    ImGui::TextUnformatted("3D ENGINE");
     ImGui::SetWindowFontScale(1.0f);
-    ImGui::TextDisabled("Create, open, and return to your game projects.");
-    ImGui::Spacing();
+    ImGui::SetCursorPosX(24);
+    ImGui::TextDisabled("PROJECT WORKSPACE");
 
-    if (ImGui::Button("Open Project...", ImVec2(180, 40)))
+    ImGui::SetCursorPosY(100);
+    ImGui::SetCursorPosX(16);
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.28f, 0.52f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.34f, 0.62f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.13f, 0.23f, 0.44f, 1.0f));
+    if (ImGui::Button("+  New Project", ImVec2(sidebarWidth - 32.0f, 42.0f)))
+        ImGui::SetKeyboardFocusHere();
+    ImGui::PopStyleColor(3);
+
+    ImGui::SetCursorPosX(16);
+    if (ImGui::Button("Open Project...", ImVec2(sidebarWidth - 32.0f, 42.0f)))
     {
         std::string path;
         if (FileDialog::OpenProject(path))
             ActivateProject(path);
     }
 
-    ImGui::SameLine();
-    if (ImGui::Button("Refresh Recents", ImVec2(150, 40)))
+    ImGui::SetCursorPosX(16);
+    if (ImGui::Button("Refresh Projects", ImVec2(sidebarWidth - 32.0f, 38.0f)))
         LoadRecentProjects();
 
+    ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 104.0f);
+    ImGui::SetCursorPosX(24);
+    ImGui::TextDisabled("WORKSPACE");
+    ImGui::SetCursorPosX(16);
+    if (ImGui::Button("Continue Legacy Workspace", ImVec2(sidebarWidth - 32.0f, 38.0f)))
+    {
+        m_ShowProjectHub = false;
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Editor - Legacy Workspace");
+    }
+
+    ImGui::EndChild();
+    ImGui::SameLine(0, 0);
+
+    // Main workspace.
+    ImGui::BeginChild("HubMain", ImVec2(0, 0), ImGuiChildFlags_None);
+    ImGui::SetCursorPos(ImVec2(34, 28));
+    ImGui::SetWindowFontScale(1.62f);
+    ImGui::TextUnformatted("Your Projects");
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::SetCursorPosX(34);
+    ImGui::TextDisabled("Pick up where you left off, or create a clean workspace.");
+
+    const float contentTop = 94.0f;
+    const float padding = 34.0f;
+    const float mainWidth = ImGui::GetWindowWidth();
+    const float createWidth = std::min(360.0f, std::max(300.0f, mainWidth * 0.32f));
+    const float recentWidth = std::max(320.0f, mainWidth - createWidth - padding * 3.0f);
+    const float panelHeight = std::max(320.0f, ImGui::GetWindowHeight() - contentTop - footerHeight - 22.0f);
+
+    // Recent projects panel.
+    ImGui::SetCursorPos(ImVec2(padding, contentTop));
+    ImGui::BeginChild("RecentPanel", ImVec2(recentWidth, panelHeight), ImGuiChildFlags_Borders);
+    ImGui::SetCursorPos(ImVec2(20, 18));
+    ImGui::TextUnformatted("RECENT PROJECTS");
+    ImGui::SameLine();
+    ImGui::TextDisabled("  %d", static_cast<int>(m_RecentProjects.size()));
+    ImGui::SetCursorPosX(20);
     ImGui::Separator();
-    ImGui::TextUnformatted("Recent Projects");
 
     if (m_RecentProjects.empty())
     {
-        ImGui::TextDisabled("No recent projects yet.");
+        const float centerY = std::max(90.0f, panelHeight * 0.36f);
+        ImGui::SetCursorPosY(centerY);
+        const char* emptyTitle = "No recent projects";
+        const float titleWidth = ImGui::CalcTextSize(emptyTitle).x;
+        ImGui::SetCursorPosX(std::max(20.0f, (recentWidth - titleWidth) * 0.5f));
+        ImGui::TextUnformatted(emptyTitle);
+        const char* emptyText = "Open an existing project or create a new one.";
+        const float textWidth = ImGui::CalcTextSize(emptyText).x;
+        ImGui::SetCursorPosX(std::max(20.0f, (recentWidth - textWidth) * 0.5f));
+        ImGui::TextDisabled("%s", emptyText);
     }
     else
     {
@@ -356,72 +434,110 @@ void Application::RenderProjectHub()
             const bool exists = std::filesystem::is_regular_file(recent.descriptorPath);
 
             ImGui::PushID(static_cast<int>(i));
-            ImGui::BeginGroup();
+            ImGui::PushStyleColor(
+                ImGuiCol_ChildBg,
+                exists ? ImVec4(0.090f, 0.098f, 0.114f, 1.0f)
+                       : ImVec4(0.070f, 0.074f, 0.084f, 1.0f));
+            ImGui::BeginChild("ProjectCard", ImVec2(-1, 76), ImGuiChildFlags_Borders);
+            ImGui::PopStyleColor();
+
+            ImGui::SetCursorPos(ImVec2(16, 12));
+            ImGui::SetWindowFontScale(1.08f);
             ImGui::TextUnformatted(recent.name.c_str());
-            ImGui::TextDisabled("%s", recent.descriptorPath.c_str());
-            ImGui::EndGroup();
+            ImGui::SetWindowFontScale(1.0f);
 
-            const float buttonsWidth = 190.0f;
-            ImGui::SameLine(std::max(300.0f, ImGui::GetContentRegionAvail().x - buttonsWidth));
+            ImGui::SetCursorPos(ImVec2(16, 40));
+            if (exists)
+                ImGui::TextDisabled("%s", recent.descriptorPath.c_str());
+            else
+                ImGui::TextDisabled("Project file is missing");
 
+            const float actionX = std::max(180.0f, ImGui::GetWindowWidth() - 174.0f);
+            ImGui::SetCursorPos(ImVec2(actionX, 19));
             ImGui::BeginDisabled(!exists);
-            if (ImGui::Button("Open", ImVec2(82, 32)))
+            if (ImGui::Button("Open", ImVec2(72, 34)))
                 ActivateProject(recent.descriptorPath);
             ImGui::EndDisabled();
-
             ImGui::SameLine();
-            if (ImGui::Button("Remove", ImVec2(82, 32)))
+            if (ImGui::Button("Remove", ImVec2(76, 34)))
                 removeIndex = i;
 
-            if (!exists)
-            {
-                ImGui::SameLine();
-                ImGui::TextDisabled("(missing)");
-            }
-
-            ImGui::Separator();
+            ImGui::EndChild();
             ImGui::PopID();
         }
 
         if (removeIndex != static_cast<std::size_t>(-1))
             RemoveRecentProject(removeIndex);
     }
+    ImGui::EndChild();
 
-    ImGui::Spacing();
-    ImGui::TextUnformatted("New Project");
-    ImGui::InputText("Project Name", m_NewProjectName, sizeof(m_NewProjectName));
-    ImGui::InputText("Location", m_NewProjectLocation, sizeof(m_NewProjectLocation));
+    // New project panel.
+    ImGui::SetCursorPos(ImVec2(padding * 2.0f + recentWidth, contentTop));
+    ImGui::BeginChild("CreatePanel", ImVec2(createWidth, panelHeight), ImGuiChildFlags_Borders);
+    ImGui::SetCursorPos(ImVec2(22, 20));
+    ImGui::SetWindowFontScale(1.18f);
+    ImGui::TextUnformatted("Create Project");
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::SetCursorPosX(22);
+    ImGui::TextDisabled("Start with an isolated project workspace.");
 
+    ImGui::SetCursorPos(ImVec2(22, 78));
+    ImGui::TextDisabled("PROJECT NAME");
+    ImGui::SetCursorPosX(22);
+    ImGui::SetNextItemWidth(createWidth - 44.0f);
+    ImGui::InputText("##ProjectName", m_NewProjectName, sizeof(m_NewProjectName));
+
+    ImGui::SetCursorPosX(22);
+    ImGui::TextDisabled("LOCATION");
+    ImGui::SetCursorPosX(22);
+    ImGui::SetNextItemWidth(createWidth - 116.0f);
+    ImGui::InputText("##ProjectLocation", m_NewProjectLocation, sizeof(m_NewProjectLocation));
     ImGui::SameLine();
-    if (ImGui::Button("Browse..."))
+    if (ImGui::Button("Browse", ImVec2(66, 0)))
     {
         std::string folder;
         if (FileDialog::SelectFolder(folder))
             std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", folder.c_str());
     }
 
-    std::filesystem::path preview =
+    const std::filesystem::path preview =
         (std::filesystem::path(m_NewProjectLocation) / m_NewProjectName).lexically_normal();
-    ImGui::TextDisabled("Project folder: %s", preview.string().c_str());
 
-    if (ImGui::Button("Create Project", ImVec2(-1, 42)))
+    ImGui::SetCursorPosX(22);
+    ImGui::TextDisabled("PROJECT FOLDER");
+    ImGui::SetCursorPosX(22);
+    ImGui::PushTextWrapPos(createWidth - 22.0f);
+    ImGui::TextWrapped("%s", preview.string().c_str());
+    ImGui::PopTextWrapPos();
+
+    ImGui::SetCursorPosY(panelHeight - 72.0f);
+    ImGui::SetCursorPosX(22);
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.28f, 0.52f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.34f, 0.62f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.13f, 0.23f, 0.44f, 1.0f));
+    if (ImGui::Button("Create Project", ImVec2(createWidth - 44.0f, 44.0f)))
         CreateProject(m_NewProjectLocation, m_NewProjectName);
+    ImGui::PopStyleColor(3);
 
-    ImGui::Spacing();
-    ImGui::Separator();
+    ImGui::EndChild();
 
-    if (ImGui::Button("Continue Legacy Workspace", ImVec2(-1, 34)))
-    {
-        m_ShowProjectHub = false;
-        SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Editor - Legacy Workspace");
-    }
-
+    // Bottom status strip.
+    ImGui::SetCursorPos(ImVec2(padding, ImGui::GetWindowHeight() - 34.0f));
     if (!m_ProjectHubError.empty())
     {
-        ImGui::Spacing();
-        ImGui::TextWrapped("%s", m_ProjectHubError.c_str());
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.48f, 0.46f, 1.0f));
+        ImGui::TextUnformatted(m_ProjectHubError.c_str());
+        ImGui::PopStyleColor();
+    }
+    else
+    {
+        ImGui::TextDisabled("Projects keep game assets, settings, scenes, scripts, and UI isolated from the engine.");
     }
 
     ImGui::EndChild();
     ImGui::End();
+
+    ImGui::PopStyleVar(5);
+    ImGui::PopStyleColor(12);
 }
+
