@@ -6,6 +6,7 @@
 #include "../../Platform/SDL/Input.h"
 
 #include "../../Core/Logger.h"
+#include "../../Core/ProjectManager.h"
 #include "../../Graphics/Renderer.h"
 #include "../../UI/UICanvas.h"
 
@@ -19,7 +20,8 @@ void LuaScriptSystem::Start(
     Renderer& renderer,
     UICanvas& uiCanvas,
     Runtime* runtime,
-    ProjectSettings* projectSettings)
+    ProjectSettings* projectSettings,
+    ProjectManager* projectManager)
 {
     m_Instances.clear();
     m_Scene = &scene;
@@ -51,6 +53,11 @@ void LuaScriptSystem::Start(
     // The engine must never know the name of a particular game or game script.
     sol::table package = (*m_Lua)["package"];
     std::string packagePath = package["path"].get_or(std::string());
+    if (projectManager)
+    {
+        const std::string root = projectManager->GetActiveProject().rootDirectory.generic_string();
+        packagePath += ";" + root + "/?.lua;" + root + "/?/init.lua;" + root + "/Assets/?.lua;" + root + "/Assets/?/init.lua";
+    }
     packagePath += ";./?.lua;./?/init.lua";
     package["path"] = packagePath;
 
@@ -78,9 +85,9 @@ void LuaScriptSystem::Start(
                 continue;
             }
 
-            fs::path fullPath =
-                fs::current_path() /
-                scriptPath;
+            fs::path fullPath = projectManager
+                ? fs::path(projectManager->ResolveProjectPath(scriptPath))
+                : (fs::current_path() / scriptPath);
 
             if (!fs::exists(
                 fullPath))
