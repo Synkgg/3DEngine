@@ -93,7 +93,8 @@ namespace
                 << ' ' << tn.x << ' ' << tn.y << ' ' << tn.z << ' ' << tn.w
                 << ' ' << th.x << ' ' << th.y << ' ' << th.z << ' ' << th.w
                 << ' ' << tp.x << ' ' << tp.y << ' ' << tp.z << ' ' << tp.w
-                << ' ' << td.x << ' ' << td.y << ' ' << td.z << ' ' << td.w;
+                << ' ' << td.x << ' ' << td.y << ' ' << td.z << ' ' << td.w
+                << ' ' << std::quoted(button->GetClickSoundPath());
         }
 
         out << '\n';
@@ -117,7 +118,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 6\n";
+    out << "VORTEK_UI 7\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -138,7 +139,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     in >> magic >> version;
     // Read the old marker for existing assets, but all newly saved UI files use
     // the engine-neutral marker.
-    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 6) return false;
+    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 7) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -250,6 +251,13 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
                     row >> affect >> tn.x >> tn.y >> tn.z >> tn.w >> th.x >> th.y >> th.z >> th.w >> tp.x >> tp.y >> tp.z >> tp.w >> td.x >> td.y >> td.z >> td.w;
                     if (!row) return false;
                     button->SetAffectChildText(affect); button->SetNormalTextColor(tn); button->SetHoveredTextColor(th); button->SetPressedTextColor(tp); button->SetDisabledTextColor(td);
+                    if (version >= 7)
+                    {
+                        std::string clickSoundPath;
+                        row >> std::quoted(clickSoundPath);
+                        if (!row) return false;
+                        button->SetClickSoundPath(clickSoundPath);
+                    }
                 }
             }
         }
