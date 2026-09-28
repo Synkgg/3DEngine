@@ -12,6 +12,7 @@
 
 #include "Time.h"
 #include "ProjectSettings.h"
+#include "ProjectManager.h"
 #include "../Audio/AudioEngine.h"
 
 #include "../Scene/Scene.h"
@@ -22,7 +23,7 @@
 class Application
 {
 public:
-    Application();
+    explicit Application(const std::string& projectPath = {});
 
     bool Initialize();
     void Run();
@@ -45,7 +46,10 @@ private:
 
     Time m_Time;
     AudioEngine m_Audio;
+    ProjectManager m_ProjectManager;
     ProjectSettings m_ProjectSettings;
+
+    std::string m_ProjectPath;
 
     bool m_CameraControlActive;
     bool m_RuntimeMouseCaptured;

@@ -1,0 +1,5 @@
+Version 1
+Name "Core Rush"
+AssetDirectory "Assets"
+StartupScene "Assets/Scenes/MultiplayerPlayground.scene"
+Settings "ProjectSettings.cfg"

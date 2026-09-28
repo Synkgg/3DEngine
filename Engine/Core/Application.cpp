@@ -22,7 +22,7 @@
 #include "../UI/UISerializer.h"
 #include "../UI/UIText.h"
 
-Application::Application()
+Application::Application(const std::string& projectPath)
     : m_Running(false),
     m_Window("MyEngine", 1280, 720),
     m_Renderer(),
@@ -30,6 +30,7 @@ Application::Application()
     m_Time(),
     m_ImGuiLayer(),
     m_Editor(),
+    m_ProjectPath(projectPath),
     m_CameraControlActive(false),
     m_RuntimeMouseCaptured(false)
 {
@@ -82,7 +83,17 @@ bool Application::Initialize()
     m_Audio.Initialize();
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
     m_Runtime.SetAudioEngine(&m_Audio);
-    m_ProjectSettings.EnsureLoaded();
+    if (!m_ProjectPath.empty())
+    {
+        if (!m_ProjectManager.Load(m_ProjectPath)) return false;
+        if (!m_ProjectSettings.Load(m_ProjectManager.GetActiveProject().GetSettingsPath().string()))
+            m_ProjectSettings.Save(m_ProjectManager.GetActiveProject().GetSettingsPath().string());
+    }
+    else
+    {
+        m_ProjectManager.UseLegacyWorkspace();
+        m_ProjectSettings.EnsureLoaded();
+    }
     m_Renderer.SetRenderSettings(m_ProjectSettings.GetRenderSettings());
     m_Runtime.SetProjectSettings(&m_ProjectSettings);
 
