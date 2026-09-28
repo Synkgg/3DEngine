@@ -97,6 +97,15 @@ bool Application::Initialize()
     m_Renderer.SetRenderSettings(m_ProjectSettings.GetRenderSettings());
     m_Runtime.SetProjectSettings(&m_ProjectSettings);
 
+    const Project& activeProject = m_ProjectManager.GetActiveProject();
+    m_Editor.ConfigureProject(activeProject.GetAssetRoot(), activeProject.GetSettingsPath());
+
+    if (m_ProjectManager.HasProject() && !activeProject.startupScene.empty())
+    {
+        if (!m_Editor.OpenScene(m_Scene, activeProject.GetStartupScenePath()))
+            return false;
+    }
+
     return true;
 }
 
