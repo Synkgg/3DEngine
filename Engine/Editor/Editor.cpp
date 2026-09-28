@@ -10,7 +10,7 @@
 #include "../Scene/Components/MeshComponent.h"
 #include "../Scene/Components/ColorComponent.h"
 #include "../Scene/Components/NameComponent.h"
-#include "../Scene/Components/PlayerComponent.h"
+#include "../Scene/Components/PawnComponent.h"
 #include "../Scene/Components/CharacterControllerComponent.h"
 #include "../Scene/Components/LightComponent.h"
 #include "../Scene/Components/ColliderComponent.h"
