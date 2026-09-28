@@ -152,7 +152,7 @@ bool ProjectManager::SetStartupScene(const std::string& scenePath)
     const std::filesystem::path relative =
         std::filesystem::relative(absolute, m_Project.rootDirectory, error);
 
-    if (error || relative.empty() || relative.native().rfind("..", 0) == 0)
+    if (error || relative.empty() || *relative.begin() == std::filesystem::path(".."))
     {
         Logger::Error("Startup scene must be inside the active project: " + absolute.string());
         return false;
