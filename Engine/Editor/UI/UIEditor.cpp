@@ -667,6 +667,14 @@ void UIEditor::DrawInspector(
         if (ImGui::ColorEdit4("Disabled", &disabledColor.x))
             button->SetDisabledColor(disabledColor);
 
+        char clickSoundPath[512] = {};
+        std::snprintf(clickSoundPath, sizeof(clickSoundPath), "%s", button->GetClickSoundPath().c_str());
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::InputTextWithHint("Click Sound", "Assets/Audio/UI/click.wav", clickSoundPath, sizeof(clickSoundPath)))
+            button->SetClickSoundPath(clickSoundPath);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Project-relative WAV path. Leave blank for no click sound.");
+
         bool textHighlight = button->GetAffectChildText();
         if (ImGui::Checkbox("Highlight Child Text", &textHighlight)) button->SetAffectChildText(textHighlight);
         if (textHighlight)
