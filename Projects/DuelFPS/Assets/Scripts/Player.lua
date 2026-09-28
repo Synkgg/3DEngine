@@ -13,7 +13,12 @@ local respawnTimers = {}
 
 local function setPaused(value)
     paused=value
-    if not Network.IsConnected() then Scene.SetPaused(value) end
+    if Network.IsConnected() then
+        -- This is only a local input/menu state online. The world must keep ticking.
+        Scene.SetPaused(false)
+    else
+        Scene.SetPaused(value)
+    end
     UI.SetVisible("PauseMenu",value)
     Input.SetCursorVisible(value)
 end
@@ -174,6 +179,8 @@ function OnUpdate(dt)
 
     if Input.IsKeyPressed("Escape") then setPaused(not paused); return end
     if paused then
+        -- Defensively clear stale pause state every frame while an online menu is open.
+        if Network.IsConnected() and Scene.IsPaused() then Scene.SetPaused(false) end
         if UI.WasClicked("ResumeButton") then setPaused(false)
         elseif UI.WasClicked("DisconnectButton") then
             setPaused(false)
