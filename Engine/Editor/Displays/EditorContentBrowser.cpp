@@ -84,8 +84,9 @@ void Editor::RenderContentBrowser(
     fs::path currentPath =
         m_ContentBrowserPath;
 
-    const fs::path assetsRoot =
-        fs::current_path() / "Assets";
+    const fs::path assetsRoot = m_AssetRoot.empty()
+        ? fs::current_path() / "Assets"
+        : m_AssetRoot;
 
     std::error_code error;
 
