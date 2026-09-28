@@ -12,9 +12,16 @@ local health = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}
 local score = {[1]=0,[2]=0}
 local respawnTimers = {}
 local CHANNEL_COMBAT = 20
+local SCORE_LIMIT = 5
+local matchWinner = 0
+local respawnUntil = 0.0
 
 local function setPaused(value)
-    paused=value; Scene.SetPaused(value); UI.SetVisible("PauseMenu",value); Input.SetCursorVisible(value)
+    paused=value
+    -- Online menus never pause simulation/networking. Offline editor play may still truly pause.
+    Scene.SetPaused(value and not Network.IsConnected())
+    UI.SetVisible("PauseMenu",value)
+    Input.SetCursorVisible(value)
 end
 
 local function movePlayerToStart(playerID)
@@ -45,7 +52,7 @@ local function getOrCreateRemotePawn(playerID)
 end
 
 local function broadcastState()
-    Network.SendMessage(CHANNEL_COMBAT,"STATE:"..health[1]..":"..health[2]..":"..score[1]..":"..score[2])
+    Network.SendMessage(CHANNEL_COMBAT,"STATE:"..health[1]..":"..health[2]..":"..score[1]..":"..score[2]..":"..matchWinner)
 end
 
 local function respawnPlayer(playerID)
@@ -60,7 +67,7 @@ local function applyHostShot(shooterID,targetID)
     health[targetID]=math.max(0,health[targetID]-SHOT_DAMAGE)
     if health[targetID]==0 then
         score[shooterID]=(score[shooterID] or 0)+1
-        respawnTimers[targetID]=RESPAWN_DELAY
+        if score[shooterID]>=SCORE_LIMIT then matchWinner=shooterID; respawnTimers={} else respawnTimers[targetID]=RESPAWN_DELAY end
     end
     broadcastState()
 end
@@ -72,10 +79,10 @@ local function processCombatMessages()
             if target and Network.IsHost() then
                 applyHostShot(message.senderID,tonumber(target))
             else
-                local h1,h2,s1,s2=string.match(message.payload,"^STATE:(%d+):(%d+):(%d+):(%d+)$")
+                local h1,h2,s1,s2,winner=string.match(message.payload,"^STATE:(%d+):(%d+):(%d+):(%d+):(%d+)$")
                 if h1 then
                     health[1],health[2]=tonumber(h1),tonumber(h2)
-                    score[1],score[2]=tonumber(s1),tonumber(s2)
+                    score[1],score[2]=tonumber(s1),tonumber(s2); matchWinner=tonumber(winner) or 0
                 else
                     local respawnID=string.match(message.payload,"^RESPAWN:(%d+)$")
                     if respawnID then movePlayerToStart(tonumber(respawnID)) end
@@ -119,7 +126,7 @@ local function updateHostRespawns(dt)
 end
 
 local function fire()
-    if fireCooldown>0 or health[Controller.GetLocalID()]==0 then return end
+    if fireCooldown>0 or health[Controller.GetLocalID()]==0 or matchWinner~=0 then return end
     fireCooldown=FIRE_INTERVAL
     local c,f=Camera.GetPosition(),Camera.GetForward(); local range=100.0
     local hit=Physics.Raycast(c.x,c.y,c.z,f.x,f.y,f.z,range,self.id)
@@ -139,13 +146,30 @@ function OnCreate()
     State.SetNumber("mouse_sensitivity",tonumber(Preferences.LoadString("mouse_sensitivity","0.01")) or 0.01)
     State.SetBool("invert_y",Preferences.LoadString("invert_y","0")=="1")
     Controller.Possess(self.id); possessedControllerID=Controller.GetLocalID(); movePlayerToStart(possessedControllerID)
-    UI.Load("Assets/UI/Pause.ui"); UI.SetVisible("PauseMenu",false); Scene.SetPaused(false); Input.SetCursorVisible(false)
+    UI.Load("Assets/UI/Duel.ui")
+    UI.SetVisible("PauseMenu",false); UI.SetVisible("RestartMatchButton",false)
+    UI.SetVisible("Lobby",not Network.IsConnected()); Scene.SetPaused(false)
+    Input.SetCursorVisible(not Network.IsConnected())
 end
 
 function OnUpdate(dt)
     if not Network.IsConnected() then
-        if Input.IsKeyPressed("H") then Network.Host(7777); updatePossessionAndSpawn(); broadcastState()
-        elseif Input.IsKeyPressed("J") then Network.Join("127.0.0.1",7777) end
+        UI.SetVisible("Lobby",true)
+        Input.SetCursorVisible(true)
+        if UI.WasClicked("HostButton") then
+            if Network.Host(7777) then
+                UI.SetVisible("Lobby",false); Input.SetCursorVisible(false)
+                updatePossessionAndSpawn(); broadcastState()
+            else UI.SetText("NetworkStatus",Network.GetLastError()) end
+        elseif UI.WasClicked("JoinButton") then
+            local address=UI.GetText("AddressField")
+            if address=="" then address="127.0.0.1" end
+            if Network.Join(address,7777) then UI.SetText("NetworkStatus","CONNECTING TO "..address.." ...")
+            else UI.SetText("NetworkStatus",Network.GetLastError()) end
+        end
+        return
+    elseif Network.IsReady() then
+        UI.SetVisible("Lobby",false)
     end
 
     fireCooldown=math.max(0,fireCooldown-dt)
@@ -153,15 +177,43 @@ function OnUpdate(dt)
     if not Controller.IsLocallyControlled(self.id) then return end
 
     if Input.IsKeyPressed("Escape") then setPaused(not paused); return end
-    if paused then if UI.WasClicked("ResumeButton") then setPaused(false) end; return end
+    if paused then
+        if UI.WasClicked("ResumeButton") then setPaused(false)
+        elseif UI.WasClicked("DisconnectButton") then
+            setPaused(false); Network.Disconnect(); matchWinner=0; score[1],score[2]=0,0; health[1],health[2]=MAX_HEALTH,MAX_HEALTH
+            UI.SetVisible("Lobby",true); Input.SetCursorVisible(true)
+        end
+        -- Do not return from networking above; only suppress local gameplay input while menu is open.
+        return
+    end
 
     -- Keep useful combat state visible in the runtime Inspector.
     local localID=Controller.GetLocalID()
     State.SetNumber("duel_health",health[localID] or MAX_HEALTH)
     State.SetNumber("duel_score",score[localID] or 0)
-    State.SetNumber("duel_opponent_score",score[localID==1 and 2 or 1] or 0)
+    local opponentID=localID==1 and 2 or 1
+    State.SetNumber("duel_opponent_score",score[opponentID] or 0)
+    UI.SetText("HealthText","HP "..tostring(health[localID] or MAX_HEALTH))
+    UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  //  "..tostring(score[opponentID] or 0).." OPPONENT")
+    UI.SetVisible("RestartMatchButton",Network.IsHost() and matchWinner~=0)
+    if matchWinner~=0 then
+        UI.SetText("MatchStatus","FIRST TO "..SCORE_LIMIT.." // MATCH COMPLETE")
+        UI.SetText("CenterMessage",matchWinner==localID and "VICTORY" or "DEFEAT")
+        Input.SetCursorVisible(Network.IsHost())
+        if Network.IsHost() and UI.WasClicked("RestartMatchButton") then
+            health[1],health[2]=MAX_HEALTH,MAX_HEALTH; score[1],score[2]=0,0; matchWinner=0; respawnTimers={}
+            respawnPlayer(1); respawnPlayer(2); broadcastState(); UI.SetText("CenterMessage",""); Input.SetCursorVisible(false)
+        end
+        return
+    else
+        UI.SetText("MatchStatus","FIRST TO "..SCORE_LIMIT)
+        UI.SetText("CenterMessage","")
+    end
 
-    if (health[localID] or MAX_HEALTH)<=0 then return end
+    if (health[localID] or MAX_HEALTH)<=0 then
+        UI.SetText("CenterMessage","ELIMINATED // RESPAWNING")
+        return
+    end
 
     sensitivity=State.GetNumber("mouse_sensitivity",0.01)
     local invert=State.GetBool("invert_y",false) and 1.0 or -1.0
