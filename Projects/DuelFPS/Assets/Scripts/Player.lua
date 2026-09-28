@@ -192,8 +192,13 @@ function OnUpdate(dt)
     if paused then
         if UI.WasClicked("ResumeButton") then setPaused(false)
         elseif UI.WasClicked("DisconnectButton") then
-            setPaused(false); Network.Disconnect(); enteredOnlineMatch=false; matchWinner=0; score[1],score[2]=0,0; health[1],health[2]=MAX_HEALTH,MAX_HEALTH
-            UI.SetVisible("Lobby",true); Input.SetCursorVisible(true)
+            setPaused(false)
+            Network.Disconnect()
+            enteredOnlineMatch=false
+            matchWinner=0; score[1],score[2]=0,0; health[1],health[2]=MAX_HEALTH,MAX_HEALTH
+            Input.SetCursorVisible(true)
+            Scene.Load("Assets/Scenes/MainMenu.scene")
+            return
         end
         -- Do not return from networking above; only suppress local gameplay input while menu is open.
         return
