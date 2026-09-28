@@ -40,31 +40,6 @@ set(SDL_STATIC ON CACHE BOOL "Build SDL static library" FORCE)
 FetchContent_MakeAvailable(SDL3)
 
 #
-# SDL_mixer
-#
-# Generic runtime audio decoding for project-owned WAV/MP3/OGG/FLAC assets.
-FetchContent_Declare(
-    SDL3_mixer
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-    GIT_TAG release-3.2.x
-    GIT_SHALLOW TRUE
-)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build dependencies as static libraries" FORCE)
-set(SDLMIXER_VENDORED ON CACHE BOOL "" FORCE)
-set(SDLMIXER_MIDI OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_MOD OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_OPUS OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_GME OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_WAVPACK OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_MP3_DRMP3 ON CACHE BOOL "" FORCE)
-set(SDLMIXER_MP3_MPG123 OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_VORBIS_STB ON CACHE BOOL "" FORCE)
-set(SDLMIXER_VORBIS_VORBISFILE OFF CACHE BOOL "" FORCE)
-set(SDLMIXER_FLAC_DRFLAC ON CACHE BOOL "" FORCE)
-set(SDLMIXER_FLAC_LIBFLAC OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(SDL3_mixer)
-
-#
 # Lua 5.4
 #
 FetchContent_Declare(
@@ -235,7 +210,6 @@ target_link_libraries(
     PRIVATE
 
     SDL3::SDL3-static
-    SDL3_mixer::SDL3_mixer-static
     lua54
     sol2_headers
 )
