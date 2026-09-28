@@ -15,12 +15,6 @@ local respawnTimers = {}
 
 local function setPaused(value)
     paused=value
-    if Network.IsConnected() then
-        -- This is only a local input/menu state online. The world must keep ticking.
-        Scene.SetPaused(false)
-    else
-        Scene.SetPaused(value)
-    end
     UI.SetVisible("PauseMenu",value)
     Input.SetCursorVisible(value)
 end
@@ -99,8 +93,6 @@ end
 
 local function updateNetworking(dt)
     if not Network.IsConnected() or not Network.IsReady() then return end
-    updatePossessionAndSpawn()
-
     -- Publishing the local pawn requires local ownership.
     if Controller.IsLocallyControlled(self.id) then
         sendTimer=sendTimer+dt
@@ -207,22 +199,13 @@ function OnUpdate(dt)
 
     if Input.IsKeyPressed("Escape") then setPaused(not paused); return end
     if paused then
-        -- Online pause is menu/input-only. Networking and world simulation above
-        -- continue every frame; only this pawn's local gameplay input is suppressed.
-        if Network.IsConnected() and Scene.IsPaused() then Scene.SetPaused(false) end
         if UI.WasClicked("ResumeButton") then setPaused(false)
         elseif UI.WasClicked("DisconnectButton") then
             setPaused(false)
             Network.Disconnect()
             Input.SetCursorVisible(true)
             Scene.Load("Assets/Scenes/MainMenu.scene")
-            return
         end
-
-        -- Keep the camera attached to the local pawn while the menu is open so
-        -- host/client authoritative movement corrections remain visually current.
-        local p=transform.GetPosition()
-        Camera.SetPosition(p.x,p.y+cameraHeight,p.z)
         return
     end
 
