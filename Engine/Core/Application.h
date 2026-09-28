@@ -34,6 +34,7 @@ public:
     bool ActivateProject(const std::string& descriptorPath);
     bool CreateProject(const std::string& parentDirectory, const std::string& name);
     void RenderProjectHub();
+    void ReturnToProjectHub();
     void StopRuntime();
 
 private:
