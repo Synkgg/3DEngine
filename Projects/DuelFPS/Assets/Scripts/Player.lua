@@ -202,6 +202,17 @@ function OnUpdate(dt)
     local livePosition=transform.GetPosition()
     Camera.SetPosition(livePosition.x,livePosition.y+cameraHeight,livePosition.z)
 
+    local localID=Controller.GetLocalID()
+    local opponentID=localID==1 and 2 or 1
+    local localHealth=health[localID] or MAX_HEALTH
+    State.SetNumber("duel_health",localHealth)
+    UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
+    State.SetNumber("duel_score",score[localID] or 0)
+    State.SetNumber("duel_opponent_score",score[opponentID] or 0)
+    UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
+    UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  //  "..tostring(score[opponentID] or 0).." OPPONENT")
+    UI.SetVisible("RestartMatchButton",Network.IsHost() and matchWinner~=0)
+
     if Input.IsKeyPressed("Escape") then
         setPaused(not paused)
         if paused then CharacterController.Move(0.0,0.0) end
@@ -218,21 +229,6 @@ function OnUpdate(dt)
         end
         return
     end
-
-    local localID=Controller.GetLocalID()
-    local opponentID=localID==1 and 2 or 1
-    local localHealth=health[localID] or MAX_HEALTH
-    local opponentHealth=health[opponentID] or MAX_HEALTH
-    State.SetNumber("duel_health",localHealth)
-    State.SetNumber("duel_opponent_health",opponentHealth)
-    UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
-    UI.SetValue("OpponentHealthBar",math.max(0.0,math.min(1.0,opponentHealth/MAX_HEALTH)))
-    State.SetNumber("duel_score",score[localID] or 0)
-    State.SetNumber("duel_opponent_score",score[opponentID] or 0)
-    UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
-    UI.SetText("OpponentHealthText",tostring(opponentHealth).." / "..tostring(MAX_HEALTH))
-    UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  //  "..tostring(score[opponentID] or 0).." OPPONENT")
-    UI.SetVisible("RestartMatchButton",Network.IsHost() and matchWinner~=0)
 
     if matchWinner~=0 then
         UI.SetText("MatchStatus","FIRST TO "..SCORE_LIMIT.." // MATCH COMPLETE")
