@@ -23,6 +23,8 @@ function OnCreate()
     State.SetNumber("mouse_sensitivity", tonumber(Preferences.LoadString("mouse_sensitivity", "0.01")) or 0.01)
     State.SetBool("invert_y", Preferences.LoadString("invert_y", "0") == "1")
     Controller.Possess(self.id)
+    local start = Controller.GetPlayerStart(Controller.GetLocalID())
+    if start.valid then transform.SetPosition(start.x, start.y, start.z) end
     UI.Load("Assets/UI/Pause.ui")
     UI.SetVisible("PauseMenu", false)
     Scene.SetPaused(false)
