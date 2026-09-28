@@ -40,6 +40,9 @@ public:
     bool IsPlaying() const;
     void StopPlaying();
 
+    void ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath);
+    bool OpenScene(Scene& scene, const std::filesystem::path& path);
+
     std::string ConsumeOpenedUIAsset();
 
     ProjectSettings& GetProjectSettings() { return m_ProjectSettings; }
@@ -111,6 +114,7 @@ private:
     std::string m_SceneFilePath;
 
     std::string m_ContentBrowserPath;
+    std::filesystem::path m_AssetRoot;
     std::string m_SelectedAssetPath;
     std::string m_PendingUIAssetPath;
     std::string m_MeshPreviewPath;
