@@ -367,5 +367,5 @@ void Runtime::UpdateNetworkPlayers(Scene& scene, float deltaTime)
 
 std::string Runtime::ResolveProjectPath(const std::string& path) const
 {
-    return m_ProjectManager ? m_ProjectManager->ResolveProjectPath(path) : path;
+    return m_ProjectManager ? m_ProjectManager->ResolveAssetPath(path) : path;
 }
