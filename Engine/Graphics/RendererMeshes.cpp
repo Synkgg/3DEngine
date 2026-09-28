@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <filesystem>
 
 Mesh* Renderer::GetPrimitiveMesh(PrimitiveType primitive)
 {
@@ -22,16 +23,26 @@ Mesh* Renderer::GetPrimitiveMesh(PrimitiveType primitive)
     }
 }
 
+std::string Renderer::ResolveAssetPath(const std::string& path) const
+{
+    if (path.empty()) return path;
+    const std::filesystem::path input(path);
+    if (input.is_absolute() || m_ProjectRoot.empty())
+        return input.lexically_normal().string();
+    return (m_ProjectRoot / input).lexically_normal().string();
+}
+
 Mesh* Renderer::GetModelMesh(const std::string& modelPath)
 {
     if (modelPath.empty()) return nullptr;
-    auto it = m_ModelCache.find(modelPath);
+    const std::string resolvedPath = ResolveAssetPath(modelPath);
+    auto it = m_ModelCache.find(resolvedPath);
     if (it != m_ModelCache.end()) return it->second.get();
 
-    std::unique_ptr<Mesh> loaded = ModelLoader::LoadOBJ(modelPath);
+    std::unique_ptr<Mesh> loaded = ModelLoader::LoadOBJ(resolvedPath);
     if (!loaded) return nullptr;
     Mesh* result = loaded.get();
-    m_ModelCache.emplace(modelPath, std::move(loaded));
+    m_ModelCache.emplace(resolvedPath, std::move(loaded));
     return result;
 }
 
@@ -241,6 +252,6 @@ Texture2D* Renderer::LoadTexture(
 	const std::string& filepath)
 {
 	return m_TextureManager.Load(
-		filepath
+		ResolveAssetPath(filepath)
 	);
 }
