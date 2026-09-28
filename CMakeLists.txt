@@ -247,6 +247,16 @@ if (MSVC)
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:RelWithDebInfo>:/O2;/Zi>
     )
+
+    # Some Ninja/MSVC environments suppress the CRT default-library directives
+    # from object files. The engine intentionally uses the static MSVC runtime,
+    # so link the matching runtime libraries explicitly for a standalone EXE.
+    target_link_libraries(
+        3DEngine
+        PRIVATE
+        $<$<CONFIG:Debug>:libcmtd;libcpmtd>
+        $<$<NOT:$<CONFIG:Debug>>:libcmt;libcpmt>
+    )
 endif()
 
 #
