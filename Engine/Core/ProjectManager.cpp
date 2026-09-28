@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include <fstream>
 #include <iomanip>
+#include <system_error>
 
 bool ProjectManager::Load(const std::string& descriptorPath)
 {
@@ -35,10 +36,60 @@ bool ProjectManager::Load(const std::string& descriptorPath)
         return false;
     }
 
+    if (project.name.empty() || project.assetDirectory.empty())
+    {
+        Logger::Error("Project descriptor is missing Name or AssetDirectory.");
+        return false;
+    }
+
+    std::error_code directoryError;
+    std::filesystem::create_directories(project.GetAssetRoot(), directoryError);
+    if (directoryError)
+    {
+        Logger::Error("Failed to access project asset directory: " + project.GetAssetRoot().string());
+        return false;
+    }
+
     m_Project = std::move(project);
     m_HasProject = true;
     Logger::Info("Opened project: " + m_Project.name + " (" + m_Project.rootDirectory.string() + ")");
     return true;
+}
+
+bool ProjectManager::Create(const std::string& directory, const std::string& name)
+{
+    if (directory.empty() || name.empty())
+        return false;
+
+    std::filesystem::path root = std::filesystem::absolute(directory).lexically_normal();
+    std::error_code error;
+    std::filesystem::create_directories(root / "Assets" / "Scenes", error);
+    std::filesystem::create_directories(root / "Assets" / "Scripts", error);
+    std::filesystem::create_directories(root / "Assets" / "UI", error);
+    std::filesystem::create_directories(root / "Assets" / "Textures", error);
+    std::filesystem::create_directories(root / "Assets" / "Models", error);
+    if (error)
+    {
+        Logger::Error("Failed to create project directories: " + root.string());
+        return false;
+    }
+
+    const std::filesystem::path descriptor = root / (name + ".project");
+    std::ofstream out(descriptor);
+    if (!out)
+    {
+        Logger::Error("Failed to create project descriptor: " + descriptor.string());
+        return false;
+    }
+
+    out << "Version 1\n";
+    out << "Name " << std::quoted(name) << "\n";
+    out << "AssetDirectory " << std::quoted("Assets") << "\n";
+    out << "StartupScene " << std::quoted("") << "\n";
+    out << "Settings " << std::quoted("ProjectSettings.cfg") << "\n";
+    out.close();
+
+    return Load(descriptor.string());
 }
 
 void ProjectManager::UseLegacyWorkspace()
@@ -57,7 +108,5 @@ std::string ProjectManager::ResolveAssetPath(const std::string& path) const
     std::filesystem::path input(path);
     if (input.is_absolute()) return input.lexically_normal().string();
 
-    // Existing scenes store paths beginning with Assets/. Keep them valid while
-    // projects migrate, but resolve them relative to the active project root.
-    return (m_Project.rootDirectory / input).lexically_normal().string();
+    return m_Project.Resolve(input).string();
 }
