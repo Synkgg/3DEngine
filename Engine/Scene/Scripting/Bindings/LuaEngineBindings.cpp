@@ -954,6 +954,13 @@ void LuaScript::BindEngineAPI()
     });
     (*m_Environment)["Physics"] = physics;
 
+    sol::table debug = m_Lua->create_table();
+    debug.set_function("DrawLine", [this](float sx,float sy,float sz,float ex,float ey,float ez,sol::optional<float> r,sol::optional<float> g,sol::optional<float> b,sol::optional<float> duration)
+    {
+        if(m_Renderer)m_Renderer->AddDebugLine(Vec3(sx,sy,sz),Vec3(ex,ey,ez),Vec3(r.value_or(1.0f),g.value_or(0.2f),b.value_or(0.2f)),duration.value_or(0.0f));
+    });
+    (*m_Environment)["Debug"] = debug;
+
     /*
      * Networking exposes transport/replication primitives only. Match rules,
      * health, weapons, teams and game state belong to project scripts.
