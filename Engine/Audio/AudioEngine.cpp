@@ -3,72 +3,10 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 
-bool AudioEngine::Initialize()
-{
-    if (m_Mixer) return true;
-    m_Mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
-    if (!m_Mixer)
-    {
-        Logger::Warning(std::string("Audio unavailable: ") + SDL_GetError());
-        return false;
-    }
-    return true;
-}
-
-void AudioEngine::Shutdown()
-{
-    for (auto* audio : m_PlayingAudio)
-        MIX_DestroyAudio(audio);
-    m_PlayingAudio.clear();
-
-    if (m_Mixer)
-    {
-        MIX_DestroyMixer(m_Mixer);
-        m_Mixer = nullptr;
-    }
-}
-
-void AudioEngine::Update()
-{
-    for (auto it = m_PlayingAudio.begin(); it != m_PlayingAudio.end();)
-    {
-        if (!MIX_AudioPlaying(*it))
-        {
-            MIX_DestroyAudio(*it);
-            it = m_PlayingAudio.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-}
-
-bool AudioEngine::PlaySound(const std::string& path, float volume)
-{
-    if (!m_Mixer) return false;
-
-    std::filesystem::path resolved(path);
-    if (!resolved.is_absolute() && !m_ProjectRoot.empty())
-        resolved = (m_ProjectRoot / resolved).lexically_normal();
-
-    MIX_Audio* audio = MIX_LoadAudio(m_Mixer, resolved.string().c_str(), false);
-    if (!audio)
-    {
-        Logger::Warning("Sound not found or unsupported: " + resolved.string());
-        return false;
-    }
-
-    MIX_SetAudioGain(audio, std::clamp(volume * m_MasterVolume, 0.0f, 1.0f));
-    if (!MIX_PlayAudio(m_Mixer, audio))
-    {
-        MIX_DestroyAudio(audio);
-        return false;
-    }
-
-    m_PlayingAudio.push_back(audio);
-    return true;
-}
+bool AudioEngine::Initialize(){if(m_Device)return true;m_Device=SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,nullptr);if(!m_Device){Logger::Warning(std::string("Audio unavailable: ")+SDL_GetError());return false;}SDL_ResumeAudioDevice(m_Device);return true;}
+void AudioEngine::Shutdown(){for(auto*s:m_Streams){SDL_UnbindAudioStream(s);SDL_DestroyAudioStream(s);}m_Streams.clear();if(m_Device){SDL_CloseAudioDevice(m_Device);m_Device=0;}}
+void AudioEngine::Update(){for(auto i=m_Streams.begin();i!=m_Streams.end();){auto*s=*i;if(SDL_GetAudioStreamQueued(s)==0&&SDL_GetAudioStreamAvailable(s)==0){SDL_UnbindAudioStream(s);SDL_DestroyAudioStream(s);i=m_Streams.erase(i);}else ++i;}}
+bool AudioEngine::PlaySound(const std::string&p,float v){if(!m_Device)return false;std::filesystem::path resolved(p);if(!resolved.is_absolute()&&!m_ProjectRoot.empty())resolved=(m_ProjectRoot/resolved).lexically_normal();SDL_AudioSpec src{},dst{};Uint8*d=nullptr;Uint32 n=0;if(!SDL_LoadWAV(resolved.string().c_str(),&src,&d,&n)){Logger::Warning("Sound not found: "+resolved.string());return false;}SDL_GetAudioDeviceFormat(m_Device,&dst,nullptr);auto*s=SDL_CreateAudioStream(&src,&dst);if(!s){SDL_free(d);return false;}if(!SDL_BindAudioStream(m_Device,s)){SDL_DestroyAudioStream(s);SDL_free(d);return false;}SDL_SetAudioStreamGain(s,std::clamp(v*m_MasterVolume,0.0f,1.0f));bool ok=SDL_PutAudioStreamData(s,d,(int)n);SDL_free(d);if(!ok){SDL_UnbindAudioStream(s);SDL_DestroyAudioStream(s);return false;}SDL_FlushAudioStream(s);m_Streams.push_back(s);return true;}
 
 void AudioEngine::SetMasterVolume(float v){m_MasterVolume=std::clamp(v,0.0f,1.0f);}
 void AudioEngine::SetSFXVolume(float v){m_SFXVolume=std::clamp(v,0.0f,1.0f);}
