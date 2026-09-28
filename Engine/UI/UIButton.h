@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UIWidget.h"
+#include <string>
 
 class UIButton : public UIWidget
 {
@@ -39,6 +40,9 @@ public:
     void SetNormalTextColor(const Vec4& v){m_NormalTextColor=v;} void SetHoveredTextColor(const Vec4& v){m_HoveredTextColor=v;} void SetPressedTextColor(const Vec4& v){m_PressedTextColor=v;} void SetDisabledTextColor(const Vec4& v){m_DisabledTextColor=v;}
     Vec4 GetCurrentTextColor() const;
 
+    const std::string& GetClickSoundPath() const { return m_ClickSoundPath; }
+    void SetClickSoundPath(const std::string& path) { m_ClickSoundPath = path; }
+
 private:
     bool m_Hovered = false;
     bool m_Pressed = false;
@@ -49,5 +53,6 @@ private:
     Vec4 m_PressedColor = Vec4(0.12f, 0.45f, 0.66f, 1.0f);
     Vec4 m_DisabledColor = Vec4(0.16f, 0.17f, 0.19f, 0.55f);
     bool m_AffectChildText = false;
+    std::string m_ClickSoundPath;
     Vec4 m_NormalTextColor = Vec4(0.8f,0.8f,0.8f,1.0f), m_HoveredTextColor = Vec4(1,1,1,1), m_PressedTextColor = Vec4(1,1,1,1), m_DisabledTextColor = Vec4(0.5f,0.5f,0.5f,0.6f);
 };
