@@ -2,6 +2,7 @@
 #include "../Core/Logger.h"
 #include <algorithm>
 #include <cstring>
+#include <chrono>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -17,7 +18,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <chrono>
 #endif
 
 namespace {
