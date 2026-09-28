@@ -667,13 +667,67 @@ void UIEditor::DrawInspector(
         if (ImGui::ColorEdit4("Disabled", &disabledColor.x))
             button->SetDisabledColor(disabledColor);
 
-        char clickSoundPath[512] = {};
-        std::snprintf(clickSoundPath, sizeof(clickSoundPath), "%s", button->GetClickSoundPath().c_str());
-        ImGui::SetNextItemWidth(-1.0f);
-        if (ImGui::InputTextWithHint("Click Sound", "Assets/Audio/UI/click.wav", clickSoundPath, sizeof(clickSoundPath)))
-            button->SetClickSoundPath(clickSoundPath);
+        const std::string clickSoundPath = button->GetClickSoundPath();
+        const std::string clickSoundPreview = clickSoundPath.empty()
+            ? "None"
+            : std::filesystem::path(clickSoundPath).filename().string();
+
+        if (ImGui::BeginCombo("Click Sound", clickSoundPreview.c_str()))
+        {
+            static char audioSearch[128] = {};
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputTextWithHint("##UIButtonAudioSearch", "Search sounds...", audioSearch, sizeof(audioSearch));
+            ImGui::Separator();
+
+            if (ImGui::Selectable("None", clickSoundPath.empty()))
+            {
+                button->SetClickSoundPath("");
+                ImGui::CloseCurrentPopup();
+            }
+
+            std::string query = audioSearch;
+            std::transform(query.begin(), query.end(), query.begin(),
+                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+            std::error_code ec;
+            const std::filesystem::path root("Assets");
+            if (std::filesystem::exists(root, ec))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+                {
+                    if (ec) break;
+                    if (!entry.is_regular_file()) continue;
+
+                    std::string ext = entry.path().extension().string();
+                    std::transform(ext.begin(), ext.end(), ext.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                    if (ext != ".wav")
+                        continue;
+
+                    const std::string assetPath = entry.path().generic_string();
+                    std::string searchable = assetPath;
+                    std::transform(searchable.begin(), searchable.end(), searchable.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                    if (!query.empty() && searchable.find(query) == std::string::npos)
+                        continue;
+
+                    ImGui::PushID(assetPath.c_str());
+                    const bool selected = clickSoundPath == assetPath;
+                    if (ImGui::Selectable(entry.path().filename().string().c_str(), selected))
+                    {
+                        button->SetClickSoundPath(assetPath);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", assetPath.c_str());
+                    ImGui::PopID();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
         if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Project-relative WAV path. Leave blank for no click sound.");
+            ImGui::SetTooltip("Select a WAV asset from the current project's Assets folder.");
 
         bool textHighlight = button->GetAffectChildText();
         if (ImGui::Checkbox("Highlight Child Text", &textHighlight)) button->SetAffectChildText(textHighlight);
