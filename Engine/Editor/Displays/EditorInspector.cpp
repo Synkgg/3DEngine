@@ -8,6 +8,7 @@
 #include "../../Scene/Components/ColorComponent.h"
 #include "../../Scene/Components/NameComponent.h"
 #include "../../Scene/Components/PawnComponent.h"
+#include "../../Scene/Components/PlayerStartComponent.h"
 #include "../../Scene/Components/CharacterControllerComponent.h"
 #include "../../Scene/Components/LightComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
@@ -607,6 +608,9 @@ void Editor::RenderInspector(
         }
     }
 
+    /* Player Start */
+    PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
+    if(playerStart&&ImGui::CollapsingHeader("Player Start",ImGuiTreeNodeFlags_DefaultOpen)){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
     /*
      * Pawn
      */
@@ -1190,6 +1194,7 @@ void Editor::RenderInspector(
             );
 
         pawn = scene.GetComponent<PawnComponent>(m_SelectedEntity);
+        playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
 
         controller =
             scene.GetComponent<
@@ -1307,6 +1312,8 @@ void Editor::RenderInspector(
             ImGui::EndDisabled();
         }
 
+        /* Player Start */
+        if(!playerStart){if(ImGui::Selectable("Player Start")){scene.AddComponent<PlayerStartComponent>(m_SelectedEntity);Logger::Info("Added PlayerStartComponent.");}}else{ImGui::BeginDisabled();ImGui::Selectable("Player Start");ImGui::EndDisabled();}
         /*
          * Pawn
          */
