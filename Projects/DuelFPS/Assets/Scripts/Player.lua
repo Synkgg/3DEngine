@@ -1,6 +1,7 @@
 local walkSpeed, sprintSpeed = 5.0, 8.0
 local sensitivity, cameraHeight = 0.01, 0.55
 local paused, sendTimer = false, 0.0
+local stateBroadcastTimer = 0.0
 local possessedControllerID = 0
 local remotePawns, remotePlayersByEntity = {}, {}
 
@@ -118,6 +119,8 @@ end
 
 local function updateHostRespawns(dt)
     if not Network.IsHost() then return end
+    stateBroadcastTimer=stateBroadcastTimer+dt
+    if stateBroadcastTimer>=0.5 then stateBroadcastTimer=0; broadcastState() end
     for playerID,timer in pairs(respawnTimers) do
         timer=timer-dt
         if timer<=0 then respawnTimers[playerID]=nil; respawnPlayer(playerID)
