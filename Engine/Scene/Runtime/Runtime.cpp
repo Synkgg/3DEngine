@@ -263,13 +263,45 @@ void Runtime::SetPaused(bool paused)
 }
 
 
+std::uint32_t Runtime::GetLocalControllerID() const
+{
+    if (!m_Network.IsConnected()) return 1u;
+    return m_Network.GetLocalPlayerID();
+}
+
+bool Runtime::PossessPawn(Scene& scene, Entity entity, std::uint32_t controllerID)
+{
+    PawnComponent* pawn = scene.GetComponent<PawnComponent>(entity);
+    if (!pawn || controllerID == 0) return false;
+    for (const Entity& candidate : scene.GetEntities())
+    {
+        PawnComponent* other = scene.GetComponent<PawnComponent>(candidate);
+        if (other && other->controllerID == controllerID) other->controllerID = 0;
+    }
+    pawn->controllerID = controllerID;
+    return true;
+}
+
+void Runtime::UnpossessPawn(Scene& scene, Entity entity)
+{
+    if (PawnComponent* pawn = scene.GetComponent<PawnComponent>(entity)) pawn->controllerID = 0;
+}
+
+bool Runtime::IsPawnLocallyControlled(const Scene& scene, Entity entity) const
+{
+    const PawnComponent* pawn = scene.GetComponent<PawnComponent>(entity);
+    if (!pawn) return false;
+    const std::uint32_t localController = GetLocalControllerID();
+    return localController != 0 && pawn->controllerID == localController;
+}
+
 bool Runtime::IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) const
 {
     if (!m_Running || !entity.IsValid()) return false;
     Entity current = entity;
     while (current.IsValid())
     {
-        if (scene.GetComponent<PawnComponent>(current) != nullptr)
+        if (IsPawnLocallyControlled(scene, current))
             return true;
         current = scene.GetParent(current);
     }
