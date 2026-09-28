@@ -31,7 +31,7 @@ enum : std::uint8_t { Hello=1, Welcome=2, Transform=3, Goodbye=4, Message=5, Hos
 #pragma pack(push,1)
 struct PacketHeader { std::uint32_t magic; std::uint8_t type; };
 struct WelcomePacket { PacketHeader header; std::uint32_t playerID; };
-struct TransformPacket { PacketHeader header; std::uint32_t playerID; float x,y,z,rx,ry,rz; };
+struct TransformPacket { PacketHeader header; std::uint32_t playerID; std::uint32_t sequence; float x,y,z,rx,ry,rz; };
 struct MessagePacket { PacketHeader header; std::uint32_t senderID; std::uint16_t channel; std::uint16_t size; char payload[MaxMessagePayload]; };
 #pragma pack(pop)
 void CloseSocket(SocketHandle s){
@@ -62,7 +62,7 @@ bool NetworkManager::OpenSocket(std::uint16_t port){
 bool NetworkManager::Host(std::uint16_t port){Disconnect();if(!OpenSocket(port))return false;m_Mode=Mode::Host;m_LocalPlayerID=1;m_LastError.clear();Logger::Info("Network: hosting on UDP port "+std::to_string(port)+".");return true;}
 bool NetworkManager::Join(const std::string& address,std::uint16_t port){Disconnect();if(!OpenSocket(0))return false;in_addr a{};if(inet_pton(AF_INET,address.c_str(),&a)!=1){Disconnect();SetError("Join currently requires an IPv4 address.");return false;}m_Server={a.s_addr,port,1};m_Mode=Mode::Client;m_LastError.clear();SendHello();Logger::Info("Network: joining "+address+":"+std::to_string(port)+".");return true;}
 void NetworkManager::SendHello(){if(m_Mode!=Mode::Client)return;PacketHeader p{Magic,Hello};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=m_Server.address;to.sin_port=htons(m_Server.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
-void NetworkManager::SendTransformTo(const Endpoint& e,const NetworkTransformState& s){TransformPacket p{{Magic,Transform},s.playerID,s.x,s.y,s.z,s.rx,s.ry,s.rz};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
+void NetworkManager::SendTransformTo(const Endpoint& e,const NetworkTransformState& s){TransformPacket p{{Magic,Transform},s.playerID,m_LocalTransformSequence,s.x,s.y,s.z,s.rx,s.ry,s.rz};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
 void NetworkManager::SendMessageTo(const Endpoint& e,std::uint32_t senderID,std::uint16_t channel,const std::string& payload){
  MessagePacket p{};p.header={Magic,Message};p.senderID=senderID;p.channel=channel;p.size=static_cast<std::uint16_t>(std::min(payload.size(),MaxMessagePayload));std::memcpy(p.payload,payload.data(),p.size);
  sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);const int bytes=static_cast<int>(sizeof(PacketHeader)+sizeof(p.senderID)+sizeof(p.channel)+sizeof(p.size)+p.size);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),bytes,0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
@@ -76,6 +76,7 @@ std::vector<NetworkMessage> NetworkManager::ConsumeMessages(){auto messages=std:
 bool NetworkManager::WasKickedByHost(){const bool value=m_KickedByHost;m_KickedByHost=false;return value;}
 void NetworkManager::SendLocalTransform(const NetworkTransformState& state){
  if(m_Mode==Mode::Offline||!IsHandshakeComplete())return;NetworkTransformState s=state;s.playerID=GetLocalPlayerID();
+ ++m_LocalTransformSequence;
  if(m_Mode==Mode::Host){for(const auto& c:m_Clients)SendTransformTo(c,s);}else SendTransformTo(m_Server,s);
 }
 void NetworkManager::Update(){
@@ -106,7 +107,16 @@ void NetworkManager::Update(){
   }else if(h.type==Transform&&n>=(int)sizeof(TransformPacket)){
    TransformPacket p{};std::memcpy(&p,b,sizeof(p));if(p.playerID==GetLocalPlayerID())continue;
    if(m_Mode==Mode::Host){auto sender=std::find_if(m_Clients.begin(),m_Clients.end(),[&](const Endpoint&e){return e.address==from.sin_addr.s_addr&&e.port==ntohs(from.sin_port)&&e.playerID==p.playerID;});if(sender==m_Clients.end())continue;}
-   NetworkTransformState st{p.playerID,p.x,p.y,p.z,p.rx,p.ry,p.rz};m_RemoteTransforms[p.playerID]=st;if(m_Mode==Mode::Host)for(const auto& c:m_Clients)if(c.playerID!=p.playerID)SendTransformTo(c,st);
+   const auto lastSequence=m_LastRemoteTransformSequence.find(p.playerID);
+   if(lastSequence!=m_LastRemoteTransformSequence.end()&&p.sequence<=lastSequence->second)continue;
+   m_LastRemoteTransformSequence[p.playerID]=p.sequence;
+   NetworkTransformState st{p.playerID,p.x,p.y,p.z,p.rx,p.ry,p.rz};m_RemoteTransforms[p.playerID]=st;
+   if(m_Mode==Mode::Host){
+    const std::uint32_t hostSequence=m_LocalTransformSequence;
+    m_LocalTransformSequence=p.sequence;
+    for(const auto& c:m_Clients)if(c.playerID!=p.playerID)SendTransformTo(c,st);
+    m_LocalTransformSequence=hostSequence;
+   }
   }
  }
 }
@@ -119,5 +129,5 @@ void NetworkManager::Disconnect(){
 #else
  m_Socket=-1;
 #endif
- m_Mode=Mode::Offline;m_Clients.clear();m_RemoteTransforms.clear();m_Messages.clear();m_Server={};m_LocalPlayerID=0;m_NextPlayerID=2;
+ m_Mode=Mode::Offline;m_Clients.clear();m_RemoteTransforms.clear();m_LastRemoteTransformSequence.clear();m_Messages.clear();m_Server={};m_LocalPlayerID=0;m_NextPlayerID=2;m_LocalTransformSequence=0;
 }
