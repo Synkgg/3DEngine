@@ -111,6 +111,7 @@ bool Application::Initialize()
     // directory. Renderer/runtime resolve authored Assets/... paths against
     // the active project explicitly.
     m_Renderer.SetProjectRoot(activeProject.rootDirectory);
+    m_Audio.SetProjectRoot(activeProject.rootDirectory);
     m_Editor.ConfigureProject(activeProject.GetAssetRoot(), activeProject.GetSettingsPath());
 
     // The editor owns the live project settings instance. Runtime and renderer
@@ -199,6 +200,7 @@ void Application::ReturnToProjectHub()
 
     const Project& workspace = m_ProjectManager.GetActiveProject();
     m_Renderer.SetProjectRoot(workspace.rootDirectory);
+    m_Audio.SetProjectRoot(workspace.rootDirectory);
     m_Editor.ConfigureProject(workspace.GetAssetRoot(), workspace.GetSettingsPath());
 
     ProjectSettings& liveSettings = m_Editor.GetProjectSettings();
@@ -223,6 +225,7 @@ bool Application::ActivateProject(const std::string& descriptorPath)
     const Project& project = m_ProjectManager.GetActiveProject();
 
     m_Renderer.SetProjectRoot(project.rootDirectory);
+    m_Audio.SetProjectRoot(project.rootDirectory);
     m_Editor.ConfigureProject(project.GetAssetRoot(), project.GetSettingsPath());
     ProjectSettings& liveProjectSettings = m_Editor.GetProjectSettings();
     m_Renderer.SetRenderSettings(liveProjectSettings.GetRenderSettings());
