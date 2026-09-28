@@ -221,10 +221,12 @@ function OnUpdate(dt)
 
     local localID=Controller.GetLocalID()
     local opponentID=localID==1 and 2 or 1
-    State.SetNumber("duel_health",health[localID] or MAX_HEALTH)
+    local localHealth=health[localID] or MAX_HEALTH
+    State.SetNumber("duel_health",localHealth)
+    UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
     State.SetNumber("duel_score",score[localID] or 0)
     State.SetNumber("duel_opponent_score",score[opponentID] or 0)
-    UI.SetText("HealthText","HP "..tostring(health[localID] or MAX_HEALTH))
+    UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
     UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  //  "..tostring(score[opponentID] or 0).." OPPONENT")
     UI.SetVisible("RestartMatchButton",Network.IsHost() and matchWinner~=0)
 
