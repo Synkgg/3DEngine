@@ -616,6 +616,7 @@ void Editor::RenderInspector(
         if (ImGui::CollapsingHeader("Pawn", ImGuiTreeNodeFlags_DefaultOpen))
         {
             ImGui::TextWrapped("Generic controllable entity. Input, camera and gameplay behavior are project-defined.");
+            ImGui::Text("Controller ID: %u", pawn->controllerID);
             ImGui::Spacing();
             if (ImGui::Button("Remove Pawn"))
             {
