@@ -805,7 +805,8 @@ void LuaScript::BindEngineAPI()
     {
         if (!m_Scene) return std::uint32_t(0);
         Entity parent = parentID == 0 ? Entity() : m_Scene->FindEntityByID(parentID);
-        return PrefabSerializer::Instantiate(*m_Scene, path, parent).GetID();
+        const std::string resolved = m_Runtime ? m_Runtime->ResolveProjectPath(path) : path;
+        return PrefabSerializer::Instantiate(*m_Scene, resolved, parent).GetID();
     });
 
     sceneApi.set_function("DuplicateEntity", [this](std::uint32_t entityID, bool includeChildren)
@@ -1145,7 +1146,8 @@ void LuaScript::BindEngineAPI()
     ui.set_function("Load", [this](const std::string& path)
     {
         if (!m_UICanvas) return false;
-        return UISerializer::Load(*m_UICanvas, path);
+        const std::string resolved = m_Runtime ? m_Runtime->ResolveProjectPath(path) : path;
+        return UISerializer::Load(*m_UICanvas, resolved);
     });
 
     ui.set_function("Clear", [this]()
