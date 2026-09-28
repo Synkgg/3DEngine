@@ -10,6 +10,7 @@
 #include "../Components/ColorComponent.h"
 #include "../Components/NameComponent.h"
 #include "../Components/PawnComponent.h"
+#include "../Components/PlayerStartComponent.h"
 #include "../Components/CharacterControllerComponent.h"
 #include "../Components/LightComponent.h"
 #include "../Components/ColliderComponent.h"
@@ -1023,6 +1024,13 @@ bool SceneSerializer::Load(
             }
         }
 
+        /*
+         * Player Start
+         */
+        if (!ReadLine(file, line, "PlayerStart", entityID)) return false;
+        { std::istringstream s(line); std::string token; int has=0; std::uint32_t slot=0; s>>token>>has;
+          if(token!="PlayerStart"||(has!=0&&has!=1)) return false;
+          if(has==1){s>>slot;if(s.fail())return false;m_Scene.AddComponent<PlayerStartComponent>(entity,PlayerStartComponent{slot});} }
         /*
          * Character Controller
          */
