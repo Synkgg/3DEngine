@@ -1,6 +1,6 @@
 MyEngineScene
 Environment 1 4 1 1 1 180 0.78 0.0004 0.12 1 85
-Entities 6
+Entities 8
 Entity 1
 Name Player
 Position 0 1.5 10
@@ -13,7 +13,8 @@ Color 0
 Texture 0
 Material 0
 Interactable 0
-Player 0
+Player 1 0 0
+PlayerStart 0
 CharacterController 1 9.81 7 0 1
 Light 0
 Collider 1 0.8 2 0.8
@@ -32,6 +33,7 @@ Texture 0
 Material 1 0.18 0.72 1 0
 Interactable 0
 Player 0
+PlayerStart 0
 CharacterController 0
 Light 0
 Collider 1 30 1 40
@@ -49,6 +51,7 @@ Texture 0
 Material 1 0.2 0.7 1 0
 Interactable 0
 Player 0
+PlayerStart 0
 CharacterController 0
 Light 0
 Collider 1 1 6 40
@@ -66,6 +69,7 @@ Texture 0
 Material 1 0.2 0.7 1 0
 Interactable 0
 Player 0
+PlayerStart 0
 CharacterController 0
 Light 0
 Collider 1 1 6 40
@@ -83,6 +87,7 @@ Texture 0
 Material 1 0.2 0.7 1 0
 Interactable 0
 Player 0
+PlayerStart 0
 CharacterController 0
 Light 0
 Collider 1 30 6 1
@@ -100,8 +105,45 @@ Texture 0
 Material 1 0.2 0.7 1 0
 Interactable 0
 Player 0
+PlayerStart 0
 CharacterController 0
 Light 0
 Collider 1 30 6 1
+Scripts 0
+Entity 7
+Name Player Start 1
+Position 0 1.5 10
+Rotation 0 3.14159 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 1 1
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 8
+Name Player Start 2
+Position 0 1.5 -10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 1 2
+CharacterController 0
+Light 0
+Collider 0
 Scripts 0
 HierarchyFolders 0
