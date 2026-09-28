@@ -12,6 +12,7 @@ local CHANNEL_COMBAT = 20
 local fireCooldown, matchWinner = 0.0, 0
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local respawnTimers = {}
+local rifleViewmodel = 0
 
 local function setPaused(value)
     paused=value
@@ -152,6 +153,20 @@ local function updateHostRespawns(dt)
     end
 end
 
+local function updateViewmodel()
+    if rifleViewmodel==0 then return end
+    local c,f,r=Camera.GetPosition(),Camera.GetForward(),Camera.GetRight()
+    local upX,upY,upZ=0.0,1.0,0.0
+    local x=c.x+r.x*0.34+f.x*0.62+upX*(-0.24)
+    local y=c.y+r.y*0.34+f.y*0.62+upY*(-0.24)
+    local z=c.z+r.z*0.34+f.z*0.62+upZ*(-0.24)
+    Scene.SetPosition(rifleViewmodel,x,y,z)
+    local yaw=math.deg(math.atan(-f.x,-f.z))
+    local horizontal=math.sqrt(f.x*f.x+f.z*f.z)
+    local pitch=math.deg(math.atan(f.y,horizontal))
+    Scene.SetRotation(rifleViewmodel,-pitch,yaw,0.0)
+end
+
 local function fire()
     local localID=Controller.GetLocalID()
     if fireCooldown>0 or (health[localID] or MAX_HEALTH)<=0 or matchWinner~=0 then return end
@@ -178,6 +193,8 @@ function OnCreate()
     UI.SetVisible("Lobby",false)
     UI.SetVisible("PauseMenu",false)
     UI.SetVisible("RestartMatchButton",false)
+    UI.SetVisible("DeathOverlay",false)
+    rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
     Input.SetCursorVisible(false)
     updatePossessionAndSpawn()
 end
@@ -202,6 +219,7 @@ function OnUpdate(dt)
     -- an online menu owns input. The world is still simulating.
     local livePosition=transform.GetPosition()
     Camera.SetPosition(livePosition.x,livePosition.y+cameraHeight,livePosition.z)
+    updateViewmodel()
 
     local localID=Controller.GetLocalID()
     local opponentID=localID==1 and 2 or 1
@@ -213,6 +231,11 @@ function OnUpdate(dt)
     UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
     UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  //  "..tostring(score[opponentID] or 0).." OPPONENT")
     UI.SetVisible("RestartMatchButton",Network.IsHost() and matchWinner~=0)
+    local dead=localHealth<=0 and matchWinner==0
+    UI.SetVisible("DeathOverlay",dead)
+    UI.SetVisible("CrosshairH",not dead)
+    UI.SetVisible("CrosshairV",not dead)
+    if dead then UI.SetText("DeathStatus","RESPAWNING...") end
 
     if Input.IsKeyPressed("Escape") then
         setPaused(not paused)
