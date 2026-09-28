@@ -13,7 +13,7 @@ local respawnTimers = {}
 
 local function setPaused(value)
     paused=value
-    Scene.SetPaused(value and not Network.IsConnected())
+    if not Network.IsConnected() then Scene.SetPaused(value) end
     UI.SetVisible("PauseMenu",value)
     Input.SetCursorVisible(value)
 end
