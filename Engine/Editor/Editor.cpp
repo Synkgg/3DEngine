@@ -251,6 +251,13 @@ void Editor::Render(
 
             ImGui::Separator();
 
+            if (ImGui::MenuItem("Back to Project Hub"))
+            {
+                m_ProjectHubRequested = true;
+            }
+
+            ImGui::Separator();
+
             if (ImGui::MenuItem("Exit"))
             {
                 Logger::Info(
@@ -333,6 +340,13 @@ bool Editor::IsViewportHovered() const
 bool Editor::IsPlaying() const
 {
     return m_Playing;
+}
+
+bool Editor::ConsumeProjectHubRequest()
+{
+    const bool requested = m_ProjectHubRequested;
+    m_ProjectHubRequested = false;
+    return requested;
 }
 
 void Editor::StopPlaying()
