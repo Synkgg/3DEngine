@@ -622,3 +622,14 @@ void DebugRenderer::DrawBox(
 
     glBindVertexArray(0);
 }
+void DebugRenderer::DrawLine(const Mat4& view,const Mat4& projection,const Vec3& start,const Vec3& end,const Vec3& color)
+{
+    if(!m_VertexArray||!m_VertexBuffer||!m_ShaderProgram)return;
+    const float vertices[]={start.x,start.y,start.z,end.x,end.y,end.z};
+    const Mat4 transform=projection*view; glUseProgram(m_ShaderProgram);
+    glUniformMatrix4fv(glGetUniformLocation(m_ShaderProgram,"u_Transform"),1,GL_FALSE,transform.elements);
+    glUniform4f(glGetUniformLocation(m_ShaderProgram,"u_Color"),color.x,color.y,color.z,1.0f);
+    glBindVertexArray(m_VertexArray);glBindBuffer(GL_ARRAY_BUFFER,m_VertexBuffer);glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertices),vertices);
+    glDisable(GL_DEPTH_TEST);glLineWidth(2.0f);glDrawArrays(GL_LINES,0,2);glEnable(GL_DEPTH_TEST);
+    glBindBuffer(GL_ARRAY_BUFFER,0);glBindVertexArray(0);
+}
