@@ -4,6 +4,7 @@
 #include <shobjidl.h>
 
 #include <string>
+#include <filesystem>
 
 namespace
 {
@@ -272,13 +273,24 @@ namespace FileDialog
     {
         bool shouldUninitialize = false;
         if (!InitializeCOM(shouldUninitialize)) return false;
+
         IFileOpenDialog* dialog = nullptr;
-        HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
-        if (FAILED(result)) { ShutdownCOM(shouldUninitialize); return false; }
+        HRESULT result = CoCreateInstance(
+            CLSID_FileOpenDialog,
+            nullptr,
+            CLSCTX_INPROC_SERVER,
+            IID_PPV_ARGS(&dialog));
+
+        if (FAILED(result))
+        {
+            ShutdownCOM(shouldUninitialize);
+            return false;
+        }
+
         const COMDLG_FILTERSPEC filters[] =
         {
-            { L"Project Files (*.project)", L"*.project" },
-            { L"All Files (*.*)", L"*.*" }
+            { L"Engine Project (*.project)", L"*.project" },
+            { L"All Files", L"*.*" }
         };
 
         dialog->SetFileTypes(2, filters);
@@ -288,16 +300,51 @@ namespace FileDialog
         DWORD options = 0;
         if (SUCCEEDED(dialog->GetOptions(&options)))
         {
-            // Force a real filesystem browser. This keeps normal nested
-            // folders/files visible instead of allowing shell-only virtual
-            // locations to hide parts of the directory tree.
             dialog->SetOptions(
                 options |
                 FOS_FORCEFILESYSTEM |
                 FOS_PATHMUSTEXIST |
                 FOS_FILEMUSTEXIST |
-                FOS_NOCHANGEDIR
-            );
+                FOS_NOCHANGEDIR);
+        }
+
+        // Start in the nearest Projects folder instead of whatever location
+        // Windows happened to remember for this dialog. This works both when
+        // running from the repository and from out/build/<configuration>.
+        std::filesystem::path cursor = std::filesystem::current_path();
+        std::filesystem::path projectsDirectory;
+
+        for (int depth = 0; depth < 8 && !cursor.empty(); ++depth)
+        {
+            const std::filesystem::path candidate = cursor / "Projects";
+            std::error_code error;
+            if (std::filesystem::is_directory(candidate, error))
+            {
+                projectsDirectory = candidate;
+                break;
+            }
+
+            const std::filesystem::path parent = cursor.parent_path();
+            if (parent == cursor) break;
+            cursor = parent;
+        }
+
+        if (!projectsDirectory.empty())
+        {
+            IShellItem* projectsItem = nullptr;
+            const std::wstring widePath = projectsDirectory.wstring();
+            if (SUCCEEDED(SHCreateItemFromParsingName(
+                    widePath.c_str(),
+                    nullptr,
+                    IID_PPV_ARGS(&projectsItem))))
+            {
+                // SetFolder controls the folder shown when the dialog opens.
+                // SetDefaultFolder gives Windows a fallback without preventing
+                // the user from navigating anywhere else on disk.
+                dialog->SetDefaultFolder(projectsItem);
+                dialog->SetFolder(projectsItem);
+                projectsItem->Release();
+            }
         }
 
         result = dialog->Show(nullptr);
@@ -315,6 +362,7 @@ namespace FileDialog
                 item->Release();
             }
         }
+
         dialog->Release();
         ShutdownCOM(shouldUninitialize);
         return !path.empty();
