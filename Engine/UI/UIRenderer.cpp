@@ -11,12 +11,12 @@
 #include "../Graphics/Texture2D.h"
 #include "../Core/Logger.h"
 #include "../Audio/AudioEngine.h"
+#include "../Editor/Fonts/InterFont.h"
 
 #include <glad/gl.h>
 
 #include <algorithm>
 #include <string>
-#include <fstream>
 #include <vector>
 
 #define STB_TRUETYPE_IMPLEMENTATION
@@ -378,18 +378,7 @@ void UIRenderer::End()
 
 bool UIRenderer::InitializeFontAtlas()
 {
-    std::ifstream file(
-        "Assets/Fonts/InterVariable.ttf",
-        std::ios::binary | std::ios::ate
-    );
-    if (!file) return false;
-
-    const std::streamsize length = file.tellg();
-    if (length <= 0) return false;
-    file.seekg(0, std::ios::beg);
-
-    std::vector<unsigned char> fontData(static_cast<size_t>(length));
-    if (!file.read(reinterpret_cast<char*>(fontData.data()), length))
+    if (g_InterFontDataSize == 0)
         return false;
 
     std::vector<unsigned char> bitmap(
@@ -397,7 +386,7 @@ bool UIRenderer::InitializeFontAtlas()
 
     stbtt_bakedchar baked[95]{};
     const int result = stbtt_BakeFontBitmap(
-        fontData.data(), 0, FontBakeSize,
+        g_InterFontData, 0, FontBakeSize,
         bitmap.data(), FontAtlasWidth, FontAtlasHeight,
         32, 95, baked);
     if (result <= 0) return false;
@@ -432,7 +421,6 @@ bool UIRenderer::InitializeFontAtlas()
     }
     return true;
 }
-
 
 
 
