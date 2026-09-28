@@ -254,8 +254,8 @@ if (MSVC)
     target_link_libraries(
         3DEngine
         PRIVATE
-        $<$<CONFIG:Debug>:libcmtd;libcpmtd>
-        $<$<NOT:$<CONFIG:Debug>>:libcmt;libcpmt>
+        $<$<CONFIG:Debug>:libcmtd;libcpmtd;libvcruntimed;libucrtd>
+        $<$<NOT:$<CONFIG:Debug>>:libcmt;libcpmt;libvcruntime;libucrt>
     )
 endif()
 
