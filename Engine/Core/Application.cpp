@@ -101,11 +101,14 @@ bool Application::Initialize()
         const std::string defaultLocation = (std::filesystem::current_path() / "Projects").string();
         std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", defaultLocation.c_str());
     }
-    m_Renderer.SetRenderSettings(m_ProjectSettings.GetRenderSettings());
-    m_Runtime.SetProjectSettings(&m_ProjectSettings);
-
     const Project& activeProject = m_ProjectManager.GetActiveProject();
     m_Editor.ConfigureProject(activeProject.GetAssetRoot(), activeProject.GetSettingsPath());
+
+    // The editor owns the live project settings instance. Runtime and renderer
+    // must share that same object so edits cannot diverge from Play mode.
+    ProjectSettings& liveProjectSettings = m_Editor.GetProjectSettings();
+    m_Renderer.SetRenderSettings(liveProjectSettings.GetRenderSettings());
+    m_Runtime.SetProjectSettings(&liveProjectSettings);
 
     if (m_ProjectManager.HasProject() && !activeProject.startupScene.empty())
     {
