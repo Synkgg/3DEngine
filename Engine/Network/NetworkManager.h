@@ -60,9 +60,11 @@ private:
     Endpoint m_Server;
     std::vector<Endpoint> m_Clients;
     std::unordered_map<std::uint32_t, NetworkTransformState> m_RemoteTransforms;
+    std::unordered_map<std::uint32_t, std::uint32_t> m_LastRemoteTransformSequence;
     std::vector<NetworkMessage> m_Messages;
     std::string m_LastError;
     std::uint32_t m_LocalPlayerID=0;
     std::uint32_t m_NextPlayerID=2;
+    std::uint32_t m_LocalTransformSequence=0;
     bool m_KickedByHost=false;
 };
