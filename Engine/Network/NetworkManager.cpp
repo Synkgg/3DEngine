@@ -2,7 +2,6 @@
 #include "../Core/Logger.h"
 #include <algorithm>
 #include <cstring>
-#include <chrono>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -81,20 +80,14 @@ void NetworkManager::SendLocalTransform(const NetworkTransformState& state){
  if(m_Mode==Mode::Host){for(const auto& c:m_Clients)SendTransformTo(c,s);}else SendTransformTo(m_Server,s);
 }
 void NetworkManager::Update(){
- if(m_Mode==Mode::Offline)return;
- static auto diagnosticStart=std::chrono::steady_clock::now();
- static std::uint64_t diagnosticUpdates=0;
- static std::uint64_t diagnosticPackets=0;
- static std::uint64_t diagnosticTransforms=0;
- ++diagnosticUpdates;
- SocketHandle s=static_cast<SocketHandle>(m_Socket);char b[512];sockaddr_in from{};constexpr int MaxPacketsPerUpdate=128;
+ if(m_Mode==Mode::Offline)return;SocketHandle s=static_cast<SocketHandle>(m_Socket);char b[512];sockaddr_in from{};constexpr int MaxPacketsPerUpdate=128;
  for(int packetIndex=0;packetIndex<MaxPacketsPerUpdate;++packetIndex){
 #ifdef _WIN32
   int len=sizeof(from);
 #else
   socklen_t len=sizeof(from);
 #endif
-  int n=(int)recvfrom(s,b,sizeof(b),0,reinterpret_cast<sockaddr*>(&from),&len);if(n<=0)break;++diagnosticPackets;if(n<(int)sizeof(PacketHeader))continue;
+  int n=(int)recvfrom(s,b,sizeof(b),0,reinterpret_cast<sockaddr*>(&from),&len);if(n<=0)break;if(n<(int)sizeof(PacketHeader))continue;
   PacketHeader h{};std::memcpy(&h,b,sizeof(h));if(h.magic!=Magic)continue;
   if(m_Mode==Mode::Host&&h.type==Hello){
    auto it=std::find_if(m_Clients.begin(),m_Clients.end(),[&](const Endpoint&e){return e.address==from.sin_addr.s_addr&&e.port==ntohs(from.sin_port);});
@@ -117,7 +110,6 @@ void NetworkManager::Update(){
    const auto lastSequence=m_LastRemoteTransformSequence.find(p.playerID);
    if(lastSequence!=m_LastRemoteTransformSequence.end()&&p.sequence<=lastSequence->second)continue;
    m_LastRemoteTransformSequence[p.playerID]=p.sequence;
-   ++diagnosticTransforms;
    NetworkTransformState st{p.playerID,p.x,p.y,p.z,p.rx,p.ry,p.rz};m_RemoteTransforms[p.playerID]=st;
    if(m_Mode==Mode::Host){
     const std::uint32_t hostSequence=m_LocalTransformSequence;
@@ -126,13 +118,6 @@ void NetworkManager::Update(){
     m_LocalTransformSequence=hostSequence;
    }
   }
- }
- const auto diagnosticNow=std::chrono::steady_clock::now();
- if(std::chrono::duration_cast<std::chrono::seconds>(diagnosticNow-diagnosticStart).count()>=2){
-  Logger::Info("Network diagnostic: updates="+std::to_string(diagnosticUpdates)+
-   " packets="+std::to_string(diagnosticPackets)+
-   " transforms="+std::to_string(diagnosticTransforms));
-  diagnosticStart=diagnosticNow;diagnosticUpdates=0;diagnosticPackets=0;diagnosticTransforms=0;
  }
 }
 void NetworkManager::Disconnect(){
