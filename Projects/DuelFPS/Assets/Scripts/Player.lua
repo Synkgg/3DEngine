@@ -16,6 +16,7 @@ local CHANNEL_COMBAT = 20
 local SCORE_LIMIT = 5
 local matchWinner = 0
 local respawnUntil = 0.0
+local enteredOnlineMatch = false
 
 local function setPaused(value)
     paused=value
@@ -173,6 +174,14 @@ function OnUpdate(dt)
         return
     elseif Network.IsReady() then
         UI.SetVisible("Lobby",false)
+        if not enteredOnlineMatch then
+            enteredOnlineMatch=true
+            paused=false
+            Scene.SetPaused(false)
+            UI.SetVisible("PauseMenu",false)
+            Input.SetCursorVisible(false)
+            updatePossessionAndSpawn()
+        end
     end
 
     fireCooldown=math.max(0,fireCooldown-dt)
@@ -183,7 +192,7 @@ function OnUpdate(dt)
     if paused then
         if UI.WasClicked("ResumeButton") then setPaused(false)
         elseif UI.WasClicked("DisconnectButton") then
-            setPaused(false); Network.Disconnect(); matchWinner=0; score[1],score[2]=0,0; health[1],health[2]=MAX_HEALTH,MAX_HEALTH
+            setPaused(false); Network.Disconnect(); enteredOnlineMatch=false; matchWinner=0; score[1],score[2]=0,0; health[1],health[2]=MAX_HEALTH,MAX_HEALTH
             UI.SetVisible("Lobby",true); Input.SetCursorVisible(true)
         end
         -- Do not return from networking above; only suppress local gameplay input while menu is open.
