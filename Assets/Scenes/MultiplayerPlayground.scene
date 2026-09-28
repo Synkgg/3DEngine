@@ -2555,10 +2555,12 @@ Collider 0
 Scripts 0
 Entity 163
 Name WarehouseCeiling_-20_-30
-Position -20 6.35-30
+Position -20 6.35 -30
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2568,12 +2570,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 164
 Name WarehouseCeiling_-20_-10
-Position -20 6.35-10
+Position -20 6.35 -10
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2583,12 +2588,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 165
 Name WarehouseCeiling_-20_10
-Position -20 6.3510
+Position -20 6.35 10
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2598,12 +2606,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 166
 Name WarehouseCeiling_-20_30
-Position -20 6.3530
+Position -20 6.35 30
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2613,12 +2624,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 167
 Name WarehouseCeiling_0_-30
-Position 0 6.35-30
+Position 0 6.35 -30
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2628,12 +2642,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 168
 Name WarehouseCeiling_0_-10
-Position 0 6.35-10
+Position 0 6.35 -10
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2643,12 +2660,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 169
 Name WarehouseCeiling_0_10
-Position 0 6.3510
+Position 0 6.35 10
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2658,12 +2678,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 170
 Name WarehouseCeiling_0_30
-Position 0 6.3530
+Position 0 6.35 30
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2673,12 +2696,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 171
 Name WarehouseCeiling_20_-30
-Position 20 6.35-30
+Position 20 6.35 -30
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2688,12 +2714,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 172
 Name WarehouseCeiling_20_-10
-Position 20 6.35-10
+Position 20 6.35 -10
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2703,12 +2732,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 173
 Name WarehouseCeiling_20_10
-Position 20 6.3510
+Position 20 6.35 10
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2718,12 +2750,15 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 174
 Name WarehouseCeiling_20_30
-Position 20 6.3530
+Position 20 6.35 30
+Rotation 0 0 0
+Scale 5.08 0.45 5.08
 Parent 0
 PrefabSource ""
-5.08 0.45 5.08$6Mesh 1 1 ""
+Mesh 1 1 ""
 Color 1 0.055 0.065 0.08 1
 Texture 0
 Material 1 0.08 0.88 1 0
@@ -2733,6 +2768,7 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
+
 Entity 175
 Name RoofBeam_-30
 Position 0 5.75 -30
