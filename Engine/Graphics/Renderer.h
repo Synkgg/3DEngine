@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <cstdint>
+#include <filesystem>
 
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
@@ -138,6 +139,9 @@ public:
         const std::string& filepath
     );
 
+    void SetProjectRoot(const std::filesystem::path& root) { m_ProjectRoot = root.lexically_normal(); }
+    std::string ResolveAssetPath(const std::string& path) const;
+
     UIRenderer& GetUIRenderer()
     {
         return m_UIRenderer;
@@ -205,6 +209,7 @@ private:
     std::unique_ptr<Mesh> m_SphereMesh;
     std::unique_ptr<Mesh> m_CylinderMesh;
     std::unordered_map<std::string, std::unique_ptr<Mesh>> m_ModelCache;
+    std::filesystem::path m_ProjectRoot;
 
     Camera m_Camera;
     Framebuffer m_Framebuffer;
