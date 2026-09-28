@@ -392,7 +392,7 @@ void Application::Run()
             shadowTransform.rotation.z += mesh->rotation.z;
 
             if (!mesh->modelPath.empty())
-                m_Renderer.DrawShadowModel(shadowTransform, mesh->modelPath);
+                m_Renderer.DrawShadowModel(shadowTransform, m_ProjectManager.ResolveAssetPath(mesh->modelPath));
             else
                 m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
         }
@@ -457,7 +457,7 @@ void Application::Run()
                 {
                     texture =
                         m_Renderer.LoadTexture(
-                            textureComponent->path
+                            m_ProjectManager.ResolveAssetPath(textureComponent->path)
                         );
                 }
 
@@ -485,16 +485,16 @@ void Application::Run()
                 MaterialComponent* material =
                     m_Scene.GetComponent<MaterialComponent>(entity);
 
-                Texture2D* normalMap = material && !material->normalMap.empty() ? m_Renderer.LoadTexture(material->normalMap) : nullptr;
-                Texture2D* metallicMap = material && !material->metallicMap.empty() ? m_Renderer.LoadTexture(material->metallicMap) : nullptr;
-                Texture2D* roughnessMap = material && !material->roughnessMap.empty() ? m_Renderer.LoadTexture(material->roughnessMap) : nullptr;
-                Texture2D* aoMap = material && !material->aoMap.empty() ? m_Renderer.LoadTexture(material->aoMap) : nullptr;
-                Texture2D* emissiveMap = material && !material->emissiveMap.empty() ? m_Renderer.LoadTexture(material->emissiveMap) : nullptr;
+                Texture2D* normalMap = material && !material->normalMap.empty() ? m_Renderer.LoadTexture(m_ProjectManager.ResolveAssetPath(material->normalMap)) : nullptr;
+                Texture2D* metallicMap = material && !material->metallicMap.empty() ? m_Renderer.LoadTexture(m_ProjectManager.ResolveAssetPath(material->metallicMap)) : nullptr;
+                Texture2D* roughnessMap = material && !material->roughnessMap.empty() ? m_Renderer.LoadTexture(m_ProjectManager.ResolveAssetPath(material->roughnessMap)) : nullptr;
+                Texture2D* aoMap = material && !material->aoMap.empty() ? m_Renderer.LoadTexture(m_ProjectManager.ResolveAssetPath(material->aoMap)) : nullptr;
+                Texture2D* emissiveMap = material && !material->emissiveMap.empty() ? m_Renderer.LoadTexture(m_ProjectManager.ResolveAssetPath(material->emissiveMap)) : nullptr;
 
                 if (!mesh->modelPath.empty())
                 {
                     m_Renderer.DrawModel(
-                        meshTransform, mesh->modelPath,
+                        meshTransform, m_ProjectManager.ResolveAssetPath(mesh->modelPath),
                         red, green, blue, alpha, texture,
                         material ? material->metallic : 0.0f,
                         material ? material->roughness : 0.65f,
