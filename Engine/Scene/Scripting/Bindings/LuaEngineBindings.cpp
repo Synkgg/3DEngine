@@ -23,6 +23,7 @@
 #include "../../Runtime/Runtime.h"
 #include "../../Components/TransformComponent.h"
 #include "../../Components/CharacterControllerComponent.h"
+#include "../../Components/PawnComponent.h"
 #include "../../Components/MeshComponent.h"
 #include "../../Components/ColliderComponent.h"
 #include "../../Components/InteractableComponent.h"
@@ -981,6 +982,23 @@ void LuaScript::BindEngineAPI()
     network.set_function("SendTransform", [this](float x,float y,float z,float rx,float ry,float rz){if(!m_Runtime)return;NetworkTransformState s{};s.x=x;s.y=y;s.z=z;s.rx=rx;s.ry=ry;s.rz=rz;m_Runtime->GetNetwork().SendLocalTransform(s);});
     network.set_function("GetRemoteTransforms", [this](){sol::table out=m_Lua->create_table();if(!m_Runtime)return out;int i=1;for(const auto& [id,s]:m_Runtime->GetNetwork().GetRemoteTransforms()){sol::table item=m_Lua->create_table();item["playerID"]=id;item["x"]=s.x;item["y"]=s.y;item["z"]=s.z;item["rx"]=s.rx;item["ry"]=s.ry;item["rz"]=s.rz;out[i++]=item;}return out;});
     (*m_Environment)["Network"] = network;
+
+    sol::table controller = m_Lua->create_table();
+    controller.set_function("GetLocalID", [this]() { return m_Runtime ? m_Runtime->GetLocalControllerID() : 0u; });
+    controller.set_function("Possess", [this](std::uint32_t entityID, sol::optional<std::uint32_t> controllerID)
+    {
+        if (!m_Runtime || !m_Scene) return false;
+        return m_Runtime->PossessPawn(*m_Scene, Entity(entityID), controllerID.value_or(m_Runtime->GetLocalControllerID()));
+    });
+    controller.set_function("Unpossess", [this](std::uint32_t entityID) { if (m_Runtime && m_Scene) m_Runtime->UnpossessPawn(*m_Scene, Entity(entityID)); });
+    controller.set_function("GetPawnControllerID", [this](std::uint32_t entityID)
+    {
+        if (!m_Scene) return 0u;
+        const PawnComponent* pawn = m_Scene->GetComponent<PawnComponent>(Entity(entityID));
+        return pawn ? pawn->controllerID : 0u;
+    });
+    controller.set_function("IsLocallyControlled", [this](std::uint32_t entityID) { return m_Runtime && m_Scene && m_Runtime->IsPawnLocallyControlled(*m_Scene, Entity(entityID)); });
+    (*m_Environment)["Controller"] = controller;
 
     /*
      * Graphics settings - intentionally exposed as a small stable API so
