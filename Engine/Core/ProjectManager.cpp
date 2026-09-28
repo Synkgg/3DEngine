@@ -74,6 +74,31 @@ bool ProjectManager::Create(const std::string& directory, const std::string& nam
         return false;
     }
 
+    // A project should be runnable immediately after creation. Give it a
+    // project-owned startup scene rather than depending on any engine sample.
+    const std::filesystem::path startupScene = root / "Assets" / "Scenes" / "Main.scene";
+    if (!std::filesystem::exists(startupScene))
+    {
+        std::ofstream scene(startupScene);
+        if (!scene)
+        {
+            Logger::Error("Failed to create startup scene: " + startupScene.string());
+            return false;
+        }
+
+        scene << "MyEngineScene\n";
+        scene << "Environment 1 4 1 1 1 320 1 0.003 0.32 2 80\n";
+        scene << "Entities 0\n";
+        scene << "HierarchyFolders 0\n";
+    }
+
+    std::filesystem::create_directories(root / "Saved", error);
+    if (error)
+    {
+        Logger::Error("Failed to create project Saved directory: " + root.string());
+        return false;
+    }
+
     const std::filesystem::path descriptor = root / (name + ".project");
     std::ofstream out(descriptor);
     if (!out)
@@ -85,7 +110,7 @@ bool ProjectManager::Create(const std::string& directory, const std::string& nam
     out << "Version 1\n";
     out << "Name " << std::quoted(name) << "\n";
     out << "AssetDirectory " << std::quoted("Assets") << "\n";
-    out << "StartupScene " << std::quoted("") << "\n";
+    out << "StartupScene " << std::quoted("Assets/Scenes/Main.scene") << "\n";
     out << "Settings " << std::quoted("ProjectSettings.cfg") << "\n";
     out.close();
 
