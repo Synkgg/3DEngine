@@ -84,6 +84,41 @@ void Application::Run()
 
         m_Input.Update();
 
+        // Keep an unfocused Play instance alive without touching the GPU.
+        // Windows/OpenGL drivers can heavily throttle background contexts;
+        // runtime/networking must remain independent of presentation so local
+        // multiplayer instances continue simulating while another window has
+        // focus.
+        const bool windowFocused =
+            (SDL_GetWindowFlags(m_Window.GetNativeWindow()) &
+             SDL_WINDOW_INPUT_FOCUS) != 0;
+
+        if (m_Runtime.IsRunning() && !windowFocused)
+        {
+            if (m_RuntimeMouseCaptured)
+            {
+                m_Input.SetMouseCapture(
+                    m_Window.GetNativeWindow(),
+                    false
+                );
+                m_RuntimeMouseCaptured = false;
+            }
+
+            m_Runtime.Update(
+                m_Scene,
+                m_Renderer,
+                m_Input,
+                m_Time.GetDeltaTime()
+            );
+
+            if (!m_Editor.IsPlaying() && m_Runtime.IsRunning())
+            {
+                StopRuntime();
+            }
+
+            continue;
+        }
+
         // Escape must always provide an editor-level way out of Play mode.
         // A gameplay script can consume the first Escape later in this frame
         // to open its pause menu, so defer the actual stop decision until
