@@ -36,7 +36,7 @@ bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
     if (!UISerializer::Load(canvas, path))
         return false;
 
-    m_UIAssetPath = std::filesystem::path(path).generic_string();
+    m_UIAssetPath = std::filesystem::absolute(std::filesystem::path(path)).lexically_normal().generic_string();
     ResetView();
     return true;
 }
@@ -578,10 +578,20 @@ void UIEditor::DrawInspector(
                 [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
 
             std::error_code ec;
-            const std::filesystem::path root("Assets");
-            if (std::filesystem::exists(root, ec))
+            std::filesystem::path assetRoot("Assets");
+            const std::filesystem::path uiPath(m_UIAssetPath);
+            for (std::filesystem::path parent = uiPath.parent_path(); !parent.empty(); parent = parent.parent_path())
             {
-                for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+                if (parent.filename() == "Assets")
+                {
+                    assetRoot = parent;
+                    break;
+                }
+                if (parent == parent.root_path()) break;
+            }
+            if (std::filesystem::exists(assetRoot, ec))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(assetRoot, ec))
                 {
                     if (ec) break;
                     if (!entry.is_regular_file()) continue;
@@ -593,7 +603,10 @@ void UIEditor::DrawInspector(
                         ext != ".bmp" && ext != ".tga")
                         continue;
 
-                    const std::string assetPath = entry.path().generic_string();
+                    const std::filesystem::path relativeAsset =
+                        std::filesystem::path("Assets") / std::filesystem::relative(entry.path(), assetRoot, ec);
+                    if (ec) continue;
+                    const std::string assetPath = relativeAsset.lexically_normal().generic_string();
                     std::string searchable = assetPath;
                     std::transform(searchable.begin(), searchable.end(), searchable.begin(),
                         [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
@@ -690,10 +703,20 @@ void UIEditor::DrawInspector(
                 [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
 
             std::error_code ec;
-            const std::filesystem::path root("Assets");
-            if (std::filesystem::exists(root, ec))
+            std::filesystem::path assetRoot("Assets");
+            const std::filesystem::path uiPath(m_UIAssetPath);
+            for (std::filesystem::path parent = uiPath.parent_path(); !parent.empty(); parent = parent.parent_path())
             {
-                for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+                if (parent.filename() == "Assets")
+                {
+                    assetRoot = parent;
+                    break;
+                }
+                if (parent == parent.root_path()) break;
+            }
+            if (std::filesystem::exists(assetRoot, ec))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(assetRoot, ec))
                 {
                     if (ec) break;
                     if (!entry.is_regular_file()) continue;
@@ -704,7 +727,10 @@ void UIEditor::DrawInspector(
                     if (ext != ".wav")
                         continue;
 
-                    const std::string assetPath = entry.path().generic_string();
+                    const std::filesystem::path relativeAsset =
+                        std::filesystem::path("Assets") / std::filesystem::relative(entry.path(), assetRoot, ec);
+                    if (ec) continue;
+                    const std::string assetPath = relativeAsset.lexically_normal().generic_string();
                     std::string searchable = assetPath;
                     std::transform(searchable.begin(), searchable.end(), searchable.begin(),
                         [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
@@ -835,7 +861,7 @@ void UIEditor::DrawToolbar(
         const std::filesystem::path root("Assets/UI");
         if (std::filesystem::exists(root, ec))
         {
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(assetRoot, ec))
             {
                 if (ec) break;
                 if (!entry.is_regular_file()) continue;
