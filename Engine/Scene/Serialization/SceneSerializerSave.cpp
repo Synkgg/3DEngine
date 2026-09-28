@@ -9,7 +9,7 @@
 #include "../Components/MeshComponent.h"
 #include "../Components/ColorComponent.h"
 #include "../Components/NameComponent.h"
-#include "../Components/PlayerComponent.h"
+#include "../Components/PawnComponent.h"
 #include "../Components/CharacterControllerComponent.h"
 #include "../Components/LightComponent.h"
 #include "../Components/ColliderComponent.h"
@@ -513,24 +513,13 @@ bool SceneSerializer::Save(
         }
 
         /*
-         * Player
+         * Pawn. Keep the legacy Player slot until the scene format is versioned.
          */
-        PlayerComponent* player =
-            m_Scene.GetComponent<
-            PlayerComponent
-            >(entity);
-
-        if (player != nullptr)
-        {
-            file << "Player 1 "
-                << player->moveSpeed << " "
-                << player->lookSensitivity
-                << '\n';
-        }
+        PawnComponent* pawn = m_Scene.GetComponent<PawnComponent>(entity);
+        if (pawn != nullptr)
+            file << "Player 1 0 0\n";
         else
-        {
             file << "Player 0\n";
-        }
 
         /*
          * Character Controller

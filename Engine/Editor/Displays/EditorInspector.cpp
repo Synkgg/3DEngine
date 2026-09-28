@@ -7,7 +7,7 @@
 #include "../../Scene/Components/MeshComponent.h"
 #include "../../Scene/Components/ColorComponent.h"
 #include "../../Scene/Components/NameComponent.h"
-#include "../../Scene/Components/PlayerComponent.h"
+#include "../../Scene/Components/PawnComponent.h"
 #include "../../Scene/Components/CharacterControllerComponent.h"
 #include "../../Scene/Components/LightComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
@@ -608,50 +608,19 @@ void Editor::RenderInspector(
     }
 
     /*
-     * Player
+     * Pawn
      */
-    PlayerComponent* player =
-        scene.GetComponent<
-        PlayerComponent
-        >(m_SelectedEntity);
-
-    if (player != nullptr)
+    PawnComponent* pawn = scene.GetComponent<PawnComponent>(m_SelectedEntity);
+    if (pawn != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Player",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Pawn", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::DragFloat(
-                "Move Speed",
-                &player->moveSpeed,
-                0.1f,
-                0.0f,
-                100.0f
-            );
-
-            ImGui::DragFloat(
-                "Look Sensitivity",
-                &player->lookSensitivity,
-                0.0001f,
-                0.0001f,
-                0.1f,
-                "%.4f"
-            );
-
+            ImGui::TextWrapped("Generic controllable entity. Input, camera and gameplay behavior are project-defined.");
             ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Player"))
+            if (ImGui::Button("Remove Pawn"))
             {
-                scene.RemoveComponent<
-                    PlayerComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed PlayerComponent."
-                );
+                scene.RemoveComponent<PawnComponent>(m_SelectedEntity);
+                Logger::Info("Removed PawnComponent.");
             }
         }
     }
@@ -1219,12 +1188,7 @@ void Editor::RenderInspector(
                 m_SelectedEntity
             );
 
-        player =
-            scene.GetComponent<
-            PlayerComponent
-            >(
-                m_SelectedEntity
-            );
+        pawn = scene.GetComponent<PawnComponent>(m_SelectedEntity);
 
         controller =
             scene.GetComponent<
@@ -1343,27 +1307,20 @@ void Editor::RenderInspector(
         }
 
         /*
-         * Player
+         * Pawn
          */
-        if (player == nullptr)
+        if (pawn == nullptr)
         {
-            if (ImGui::Selectable("Player"))
+            if (ImGui::Selectable("Pawn"))
             {
-                scene.AddComponent<
-                    PlayerComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added PlayerComponent."
-                );
+                scene.AddComponent<PawnComponent>(m_SelectedEntity);
+                Logger::Info("Added PawnComponent.");
             }
         }
         else
         {
             ImGui::BeginDisabled();
-            ImGui::Selectable("Player");
+            ImGui::Selectable("Pawn");
             ImGui::EndDisabled();
         }
 

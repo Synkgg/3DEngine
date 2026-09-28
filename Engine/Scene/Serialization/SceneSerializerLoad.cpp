@@ -9,7 +9,7 @@
 #include "../Components/MeshComponent.h"
 #include "../Components/ColorComponent.h"
 #include "../Components/NameComponent.h"
-#include "../Components/PlayerComponent.h"
+#include "../Components/PawnComponent.h"
 #include "../Components/CharacterControllerComponent.h"
 #include "../Components/LightComponent.h"
 #include "../Components/ColliderComponent.h"
@@ -1013,28 +1013,13 @@ bool SceneSerializer::Load(
 
             if (hasPlayer == 1)
             {
-                PlayerComponent player;
+                // Legacy Player records stored FPS tuning after the flag.
+                // Consume it when present, but gameplay behavior now belongs to the project.
+                float legacyMoveSpeed = 0.0f;
+                float legacyLookSensitivity = 0.0f;
+                playerLine >> legacyMoveSpeed >> legacyLookSensitivity;
 
-                playerLine >>
-                    player.moveSpeed >>
-                    player.lookSensitivity;
-
-                if (playerLine.fail())
-                {
-                    Logger::Error(
-                        "Invalid Player data for entity " +
-                        std::to_string(entityID)
-                    );
-
-                    return false;
-                }
-
-                m_Scene.AddComponent<
-                    PlayerComponent
-                >(
-                    entity,
-                    player
-                );
+                m_Scene.AddComponent<PawnComponent>(entity, PawnComponent{});
             }
         }
 

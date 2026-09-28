@@ -4,7 +4,7 @@
 #include "Components/NameComponent.h"
 #include "Components/MeshComponent.h"
 #include "Components/ColorComponent.h"
-#include "Components/PlayerComponent.h"
+#include "Components/PawnComponent.h"
 #include "Components/CharacterControllerComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/ColliderComponent.h"

@@ -2,7 +2,6 @@
 
 
 
-#include "../Systems/PlayerSystem.h"
 #include "../Systems/CharacterControllerSystem.h"
 #include "../Systems/CollisionSystem.h"
 #include "../Systems/ScriptSystem.h"
@@ -79,7 +78,6 @@ public:
 private:
     bool m_Running = false;
 
-    PlayerSystem m_PlayerSystem;
     CharacterControllerSystem m_CharacterControllerSystem;
     CollisionSystem m_CollisionSystem;
     ScriptSystem m_ScriptSystem;

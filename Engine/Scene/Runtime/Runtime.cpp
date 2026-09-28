@@ -14,7 +14,7 @@
 #include "../../Core/ProjectManager.h"
 #include "../Components/NameComponent.h"
 #include "../Components/TransformComponent.h"
-#include "../Components/PlayerComponent.h"
+#include "../Components/PawnComponent.h"
 
 #include <memory>
 
@@ -269,7 +269,7 @@ bool Runtime::IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) cons
     Entity current = entity;
     while (current.IsValid())
     {
-        if (scene.GetComponent<PlayerComponent>(current) != nullptr)
+        if (scene.GetComponent<PawnComponent>(current) != nullptr)
             return true;
         current = scene.GetParent(current);
     }
