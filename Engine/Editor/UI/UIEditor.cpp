@@ -861,7 +861,7 @@ void UIEditor::DrawToolbar(
         const std::filesystem::path root("Assets/UI");
         if (std::filesystem::exists(root, ec))
         {
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(assetRoot, ec))
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
             {
                 if (ec) break;
                 if (!entry.is_regular_file()) continue;
