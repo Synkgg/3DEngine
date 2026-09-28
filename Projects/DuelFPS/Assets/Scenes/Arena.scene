@@ -13,7 +13,7 @@ Color 0
 Texture 0
 Material 0
 Interactable 0
-Player 1
+Player 0
 CharacterController 1 9.81 7 0 1
 Light 0
 Collider 1 0.8 2 0.8
