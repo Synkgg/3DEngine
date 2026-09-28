@@ -6,6 +6,7 @@
 #include <string>
 #include <cstdint>
 #include <filesystem>
+#include <vector>
 
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
@@ -134,6 +135,8 @@ public:
     void InvalidateTemporalHistory() { m_HistoryValid = false; }
     void DrawDirectionalLight(const Vec3& position, const Vec3& direction);
     void DrawCollider(const Transform& transform, float width, float height, float depth);
+    void AddDebugLine(const Vec3& start, const Vec3& end, const Vec3& color = Vec3(1.0f, 0.2f, 0.2f), float duration = 0.0f);
+    void DrawDebugLines(float deltaTime);
 
     Texture2D* LoadTexture(
         const std::string& filepath
@@ -231,7 +234,9 @@ private:
     Mat4 m_FrameViewProjection = Mat4::Identity();
     bool m_FrameShaderStateReady = false;
 
+    struct DebugLine { Vec3 start; Vec3 end; Vec3 color; float remaining = 0.0f; };
     DebugRenderer m_DebugRenderer;
+    std::vector<DebugLine> m_DebugLines;
 
     TextureManager m_TextureManager;
     EnvironmentSystem m_EnvironmentSystem;
