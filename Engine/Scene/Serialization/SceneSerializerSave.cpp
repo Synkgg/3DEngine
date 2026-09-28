@@ -10,6 +10,7 @@
 #include "../Components/ColorComponent.h"
 #include "../Components/NameComponent.h"
 #include "../Components/PawnComponent.h"
+#include "../Components/PlayerStartComponent.h"
 #include "../Components/CharacterControllerComponent.h"
 #include "../Components/LightComponent.h"
 #include "../Components/ColliderComponent.h"
@@ -521,6 +522,10 @@ bool SceneSerializer::Save(
         else
             file << "Player 0\n";
 
+        /*
+         * Player Start
+         */
+        if(auto* start=m_Scene.GetComponent<PlayerStartComponent>(entity)) file<<"PlayerStart 1 "<<start->slot<<'\n'; else file<<"PlayerStart 0\n";
         /*
          * Character Controller
          */
