@@ -8,7 +8,7 @@
 #include "../../Scene/Components/MeshComponent.h"
 #include "../../Scene/Components/ColorComponent.h"
 #include "../../Scene/Components/NameComponent.h"
-#include "../../Scene/Components/PlayerComponent.h"
+#include "../../Scene/Components/PawnComponent.h"
 #include "../../Scene/Components/CharacterControllerComponent.h"
 #include "../../Scene/Components/LightComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
@@ -768,14 +768,14 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 name->name = MakeUniqueName(scene, "Directional Light", entity);
             m_SelectedEntity = entity;
         }
-        if (ImGui::Selectable("Player"))
+        if (ImGui::Selectable("Pawn"))
         {
             Entity entity = scene.CreateEntity();
-            scene.AddComponent<PlayerComponent>(entity);
+            scene.AddComponent<PawnComponent>(entity);
             scene.AddComponent<CharacterControllerComponent>(entity);
             scene.AddComponent<ColliderComponent>(entity);
             if (NameComponent* name = scene.GetComponent<NameComponent>(entity))
-                name->name = MakeUniqueName(scene, "Player", entity);
+                name->name = MakeUniqueName(scene, "Pawn", entity);
             m_SelectedEntity = entity;
         }
         ImGui::EndPopup();
@@ -819,7 +819,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
         // Empty scene-graph entities act as hierarchy folders/groups.
         const bool isGroup =
             !scene.HasComponent<MeshComponent>(entity) &&
-            !scene.HasComponent<PlayerComponent>(entity) &&
+            !scene.HasComponent<PawnComponent>(entity) &&
             !scene.HasComponent<CharacterControllerComponent>(entity) &&
             !scene.HasComponent<LightComponent>(entity) &&
             !scene.HasComponent<ColliderComponent>(entity) &&
