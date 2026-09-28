@@ -39,6 +39,7 @@ public:
 
     bool IsPlaying() const;
     void StopPlaying();
+    bool ConsumeProjectHubRequest();
 
     void ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath);
     bool OpenScene(Scene& scene, const std::filesystem::path& path);
@@ -96,6 +97,7 @@ private:
     bool m_StyleInitialized;
 
     bool m_Playing;
+    bool m_ProjectHubRequested = false;
 
     Entity m_SelectedEntity;
 
