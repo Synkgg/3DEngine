@@ -34,7 +34,13 @@ function OnUpdate(dt)
 
     if Input.IsMouseButtonDown(1) then
         local c, f = Camera.GetPosition(), Camera.GetForward()
-        local hit = Physics.Raycast(c.x,c.y,c.z,f.x,f.y,f.z,100.0,self.id)
-        if hit.hit then State.SetNumber("last_hit_entity", hit.entityID) end
+        local range = 100.0
+        local hit = Physics.Raycast(c.x,c.y,c.z,f.x,f.y,f.z,range,self.id)
+        if hit.hit then
+            Debug.DrawLine(c.x,c.y,c.z,hit.x,hit.y,hit.z,0.2,1.0,0.2,0.08)
+            State.SetNumber("last_hit_entity", hit.entityID)
+        else
+            Debug.DrawLine(c.x,c.y,c.z,c.x+f.x*range,c.y+f.y*range,c.z+f.z*range,1.0,0.2,0.2,0.08)
+        end
     end
 end
