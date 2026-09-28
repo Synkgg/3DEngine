@@ -110,3 +110,11 @@ std::string ProjectManager::ResolveAssetPath(const std::string& path) const
 
     return m_Project.Resolve(input).string();
 }
+
+std::string ProjectManager::ResolveProjectPath(const std::string& path) const
+{
+    if (path.empty()) return path;
+    std::filesystem::path input(path);
+    if (input.is_absolute()) return input.lexically_normal().string();
+    return (m_Project.rootDirectory / input).lexically_normal().string();
+}
