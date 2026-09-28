@@ -315,18 +315,28 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3
 #   cmake --build --preset x64-Release
 #   cmake --build --preset x64-Release --target package_portable
 #
-# The resulting folder contains only the executable and Assets directory.
+# Produces a self-contained editor executable plus external project folders:
+#
+#   portable/
+#     3DEngine.exe
+#     Projects/
+#       <ProjectName>/
+#
+# Engine/editor resources are compiled into the executable. Game content stays
+# project-owned and portable under Projects/.
 set(PORTABLE_DIR "${CMAKE_BINARY_DIR}/portable")
 
 add_custom_target(
     package_portable
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PORTABLE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PORTABLE_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:3DEngine>" "${PORTABLE_DIR}/3DEngine.exe"
+    COMMAND ${CMAKE_COMMAND} -E copy
+            "$<TARGET_FILE:3DEngine>"
+            "${PORTABLE_DIR}/3DEngine.exe"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
-            "${PORTABLE_DIR}/Assets"
+            "${CMAKE_CURRENT_SOURCE_DIR}/Projects"
+            "${PORTABLE_DIR}/Projects"
     DEPENDS 3DEngine
-    COMMENT "Creating portable 3DEngine.exe + Assets package"
+    COMMENT "Creating portable 3DEngine.exe + Projects package"
     VERBATIM
 )
