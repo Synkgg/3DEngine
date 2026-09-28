@@ -179,7 +179,8 @@ function OnUpdate(dt)
 
     if Input.IsKeyPressed("Escape") then setPaused(not paused); return end
     if paused then
-        -- Defensively clear stale pause state every frame while an online menu is open.
+        -- Online pause is menu/input-only. Networking and world simulation above
+        -- continue every frame; only this pawn's local gameplay input is suppressed.
         if Network.IsConnected() and Scene.IsPaused() then Scene.SetPaused(false) end
         if UI.WasClicked("ResumeButton") then setPaused(false)
         elseif UI.WasClicked("DisconnectButton") then
@@ -187,7 +188,13 @@ function OnUpdate(dt)
             Network.Disconnect()
             Input.SetCursorVisible(true)
             Scene.Load("Assets/Scenes/MainMenu.scene")
+            return
         end
+
+        -- Keep the camera attached to the local pawn while the menu is open so
+        -- host/client authoritative movement corrections remain visually current.
+        local p=transform.GetPosition()
+        Camera.SetPosition(p.x,p.y+cameraHeight,p.z)
         return
     end
 
