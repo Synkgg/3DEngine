@@ -1064,7 +1064,16 @@ void Renderer::EndOverlay()
 
 void Renderer::EndFrame()
 {
-	SDL_GL_SwapWindow(m_Window->GetNativeWindow());
+    SDL_Window* window = m_Window->GetNativeWindow();
+
+    // Some Windows OpenGL drivers can block an unfocused window inside
+    // SDL_GL_SwapWindow for seconds. Runtime simulation and networking share
+    // this thread, so presentation must never starve them.
+    const SDL_WindowFlags flags = SDL_GetWindowFlags(window);
+    if ((flags & SDL_WINDOW_INPUT_FOCUS) == 0)
+        return;
+
+    SDL_GL_SwapWindow(window);
 }
 
 void Renderer::SetClearColor(float red, float green, float blue, float alpha)
