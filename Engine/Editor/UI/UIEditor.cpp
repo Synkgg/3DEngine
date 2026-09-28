@@ -724,7 +724,7 @@ void UIEditor::DrawInspector(
                     std::string ext = entry.path().extension().string();
                     std::transform(ext.begin(), ext.end(), ext.begin(),
                         [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-                    if (ext != ".wav" && ext != ".mp3" && ext != ".ogg" && ext != ".flac")
+                    if (ext != ".wav")
                         continue;
 
                     const std::filesystem::path relativeAsset =
@@ -753,7 +753,7 @@ void UIEditor::DrawInspector(
             ImGui::EndCombo();
         }
         if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Select a WAV, MP3, OGG, or FLAC asset from the current project's Assets folder.");
+            ImGui::SetTooltip("Select a WAV asset from the current project's Assets folder.");
 
         bool textHighlight = button->GetAffectChildText();
         if (ImGui::Checkbox("Highlight Child Text", &textHighlight)) button->SetAffectChildText(textHighlight);
