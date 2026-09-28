@@ -9,6 +9,7 @@
 #include "../../Scene/Components/ColorComponent.h"
 #include "../../Scene/Components/NameComponent.h"
 #include "../../Scene/Components/PawnComponent.h"
+#include "../../Scene/Components/PlayerStartComponent.h"
 #include "../../Scene/Components/CharacterControllerComponent.h"
 #include "../../Scene/Components/LightComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
@@ -768,6 +769,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 name->name = MakeUniqueName(scene, "Directional Light", entity);
             m_SelectedEntity = entity;
         }
+        if (ImGui::Selectable("Player Start")) { Entity entity=scene.CreateEntity();scene.AddComponent<PlayerStartComponent>(entity);if(auto* name=scene.GetComponent<NameComponent>(entity))name->name=MakeUniqueName(scene,"Player Start",entity);m_SelectedEntity=entity; }
         if (ImGui::Selectable("Pawn"))
         {
             Entity entity = scene.CreateEntity();
@@ -820,6 +822,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
         const bool isGroup =
             !scene.HasComponent<MeshComponent>(entity) &&
             !scene.HasComponent<PawnComponent>(entity) &&
+            !scene.HasComponent<PlayerStartComponent>(entity) &&
             !scene.HasComponent<CharacterControllerComponent>(entity) &&
             !scene.HasComponent<LightComponent>(entity) &&
             !scene.HasComponent<ColliderComponent>(entity) &&
