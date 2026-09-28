@@ -588,6 +588,8 @@ void Application::Run()
             }
         }
 
+        m_Renderer.DrawDebugLines(m_Time.GetDeltaTime());
+
         // Finish the HDR 3D scene first. Runtime UI is intentionally
         // composited afterward so menu/text/image colors are not tone-mapped,
         // exposed, fogged, or affected by future bloom.
