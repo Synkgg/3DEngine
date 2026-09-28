@@ -184,6 +184,7 @@ bool Application::ActivateProject(const std::string& descriptorPath)
 
     m_Renderer.SetRenderSettings(m_ProjectSettings.GetRenderSettings());
     m_Runtime.SetProjectSettings(&m_ProjectSettings);
+    m_Runtime.SetProjectManager(&m_ProjectManager);
     m_Editor.ConfigureProject(project.GetAssetRoot(), project.GetSettingsPath());
 
     if (!project.startupScene.empty() &&
