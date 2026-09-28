@@ -25,6 +25,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
+#include <cstdio>
 
 Application::Application(const std::string& projectPath)
     : m_Running(false),
@@ -88,6 +90,7 @@ bool Application::Initialize()
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
     m_Runtime.SetAudioEngine(&m_Audio);
     m_Runtime.SetProjectManager(&m_ProjectManager);
+    LoadRecentProjects();
     if (!m_ProjectPath.empty())
     {
         if (!m_ProjectManager.Load(m_ProjectPath)) return false;
@@ -120,6 +123,12 @@ bool Application::Initialize()
     {
         if (!m_Editor.OpenScene(m_Scene, activeProject.GetStartupScenePath()))
             return false;
+    }
+
+    if (m_ProjectManager.HasProject())
+    {
+        AddRecentProject(activeProject);
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), (activeProject.name + " - Editor").c_str());
     }
 
     return true;
@@ -184,7 +193,8 @@ bool Application::ActivateProject(const std::string& descriptorPath)
         return false;
     }
 
-    m_ProjectPath = descriptorPath;
+    m_ProjectPath = project.descriptorPath.string();
+    AddRecentProject(project);
     m_ShowProjectHub = false;
     m_ProjectHubError.clear();
     SDL_SetWindowTitle(m_Window.GetNativeWindow(), (project.name + " - Editor").c_str());
@@ -212,11 +222,91 @@ bool Application::CreateProject(const std::string& parentDirectory, const std::s
         m_ProjectManager.GetActiveProject().descriptorPath.string());
 }
 
+std::string Application::GetHubStatePath() const
+{
+    char* prefPath = SDL_GetPrefPath("3DEngine", "Editor");
+    if (prefPath == nullptr)
+        return (std::filesystem::current_path() / "Saved" / "RecentProjects.txt").string();
+
+    std::filesystem::path path(prefPath);
+    SDL_free(prefPath);
+    return (path / "RecentProjects.txt").string();
+}
+
+void Application::LoadRecentProjects()
+{
+    m_RecentProjects.clear();
+
+    std::ifstream in(GetHubStatePath());
+    if (!in)
+        return;
+
+    std::string name;
+    std::string path;
+    while (in >> std::quoted(name) >> std::quoted(path))
+    {
+        if (!path.empty())
+            m_RecentProjects.push_back({ name, path });
+    }
+}
+
+void Application::SaveRecentProjects() const
+{
+    const std::filesystem::path statePath(GetHubStatePath());
+    std::error_code error;
+    std::filesystem::create_directories(statePath.parent_path(), error);
+    if (error)
+        return;
+
+    std::ofstream out(statePath, std::ios::trunc);
+    if (!out)
+        return;
+
+    for (const RecentProject& recent : m_RecentProjects)
+        out << std::quoted(recent.name) << ' ' << std::quoted(recent.descriptorPath) << '\n';
+}
+
+void Application::AddRecentProject(const Project& project)
+{
+    if (project.descriptorPath.empty())
+        return;
+
+    const std::string path =
+        std::filesystem::absolute(project.descriptorPath).lexically_normal().string();
+
+    m_RecentProjects.erase(
+        std::remove_if(
+            m_RecentProjects.begin(),
+            m_RecentProjects.end(),
+            [&](const RecentProject& recent)
+            {
+                return std::filesystem::path(recent.descriptorPath).lexically_normal() ==
+                       std::filesystem::path(path).lexically_normal();
+            }),
+        m_RecentProjects.end());
+
+    m_RecentProjects.insert(m_RecentProjects.begin(), { project.name, path });
+    if (m_RecentProjects.size() > 12)
+        m_RecentProjects.resize(12);
+
+    SaveRecentProjects();
+}
+
+void Application::RemoveRecentProject(std::size_t index)
+{
+    if (index >= m_RecentProjects.size())
+        return;
+
+    m_RecentProjects.erase(m_RecentProjects.begin() + static_cast<std::ptrdiff_t>(index));
+    SaveRecentProjects();
+}
+
 void Application::RenderProjectHub()
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(io.DisplaySize);
+
     const ImGuiWindowFlags flags =
         ImGuiWindowFlags_NoDecoration |
         ImGuiWindowFlags_NoMove |
@@ -224,30 +314,84 @@ void Application::RenderProjectHub()
         ImGuiWindowFlags_NoSavedSettings;
 
     ImGui::Begin("Project Hub", nullptr, flags);
-    const float width = ImGui::GetContentRegionAvail().x;
-    ImGui::Dummy(ImVec2(0, 42));
-    ImGui::SetCursorPosX((width - 520.0f) * 0.5f);
-    ImGui::BeginChild("HubCard", ImVec2(520, 0), ImGuiChildFlags_Borders);
 
-    ImGui::Dummy(ImVec2(0, 20));
-    ImGui::SetWindowFontScale(1.45f);
+    const float panelWidth = 760.0f;
+    const float availableWidth = ImGui::GetContentRegionAvail().x;
+    ImGui::Dummy(ImVec2(0, 28));
+    ImGui::SetCursorPosX(std::max(16.0f, (availableWidth - panelWidth) * 0.5f));
+    ImGui::BeginChild("HubCard", ImVec2(std::min(panelWidth, availableWidth - 32.0f), 0), ImGuiChildFlags_Borders);
+
+    ImGui::Dummy(ImVec2(0, 18));
+    ImGui::SetWindowFontScale(1.55f);
     ImGui::TextUnformatted("Projects");
     ImGui::SetWindowFontScale(1.0f);
-    ImGui::TextDisabled("Create a game project or open an existing one.");
-    ImGui::Separator();
+    ImGui::TextDisabled("Create, open, and return to your game projects.");
     ImGui::Spacing();
 
-    if (ImGui::Button("Open Project...", ImVec2(-1, 42)))
+    if (ImGui::Button("Open Project...", ImVec2(180, 40)))
     {
         std::string path;
         if (FileDialog::OpenProject(path))
             ActivateProject(path);
     }
 
+    ImGui::SameLine();
+    if (ImGui::Button("Refresh Recents", ImVec2(150, 40)))
+        LoadRecentProjects();
+
+    ImGui::Separator();
+    ImGui::TextUnformatted("Recent Projects");
+
+    if (m_RecentProjects.empty())
+    {
+        ImGui::TextDisabled("No recent projects yet.");
+    }
+    else
+    {
+        std::size_t removeIndex = static_cast<std::size_t>(-1);
+
+        for (std::size_t i = 0; i < m_RecentProjects.size(); ++i)
+        {
+            const RecentProject& recent = m_RecentProjects[i];
+            const bool exists = std::filesystem::is_regular_file(recent.descriptorPath);
+
+            ImGui::PushID(static_cast<int>(i));
+            ImGui::BeginGroup();
+            ImGui::TextUnformatted(recent.name.c_str());
+            ImGui::TextDisabled("%s", recent.descriptorPath.c_str());
+            ImGui::EndGroup();
+
+            const float buttonsWidth = 190.0f;
+            ImGui::SameLine(std::max(300.0f, ImGui::GetContentRegionAvail().x - buttonsWidth));
+
+            ImGui::BeginDisabled(!exists);
+            if (ImGui::Button("Open", ImVec2(82, 32)))
+                ActivateProject(recent.descriptorPath);
+            ImGui::EndDisabled();
+
+            ImGui::SameLine();
+            if (ImGui::Button("Remove", ImVec2(82, 32)))
+                removeIndex = i;
+
+            if (!exists)
+            {
+                ImGui::SameLine();
+                ImGui::TextDisabled("(missing)");
+            }
+
+            ImGui::Separator();
+            ImGui::PopID();
+        }
+
+        if (removeIndex != static_cast<std::size_t>(-1))
+            RemoveRecentProject(removeIndex);
+    }
+
     ImGui::Spacing();
     ImGui::TextUnformatted("New Project");
-    ImGui::InputText("Name", m_NewProjectName, sizeof(m_NewProjectName));
+    ImGui::InputText("Project Name", m_NewProjectName, sizeof(m_NewProjectName));
     ImGui::InputText("Location", m_NewProjectLocation, sizeof(m_NewProjectLocation));
+
     ImGui::SameLine();
     if (ImGui::Button("Browse..."))
     {
@@ -256,11 +400,16 @@ void Application::RenderProjectHub()
             std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", folder.c_str());
     }
 
+    std::filesystem::path preview =
+        (std::filesystem::path(m_NewProjectLocation) / m_NewProjectName).lexically_normal();
+    ImGui::TextDisabled("Project folder: %s", preview.string().c_str());
+
     if (ImGui::Button("Create Project", ImVec2(-1, 42)))
         CreateProject(m_NewProjectLocation, m_NewProjectName);
 
     ImGui::Spacing();
     ImGui::Separator();
+
     if (ImGui::Button("Continue Legacy Workspace", ImVec2(-1, 34)))
     {
         m_ShowProjectHub = false;

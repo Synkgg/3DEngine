@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iomanip>
 #include <system_error>
+#include <array>
 
 bool ProjectManager::Load(const std::string& descriptorPath)
 {
@@ -61,13 +62,31 @@ bool ProjectManager::Create(const std::string& directory, const std::string& nam
     if (directory.empty() || name.empty())
         return false;
 
+    if (name == "." || name == ".." ||
+        name.find_first_of("<>:\\/|?*\"") != std::string::npos)
+    {
+        Logger::Error("Project name contains characters that are not valid in a folder name.");
+        return false;
+    }
+
     std::filesystem::path root = std::filesystem::absolute(directory).lexically_normal();
     std::error_code error;
+
+    if (std::filesystem::exists(root, error) &&
+        !std::filesystem::is_empty(root, error))
+    {
+        Logger::Error("Project directory already exists and is not empty: " + root.string());
+        return false;
+    }
     std::filesystem::create_directories(root / "Assets" / "Scenes", error);
     std::filesystem::create_directories(root / "Assets" / "Scripts", error);
     std::filesystem::create_directories(root / "Assets" / "UI", error);
     std::filesystem::create_directories(root / "Assets" / "Textures", error);
     std::filesystem::create_directories(root / "Assets" / "Models", error);
+    std::filesystem::create_directories(root / "Assets" / "Materials", error);
+    std::filesystem::create_directories(root / "Assets" / "Audio", error);
+    std::filesystem::create_directories(root / "Assets" / "Fonts", error);
+    std::filesystem::create_directories(root / "Assets" / "Prefabs", error);
     if (error)
     {
         Logger::Error("Failed to create project directories: " + root.string());
@@ -113,6 +132,14 @@ bool ProjectManager::Create(const std::string& directory, const std::string& nam
     out << "StartupScene " << std::quoted("Assets/Scenes/Main.scene") << "\n";
     out << "Settings " << std::quoted("ProjectSettings.cfg") << "\n";
     out.close();
+
+    // Keep generated/editor state out of source control by default.
+    std::ofstream ignore(root / ".gitignore");
+    if (ignore)
+    {
+        ignore << "Saved/\n";
+        ignore << "*.user\n";
+    }
 
     return Load(descriptor.string());
 }

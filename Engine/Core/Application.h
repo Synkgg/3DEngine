@@ -18,6 +18,7 @@
 #include "../Scene/Scene.h"
 
 #include "../Scene/Runtime/Runtime.h"
+#include <vector>
 
 
 class Application
@@ -36,8 +37,18 @@ public:
     void StopRuntime();
 
 private:
+    struct RecentProject
+    {
+        std::string name;
+        std::string descriptorPath;
+    };
 
     void UpdateLighting();
+    void LoadRecentProjects();
+    void SaveRecentProjects() const;
+    void AddRecentProject(const Project& project);
+    void RemoveRecentProject(std::size_t index);
+    std::string GetHubStatePath() const;
 
     bool m_Running;
     Window m_Window;
@@ -57,6 +68,7 @@ private:
     char m_NewProjectName[128]{ "New Project" };
     char m_NewProjectLocation[512]{};
     std::string m_ProjectHubError;
+    std::vector<RecentProject> m_RecentProjects;
 
     bool m_CameraControlActive;
     bool m_RuntimeMouseCaptured;
