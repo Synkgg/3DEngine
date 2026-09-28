@@ -95,9 +95,7 @@ void Application::Run()
 
         const bool stopRuntimeBeforeUpdate =
             runtimeEscapePressed &&
-            (m_Runtime.IsPaused() ||
-             m_Runtime.WantsCursor() ||
-             m_Scene.GetEntities().empty());
+            m_Scene.GetEntities().empty();
 
         if (stopRuntimeBeforeUpdate)
         {
@@ -360,6 +358,9 @@ void Application::Run()
                 !m_Runtime.IsPaused() &&
                 !m_Runtime.WantsCursor())
             {
+                // Give authored runtime UI/gameplay scripts first ownership of
+                // Escape. If they expose the cursor this frame, they consumed it.
+                // Otherwise Escape remains the editor Stop shortcut.
                 m_Editor.StopPlaying();
             }
 
