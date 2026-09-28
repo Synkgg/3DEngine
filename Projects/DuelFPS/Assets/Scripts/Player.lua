@@ -104,8 +104,9 @@ local function updateNetworking(dt)
         if sendTimer>=1.0/30.0 then
             sendTimer=0
             local p=transform.GetPosition()
-            local r=self:GetRotation()
-            Network.SendTransform(p.x,p.y,p.z,r.x,r.y,r.z)
+            local forward=Camera.GetForward()
+            local bodyYaw=math.deg(math.atan2(-forward.x,-forward.z))
+            Network.SendTransform(p.x,p.y,p.z,0.0,bodyYaw,0.0)
         end
     end
 
