@@ -59,8 +59,8 @@ end
 
 local function applyExtraSettings()
     Graphics.SetFOV(fovValues[fovIndex]); Graphics.SetShadowQuality(shadowValues[shadowIndex])
-    GameSettings.SetMouseSensitivity(sensitivityValues[sensitivityIndex]); GameSettings.SetInvertY(invertY)
-    GameSettings.SetSprintToggle(sprintToggle); GameSettings.SetCameraBob(cameraBob); GameSettings.SetShowFPS(showFPS)
+    State.SetNumber("mouse_sensitivity",sensitivityValues[sensitivityIndex]); State.SetBool("invert_y",invertY)
+    State.SetBool("sprint_toggle",sprintToggle); State.SetBool("camera_bob",cameraBob); State.SetBool("show_fps",showFPS)
     Audio.SetMasterVolume(volumeValues[masterIndex]); Audio.SetSFXVolume(volumeValues[sfxIndex]); Audio.SetUIVolume(volumeValues[uiVolumeIndex])
 end
 

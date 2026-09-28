@@ -16,7 +16,7 @@ end
 
 function OnUpdate(deltaTime)
 
-    mouseSensitivity = GameSettings.GetMouseSensitivity()
+    mouseSensitivity = State.GetNumber("mouse_sensitivity", 0.01)
 
     -- Camera look
     local mouseX =
@@ -25,7 +25,7 @@ function OnUpdate(deltaTime)
     local mouseY =
         Input.GetMouseDeltaY()
 
-    local pitchDirection = GameSettings.GetInvertY() and 1.0 or -1.0
+    local pitchDirection = State.GetBool("invert_y", false) and 1.0 or -1.0
     Camera.Rotate(
         mouseX * mouseSensitivity,
         mouseY * mouseSensitivity * pitchDirection
@@ -70,8 +70,8 @@ function OnUpdate(deltaTime)
     -- Sprint can be hold or toggle from Settings.
     local shiftDown = Input.IsKeyDown("Left Shift") or Input.IsKeyDown("LShift")
     local shiftPressed = Input.IsKeyPressed("Left Shift") or Input.IsKeyPressed("LShift")
-    if GameSettings.GetSprintToggle() and shiftPressed then sprintToggled = not sprintToggled end
-    local sprinting = GameSettings.GetSprintToggle() and sprintToggled or shiftDown
+    if State.GetBool("sprint_toggle", false) and shiftPressed then sprintToggled = not sprintToggled end
+    local sprinting = State.GetBool("sprint_toggle", false) and sprintToggled or shiftDown
     local currentSpeed = sprinting and sprintSpeed or moveSpeed
 
     -- Prevent diagonal movement from being faster
@@ -119,7 +119,7 @@ function OnUpdate(deltaTime)
         transform.GetPosition()
 
     local bob = 0.0
-    if GameSettings.GetCameraBob() and length > 0.0 and CharacterController.IsGrounded() then
+    if State.GetBool("camera_bob", true) and length > 0.0 and CharacterController.IsGrounded() then
         bobTime = bobTime + deltaTime * (sprinting and 12.0 or 8.0)
         bob = math.sin(bobTime) * 0.035
     end

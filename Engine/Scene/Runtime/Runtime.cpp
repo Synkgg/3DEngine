@@ -179,6 +179,8 @@ void Runtime::Stop(Scene& scene)
     m_WantsCursor = false;
     m_PendingScenePath.clear();
     m_CurrentScenePath.clear();
+    m_StateNumbers.clear();
+    m_StateBools.clear();
     m_Renderer = nullptr;
     m_Input = nullptr;
     m_UICanvas = nullptr;
