@@ -86,7 +86,7 @@ void LuaScriptSystem::Start(
             }
 
             fs::path fullPath = projectManager
-                ? fs::path(projectManager->ResolveProjectPath(scriptPath))
+                ? fs::path(projectManager->ResolveAssetPath(scriptPath))
                 : (fs::current_path() / scriptPath);
 
             if (!fs::exists(
