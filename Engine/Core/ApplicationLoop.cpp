@@ -20,8 +20,18 @@ void Application::Run()
 
     SDL_Event event;
 
+    constexpr Uint64 TargetFrameTimeNS = 1000000000ull / 60ull;
+
     while (m_Running)
     {
+        const Uint64 frameStartNS = SDL_GetTicksNS();
+        const auto finishFrame = [frameStartNS, TargetFrameTimeNS]()
+        {
+            const Uint64 elapsedNS = SDL_GetTicksNS() - frameStartNS;
+            if (elapsedNS < TargetFrameTimeNS)
+                SDL_DelayPrecise(TargetFrameTimeNS - elapsedNS);
+        };
+
         m_Time.Update();
         m_Audio.Update();
 
@@ -84,40 +94,6 @@ void Application::Run()
 
         m_Input.Update();
 
-        // Keep an unfocused Play instance alive without touching the GPU.
-        // Windows/OpenGL drivers can heavily throttle background contexts;
-        // runtime/networking must remain independent of presentation so local
-        // multiplayer instances continue simulating while another window has
-        // focus.
-        const bool windowFocused =
-            (SDL_GetWindowFlags(m_Window.GetNativeWindow()) &
-             SDL_WINDOW_INPUT_FOCUS) != 0;
-
-        if (m_Runtime.IsRunning() && !windowFocused)
-        {
-            if (m_RuntimeMouseCaptured)
-            {
-                m_Input.SetMouseCapture(
-                    m_Window.GetNativeWindow(),
-                    false
-                );
-                m_RuntimeMouseCaptured = false;
-            }
-
-            m_Runtime.Update(
-                m_Scene,
-                m_Renderer,
-                m_Input,
-                m_Time.GetDeltaTime()
-            );
-
-            if (!m_Editor.IsPlaying() && m_Runtime.IsRunning())
-            {
-                StopRuntime();
-            }
-
-            continue;
-        }
 
         // Escape must always provide an editor-level way out of Play mode.
         // A gameplay script can consume the first Escape later in this frame
@@ -145,6 +121,7 @@ void Application::Run()
             RenderProjectHub();
             m_ImGuiLayer.EndFrame();
             m_Renderer.EndFrame();
+            finishFrame();
             continue;
         }
 
@@ -171,6 +148,7 @@ void Application::Run()
             ReturnToProjectHub();
             m_ImGuiLayer.EndFrame();
             m_Renderer.EndFrame();
+            finishFrame();
             continue;
         }
 
@@ -655,5 +633,6 @@ void Application::Run()
         m_ImGuiLayer.EndFrame();
 
         m_Renderer.EndFrame();
+        finishFrame();
     }
 }

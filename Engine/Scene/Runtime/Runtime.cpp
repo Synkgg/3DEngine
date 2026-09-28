@@ -259,13 +259,6 @@ bool Runtime::IsPaused() const
 
 void Runtime::SetPaused(bool paused)
 {
-    if (paused && m_Network.IsConnected())
-    {
-        Logger::Warning("Cannot pause scene while an online network session is active. Pause request ignored.");
-        m_Paused = false;
-        return;
-    }
-
     m_Paused = paused;
 }
 

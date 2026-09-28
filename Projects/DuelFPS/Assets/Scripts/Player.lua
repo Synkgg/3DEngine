@@ -93,7 +93,6 @@ end
 
 local function updateNetworking(dt)
     if not Network.IsConnected() or not Network.IsReady() then return end
-    -- Publishing the local pawn requires local ownership.
     if Controller.IsLocallyControlled(self.id) then
         sendTimer=sendTimer+dt
         if sendTimer>=1.0/30.0 then
@@ -104,8 +103,6 @@ local function updateNetworking(dt)
         end
     end
 
-    -- Receiving remote pawns must NEVER depend on local ownership, input,
-    -- cursor state, or whether a local menu is open.
     local localID=Controller.GetLocalID()
     for _,remote in ipairs(Network.GetRemoteTransforms()) do
         if remote.playerID~=localID then
@@ -132,8 +129,6 @@ local function updateRemoteInterpolation(dt)
                 p.y+(target.y-p.y)*alpha,
                 p.z+(target.z-p.z)*alpha
             )
-            -- Rotation is still applied immediately until the generic scene API
-            -- exposes GetRotation for arbitrary entities.
             Scene.SetRotation(entityID,target.rx,target.ry,target.rz)
         end
     end
@@ -176,7 +171,6 @@ function OnCreate()
     UI.SetVisible("Lobby",false)
     UI.SetVisible("PauseMenu",false)
     UI.SetVisible("RestartMatchButton",false)
-    Scene.SetPaused(false)
     Input.SetCursorVisible(false)
     updatePossessionAndSpawn()
 end
