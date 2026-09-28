@@ -874,10 +874,10 @@ Entity 52
 Name CoreOrb
 Position 0 1.35 0
 Rotation 0 0 0
-Scale 3.0 3.0 3.0
+Scale 1.6 1.6 1.6
 Parent 0
 PrefabSource ""
-Mesh 1 0 "Assets/SciFi Kit/OBJ/Props/Prop_ItemHolder.obj"
+Mesh 1 2 ""
 Color 1 1 0.72 0.08 1
 Texture 0
 Material 1 0.02 0.32 1 1.35
