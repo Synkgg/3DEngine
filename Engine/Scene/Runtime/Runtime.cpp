@@ -11,6 +11,7 @@
 #include "../../UI/UICanvas.h"
 
 #include "../../Core/Logger.h"
+#include "../../Core/ProjectManager.h"
 #include "../Components/NameComponent.h"
 #include "../Components/TransformComponent.h"
 #include "../Components/CharacterControllerComponent.h"
@@ -49,7 +50,8 @@ void Runtime::Start(
         renderer,
         uiCanvas,
         this,
-        m_ProjectSettings
+        m_ProjectSettings,
+        m_ProjectManager
     );
 
     m_ScriptSystem.Register(
@@ -100,7 +102,8 @@ void Runtime::Update(
         std::vector<HierarchyFolder> ignoredFolders;
         SceneSerializer serializer(loadedScene);
 
-        if (!serializer.Load(nextScene, ignoredFolders))
+        const std::string resolvedScene = ResolveProjectPath(nextScene);
+        if (!serializer.Load(resolvedScene, ignoredFolders))
         {
             Logger::Error("Failed to switch runtime scene: " + nextScene);
             return;
@@ -123,14 +126,15 @@ void Runtime::Update(
                 *m_Renderer,
                 *m_UICanvas,
                 this,
-                m_ProjectSettings
+                m_ProjectSettings,
+                m_ProjectManager
             );
 
             m_ScriptSystem.Start(scene);
         }
 
-        m_CurrentScenePath = nextScene;
-        Logger::Info("Runtime scene switched to: " + nextScene);
+        m_CurrentScenePath = resolvedScene;
+        Logger::Info("Runtime scene switched to: " + resolvedScene);
         return;
     }
 
@@ -359,4 +363,9 @@ void Runtime::UpdateNetworkPlayers(Scene& scene, float deltaTime)
             transform->transform.rotation.z=state.rz;
         }
     }
+}
+
+std::string Runtime::ResolveProjectPath(const std::string& path) const
+{
+    return m_ProjectManager ? m_ProjectManager->ResolveProjectPath(path) : path;
 }
