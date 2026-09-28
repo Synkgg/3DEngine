@@ -113,6 +113,24 @@ target_include_directories(
 )
 
 #
+# Embedded editor resources
+#
+# Keep editor/runtime UI infrastructure independent from project Assets.
+# The generated source is compiled into the executable and never needs to be
+# shipped as a loose font file.
+set(INTER_FONT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Editor/Fonts/InterVariable.ttf")
+set(INTER_FONT_CPP "${CMAKE_CURRENT_BINARY_DIR}/Generated/InterFont.cpp")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Generated")
+file(READ "${INTER_FONT_FILE}" INTER_FONT_HEX HEX)
+string(REGEX REPLACE "(..)" "0x\\1," INTER_FONT_BYTES "${INTER_FONT_HEX}")
+file(WRITE "${INTER_FONT_CPP}"
+"#include <cstddef>\n"
+"const unsigned char g_InterFontData[] = {${INTER_FONT_BYTES}};\n"
+"const std::size_t g_InterFontDataSize = sizeof(g_InterFontData);\n")
+unset(INTER_FONT_HEX)
+unset(INTER_FONT_BYTES)
+
+#
 # Engine source files
 #
 file(
@@ -139,6 +157,7 @@ add_executable(
     3DEngine
 
     ${ENGINE_SOURCES}
+    ${INTER_FONT_CPP}
 
     #
     # GLAD
