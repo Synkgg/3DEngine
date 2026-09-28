@@ -6,10 +6,12 @@ local cameraHeight = 0.55
 function OnCreate()
     State.SetNumber("mouse_sensitivity", tonumber(Preferences.LoadString("mouse_sensitivity", "0.01")) or 0.01)
     State.SetBool("invert_y", Preferences.LoadString("invert_y", "0") == "1")
+    Controller.Possess(self.id)
     Input.SetCursorVisible(false)
 end
 
 function OnUpdate(dt)
+    if not Controller.IsLocallyControlled(self.id) then return end
     sensitivity = State.GetNumber("mouse_sensitivity", 0.01)
     local invert = State.GetBool("invert_y", false) and 1.0 or -1.0
     Camera.Rotate(Input.GetMouseDeltaX() * sensitivity, Input.GetMouseDeltaY() * sensitivity * invert)
