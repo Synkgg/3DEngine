@@ -1,6 +1,7 @@
 #include "Application.h"
 #include <SDL3/SDL.h>
 #include <imgui.h>
+#include <chrono>
 #include "../Scene/Entity.h"
 #include "../Scene/Components/TransformComponent.h"
 #include "../Scene/Components/MeshComponent.h"
@@ -617,8 +618,19 @@ void Application::Run()
             m_Renderer.EndOverlay();
         }
 
+        const auto imguiRenderStart = std::chrono::steady_clock::now();
         m_ImGuiLayer.EndFrame();
-
+        const auto swapStart = std::chrono::steady_clock::now();
         m_Renderer.EndFrame();
+        const auto presentEnd = std::chrono::steady_clock::now();
+
+        const auto imguiRenderMs = std::chrono::duration_cast<std::chrono::milliseconds>(swapStart - imguiRenderStart).count();
+        const auto swapMs = std::chrono::duration_cast<std::chrono::milliseconds>(presentEnd - swapStart).count();
+        if (imguiRenderMs > 100 || swapMs > 100)
+        {
+            Logger::Warning(
+                "Frame stall diagnostic: imgui_render=" + std::to_string(imguiRenderMs) +
+                "ms swap=" + std::to_string(swapMs) + "ms");
+        }
     }
 }
