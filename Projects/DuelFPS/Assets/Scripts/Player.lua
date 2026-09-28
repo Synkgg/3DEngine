@@ -10,6 +10,14 @@ local function setPaused(value)
     UI.SetVisible("PauseMenu", value)
     Input.SetCursorVisible(value)
 end
+local paused = false
+
+local function setPaused(value)
+    paused = value
+    Scene.SetPaused(value)
+    UI.SetVisible("PauseMenu", value)
+    Input.SetCursorVisible(value)
+end
 
 function OnCreate()
     State.SetNumber("mouse_sensitivity", tonumber(Preferences.LoadString("mouse_sensitivity", "0.01")) or 0.01)
@@ -23,6 +31,11 @@ end
 
 function OnUpdate(dt)
     if not Controller.IsLocallyControlled(self.id) then return end
+    if Input.IsKeyPressed("Escape") then setPaused(not paused); return end
+    if paused then
+        if UI.WasClicked("ResumeButton") then setPaused(false) end
+        return
+    end
 
     if Input.IsKeyPressed("Escape") then
         setPaused(not paused)
