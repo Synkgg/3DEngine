@@ -169,6 +169,49 @@ void Application::Shutdown()
 
 
 
+void Application::ReturnToProjectHub()
+{
+    // Leave the active workspace in a predictable state before showing the Hub.
+    if (m_Runtime.IsRunning())
+    {
+        m_Editor.StopPlaying();
+        StopRuntime();
+    }
+
+    if (m_CameraControlActive || m_RuntimeMouseCaptured)
+    {
+        m_Input.SetMouseCapture(m_Window.GetNativeWindow(), false);
+        m_CameraControlActive = false;
+        m_RuntimeMouseCaptured = false;
+    }
+
+    m_Renderer.GetUIRenderer().SetMouseInteractionEnabled(false);
+    m_Renderer.GetUIRenderer().Clear();
+    m_UICanvas.Clear();
+    m_UIEditor.SetVisible(false);
+
+    // The Hub owns no scene. Drop project entities/resources from the editor
+    // workspace, then use the compatibility workspace until another project
+    // is selected.
+    m_Scene = Scene();
+    m_ProjectManager.UseLegacyWorkspace();
+    m_ProjectPath.clear();
+
+    const Project& workspace = m_ProjectManager.GetActiveProject();
+    m_Renderer.SetProjectRoot(workspace.rootDirectory);
+    m_Editor.ConfigureProject(workspace.GetAssetRoot(), workspace.GetSettingsPath());
+
+    ProjectSettings& liveSettings = m_Editor.GetProjectSettings();
+    m_Renderer.SetRenderSettings(liveSettings.GetRenderSettings());
+    m_Runtime.SetProjectSettings(&liveSettings);
+    m_Runtime.SetProjectManager(&m_ProjectManager);
+
+    m_ShowProjectHub = true;
+    m_ProjectHubError.clear();
+    SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Project Hub");
+    Logger::Info("Returned to Project Hub.");
+}
+
 bool Application::ActivateProject(const std::string& descriptorPath)
 {
     if (!m_ProjectManager.Load(descriptorPath))
