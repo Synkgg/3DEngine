@@ -117,6 +117,57 @@ bool ProjectManager::Create(const std::string& directory, const std::string& nam
     return Load(descriptor.string());
 }
 
+
+bool ProjectManager::Save()
+{
+    if (!m_HasProject || m_Project.descriptorPath.empty())
+        return false;
+
+    std::ofstream out(m_Project.descriptorPath, std::ios::trunc);
+    if (!out)
+    {
+        Logger::Error("Failed to save project descriptor: " + m_Project.descriptorPath.string());
+        return false;
+    }
+
+    out << "Version 1\n";
+    out << "Name " << std::quoted(m_Project.name) << "\n";
+    out << "AssetDirectory " << std::quoted(m_Project.assetDirectory.generic_string()) << "\n";
+    out << "StartupScene " << std::quoted(m_Project.startupScene.generic_string()) << "\n";
+    out << "Settings " << std::quoted(m_Project.settingsFile.generic_string()) << "\n";
+    return static_cast<bool>(out);
+}
+
+bool ProjectManager::SetStartupScene(const std::string& scenePath)
+{
+    if (!m_HasProject || scenePath.empty())
+        return false;
+
+    std::filesystem::path input(scenePath);
+    std::filesystem::path absolute = input.is_absolute()
+        ? input.lexically_normal()
+        : m_Project.Resolve(input);
+
+    std::error_code error;
+    const std::filesystem::path relative =
+        std::filesystem::relative(absolute, m_Project.rootDirectory, error);
+
+    if (error || relative.empty() || relative.native().rfind("..", 0) == 0)
+    {
+        Logger::Error("Startup scene must be inside the active project: " + absolute.string());
+        return false;
+    }
+
+    if (!std::filesystem::exists(absolute) || absolute.extension() != ".scene")
+    {
+        Logger::Error("Invalid startup scene: " + absolute.string());
+        return false;
+    }
+
+    m_Project.startupScene = relative.lexically_normal();
+    return Save();
+}
+
 void ProjectManager::UseLegacyWorkspace()
 {
     m_Project = {};
