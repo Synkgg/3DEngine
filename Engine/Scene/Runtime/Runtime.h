@@ -61,6 +61,10 @@ public:
     void SetProjectManager(ProjectManager* projects) { m_ProjectManager = projects; }
     std::string ResolveProjectPath(const std::string& path) const;
     NetworkManager& GetNetwork() { return m_Network; }
+    std::uint32_t GetLocalControllerID() const;
+    bool PossessPawn(Scene& scene, Entity entity, std::uint32_t controllerID);
+    void UnpossessPawn(Scene& scene, Entity entity);
+    bool IsPawnLocallyControlled(const Scene& scene, Entity entity) const;
     bool IsLocalPlayerEntityOrChild(const Scene& scene, Entity entity) const;
     void SetStateNumber(const std::string& key, double value) { m_StateNumbers[key] = value; }
     double GetStateNumber(const std::string& key, double fallback = 0.0) const
