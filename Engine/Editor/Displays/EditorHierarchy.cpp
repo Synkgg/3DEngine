@@ -12,6 +12,7 @@
 #include "../../Scene/Components/PlayerStartComponent.h"
 #include "../../Scene/Components/CharacterControllerComponent.h"
 #include "../../Scene/Components/LightComponent.h"
+#include "../../Scene/Components/CameraComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
 #include "../../Scene/Components/TextureComponent.h"
 
@@ -770,6 +771,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             m_SelectedEntity = entity;
         }
         if (ImGui::Selectable("Player Start")) { Entity entity=scene.CreateEntity();scene.AddComponent<PlayerStartComponent>(entity);if(auto* name=scene.GetComponent<NameComponent>(entity))name->name=MakeUniqueName(scene,"Player Start",entity);m_SelectedEntity=entity; }
+        if (ImGui::Selectable("Camera")) { Entity parent=m_SelectedEntity;Entity entity=scene.CreateEntity();scene.AddComponent<CameraComponent>(entity);if(auto* name=scene.GetComponent<NameComponent>(entity))name->name=MakeUniqueName(scene,"Camera",entity);if(parent.IsValid())scene.SetParent(entity,parent,false);m_SelectedEntity=entity; }
         if (ImGui::Selectable("Pawn"))
         {
             Entity entity = scene.CreateEntity();

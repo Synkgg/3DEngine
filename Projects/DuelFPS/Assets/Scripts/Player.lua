@@ -1,5 +1,5 @@
 local walkSpeed, sprintSpeed = 5.0, 8.0
-local sensitivity, cameraHeight = 0.01, 0.55
+local sensitivity = 0.01
 local paused, sendTimer, stateBroadcastTimer = false, 0.0, 0.0
 local possessedControllerID = 0
 local remotePawns, remotePlayersByEntity, remoteTargets = {}, {}, {}
@@ -17,6 +17,7 @@ local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
 local roundWinner, matchWinner = 0, 0
 local activeIntroTimer = 0.0
 local rifleViewmodel = 0
+local playerCamera = 0
 
 local function setPaused(value)
     paused=value
@@ -30,7 +31,6 @@ local function movePlayerToStart(playerID)
     if playerID==Controller.GetLocalID() then
         transform.SetPosition(start.x,start.y,start.z)
         CharacterController.Move(0.0,0.0)
-        Camera.SetPosition(start.x,start.y+cameraHeight,start.z)
     else
         local entityID=remotePawns[playerID]
         if entityID and entityID~=0 then
@@ -346,6 +346,8 @@ function OnCreate()
     UI.SetVisible("RoundResult",false)
     UI.SetVisible("MatchResult",false)
     UI.SetVisible("MatchActions",false)
+    playerCamera=Scene.FindEntity("FirstPersonCamera").id
+    if playerCamera~=0 then Camera.SetActive(playerCamera) end
     rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
     Input.SetCursorVisible(false)
     updatePossessionAndSpawn()
@@ -369,8 +371,6 @@ function OnUpdate(dt)
 
     if not Controller.IsLocallyControlled(self.id) then return end
 
-    local livePosition=transform.GetPosition()
-    Camera.SetPosition(livePosition.x,livePosition.y+cameraHeight,livePosition.z)
     updateViewmodel()
     updateHUD()
 
@@ -407,7 +407,11 @@ function OnUpdate(dt)
     Input.SetCursorVisible(false)
     sensitivity=State.GetNumber("mouse_sensitivity",0.01)
     local invert=State.GetBool("invert_y",false) and 1.0 or -1.0
-    Camera.Rotate(Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
+    if playerCamera~=0 then
+        Camera.RotateEntity(playerCamera,Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
+    else
+        Camera.Rotate(Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
+    end
 
     local ix,iz=0.0,0.0
     if Input.IsKeyDown("W") then iz=iz+1 end

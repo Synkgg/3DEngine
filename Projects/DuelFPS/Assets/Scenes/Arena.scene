@@ -1,6 +1,6 @@
 MyEngineScene
 Environment 1 4 1 1 1 180 0.78 0.0004 0.12 1 85
-Entities 8
+Entities 9
 Entity 1
 Name Player
 Position 0 1.5 10
@@ -20,6 +20,25 @@ Light 0
 Collider 1 0.8 2 0.8
 Scripts 1
 Script Assets/Scripts/Player.lua
+Entity 9
+Name FirstPersonCamera
+Position 0 0.55 0
+Rotation 0 1.5708 0
+Scale 1 1 1
+Parent 1
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Camera 1 90 0.1 1000 1
+Collider 0
+Scripts 0
 Entity 2
 Name ArenaFloor
 Position 0 -0.5 0

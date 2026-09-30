@@ -15,6 +15,7 @@
 #include "../Components/NameComponent.h"
 #include "../Components/TransformComponent.h"
 #include "../Components/PawnComponent.h"
+#include "../Components/CameraComponent.h"
 
 #include <memory>
 
@@ -87,6 +88,20 @@ void Runtime::Update(
         scene,
         deltaTime
     );
+
+    // The active Camera entity drives the renderer from its composed world transform.
+    for (const Entity& entity : scene.GetEntities())
+    {
+        CameraComponent* camera = scene.GetComponent<CameraComponent>(entity);
+        if (!camera || !camera->active) continue;
+        const Transform world = scene.GetWorldTransform(entity);
+        renderer.SetCameraPosition(world.position);
+        renderer.SetCameraRotation(world.rotation.y, world.rotation.x);
+        renderer.SetCameraFov(camera->fieldOfView);
+        renderer.SetCameraNearPlane(camera->nearClip);
+        renderer.SetCameraFarPlane(camera->farClip);
+        break;
+    }
 
     if (!m_PendingScenePath.empty())
     {

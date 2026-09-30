@@ -11,6 +11,7 @@
 #include "../../Scene/Components/PlayerStartComponent.h"
 #include "../../Scene/Components/CharacterControllerComponent.h"
 #include "../../Scene/Components/LightComponent.h"
+#include "../../Scene/Components/CameraComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
 #include "../../Scene/Components/TextureComponent.h"
 #include "../../Scene/Components/MaterialComponent.h"
@@ -690,6 +691,24 @@ void Editor::RenderInspector(
         }
     }
 
+    CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
+    if (camera != nullptr)
+    {
+        if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::SliderFloat("Field of View", &camera->fieldOfView, 30.0f, 120.0f);
+            ImGui::DragFloat("Near Clip", &camera->nearClip, 0.01f, 0.01f, 10.0f);
+            ImGui::DragFloat("Far Clip", &camera->farClip, 1.0f, 10.0f, 10000.0f);
+            if (camera->farClip <= camera->nearClip) camera->farClip = camera->nearClip + 1.0f;
+            if (ImGui::Checkbox("Active", &camera->active) && camera->active)
+                for (const Entity& other : scene.GetEntities())
+                    if (other.GetID() != m_SelectedEntity.GetID())
+                        if (auto* otherCamera = scene.GetComponent<CameraComponent>(other)) otherCamera->active = false;
+            ImGui::TextWrapped("The active Camera entity supplies the runtime view using its world transform.");
+            if (ImGui::Button("Remove Camera")) scene.RemoveComponent<CameraComponent>(m_SelectedEntity);
+        }
+    }
+
     /*
      * Directional Light
      */
@@ -1194,6 +1213,7 @@ void Editor::RenderInspector(
             );
 
         pawn = scene.GetComponent<PawnComponent>(m_SelectedEntity);
+        camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
         playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
 
         controller =
@@ -1314,6 +1334,7 @@ void Editor::RenderInspector(
 
         /* Player Start */
         if(!playerStart){if(ImGui::Selectable("Player Start")){scene.AddComponent<PlayerStartComponent>(m_SelectedEntity);Logger::Info("Added PlayerStartComponent.");}}else{ImGui::BeginDisabled();ImGui::Selectable("Player Start");ImGui::EndDisabled();}
+        if(!camera){if(ImGui::Selectable("Camera")){scene.AddComponent<CameraComponent>(m_SelectedEntity);Logger::Info("Added CameraComponent.");}}else{ImGui::BeginDisabled();ImGui::Selectable("Camera");ImGui::EndDisabled();}
         /*
          * Pawn
          */

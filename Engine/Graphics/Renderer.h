@@ -116,6 +116,8 @@ public:
     void ResetCamera();
     void SetCameraFov(float degrees) { m_Camera.SetFovDegrees(degrees); }
     float GetCameraFov() const { return m_Camera.GetFovDegrees(); }
+    void SetCameraNearPlane(float value) { m_Camera.SetNearPlane(value); }
+    void SetCameraFarPlane(float value) { m_Camera.SetFarPlane(value); }
 
     void DrawGrid();
     void DrawSky();

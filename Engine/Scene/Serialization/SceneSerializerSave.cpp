@@ -13,6 +13,7 @@
 #include "../Components/PlayerStartComponent.h"
 #include "../Components/CharacterControllerComponent.h"
 #include "../Components/LightComponent.h"
+#include "../Components/CameraComponent.h"
 #include "../Components/ColliderComponent.h"
 #include "../Components/TextureComponent.h"
 #include "../Components/MaterialComponent.h"
@@ -570,6 +571,15 @@ bool SceneSerializer::Save(
         {
             file << "Light 0\n";
         }
+
+        /*
+         * Camera
+         */
+        if (CameraComponent* camera = m_Scene.GetComponent<CameraComponent>(entity))
+            file << "Camera 1 " << camera->fieldOfView << " " << camera->nearClip << " "
+                 << camera->farClip << " " << (camera->active ? 1 : 0) << '\n';
+        else
+            file << "Camera 0\n";
 
         /*
          * Collider

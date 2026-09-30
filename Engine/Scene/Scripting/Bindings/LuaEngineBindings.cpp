@@ -17,6 +17,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 
 #include "../../Scene.h"
 #include "../../PrefabSerializer.h"
@@ -29,6 +30,7 @@
 #include "../../Components/ColliderComponent.h"
 #include "../../Components/InteractableComponent.h"
 #include "../../Components/LightComponent.h"
+#include "../../Components/CameraComponent.h"
 #include "../../Systems/CollisionSystem.h"
 
 void LuaScript::BindEngineAPI()
@@ -760,6 +762,54 @@ void LuaScript::BindEngineAPI()
             return result;
         }
     );
+
+    camera.set_function("SetActive", [this](std::uint32_t entityID)
+    {
+        if (!m_Scene) return false;
+        CameraComponent* selected = m_Scene->GetComponent<CameraComponent>(Entity(entityID));
+        if (!selected) return false;
+        for (const Entity& entity : m_Scene->GetEntities())
+            if (auto* component = m_Scene->GetComponent<CameraComponent>(entity))
+                component->active = entity.GetID() == entityID;
+        return true;
+    });
+    camera.set_function("GetActive", [this]()
+    {
+        if (!m_Scene) return std::uint32_t(0);
+        for (const Entity& entity : m_Scene->GetEntities())
+            if (auto* component = m_Scene->GetComponent<CameraComponent>(entity); component && component->active)
+                return entity.GetID();
+        return std::uint32_t(0);
+    });
+    camera.set_function("RotateEntity", [this](std::uint32_t entityID, float yawDelta, float pitchDelta)
+    {
+        if (!m_Scene) return false;
+        TransformComponent* transform = m_Scene->GetComponent<TransformComponent>(Entity(entityID));
+        CameraComponent* component = m_Scene->GetComponent<CameraComponent>(Entity(entityID));
+        if (!transform || !component) return false;
+        constexpr float pitchLimit = 1.553343034f;
+        transform->transform.rotation.y += yawDelta;
+        transform->transform.rotation.x = std::clamp(transform->transform.rotation.x + pitchDelta, -pitchLimit, pitchLimit);
+        const Transform world = m_Scene->GetWorldTransform(Entity(entityID));
+        if (component->active && m_Renderer)
+        {
+            m_Renderer->SetCameraPosition(world.position);
+            m_Renderer->SetCameraRotation(world.rotation.y, world.rotation.x);
+            m_Renderer->SetCameraFov(component->fieldOfView);
+            m_Renderer->SetCameraNearPlane(component->nearClip);
+            m_Renderer->SetCameraFarPlane(component->farClip);
+        }
+        return true;
+    });
+    camera.set_function("SetEntityFOV", [this](std::uint32_t entityID, float fov)
+    {
+        if (!m_Scene) return false;
+        CameraComponent* component = m_Scene->GetComponent<CameraComponent>(Entity(entityID));
+        if (!component) return false;
+        component->fieldOfView = std::clamp(fov, 30.0f, 120.0f);
+        if (component->active && m_Renderer) m_Renderer->SetCameraFov(component->fieldOfView);
+        return true;
+    });
 
     (*m_Environment)["Camera"] =
         camera;

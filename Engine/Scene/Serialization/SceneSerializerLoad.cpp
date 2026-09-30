@@ -13,6 +13,7 @@
 #include "../Components/PlayerStartComponent.h"
 #include "../Components/CharacterControllerComponent.h"
 #include "../Components/LightComponent.h"
+#include "../Components/CameraComponent.h"
 #include "../Components/ColliderComponent.h"
 #include "../Components/TextureComponent.h"
 #include "../Components/MaterialComponent.h"
@@ -1204,6 +1205,32 @@ bool SceneSerializer::Load(
                     entity,
                     light
                 );
+            }
+        }
+
+        /*
+         * Camera - optional for backwards compatibility.
+         */
+        {
+            const std::streampos cameraPosition = file.tellg();
+            if (std::getline(file, line))
+            {
+                if (line.rfind("Camera ", 0) == 0)
+                {
+                    std::istringstream cameraLine(line);
+                    std::string token; int hasCamera = 0; int active = 0;
+                    cameraLine >> token >> hasCamera;
+                    if (hasCamera != 0 && hasCamera != 1) return false;
+                    if (hasCamera == 1)
+                    {
+                        CameraComponent camera;
+                        cameraLine >> camera.fieldOfView >> camera.nearClip >> camera.farClip >> active;
+                        if (cameraLine.fail()) return false;
+                        camera.active = active != 0;
+                        m_Scene.AddComponent<CameraComponent>(entity, camera);
+                    }
+                }
+                else { file.clear(); file.seekg(cameraPosition); }
             }
         }
 
