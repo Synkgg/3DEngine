@@ -15,6 +15,7 @@ local fireCooldown = 0.0
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
 local roundWinner, matchWinner = 0, 0
+local activeIntroTimer = 0.0
 local rifleViewmodel = 0
 
 local function setPaused(value)
@@ -80,6 +81,7 @@ local function beginWarmup()
     roundWinner,matchWinner=0,0
     matchState=WARMUP
     stateTimer=WARMUP_DURATION
+    activeIntroTimer=0.0
     spawnRoundPlayers()
     broadcastState()
 end
@@ -218,6 +220,7 @@ local function updateHostMatch(dt)
             if matchState==WARMUP then
                 matchState=ROUND_ACTIVE
                 stateTimer=0.0
+                activeIntroTimer=0.65
                 broadcastState()
             else
                 beginWarmup()
@@ -276,36 +279,59 @@ local function updateHUD()
     local opponentID=localID==1 and 2 or 1
     local localHealth=health[localID] or MAX_HEALTH
     local dead=localHealth<=0
+    local localScore=score[localID] or 0
+    local enemyScore=score[opponentID] or 0
+    local scoreLine="YOU "..localScore.."  —  "..enemyScore.." ENEMY"
 
     State.SetNumber("duel_health",localHealth)
-    State.SetNumber("duel_score",score[localID] or 0)
-    State.SetNumber("duel_opponent_score",score[opponentID] or 0)
+    State.SetNumber("duel_score",localScore)
+    State.SetNumber("duel_opponent_score",enemyScore)
     UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
     UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
-    UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  —  "..tostring(score[opponentID] or 0).." ENEMY")
+    UI.SetText("ScoreText",scoreLine)
 
-    UI.SetVisible("DeathOverlay",dead and (matchState==ROUND_END or matchState==MATCH_END))
+    local showWarmup=matchState==WARMUP
+    local showRoundResult=matchState==ROUND_END
+    local showMatchResult=matchState==MATCH_END
+    UI.SetVisible("RoundIntro",showWarmup or (matchState==ROUND_ACTIVE and activeIntroTimer>0))
+    UI.SetVisible("RoundResult",showRoundResult)
+    UI.SetVisible("MatchResult",showMatchResult)
+    UI.SetVisible("DeathOverlay",false)
     UI.SetVisible("CrosshairH",matchState==ROUND_ACTIVE and not dead)
     UI.SetVisible("CrosshairV",matchState==ROUND_ACTIVE and not dead)
-    UI.SetVisible("MatchActions",matchState==MATCH_END)
+    UI.SetVisible("MatchActions",showMatchResult)
 
     if matchState==WAITING then
         UI.SetText("MatchStatus","WAITING FOR OPPONENT")
         UI.SetText("CenterMessage","WAITING FOR PLAYER 2")
-    elseif matchState==WARMUP then
+    elseif showWarmup then
+        local countdown=math.max(1,math.ceil(stateTimer))
         UI.SetText("MatchStatus","ROUND "..roundNumber.." // FIRST TO "..ROUNDS_TO_WIN)
-        UI.SetText("CenterMessage","ROUND "..roundNumber.." // "..math.max(1,math.ceil(stateTimer)))
+        UI.SetText("CenterMessage","")
+        UI.SetText("RoundIntroEyebrow","ROUND "..roundNumber)
+        UI.SetText("RoundIntroTitle",tostring(countdown))
+        UI.SetText("RoundIntroHint","GET READY")
     elseif matchState==ROUND_ACTIVE then
         UI.SetText("MatchStatus","ROUND "..roundNumber.." // FIRST TO "..ROUNDS_TO_WIN)
         UI.SetText("CenterMessage","")
-    elseif matchState==ROUND_END then
+        if activeIntroTimer>0 then
+            UI.SetText("RoundIntroEyebrow","ROUND "..roundNumber)
+            UI.SetText("RoundIntroTitle","FIGHT")
+            UI.SetText("RoundIntroHint","")
+        end
+    elseif showRoundResult then
         UI.SetText("MatchStatus","ROUND "..roundNumber.." COMPLETE")
-        UI.SetText("CenterMessage",roundWinner==localID and "ROUND WON" or "ELIMINATED")
-        if dead then UI.SetText("DeathStatus","ROUND LOST") end
-    elseif matchState==MATCH_END then
-        UI.SetText("MatchStatus","MATCH COMPLETE // FIRST TO "..ROUNDS_TO_WIN)
-        UI.SetText("CenterMessage",matchWinner==localID and "VICTORY" or "DEFEAT")
-        if dead then UI.SetText("DeathStatus","MATCH COMPLETE") end
+        UI.SetText("CenterMessage","")
+        UI.SetText("RoundResultTitle",roundWinner==localID and "ROUND WON" or "ROUND LOST")
+        UI.SetText("RoundResultScore",scoreLine)
+        UI.SetText("RoundResultNext","NEXT ROUND IN "..math.max(1,math.ceil(stateTimer)))
+    elseif showMatchResult then
+        UI.SetText("MatchStatus","MATCH COMPLETE")
+        UI.SetText("CenterMessage","")
+        UI.SetText("MatchResultTitle",matchWinner==localID and "VICTORY" or "DEFEAT")
+        UI.SetText("MatchResultScore",scoreLine)
+        UI.SetText("MatchResultHint",matchWinner==localID and "MATCH WON" or "MATCH LOST")
+        UI.SetText("RematchLabel",Network.IsHost() and "REMATCH" or "HOST CAN START REMATCH")
     end
 end
 
@@ -316,6 +342,9 @@ function OnCreate()
     UI.SetVisible("Lobby",false)
     UI.SetVisible("PauseMenu",false)
     UI.SetVisible("DeathOverlay",false)
+    UI.SetVisible("RoundIntro",false)
+    UI.SetVisible("RoundResult",false)
+    UI.SetVisible("MatchResult",false)
     UI.SetVisible("MatchActions",false)
     rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
     Input.SetCursorVisible(false)
@@ -336,6 +365,7 @@ function OnUpdate(dt)
     processCombatMessages()
     updateHostMatch(dt)
     fireCooldown=math.max(0,fireCooldown-dt)
+    activeIntroTimer=math.max(0,activeIntroTimer-dt)
 
     if not Controller.IsLocallyControlled(self.id) then return end
 
