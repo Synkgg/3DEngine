@@ -78,8 +78,11 @@ void UIEditor::Draw(
                viewport->WorkPos.y + viewport->WorkSize.y * 0.06f),
         ImGuiCond_FirstUseEver);
 
+    const std::string documentWindowName =
+        std::string("Widget Blueprint##") + m_UIAssetPath;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Widget Blueprint");
+    ImGui::Begin(documentWindowName.c_str());
     ImGui::PopStyleVar();
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 29, 255));
