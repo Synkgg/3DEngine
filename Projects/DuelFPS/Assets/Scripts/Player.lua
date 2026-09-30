@@ -2,16 +2,19 @@ local walkSpeed, sprintSpeed = 5.0, 8.0
 local sensitivity, cameraHeight = 0.01, 0.55
 local paused, sendTimer, stateBroadcastTimer = false, 0.0, 0.0
 local possessedControllerID = 0
-local remotePawns, remotePlayersByEntity = {}, {}
-local remoteTargets = {}
+local remotePawns, remotePlayersByEntity, remoteTargets = {}, {}, {}
 local REMOTE_INTERPOLATION_SPEED = 20.0
 
 local MAX_HEALTH, SHOT_DAMAGE = 100, 25
-local FIRE_INTERVAL, RESPAWN_DELAY, SCORE_LIMIT = 0.25, 2.0, 5
+local FIRE_INTERVAL, ROUNDS_TO_WIN = 0.25, 5
+local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
-local fireCooldown, matchWinner = 0.0, 0
+local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
+
+local fireCooldown = 0.0
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
-local respawnTimers = {}
+local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
+local roundWinner, matchWinner = 0, 0
 local rifleViewmodel = 0
 
 local function setPaused(value)
@@ -36,6 +39,11 @@ local function movePlayerToStart(playerID)
     end
 end
 
+local function spawnRoundPlayers()
+    movePlayerToStart(1)
+    movePlayerToStart(2)
+end
+
 local function updatePossessionAndSpawn()
     local controllerID=Controller.GetLocalID()
     if controllerID==0 or controllerID==possessedControllerID then return end
@@ -57,41 +65,86 @@ local function getOrCreateRemotePawn(playerID)
 end
 
 local function broadcastState()
-    Network.SendMessage(CHANNEL_COMBAT,"STATE:"..health[1]..":"..health[2]..":"..score[1]..":"..score[2]..":"..matchWinner)
+    if not Network.IsHost() then return end
+    local timerTenths=math.max(0,math.floor(stateTimer*10+0.5))
+    Network.SendMessage(CHANNEL_COMBAT,
+        "STATE:"..matchState..":"..timerTenths..":"..roundNumber..":"..
+        health[1]..":"..health[2]..":"..score[1]..":"..score[2]..":"..
+        roundWinner..":"..matchWinner)
 end
 
-local function respawnPlayer(playerID)
-    health[playerID]=MAX_HEALTH
-    movePlayerToStart(playerID)
-    Network.SendMessage(CHANNEL_COMBAT,"RESPAWN:"..playerID)
+local function beginWarmup()
+    if not Network.IsHost() then return end
+    roundNumber=roundNumber+1
+    health[1],health[2]=MAX_HEALTH,MAX_HEALTH
+    roundWinner,matchWinner=0,0
+    matchState=WARMUP
+    stateTimer=WARMUP_DURATION
+    spawnRoundPlayers()
+    broadcastState()
+end
+
+local function beginMatch()
+    if not Network.IsHost() then return end
+    score[1],score[2]=0,0
+    roundNumber=0
+    roundWinner,matchWinner=0,0
+    if Network.GetPlayerCount()>=2 then beginWarmup()
+    else
+        matchState=WAITING
+        stateTimer=0.0
+        health[1],health[2]=MAX_HEALTH,MAX_HEALTH
+        broadcastState()
+    end
+end
+
+local function finishRound(winnerID)
+    if not Network.IsHost() or matchState~=ROUND_ACTIVE then return end
+    roundWinner=winnerID
+    score[winnerID]=(score[winnerID] or 0)+1
+    if score[winnerID]>=ROUNDS_TO_WIN then
+        matchWinner=winnerID
+        matchState=MATCH_END
+        stateTimer=0.0
+    else
+        matchState=ROUND_END
+        stateTimer=ROUND_END_DURATION
+    end
     broadcastState()
 end
 
 local function applyHostShot(shooterID,targetID)
-    if not Network.IsHost() or shooterID==targetID or not health[targetID] or health[targetID]<=0 or matchWinner~=0 then return end
+    if not Network.IsHost() or matchState~=ROUND_ACTIVE or shooterID==targetID or
+       not health[targetID] or health[targetID]<=0 then return end
     health[targetID]=math.max(0,health[targetID]-SHOT_DAMAGE)
-    if health[targetID]==0 then
-        score[shooterID]=(score[shooterID] or 0)+1
-        if score[shooterID]>=SCORE_LIMIT then matchWinner=shooterID; respawnTimers={}
-        else respawnTimers[targetID]=RESPAWN_DELAY end
-    end
-    broadcastState()
+    if health[targetID]==0 then finishRound(shooterID)
+    else broadcastState() end
+end
+
+local function applyReplicatedState(newState,newTimer,newRound,h1,h2,s1,s2,newRoundWinner,newMatchWinner)
+    local previousState=matchState
+    matchState,stateTimer,roundNumber=newState,newTimer,newRound
+    health[1],health[2]=h1,h2
+    score[1],score[2]=s1,s2
+    roundWinner,matchWinner=newRoundWinner,newMatchWinner
+    if previousState~=matchState and matchState==WARMUP then spawnRoundPlayers() end
 end
 
 local function processCombatMessages()
     for _,message in ipairs(Network.ConsumeMessages()) do
         if message.channel==CHANNEL_COMBAT then
             local target=string.match(message.payload,"^SHOT:(%d+)$")
-            if target and Network.IsHost() then applyHostShot(message.senderID,tonumber(target))
+            if target and Network.IsHost() then
+                applyHostShot(message.senderID,tonumber(target))
             else
-                local h1,h2,s1,s2,winner=string.match(message.payload,"^STATE:(%d+):(%d+):(%d+):(%d+):(%d+)$")
-                if h1 then
-                    health[1],health[2]=tonumber(h1),tonumber(h2)
-                    score[1],score[2]=tonumber(s1),tonumber(s2)
-                    matchWinner=tonumber(winner) or 0
-                else
-                    local respawnID=string.match(message.payload,"^RESPAWN:(%d+)$")
-                    if respawnID then movePlayerToStart(tonumber(respawnID)) end
+                local st,timer,rnd,h1,h2,s1,s2,rw,mw=string.match(
+                    message.payload,
+                    "^STATE:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+)$")
+                if st and not Network.IsHost() then
+                    applyReplicatedState(
+                        tonumber(st),tonumber(timer)/10.0,tonumber(rnd),
+                        tonumber(h1),tonumber(h2),tonumber(s1),tonumber(s2),
+                        tonumber(rw),tonumber(mw))
                 end
             end
         end
@@ -131,35 +184,60 @@ local function updateRemoteInterpolation(dt)
         local entityID=remotePawns[playerID]
         if entityID and entityID~=0 then
             local p=Scene.GetPosition(entityID)
-            Scene.SetPosition(
-                entityID,
+            Scene.SetPosition(entityID,
                 p.x+(target.x-p.x)*alpha,
                 p.y+(target.y-p.y)*alpha,
-                p.z+(target.z-p.z)*alpha
-            )
+                p.z+(target.z-p.z)*alpha)
             Scene.SetRotation(entityID,target.rx,target.ry,target.rz)
         end
     end
 end
 
-local function updateHostRespawns(dt)
+local function updateHostMatch(dt)
     if not Network.IsHost() then return end
+
+    if Network.GetPlayerCount()<2 then
+        if matchState~=WAITING then
+            matchState=WAITING
+            stateTimer=0.0
+            roundWinner,matchWinner=0,0
+            health[1],health[2]=MAX_HEALTH,MAX_HEALTH
+            broadcastState()
+        end
+        return
+    end
+
+    if matchState==WAITING then
+        beginWarmup()
+        return
+    end
+
+    if matchState==WARMUP or matchState==ROUND_END then
+        stateTimer=math.max(0,stateTimer-dt)
+        if stateTimer<=0 then
+            if matchState==WARMUP then
+                matchState=ROUND_ACTIVE
+                stateTimer=0.0
+                broadcastState()
+            else
+                beginWarmup()
+            end
+        end
+    end
+
     stateBroadcastTimer=stateBroadcastTimer+dt
-    if stateBroadcastTimer>=0.5 then stateBroadcastTimer=0; broadcastState() end
-    for playerID,timer in pairs(respawnTimers) do
-        timer=timer-dt
-        if timer<=0 then respawnTimers[playerID]=nil; respawnPlayer(playerID)
-        else respawnTimers[playerID]=timer end
+    if stateBroadcastTimer>=0.25 then
+        stateBroadcastTimer=0
+        broadcastState()
     end
 end
 
 local function updateViewmodel()
     if rifleViewmodel==0 then return end
     local c,f,r=Camera.GetPosition(),Camera.GetForward(),Camera.GetRight()
-    local upX,upY,upZ=0.0,1.0,0.0
-    local x=c.x+r.x*0.34+f.x*0.62+upX*(-0.24)
-    local y=c.y+r.y*0.34+f.y*0.62+upY*(-0.24)
-    local z=c.z+r.z*0.34+f.z*0.62+upZ*(-0.24)
+    local x=c.x+r.x*0.34+f.x*0.62
+    local y=c.y+r.y*0.34+f.y*0.62-0.24
+    local z=c.z+r.z*0.34+f.z*0.62
     Scene.SetPosition(rifleViewmodel,x,y,z)
     local yaw=math.deg(math.atan(-f.x,-f.z))
     local horizontal=math.sqrt(f.x*f.x+f.z*f.z)
@@ -169,7 +247,7 @@ end
 
 local function fire()
     local localID=Controller.GetLocalID()
-    if fireCooldown>0 or (health[localID] or MAX_HEALTH)<=0 or matchWinner~=0 then return end
+    if matchState~=ROUND_ACTIVE or fireCooldown>0 or (health[localID] or 0)<=0 then return end
     fireCooldown=FIRE_INTERVAL
     local c,f=Camera.GetPosition(),Camera.GetForward()
     local range=100.0
@@ -186,17 +264,63 @@ local function fire()
     end
 end
 
+local function returnToMenu()
+    setPaused(false)
+    Network.Disconnect()
+    Input.SetCursorVisible(true)
+    Scene.Load("Assets/Scenes/MainMenu.scene")
+end
+
+local function updateHUD()
+    local localID=Controller.GetLocalID()
+    local opponentID=localID==1 and 2 or 1
+    local localHealth=health[localID] or MAX_HEALTH
+    local dead=localHealth<=0
+
+    State.SetNumber("duel_health",localHealth)
+    State.SetNumber("duel_score",score[localID] or 0)
+    State.SetNumber("duel_opponent_score",score[opponentID] or 0)
+    UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
+    UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
+    UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  —  "..tostring(score[opponentID] or 0).." ENEMY")
+
+    UI.SetVisible("DeathOverlay",dead and (matchState==ROUND_END or matchState==MATCH_END))
+    UI.SetVisible("CrosshairH",matchState==ROUND_ACTIVE and not dead)
+    UI.SetVisible("CrosshairV",matchState==ROUND_ACTIVE and not dead)
+    UI.SetVisible("MatchActions",matchState==MATCH_END)
+
+    if matchState==WAITING then
+        UI.SetText("MatchStatus","WAITING FOR OPPONENT")
+        UI.SetText("CenterMessage","WAITING FOR PLAYER 2")
+    elseif matchState==WARMUP then
+        UI.SetText("MatchStatus","ROUND "..roundNumber.." // FIRST TO "..ROUNDS_TO_WIN)
+        UI.SetText("CenterMessage","ROUND "..roundNumber.." // "..math.max(1,math.ceil(stateTimer)))
+    elseif matchState==ROUND_ACTIVE then
+        UI.SetText("MatchStatus","ROUND "..roundNumber.." // FIRST TO "..ROUNDS_TO_WIN)
+        UI.SetText("CenterMessage","")
+    elseif matchState==ROUND_END then
+        UI.SetText("MatchStatus","ROUND "..roundNumber.." COMPLETE")
+        UI.SetText("CenterMessage",roundWinner==localID and "ROUND WON" or "ELIMINATED")
+        if dead then UI.SetText("DeathStatus","ROUND LOST") end
+    elseif matchState==MATCH_END then
+        UI.SetText("MatchStatus","MATCH COMPLETE // FIRST TO "..ROUNDS_TO_WIN)
+        UI.SetText("CenterMessage",matchWinner==localID and "VICTORY" or "DEFEAT")
+        if dead then UI.SetText("DeathStatus","MATCH COMPLETE") end
+    end
+end
+
 function OnCreate()
     State.SetNumber("mouse_sensitivity",tonumber(Preferences.LoadString("mouse_sensitivity","0.01")) or 0.01)
     State.SetBool("invert_y",Preferences.LoadString("invert_y","0")=="1")
     UI.Load("Assets/UI/Duel.ui")
     UI.SetVisible("Lobby",false)
     UI.SetVisible("PauseMenu",false)
-    UI.SetVisible("RestartMatchButton",false)
     UI.SetVisible("DeathOverlay",false)
+    UI.SetVisible("MatchActions",false)
     rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
     Input.SetCursorVisible(false)
     updatePossessionAndSpawn()
+    if Network.IsHost() then beginMatch() end
 end
 
 function OnUpdate(dt)
@@ -210,74 +334,47 @@ function OnUpdate(dt)
     updateNetworking(dt)
     updateRemoteInterpolation(dt)
     processCombatMessages()
-    updateHostRespawns(dt)
+    updateHostMatch(dt)
     fireCooldown=math.max(0,fireCooldown-dt)
 
     if not Controller.IsLocallyControlled(self.id) then return end
 
-    -- Camera and controller state must keep following the live pawn even while
-    -- an online menu owns input. The world is still simulating.
     local livePosition=transform.GetPosition()
     Camera.SetPosition(livePosition.x,livePosition.y+cameraHeight,livePosition.z)
     updateViewmodel()
+    updateHUD()
 
-    local localID=Controller.GetLocalID()
-    local opponentID=localID==1 and 2 or 1
-    local localHealth=health[localID] or MAX_HEALTH
-    State.SetNumber("duel_health",localHealth)
-    UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
-    State.SetNumber("duel_score",score[localID] or 0)
-    State.SetNumber("duel_opponent_score",score[opponentID] or 0)
-    UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
-    UI.SetText("ScoreText","YOU "..tostring(score[localID] or 0).."  //  "..tostring(score[opponentID] or 0).." OPPONENT")
-    UI.SetVisible("RestartMatchButton",Network.IsHost() and matchWinner~=0)
-    local dead=localHealth<=0 and matchWinner==0
-    UI.SetVisible("DeathOverlay",dead)
-    UI.SetVisible("CrosshairH",not dead)
-    UI.SetVisible("CrosshairV",not dead)
-    if dead then UI.SetText("DeathStatus","RESPAWNING...") end
-
-    if Input.IsKeyPressed("Escape") then
+    if Input.IsKeyPressed("Escape") and matchState~=MATCH_END then
         setPaused(not paused)
         if paused then CharacterController.Move(0.0,0.0) end
         return
     end
+
     if paused then
         CharacterController.Move(0.0,0.0)
         if UI.WasClicked("ResumeButton") then setPaused(false)
-        elseif UI.WasClicked("DisconnectButton") then
-            setPaused(false)
-            Network.Disconnect()
-            Input.SetCursorVisible(true)
-            Scene.Load("Assets/Scenes/MainMenu.scene")
-        end
+        elseif UI.WasClicked("DisconnectButton") then returnToMenu() end
         return
     end
 
-    if matchWinner~=0 then
-        UI.SetText("MatchStatus","FIRST TO "..SCORE_LIMIT.." // MATCH COMPLETE")
-        UI.SetText("CenterMessage",matchWinner==localID and "VICTORY" or "DEFEAT")
-        Input.SetCursorVisible(Network.IsHost())
-        if Network.IsHost() and UI.WasClicked("RestartMatchButton") then
-            health[1],health[2]=MAX_HEALTH,MAX_HEALTH
-            score[1],score[2]=0,0
-            matchWinner=0
-            respawnTimers={}
-            respawnPlayer(1); respawnPlayer(2)
-            broadcastState()
-            UI.SetText("CenterMessage","")
+    if matchState==MATCH_END then
+        CharacterController.Move(0.0,0.0)
+        Input.SetCursorVisible(true)
+        if UI.WasClicked("RematchButton") and Network.IsHost() then
             Input.SetCursorVisible(false)
+            beginMatch()
+        elseif UI.WasClicked("ReturnToMenuButton") then
+            returnToMenu()
         end
         return
     end
 
-    UI.SetText("MatchStatus","FIRST TO "..SCORE_LIMIT)
-    UI.SetText("CenterMessage","")
-    if (health[localID] or MAX_HEALTH)<=0 then
-        UI.SetText("CenterMessage","ELIMINATED // RESPAWNING")
+    if matchState~=ROUND_ACTIVE or (health[Controller.GetLocalID()] or 0)<=0 then
+        CharacterController.Move(0.0,0.0)
         return
     end
 
+    Input.SetCursorVisible(false)
     sensitivity=State.GetNumber("mouse_sensitivity",0.01)
     local invert=State.GetBool("invert_y",false) and 1.0 or -1.0
     Camera.Rotate(Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
@@ -294,6 +391,5 @@ function OnUpdate(dt)
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
-
     if Input.IsMouseButtonDown(1) then fire() end
 end
