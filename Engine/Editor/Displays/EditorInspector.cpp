@@ -313,17 +313,12 @@ void Editor::RenderInspector(
 
     // Inspector-only component surfaces: strong headers, dark field bodies and
     // visible outlines create distinct cards without changing the global theme.
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 4.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 14.0f);
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.205f,0.212f,0.222f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.235f,0.245f,0.258f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.255f,0.270f,0.290f,1.0f));
-
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.115f, 0.120f, 0.128f, 1.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
-    ImGui::BeginChild("##InspectorComponents", ImVec2(0.0f, 0.0f), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.185f,0.190f,0.198f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.220f,0.228f,0.238f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.240f,0.250f,0.265f,1.0f));
 
     /*
      * Transform
@@ -1188,10 +1183,6 @@ void Editor::RenderInspector(
             }
         }
     }
-
-    ImGui::EndChild();
-    ImGui::PopStyleVar(2);
-    ImGui::PopStyleColor();
 
     ImGui::PopStyleColor(3);
     ImGui::PopStyleVar(3);
