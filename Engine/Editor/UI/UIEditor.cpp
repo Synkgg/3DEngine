@@ -63,6 +63,12 @@ void UIEditor::Draw(
 
     m_Renderer = &renderer;
 
+    if (m_FocusRequested)
+    {
+        ImGui::SetNextWindowFocus();
+        m_FocusRequested = false;
+    }
+
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowSize(
         ImVec2(viewport->WorkSize.x * 0.88f, viewport->WorkSize.y * 0.88f),
