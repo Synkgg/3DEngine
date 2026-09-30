@@ -21,6 +21,7 @@ public:
     bool OpenAsset(UICanvas& canvas, const std::string& path);
     void SetVisible(bool visible);
     bool IsVisible() const { return m_Visible; }
+    const std::string& GetAssetPath() const { return m_UIAssetPath; }
 
 private:
     UIWidget* m_SelectedWidget = nullptr;
