@@ -818,13 +818,6 @@ void UIEditor::DrawToolbar(
     const float width = ImGui::GetContentRegionAvail().x;
     const bool compact = width < 900.0f;
 
-    if (ImGui::Button("< Scene"))
-    {
-        SetVisible(false);
-        return;
-    }
-    ImGui::SameLine();
-
     if (ImGui::Button("Open"))
         ImGui::OpenPopup("SelectUIAsset");
     ImGui::SameLine();
