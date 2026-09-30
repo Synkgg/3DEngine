@@ -80,4 +80,5 @@ private:
     UICanvas m_UICanvas;
     UICanvas m_UIEditorCanvas;
     UIEditor m_UIEditor;
+    bool m_UIEditorPageActive = false;
 };
