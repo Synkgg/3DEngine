@@ -87,7 +87,6 @@ bool Application::Initialize()
     // the Widget Blueprint editor.
     m_UICanvas.Clear();
     m_UIEditor.SetVisible(false);
-    m_Editor.SetUIEditor(&m_UIEditor);
     m_Audio.Initialize();
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
     m_Runtime.SetAudioEngine(&m_Audio);
