@@ -22,7 +22,7 @@ public:
     void SetVisible(bool visible);
     bool IsVisible() const { return m_Visible; }
     const std::string& GetAssetPath() const { return m_UIAssetPath; }
-    void Focus() { ImGui::SetWindowFocus("Widget Blueprint"); m_FocusRequested = true; }
+    void Focus() { m_FocusRequested = true; }
 
 private:
     UIWidget* m_SelectedWidget = nullptr;
