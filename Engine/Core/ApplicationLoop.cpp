@@ -139,31 +139,9 @@ void Application::Run()
             imguiIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         }
 
-        // Persistent editor shell: scene/map and asset editors are document
-        // pages. The scene editor stays alive while another page is active.
+        // Persistent editor shell: scenes and asset editors are documents.
+        // Scene rendering stays alive regardless of which document is active.
         m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
-
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->WorkPos, ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(ImGui::GetMainViewport()->WorkSize.x, 34.0f), ImGuiCond_Always);
-        ImGui::Begin("##EditorDocuments", nullptr,
-            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking);
-        std::string sceneLabel = m_Editor.GetSceneFilePath().empty()
-            ? "Scene"
-            : std::filesystem::path(m_Editor.GetSceneFilePath()).filename().string();
-        if (ImGui::Selectable(sceneLabel.c_str(), !m_UIEditorPageActive, 0, ImVec2(140.0f, 0.0f)))
-            m_UIEditorPageActive = false;
-        if (m_UIEditor.IsVisible())
-        {
-            ImGui::SameLine();
-            std::string uiLabel = std::filesystem::path(m_UIEditor.GetAssetPath()).filename().string();
-            if (ImGui::Selectable(uiLabel.c_str(), m_UIEditorPageActive, 0, ImVec2(160.0f, 0.0f)))
-            {
-                m_UIEditorPageActive = true;
-                m_UIEditor.Focus();
-            }
-        }
-        ImGui::End();
 
         if (m_Editor.ConsumeProjectHubRequest())
         {
@@ -174,27 +152,76 @@ void Application::Run()
             continue;
         }
 
-        // Widget Blueprint owns a separate editing canvas, so it can remain
-        // open while Play mode uses the runtime UI canvas independently.
+        // Consume asset-open requests before drawing the document bar so a
+        // newly opened UI appears and becomes active in the same frame.
+        const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
+        if (!openedUIAsset.empty())
         {
-            const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
-            if (!openedUIAsset.empty())
+            const std::string normalizedPath =
+                std::filesystem::absolute(std::filesystem::path(openedUIAsset))
+                    .lexically_normal().generic_string();
+
+            int existingDocument = -1;
+            for (int i = 0; i < static_cast<int>(m_UIDocuments.size()); ++i)
             {
-                if (!m_UIEditor.OpenAsset(m_UIEditorCanvas, openedUIAsset))
+                if (m_UIDocuments[i].path == normalizedPath)
                 {
-                    Logger::Error(
-                        std::string("Failed to open UI asset: ") +
-                        openedUIAsset);
-                }
-                else
-                {
-                    m_UIEditorPageActive = true;
-                    m_UIEditor.Focus();
+                    existingDocument = i;
+                    break;
                 }
             }
 
-            if (m_UIEditorPageActive)
-                m_UIEditor.Draw(m_UIEditorCanvas, m_Renderer);
+            if (existingDocument >= 0)
+            {
+                m_ActiveUIDocument = existingDocument;
+            }
+            else
+            {
+                UIDocument document;
+                document.path = normalizedPath;
+                document.canvas = std::make_unique<UICanvas>();
+                document.editor = std::make_unique<UIEditor>();
+
+                if (document.editor->OpenAsset(*document.canvas, normalizedPath))
+                {
+                    m_UIDocuments.push_back(std::move(document));
+                    m_ActiveUIDocument = static_cast<int>(m_UIDocuments.size()) - 1;
+                }
+                else
+                {
+                    Logger::Error(std::string("Failed to open UI asset: ") + openedUIAsset);
+                }
+            }
+        }
+
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->WorkPos, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetMainViewport()->WorkSize.x, 34.0f), ImGuiCond_Always);
+        ImGui::Begin("##EditorDocuments", nullptr,
+            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking);
+
+        std::string sceneLabel = m_Editor.GetSceneFilePath().empty()
+            ? "Scene"
+            : std::filesystem::path(m_Editor.GetSceneFilePath()).filename().string();
+        if (ImGui::Selectable(sceneLabel.c_str(), m_ActiveUIDocument < 0, 0, ImVec2(140.0f, 0.0f)))
+            m_ActiveUIDocument = -1;
+
+        for (int i = 0; i < static_cast<int>(m_UIDocuments.size()); ++i)
+        {
+            ImGui::SameLine();
+            ImGui::PushID(i);
+            const std::string label = std::filesystem::path(m_UIDocuments[i].path).filename().string();
+            if (ImGui::Selectable(label.c_str(), m_ActiveUIDocument == i, 0, ImVec2(160.0f, 0.0f)))
+                m_ActiveUIDocument = i;
+            ImGui::PopID();
+        }
+        ImGui::End();
+
+        if (m_ActiveUIDocument >= 0 &&
+            m_ActiveUIDocument < static_cast<int>(m_UIDocuments.size()))
+        {
+            UIDocument& document = m_UIDocuments[m_ActiveUIDocument];
+            document.editor->Draw(*document.canvas, m_Renderer);
         }
 
         if (m_Editor.IsPlaying() &&
