@@ -320,6 +320,7 @@ void Editor::RenderInspector(
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.220f,0.228f,0.238f,1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.240f,0.250f,0.265f,1.0f));
 
+    ImGui::Separator();
     /*
      * Transform
      */
@@ -417,6 +418,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     /*
      * Mesh
      */
@@ -522,6 +524,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     /*
      * Color
      */
@@ -579,6 +582,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     /*
      * Texture
      */
@@ -618,9 +622,11 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
     if(playerStart&&ImGui::CollapsingHeader("Player Start",ImGuiTreeNodeFlags_DefaultOpen)){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
+    ImGui::Separator();
     /*
      * Pawn
      */
@@ -640,6 +646,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     /*
      * Character Controller
      */
@@ -700,6 +707,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
@@ -721,6 +729,7 @@ void Editor::RenderInspector(
     /*
      * Directional Light
      */
+    ImGui::Separator();
     LightComponent* light =
         scene.GetComponent<
         LightComponent
@@ -817,6 +826,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     MaterialComponent* material =
         scene.GetComponent<MaterialComponent>(m_SelectedEntity);
 
@@ -833,6 +843,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     /*
      * Collider
      */
@@ -896,6 +907,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     InteractableComponent* interactable =
         scene.GetComponent<InteractableComponent>(m_SelectedEntity);
 
@@ -937,6 +949,7 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Separator();
     /*
   * Scripts
   */
