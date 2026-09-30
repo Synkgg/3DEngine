@@ -33,14 +33,14 @@ void Editor::ApplyEditorStyle()
     ImVec4* c = s.Colors;
     c[ImGuiCol_Text]                 = ImVec4(0.90f, 0.91f, 0.92f, 1.00f);
     c[ImGuiCol_TextDisabled]         = ImVec4(0.52f, 0.54f, 0.57f, 1.00f);
-    c[ImGuiCol_WindowBg]             = ImVec4(0.105f, 0.110f, 0.118f, 1.00f);
-    c[ImGuiCol_ChildBg]              = ImVec4(0.125f, 0.130f, 0.138f, 1.00f);
-    c[ImGuiCol_PopupBg]              = ImVec4(0.115f, 0.120f, 0.128f, 0.99f);
-    c[ImGuiCol_Border]               = ImVec4(0.205f, 0.215f, 0.228f, 1.00f);
+    c[ImGuiCol_WindowBg]             = ImVec4(0.135f, 0.140f, 0.148f, 1.00f);
+    c[ImGuiCol_ChildBg]              = ImVec4(0.150f, 0.155f, 0.164f, 1.00f);
+    c[ImGuiCol_PopupBg]              = ImVec4(0.165f, 0.170f, 0.180f, 0.99f);
+    c[ImGuiCol_Border]               = ImVec4(0.285f, 0.295f, 0.310f, 1.00f);
     c[ImGuiCol_BorderShadow]         = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    c[ImGuiCol_FrameBg]              = ImVec4(0.155f, 0.162f, 0.172f, 1.00f);
-    c[ImGuiCol_FrameBgHovered]       = ImVec4(0.190f, 0.198f, 0.210f, 1.00f);
+    c[ImGuiCol_FrameBg]              = ImVec4(0.095f, 0.100f, 0.108f, 1.00f);
+    c[ImGuiCol_FrameBgHovered]       = ImVec4(0.125f, 0.132f, 0.143f, 1.00f);
     c[ImGuiCol_FrameBgActive]        = ImVec4(0.125f, 0.245f, 0.345f, 1.00f);
 
     c[ImGuiCol_TitleBg]              = ImVec4(0.085f, 0.090f, 0.097f, 1.00f);
@@ -48,12 +48,12 @@ void Editor::ApplyEditorStyle()
     c[ImGuiCol_TitleBgCollapsed]     = c[ImGuiCol_TitleBg];
     c[ImGuiCol_MenuBarBg]            = ImVec4(0.075f, 0.080f, 0.087f, 1.00f);
 
-    c[ImGuiCol_Button]               = ImVec4(0.160f, 0.168f, 0.178f, 1.00f);
+    c[ImGuiCol_Button]               = ImVec4(0.225f, 0.232f, 0.245f, 1.00f);
     c[ImGuiCol_ButtonHovered]        = ImVec4(0.205f, 0.215f, 0.228f, 1.00f);
     c[ImGuiCol_ButtonActive]         = ImVec4(0.115f, 0.355f, 0.535f, 1.00f);
 
-    c[ImGuiCol_Header]               = ImVec4(0.155f, 0.162f, 0.172f, 1.00f);
-    c[ImGuiCol_HeaderHovered]        = ImVec4(0.190f, 0.205f, 0.220f, 1.00f);
+    c[ImGuiCol_Header]               = ImVec4(0.245f, 0.252f, 0.265f, 1.00f);
+    c[ImGuiCol_HeaderHovered]        = ImVec4(0.290f, 0.300f, 0.315f, 1.00f);
     c[ImGuiCol_HeaderActive]         = ImVec4(0.110f, 0.315f, 0.470f, 1.00f);
 
     c[ImGuiCol_Tab]                  = ImVec4(0.105f, 0.110f, 0.118f, 1.00f);
@@ -66,7 +66,7 @@ void Editor::ApplyEditorStyle()
     c[ImGuiCol_SliderGrab]           = ImVec4(0.140f, 0.455f, 0.675f, 1.00f);
     c[ImGuiCol_SliderGrabActive]     = ImVec4(0.180f, 0.650f, 0.950f, 1.00f);
 
-    c[ImGuiCol_Separator]            = ImVec4(0.10f, 0.12f, 0.14f, 1.00f);
+    c[ImGuiCol_Separator]            = ImVec4(0.285f, 0.295f, 0.310f, 1.00f);
     c[ImGuiCol_SeparatorHovered]     = ImVec4(0.12f, 0.46f, 0.66f, 1.00f);
     c[ImGuiCol_SeparatorActive]      = ImVec4(0.120f, 0.570f, 0.850f, 1.00f);
 
