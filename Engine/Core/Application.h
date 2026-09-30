@@ -19,6 +19,7 @@
 
 #include "../Scene/Runtime/Runtime.h"
 #include <vector>
+#include <memory>
 
 
 class Application
@@ -78,7 +79,14 @@ private:
     Runtime m_Runtime;
 
     UICanvas m_UICanvas;
-    UICanvas m_UIEditorCanvas;
-    UIEditor m_UIEditor;
-    bool m_UIEditorPageActive = false;
+
+    struct UIDocument
+    {
+        std::string path;
+        std::unique_ptr<UICanvas> canvas;
+        std::unique_ptr<UIEditor> editor;
+    };
+
+    std::vector<UIDocument> m_UIDocuments;
+    int m_ActiveUIDocument = -1;
 };
