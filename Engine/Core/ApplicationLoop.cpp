@@ -139,10 +139,10 @@ void Application::Run()
             imguiIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         }
 
-        // Widget Blueprint is a dedicated editor workspace. While it is open,
-        // do not draw the scene workspace underneath it.
-        if (!m_UIEditor.IsVisible())
-            m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
+        // Keep the scene editor alive even while Widget Blueprint is open.
+        // Widget Blueprint is an independent editor surface layered into the
+        // same ImGui application, so neither workspace loses its state.
+        m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
 
         if (m_Editor.ConsumeProjectHubRequest())
         {
