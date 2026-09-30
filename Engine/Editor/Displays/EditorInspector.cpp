@@ -348,11 +348,13 @@ void Editor::RenderInspector(
     // Inspector-only component surfaces: strong headers, dark field bodies and
     // visible outlines create distinct cards without changing the global theme.
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 3.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 2.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.185f,0.190f,0.198f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.220f,0.228f,0.238f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.240f,0.250f,0.265f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.225f,0.230f,0.238f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.255f,0.262f,0.272f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.275f,0.285f,0.300f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.105f,0.110f,0.118f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.245f,0.252f,0.265f,1.0f));
 
     /*
      * Transform
@@ -1209,7 +1211,7 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::PopStyleColor(3);
+    ImGui::PopStyleColor(5);
     ImGui::PopStyleVar(3);
 
     /*
