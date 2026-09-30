@@ -74,29 +74,13 @@ void UIEditor::Draw(
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    const ImVec2 available = ImGui::GetContentRegionAvail();
-    const bool compact = available.x < 1050.0f;
-    const bool veryCompact = available.x < 760.0f;
+    const ImGuiID dockspaceId = ImGui::GetID("WidgetBlueprintDockSpace");
+    ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
-    // On narrow windows the designer gets priority. Side panels become
-    // optional instead of squeezing a 16:9 canvas into an unusable strip.
-    bool showPalette = m_ShowPalette && !veryCompact;
-    bool showHierarchy = m_ShowHierarchy && !veryCompact;
-    bool showDetails = m_ShowDetails && !compact;
-
-    float paletteWidth = showPalette ? std::clamp(available.x * 0.14f, 135.0f, 175.0f) : 0.0f;
-    float hierarchyWidth = showHierarchy ? std::clamp(available.x * 0.18f, 165.0f, 225.0f) : 0.0f;
-    float inspectorWidth = showDetails ? std::clamp(available.x * 0.24f, 245.0f, 310.0f) : 0.0f;
-
-    float used = paletteWidth + hierarchyWidth + inspectorWidth;
-    float designerWidth = std::max(280.0f, available.x - used);
-
-    auto sameLine = []() { ImGui::SameLine(0.0f, 0.0f); };
-
-    if (showPalette)
+    if (m_ShowPalette)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-        ImGui::BeginChild("Palette", ImVec2(paletteWidth, 0.0f), true);
+        ImGui::Begin("Palette##UIEditor", &m_ShowPalette);
         ImGui::TextDisabled("PALETTE");
         ImGui::Separator();
         static char paletteSearch[64] = {};
@@ -131,15 +115,14 @@ void UIEditor::Draw(
         paletteItem("Slider", UIWidgetType::Slider);
         ImGui::Spacing();
         ImGui::TextDisabled("Click to add, or drag into the Designer");
-        ImGui::EndChild();
+        ImGui::End();
         ImGui::PopStyleColor();
-        sameLine();
     }
 
-    if (showHierarchy)
+    if (m_ShowHierarchy)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
-        ImGui::BeginChild("HierarchyPanel", ImVec2(hierarchyWidth, 0.0f), true);
+        ImGui::Begin("Hierarchy##UIEditor", &m_ShowHierarchy);
         ImGui::TextDisabled("HIERARCHY");
         ImGui::Separator();
         ImGui::SetNextItemWidth(-1.0f);
@@ -148,29 +131,27 @@ void UIEditor::Draw(
         std::transform(hierarchyQuery.begin(),hierarchyQuery.end(),hierarchyQuery.begin(),
             [](unsigned char c){return static_cast<char>(std::tolower(c));});
         if (canvas.GetRoot()) DrawHierarchy(canvas, *canvas.GetRoot(), hierarchyQuery);
-        ImGui::EndChild();
+        ImGui::End();
         ImGui::PopStyleColor();
-        sameLine();
     }
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(17, 18, 21, 255));
-    ImGui::BeginChild("DesignerPanel", ImVec2(designerWidth, 0.0f), true);
+    ImGui::Begin("Designer##UIEditor");
     DrawDesigner(canvas);
-    ImGui::EndChild();
+    ImGui::End();
     ImGui::PopStyleColor();
 
-    if (showDetails)
+    if (m_ShowDetails)
     {
-        sameLine();
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-        ImGui::BeginChild("DetailsPanel", ImVec2(inspectorWidth, 0.0f), true);
+        ImGui::Begin("Details##UIEditor", &m_ShowDetails);
         ImGui::TextDisabled("DETAILS");
         ImGui::Separator();
         if (m_SelectedWidget)
             DrawInspector(*m_SelectedWidget);
         else
             ImGui::TextDisabled("Select a widget to edit its properties.");
-        ImGui::EndChild();
+        ImGui::End();
         ImGui::PopStyleColor();
     }
 
