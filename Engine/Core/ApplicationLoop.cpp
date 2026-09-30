@@ -174,6 +174,7 @@ void Application::Run()
             if (existingDocument >= 0)
             {
                 m_ActiveUIDocument = existingDocument;
+                m_UIDocuments[m_ActiveUIDocument].editor->Focus();
             }
             else
             {
@@ -186,6 +187,7 @@ void Application::Run()
                 {
                     m_UIDocuments.push_back(std::move(document));
                     m_ActiveUIDocument = static_cast<int>(m_UIDocuments.size()) - 1;
+                    m_UIDocuments[m_ActiveUIDocument].editor->Focus();
                 }
                 else
                 {
@@ -212,7 +214,10 @@ void Application::Run()
             ImGui::PushID(i);
             const std::string label = std::filesystem::path(m_UIDocuments[i].path).filename().string();
             if (ImGui::Selectable(label.c_str(), m_ActiveUIDocument == i, 0, ImVec2(160.0f, 0.0f)))
+            {
                 m_ActiveUIDocument = i;
+                m_UIDocuments[i].editor->Focus();
+            }
             ImGui::PopID();
         }
         ImGui::End();
