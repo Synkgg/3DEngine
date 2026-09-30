@@ -86,6 +86,8 @@ bool Application::Initialize()
     // through UI.Load(), rather than inheriting whichever asset was open in
     // the Widget Blueprint editor.
     m_UICanvas.Clear();
+    m_UIEditor.SetVisible(false);
+    m_Editor.SetUIEditor(&m_UIEditor);
     m_Audio.Initialize();
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
     m_Runtime.SetAudioEngine(&m_Audio);
@@ -190,7 +192,6 @@ void Application::ReturnToProjectHub()
     m_Renderer.GetUIRenderer().Clear();
     m_UICanvas.Clear();
     m_UIEditor.SetVisible(false);
-    m_Editor.SetUIEditor(&m_UIEditor);
 
     // The Hub owns no scene. Drop project entities/resources from the editor
     // workspace, then use the compatibility workspace until another project
