@@ -278,11 +278,23 @@ namespace
         if(removable)
         {
             ImGui::SetCursorScreenPos(ImVec2(p.x+width-menuWidth,p.y));
-            ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(0,0,0,0));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(0.225f,0.235f,0.248f,1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(0.255f,0.265f,0.280f,1.0f));
-            if(ImGui::Button("...",ImVec2(menuWidth,height))) ImGui::OpenPopup("##ComponentMenu");
-            ImGui::PopStyleColor(3);
+            ImGui::InvisibleButton("##ComponentMenuButton",ImVec2(menuWidth,height));
+            const bool menuHovered=ImGui::IsItemHovered();
+            if(ImGui::IsItemClicked()) ImGui::OpenPopup("##ComponentMenu");
+
+            // Borderless vertical ellipsis. Only the dots are visible; hover
+            // gets a subtle background so the hit target remains discoverable.
+            if(menuHovered)
+                draw->AddRectFilled(
+                    ImVec2(p.x+width-menuWidth+2.0f,p.y+2.0f),
+                    ImVec2(p.x+width-2.0f,p.y+height-2.0f),
+                    ImGui::GetColorU32(ImVec4(0.225f,0.235f,0.248f,1.0f)),2.0f);
+            const float dotX=p.x+width-menuWidth*0.5f;
+            const float dotY=p.y+height*0.5f;
+            const ImU32 dotColor=ImGui::GetColorU32(ImGuiCol_Text);
+            draw->AddCircleFilled(ImVec2(dotX,dotY-4.0f),1.3f,dotColor);
+            draw->AddCircleFilled(ImVec2(dotX,dotY),1.3f,dotColor);
+            draw->AddCircleFilled(ImVec2(dotX,dotY+4.0f),1.3f,dotColor);
             if(ImGui::BeginPopup("##ComponentMenu"))
             {
                 if(ImGui::MenuItem("Remove Component")) { result.removeRequested=true; g_RemoveComponentRequest=label; }
