@@ -153,15 +153,13 @@ void Application::Run()
             continue;
         }
 
-        // Never let editor asset-open requests replace the live runtime
-        // canvas. Outside Play mode, consume the request before drawing the
-        // Widget Blueprint so it opens immediately in the same frame.
-        if (!m_Runtime.IsRunning())
+        // Widget Blueprint owns a separate editing canvas, so it can remain
+        // open while Play mode uses the runtime UI canvas independently.
         {
             const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
             if (!openedUIAsset.empty())
             {
-                if (!m_UIEditor.OpenAsset(m_UICanvas, openedUIAsset))
+                if (!m_UIEditor.OpenAsset(m_UIEditorCanvas, openedUIAsset))
                 {
                     Logger::Error(
                         std::string("Failed to open UI asset: ") +
@@ -169,7 +167,7 @@ void Application::Run()
                 }
             }
 
-            m_UIEditor.Draw(m_UICanvas, m_Renderer);
+            m_UIEditor.Draw(m_UIEditorCanvas, m_Renderer);
         }
 
         if (m_Editor.IsPlaying() &&
