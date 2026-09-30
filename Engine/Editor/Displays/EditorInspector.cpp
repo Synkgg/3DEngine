@@ -1,5 +1,4 @@
 #include "../Editor.h"
-#include "../UI/UIEditor.h"
 
 #include "../../Scene/Scene.h"
 #include "../../Scene/PrefabSerializer.h"
@@ -329,13 +328,6 @@ void Editor::RenderInspector(
 
     ImGui::TextDisabled("DETAILS");
     ImGui::Separator();
-
-    if (m_UIEditor && m_UIEditor->HasSelectedWidget())
-    {
-        m_UIEditor->DrawSelectedInspector();
-        ImGui::End();
-        return;
-    }
 
     if (!m_SelectedEntity.IsValid())
     {
