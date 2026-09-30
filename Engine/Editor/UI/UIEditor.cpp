@@ -80,6 +80,7 @@ void UIEditor::Draw(
     if (m_ShowPalette)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
         ImGui::Begin("Palette##UIEditor", &m_ShowPalette);
         ImGui::TextDisabled("PALETTE");
         ImGui::Separator();
@@ -122,6 +123,7 @@ void UIEditor::Draw(
     if (m_ShowHierarchy)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
+        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
         ImGui::Begin("Hierarchy##UIEditor", &m_ShowHierarchy);
         ImGui::TextDisabled("HIERARCHY");
         ImGui::Separator();
@@ -136,6 +138,7 @@ void UIEditor::Draw(
     }
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(17, 18, 21, 255));
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
     ImGui::Begin("Designer##UIEditor");
     DrawDesigner(canvas);
     ImGui::End();
@@ -144,6 +147,7 @@ void UIEditor::Draw(
     if (m_ShowDetails)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
         ImGui::Begin("Details##UIEditor", &m_ShowDetails);
         ImGui::TextDisabled("DETAILS");
         ImGui::Separator();
