@@ -202,6 +202,40 @@ namespace
         return changed;
     }
 
+    bool DrawTransformVector3(const char* label, float values[3], float speed)
+    {
+        ImGui::PushID(label);
+        const float labelWidth = 72.0f;
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(label);
+        ImGui::SameLine(labelWidth);
+
+        const float spacing = 4.0f;
+        const float axisLabelWidth = 12.0f;
+        const float available = ImGui::GetContentRegionAvail().x;
+        const float fieldWidth = std::max(36.0f, (available - (axisLabelWidth * 3.0f) - (spacing * 5.0f)) / 3.0f);
+        const ImVec4 axisColors[3] = {
+            ImVec4(0.90f, 0.28f, 0.28f, 1.0f),
+            ImVec4(0.32f, 0.78f, 0.38f, 1.0f),
+            ImVec4(0.30f, 0.52f, 0.95f, 1.0f)
+        };
+        const char* axes[3] = { "X", "Y", "Z" };
+
+        bool changed = false;
+        for (int i = 0; i < 3; ++i)
+        {
+            if (i > 0) ImGui::SameLine(0.0f, spacing);
+            ImGui::TextColored(axisColors[i], "%s", axes[i]);
+            ImGui::SameLine(0.0f, spacing);
+            ImGui::SetNextItemWidth(fieldWidth);
+            ImGui::PushID(i);
+            changed |= ImGui::DragFloat("##Value", &values[i], speed, 0.0f, 0.0f, "%.3f");
+            ImGui::PopID();
+        }
+        ImGui::PopID();
+        return changed;
+    }
+
 }
 
 void Editor::RenderInspector(
@@ -320,7 +354,6 @@ void Editor::RenderInspector(
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.220f,0.228f,0.238f,1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.240f,0.250f,0.265f,1.0f));
 
-    ImGui::Separator();
     /*
      * Transform
      */
@@ -350,10 +383,7 @@ void Editor::RenderInspector(
             position.z
         };
 
-        if (ImGui::DragFloat3(
-            "Position",
-            positionValues,
-            0.05f))
+        if (DrawTransformVector3("Position", positionValues, 0.05f))
         {
             position.x =
                 positionValues[0];
@@ -377,10 +407,7 @@ void Editor::RenderInspector(
                 RadiansToDegrees
         };
 
-        if (ImGui::DragFloat3(
-            "Rotation",
-            rotationValues,
-            1.0f))
+        if (DrawTransformVector3("Rotation", rotationValues, 1.0f))
         {
             rotation.x =
                 rotationValues[0] *
@@ -402,10 +429,7 @@ void Editor::RenderInspector(
             scale.z
         };
 
-        if (ImGui::DragFloat3(
-            "Scale",
-            scaleValues,
-            0.05f))
+        if (DrawTransformVector3("Scale", scaleValues, 0.05f))
         {
             scale.x =
                 scaleValues[0];
@@ -418,7 +442,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     /*
      * Mesh
      */
@@ -524,7 +547,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     /*
      * Color
      */
@@ -582,7 +604,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     /*
      * Texture
      */
@@ -622,11 +643,9 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
     if(playerStart&&ImGui::CollapsingHeader("Player Start",ImGuiTreeNodeFlags_DefaultOpen)){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
-    ImGui::Separator();
     /*
      * Pawn
      */
@@ -646,7 +665,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     /*
      * Character Controller
      */
@@ -707,7 +725,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
@@ -729,7 +746,6 @@ void Editor::RenderInspector(
     /*
      * Directional Light
      */
-    ImGui::Separator();
     LightComponent* light =
         scene.GetComponent<
         LightComponent
@@ -826,7 +842,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     MaterialComponent* material =
         scene.GetComponent<MaterialComponent>(m_SelectedEntity);
 
@@ -843,7 +858,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     /*
      * Collider
      */
@@ -907,7 +921,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     InteractableComponent* interactable =
         scene.GetComponent<InteractableComponent>(m_SelectedEntity);
 
@@ -949,7 +962,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Separator();
     /*
   * Scripts
   */
