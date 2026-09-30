@@ -139,10 +139,28 @@ void Application::Run()
             imguiIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         }
 
-        // Keep the scene editor alive even while Widget Blueprint is open.
-        // Widget Blueprint is an independent editor surface layered into the
-        // same ImGui application, so neither workspace loses its state.
+        // Persistent editor shell: scene/map and asset editors are document
+        // pages. The scene editor stays alive while another page is active.
         m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
+
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->WorkPos, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetMainViewport()->WorkSize.x, 34.0f), ImGuiCond_Always);
+        ImGui::Begin("##EditorDocuments", nullptr,
+            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking);
+        std::string sceneLabel = m_Editor.GetSceneFilePath().empty()
+            ? "Scene"
+            : std::filesystem::path(m_Editor.GetSceneFilePath()).filename().string();
+        if (ImGui::Selectable(sceneLabel.c_str(), !m_UIEditorPageActive, 0, ImVec2(140.0f, 0.0f)))
+            m_UIEditorPageActive = false;
+        if (m_UIEditor.IsVisible())
+        {
+            ImGui::SameLine();
+            std::string uiLabel = std::filesystem::path(m_UIEditor.GetAssetPath()).filename().string();
+            if (ImGui::Selectable(uiLabel.c_str(), m_UIEditorPageActive, 0, ImVec2(160.0f, 0.0f)))
+                m_UIEditorPageActive = true;
+        }
+        ImGui::End();
 
         if (m_Editor.ConsumeProjectHubRequest())
         {
@@ -165,9 +183,14 @@ void Application::Run()
                         std::string("Failed to open UI asset: ") +
                         openedUIAsset);
                 }
+                else
+                {
+                    m_UIEditorPageActive = true;
+                }
             }
 
-            m_UIEditor.Draw(m_UIEditorCanvas, m_Renderer);
+            if (m_UIEditorPageActive)
+                m_UIEditor.Draw(m_UIEditorCanvas, m_Renderer);
         }
 
         if (m_Editor.IsPlaying() &&
