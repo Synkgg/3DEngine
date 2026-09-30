@@ -47,6 +47,7 @@ public:
 
     std::string ConsumeOpenedUIAsset();
     void SetUIEditor(UIEditor* uiEditor) { m_UIEditor = uiEditor; }
+    void RenderDetails(Renderer& renderer, Scene& scene);
 
     ProjectSettings& GetProjectSettings() { return m_ProjectSettings; }
     const ProjectSettings& GetProjectSettings() const { return m_ProjectSettings; }
