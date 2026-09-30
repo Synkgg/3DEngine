@@ -63,8 +63,13 @@ void UIEditor::Draw(
 
     m_Renderer = &renderer;
 
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->WorkPos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(viewport->WorkSize, ImGuiCond_Always);
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Widget Blueprint");
+    ImGui::Begin("Widget Blueprint", nullptr,
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::PopStyleVar();
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 29, 255));
@@ -808,6 +813,13 @@ void UIEditor::DrawToolbar(
 {
     const float width = ImGui::GetContentRegionAvail().x;
     const bool compact = width < 900.0f;
+
+    if (ImGui::Button("< Scene"))
+    {
+        SetVisible(false);
+        return;
+    }
+    ImGui::SameLine();
 
     if (ImGui::Button("Open"))
         ImGui::OpenPopup("SelectUIAsset");
