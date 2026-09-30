@@ -342,7 +342,12 @@ void UIEditor::DrawHierarchy(
     }
 }
 
-void UIEditor::DrawSelectedInspector()\n{\n    if (m_SelectedWidget) DrawInspector(*m_SelectedWidget);\n}\n\nvoid UIEditor::DrawInspector(
+void UIEditor::DrawSelectedInspector()
+{
+    if (m_SelectedWidget) DrawInspector(*m_SelectedWidget);
+}
+
+void UIEditor::DrawInspector(
     UIWidget& widget)
 {
     char nameBuffer[256];
@@ -1375,7 +1380,8 @@ void UIEditor::DrawWidget(
             const std::string& previewText = text->GetText();
             for (std::size_t i = 0; i <= previewText.size(); ++i)
             {
-                if (i == previewText.size() || previewText[i] == '\n')
+                if (i == previewText.size() || previewText[i] == '
+')
                 {
                     drawList->AddText(
                         previewFont,
