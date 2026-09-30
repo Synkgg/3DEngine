@@ -190,6 +190,7 @@ void Application::ReturnToProjectHub()
     m_Renderer.GetUIRenderer().Clear();
     m_UICanvas.Clear();
     m_UIEditor.SetVisible(false);
+    m_Editor.SetUIEditor(&m_UIEditor);
 
     // The Hub owns no scene. Drop project entities/resources from the editor
     // workspace, then use the compatibility workspace until another project
