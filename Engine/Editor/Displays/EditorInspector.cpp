@@ -330,7 +330,14 @@ void Editor::RenderInspector(
     ImGui::TextDisabled("DETAILS");
     ImGui::Separator();
 
-    if (m_UIEditor && m_UIEditor->HasSelectedWidget())\n    {\n        m_UIEditor->DrawSelectedInspector();\n        ImGui::End();\n        return;\n    }\n\n    if (!m_SelectedEntity.IsValid())
+    if (m_UIEditor && m_UIEditor->HasSelectedWidget())
+    {
+        m_UIEditor->DrawSelectedInspector();
+        ImGui::End();
+        return;
+    }
+
+    if (!m_SelectedEntity.IsValid())
     {
         m_NameEditEntityID = 0;
         m_NameEditBuffer[0] = '\0';
@@ -993,7 +1000,9 @@ void Editor::RenderInspector(
                             {
                                 const std::size_t equals = declaration.find('=');
                                 if (equals == std::string::npos) continue;
-                                auto trim=[](std::string value){ const auto first=value.find_first_not_of(" \t\r\n"); const auto last=value.find_last_not_of(" \t\r\n"); return first==std::string::npos?std::string():value.substr(first,last-first+1); };
+                                auto trim=[](std::string value){ const auto first=value.find_first_not_of(" \t\r
+"); const auto last=value.find_last_not_of(" \t\r
+"); return first==std::string::npos?std::string():value.substr(first,last-first+1); };
                                 const std::string propertyName=trim(declaration.substr(0,equals));
                                 const std::string defaultValue=trim(declaration.substr(equals+1));
                                 if(propertyName.empty()||defaultValue.empty()) continue;
