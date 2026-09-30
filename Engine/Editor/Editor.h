@@ -16,7 +16,6 @@
 
 class Renderer;
 class Scene;
-class UIEditor;
 
 class Editor
 {
@@ -46,7 +45,6 @@ public:
     bool OpenScene(Scene& scene, const std::filesystem::path& path);
 
     std::string ConsumeOpenedUIAsset();
-    void SetUIEditor(UIEditor* uiEditor) { m_UIEditor = uiEditor; }
     void RenderDetails(Renderer& renderer, Scene& scene);
 
     ProjectSettings& GetProjectSettings() { return m_ProjectSettings; }
@@ -103,7 +101,6 @@ private:
     bool m_ProjectHubRequested = false;
 
     Entity m_SelectedEntity;
-    UIEditor* m_UIEditor = nullptr;
 
     char m_NameEditBuffer[256]{};
     std::uint32_t m_NameEditEntityID = 0;
