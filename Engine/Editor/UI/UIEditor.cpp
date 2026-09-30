@@ -147,7 +147,7 @@ void UIEditor::Draw(
         std::string hierarchyQuery=m_HierarchySearch;
         std::transform(hierarchyQuery.begin(),hierarchyQuery.end(),hierarchyQuery.begin(),
             [](unsigned char c){return static_cast<char>(std::tolower(c));});
-        if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot(), hierarchyQuery);
+        if (canvas.GetRoot()) DrawHierarchy(canvas, *canvas.GetRoot(), hierarchyQuery);
         ImGui::EndChild();
         ImGui::PopStyleColor();
         sameLine();
@@ -215,6 +215,7 @@ void UIEditor::Draw(
 }
 
 void UIEditor::DrawHierarchy(
+    UICanvas& canvas,
     UIWidget& widget,
     const std::string& search)
 {
@@ -288,19 +289,13 @@ void UIEditor::DrawHierarchy(
             RenameSelected();
         if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
         {
-            if (UICanvas* canvas = dynamic_cast<UICanvas*>(widget.GetRoot()))
-            {
-                PushHistory(*canvas);
-                DuplicateSelected(*canvas);
-            }
+            PushHistory(canvas);
+            DuplicateSelected(canvas);
         }
         if (ImGui::MenuItem("Delete", "Del", false, widget.GetParent() != nullptr))
         {
-            if (UICanvas* canvas = dynamic_cast<UICanvas*>(widget.GetRoot()))
-            {
-                PushHistory(*canvas);
-                DeleteSelected(*canvas);
-            }
+            PushHistory(canvas);
+            DeleteSelected(canvas);
         }
         ImGui::EndPopup();
     }
@@ -351,6 +346,7 @@ void UIEditor::DrawHierarchy(
             if (child)
             {
                 DrawHierarchy(
+                    canvas,
                     *child,
                     search
                 );
