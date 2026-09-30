@@ -22,10 +22,12 @@ public:
     void SetVisible(bool visible);
     bool IsVisible() const { return m_Visible; }
     const std::string& GetAssetPath() const { return m_UIAssetPath; }
+    void Focus() { m_FocusRequested = true; }
 
 private:
     UIWidget* m_SelectedWidget = nullptr;
     bool m_Visible = false;
+    bool m_FocusRequested = false;
     Renderer* m_Renderer = nullptr;
     std::string m_UIAssetPath = "Assets/UI/Main.ui";
 
