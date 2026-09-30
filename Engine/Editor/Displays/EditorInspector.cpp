@@ -237,6 +237,8 @@ namespace
         return changed;
     }
 
+    std::string g_RemoveComponentRequest;
+
     struct ComponentHeaderResult
     {
         bool open = true;
@@ -283,7 +285,7 @@ namespace
             ImGui::PopStyleColor(3);
             if(ImGui::BeginPopup("##ComponentMenu"))
             {
-                if(ImGui::MenuItem("Remove Component")) result.removeRequested=true;
+                if(ImGui::MenuItem("Remove Component")) { result.removeRequested=true; g_RemoveComponentRequest=label; }
                 ImGui::EndPopup();
             }
         }
@@ -593,22 +595,6 @@ void Editor::RenderInspector(
                 mesh->rotation.y = meshRotationDegrees[1] * DegreesToRadians;
                 mesh->rotation.z = meshRotationDegrees[2] * DegreesToRadians;
             }
-
-            ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Mesh"))
-            {
-                scene.RemoveComponent<
-                    MeshComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed MeshComponent."
-                );
-            }
         }
     }
 
@@ -648,22 +634,6 @@ void Editor::RenderInspector(
                 color->a =
                     colorValues[3];
             }
-
-            ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Color"))
-            {
-                scene.RemoveComponent<
-                    ColorComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed ColorComponent."
-                );
-            }
         }
     }
 
@@ -685,28 +655,12 @@ void Editor::RenderInspector(
                 if (!texture->path.empty())
                     Logger::Info(std::string("Assigned texture: ") + texture->path);
             }
-
-            ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Texture"))
-            {
-                scene.RemoveComponent<
-                    TextureComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed TextureComponent."
-                );
-            }
         }
     }
 
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
-    if(playerStart&&DrawComponentHeader("Player Start").open){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
+    if(playerStart&&DrawComponentHeader("Player Start").open){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");}
     /*
      * Pawn
      */
@@ -717,12 +671,6 @@ void Editor::RenderInspector(
         {
             ImGui::TextWrapped("Generic controllable entity. Input, camera and gameplay behavior are project-defined.");
             ImGui::Text("Controller ID: %u", pawn->controllerID);
-            ImGui::Spacing();
-            if (ImGui::Button("Remove Pawn"))
-            {
-                scene.RemoveComponent<PawnComponent>(m_SelectedEntity);
-                Logger::Info("Removed PawnComponent.");
-            }
         }
     }
 
@@ -765,22 +713,6 @@ void Editor::RenderInspector(
                 "Vertical Velocity: %.2f",
                 controller->verticalVelocity
             );
-
-            ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Character Controller"))
-            {
-                scene.RemoveComponent<
-                    CharacterControllerComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed CharacterControllerComponent."
-                );
-            }
         }
     }
 
@@ -798,7 +730,6 @@ void Editor::RenderInspector(
                     if (other.GetID() != m_SelectedEntity.GetID())
                         if (auto* otherCamera = scene.GetComponent<CameraComponent>(other)) otherCamera->active = false;
             ImGui::TextWrapped("The active Camera entity supplies the runtime view using its world transform.");
-            if (ImGui::Button("Remove Camera")) scene.RemoveComponent<CameraComponent>(m_SelectedEntity);
         }
     }
 
@@ -880,22 +811,6 @@ void Editor::RenderInspector(
             }
 
             ImGui::Checkbox("Cast Shadows", &light->castShadows);
-
-            ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Light"))
-            {
-                scene.RemoveComponent<
-                    LightComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed LightComponent."
-                );
-            }
         }
     }
 
@@ -910,8 +825,6 @@ void Editor::RenderInspector(
             ImGui::SliderFloat("Roughness", &material->roughness, 0.04f, 1.0f);
             ImGui::SliderFloat("Ambient Occlusion", &material->ambientOcclusion, 0.0f, 1.0f);
             ImGui::DragFloat("Emissive", &material->emissive, 0.05f, 0.0f, 20.0f);
-            if (ImGui::Button("Remove Material"))
-                scene.RemoveComponent<MaterialComponent>(m_SelectedEntity);
         }
     }
 
@@ -957,22 +870,6 @@ void Editor::RenderInspector(
                 0.01f,
                 100.0f
             );
-
-            ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Collider"))
-            {
-                scene.RemoveComponent<
-                    ColliderComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed ColliderComponent."
-                );
-            }
         }
     }
 
@@ -1241,23 +1138,25 @@ void Editor::RenderInspector(
 
                 ImGui::EndPopup();
             }
-
-            ImGui::Spacing();
-
-            if (ImGui::Button(
-                "Remove Script Component"))
-            {
-                scene.RemoveComponent<
-                    ScriptComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Removed ScriptComponent."
-                );
-            }
         }
+    }
+
+    if (!g_RemoveComponentRequest.empty())
+    {
+        const std::string remove = g_RemoveComponentRequest;
+        g_RemoveComponentRequest.clear();
+        if (remove == "Mesh") scene.RemoveComponent<MeshComponent>(m_SelectedEntity);
+        else if (remove == "Color") scene.RemoveComponent<ColorComponent>(m_SelectedEntity);
+        else if (remove == "Texture") scene.RemoveComponent<TextureComponent>(m_SelectedEntity);
+        else if (remove == "Player Start") scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);
+        else if (remove == "Pawn") scene.RemoveComponent<PawnComponent>(m_SelectedEntity);
+        else if (remove == "Character Controller") scene.RemoveComponent<CharacterControllerComponent>(m_SelectedEntity);
+        else if (remove == "Camera") scene.RemoveComponent<CameraComponent>(m_SelectedEntity);
+        else if (remove == "Light") scene.RemoveComponent<LightComponent>(m_SelectedEntity);
+        else if (remove == "Material") scene.RemoveComponent<MaterialComponent>(m_SelectedEntity);
+        else if (remove == "Collider") scene.RemoveComponent<ColliderComponent>(m_SelectedEntity);
+        else if (remove == "Interactable") scene.RemoveComponent<InteractableComponent>(m_SelectedEntity);
+        else if (remove == "Script") scene.RemoveComponent<ScriptComponent>(m_SelectedEntity);
     }
 
     ImGui::PopStyleColor(5);
