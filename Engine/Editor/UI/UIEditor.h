@@ -59,6 +59,7 @@ private:
     Vec2 m_DragStartSize;
 
     void DrawHierarchy(
+        UICanvas& canvas,
         UIWidget& widget,
         const std::string& search = ""
     );
