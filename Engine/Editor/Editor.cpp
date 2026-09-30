@@ -303,6 +303,11 @@ void Editor::Render(
         scene
     );
 
+    RenderInspector(
+        renderer,
+        scene
+    );
+
     RenderConsole();
 
     RenderContentBrowser(
@@ -310,11 +315,6 @@ void Editor::Render(
         scene,
         iconFont
     );
-}
-
-void Editor::RenderDetails(Renderer& renderer, Scene& scene)
-{
-    RenderInspector(renderer, scene);
 }
 
 ImVec2 Editor::GetViewportPosition() const
