@@ -78,5 +78,6 @@ private:
     Runtime m_Runtime;
 
     UICanvas m_UICanvas;
+    UICanvas m_UIEditorCanvas;
     UIEditor m_UIEditor;
 };
