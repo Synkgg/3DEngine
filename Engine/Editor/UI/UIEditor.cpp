@@ -144,6 +144,20 @@ void UIEditor::Draw(
     ImGui::End();
     ImGui::PopStyleColor();
 
+    if (m_ShowDetails)
+    {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
+        ImGui::Begin("Details##UIEditor", &m_ShowDetails);
+        ImGui::TextDisabled("DETAILS");
+        ImGui::Separator();
+        if (m_SelectedWidget)
+            DrawInspector(*m_SelectedWidget);
+        else
+            ImGui::TextDisabled("Select a widget to edit its properties.");
+        ImGui::End();
+        ImGui::PopStyleColor();
+    }
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
@@ -326,11 +340,6 @@ void UIEditor::DrawHierarchy(
 
         ImGui::TreePop();
     }
-}
-
-void UIEditor::DrawSelectedInspector()
-{
-    if (m_SelectedWidget) DrawInspector(*m_SelectedWidget);
 }
 
 void UIEditor::DrawInspector(
@@ -821,6 +830,7 @@ void UIEditor::DrawToolbar(
     {
         ImGui::MenuItem("Palette", nullptr, &m_ShowPalette);
         ImGui::MenuItem("Hierarchy", nullptr, &m_ShowHierarchy);
+        ImGui::MenuItem("Details", nullptr, &m_ShowDetails);
         ImGui::EndPopup();
     }
 
