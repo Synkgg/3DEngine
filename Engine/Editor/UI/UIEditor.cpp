@@ -1380,8 +1380,7 @@ void UIEditor::DrawWidget(
             const std::string& previewText = text->GetText();
             for (std::size_t i = 0; i <= previewText.size(); ++i)
             {
-                if (i == previewText.size() || previewText[i] == '
-')
+                if (i == previewText.size() || previewText[i] == '\\n')
                 {
                     drawList->AddText(
                         previewFont,
