@@ -313,9 +313,9 @@ void Editor::RenderInspector(
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 9.0f));
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.27f,0.28f,0.30f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.33f,0.34f,0.37f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.36f,0.37f,0.40f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.30f,0.31f,0.33f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.36f,0.37f,0.40f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.40f,0.41f,0.44f,1.0f));
 
     /*
      * Transform
