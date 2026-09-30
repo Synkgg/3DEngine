@@ -827,36 +827,44 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             !scene.HasComponent<PlayerStartComponent>(entity) &&
             !scene.HasComponent<CharacterControllerComponent>(entity) &&
             !scene.HasComponent<LightComponent>(entity) &&
+            !scene.HasComponent<CameraComponent>(entity) &&
             !scene.HasComponent<ColliderComponent>(entity) &&
             !scene.HasComponent<TextureComponent>(entity);
 
-        bool open = false;
+        // Entity type is communicated by its icon; the tree arrow only means
+        // that the entity has children. Empty entities remain folder/group nodes.
+        const char* entityIcon = ICON_FA_CUBE;
+        ImVec4 iconColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
         if (isGroup)
         {
-            const ImVec4 folderColor(1.0f, 0.75f, 0.20f, 1.0f);
-
-            // Draw the icon with the icon font, but keep one invisible TreeNode
-            // as the row's interaction owner.
-            // "##" in the formatted label still gets rendered by TreeNodeEx,
-            // so use an empty visible label and draw the folder contents ourselves.
-            open = ImGui::TreeNodeEx("##EntityNode", flags, "%s", "");
-            const ImVec2 rowMin = ImGui::GetItemRectMin();
-            ImVec2 textPos(rowMin.x + ImGui::GetTreeNodeToLabelSpacing(), rowMin.y);
-
-            if (iconFont != nullptr)
-            {
-                const float iconSize = ImGui::GetFontSize();
-                ImGui::GetWindowDrawList()->AddText(iconFont, iconSize, textPos,
-                    ImGui::GetColorU32(folderColor), ICON_FA_FOLDER);
-                textPos.x += iconSize + ImGui::GetStyle().ItemInnerSpacing.x;
-            }
-
-            ImGui::GetWindowDrawList()->AddText(textPos, ImGui::GetColorU32(folderColor), label.c_str());
+            entityIcon = ICON_FA_FOLDER;
+            iconColor = ImVec4(1.0f, 0.75f, 0.20f, 1.0f);
         }
-        else
+        else if (scene.HasComponent<CameraComponent>(entity))
+            entityIcon = ICON_FA_CAMERA;
+        else if (scene.HasComponent<LightComponent>(entity))
+            entityIcon = ICON_FA_LIGHTBULB;
+        else if (scene.HasComponent<PlayerStartComponent>(entity))
+            entityIcon = ICON_FA_LOCATION_DOT;
+        else if (scene.HasComponent<PawnComponent>(entity))
+            entityIcon = ICON_FA_PERSON;
+
+        bool open = ImGui::TreeNodeEx("##EntityNode", flags, "%s", "");
+        const ImVec2 rowMin = ImGui::GetItemRectMin();
+        ImVec2 textPos(rowMin.x + ImGui::GetTreeNodeToLabelSpacing(), rowMin.y);
+
+        if (iconFont != nullptr)
         {
-            open = ImGui::TreeNodeEx("##EntityNode", flags, "%s", label.c_str());
+            const float iconSize = ImGui::GetFontSize();
+            ImGui::GetWindowDrawList()->AddText(
+                iconFont, iconSize, textPos, ImGui::GetColorU32(iconColor), entityIcon);
+            textPos.x += iconSize + ImGui::GetStyle().ItemInnerSpacing.x;
         }
+
+        ImGui::GetWindowDrawList()->AddText(
+            textPos,
+            ImGui::GetColorU32(isGroup ? iconColor : ImGui::GetStyleColorVec4(ImGuiCol_Text)),
+            label.c_str());
 
         if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
             m_SelectedEntity = entity;
