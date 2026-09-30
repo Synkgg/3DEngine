@@ -1,4 +1,5 @@
 #include "../Editor.h"
+#include "../UI/UIEditor.h"
 #include "../HierarchyFolder.h"
 
 #include "../../Scene/Scene.h"
@@ -752,7 +753,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 name->name = MakeUniqueName(scene, baseName, entity);
             if (m_SelectedEntity.IsValid())
                 scene.SetParent(entity, m_SelectedEntity, false);
-            m_SelectedEntity = entity;
+            m_SelectedEntity = entity; if (m_UIEditor) m_UIEditor->ClearSelection();
         };
 
         if (ImGui::Selectable("Group / Empty")) createEmpty("Group");
@@ -768,7 +769,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             scene.AddComponent<LightComponent>(entity);
             if (NameComponent* name = scene.GetComponent<NameComponent>(entity))
                 name->name = MakeUniqueName(scene, "Directional Light", entity);
-            m_SelectedEntity = entity;
+            m_SelectedEntity = entity; if (m_UIEditor) m_UIEditor->ClearSelection();
         }
         if (ImGui::Selectable("Player Start")) { Entity entity=scene.CreateEntity();scene.AddComponent<PlayerStartComponent>(entity);if(auto* name=scene.GetComponent<NameComponent>(entity))name->name=MakeUniqueName(scene,"Player Start",entity);m_SelectedEntity=entity; }
         if (ImGui::Selectable("Camera")) { Entity parent=m_SelectedEntity;Entity entity=scene.CreateEntity();scene.AddComponent<CameraComponent>(entity);if(auto* name=scene.GetComponent<NameComponent>(entity))name->name=MakeUniqueName(scene,"Camera",entity);if(parent.IsValid())scene.SetParent(entity,parent,false);m_SelectedEntity=entity; }
@@ -780,7 +781,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             scene.AddComponent<ColliderComponent>(entity);
             if (NameComponent* name = scene.GetComponent<NameComponent>(entity))
                 name->name = MakeUniqueName(scene, "Pawn", entity);
-            m_SelectedEntity = entity;
+            m_SelectedEntity = entity; if (m_UIEditor) m_UIEditor->ClearSelection();
         }
         ImGui::EndPopup();
     }
@@ -867,7 +868,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             label.c_str());
 
         if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
-            m_SelectedEntity = entity;
+            m_SelectedEntity = entity; if (m_UIEditor) m_UIEditor->ClearSelection();
 
         if (ImGui::BeginDragDropSource())
         {
@@ -898,7 +899,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 if (NameComponent* childName = scene.GetComponent<NameComponent>(child))
                     childName->name = MakeUniqueName(scene, "Group", child);
                 scene.SetParent(child, entity, false);
-                m_SelectedEntity = child;
+                m_SelectedEntity = child; if (m_UIEditor) m_UIEditor->ClearSelection();
             }
             if (ImGui::MenuItem("Duplicate"))
             {
@@ -907,7 +908,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 {
                     if (NameComponent* copyName = scene.GetComponent<NameComponent>(copy))
                         copyName->name = MakeUniqueName(scene, copyName->name, copy);
-                    m_SelectedEntity = copy;
+                    m_SelectedEntity = copy; if (m_UIEditor) m_UIEditor->ClearSelection();
                 }
             }
             if (ImGui::MenuItem("Create Prefab"))
