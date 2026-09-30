@@ -314,14 +314,11 @@ void Editor::RenderInspector(
     // Inspector-only component surfaces: strong headers, dark field bodies and
     // visible outlines create distinct cards without changing the global theme.
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f));
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.175f,0.182f,0.192f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.215f,0.225f,0.238f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.235f,0.250f,0.268f,1.0f));
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 4.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 14.0f);
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.205f,0.212f,0.222f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.235f,0.245f,0.258f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.255f,0.270f,0.290f,1.0f));
 
     /*
      * Transform
@@ -419,10 +416,6 @@ void Editor::RenderInspector(
                 scaleValues[2];
         }
     }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
 
     /*
      * Mesh
@@ -529,10 +522,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
     /*
      * Color
      */
@@ -590,10 +579,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
     /*
      * Texture
      */
@@ -633,17 +618,9 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
     if(playerStart&&ImGui::CollapsingHeader("Player Start",ImGuiTreeNodeFlags_DefaultOpen)){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
     /*
      * Pawn
      */
@@ -662,10 +639,6 @@ void Editor::RenderInspector(
             }
         }
     }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
 
     /*
      * Character Controller
@@ -727,10 +700,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
@@ -752,10 +721,6 @@ void Editor::RenderInspector(
     /*
      * Directional Light
      */
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
     LightComponent* light =
         scene.GetComponent<
         LightComponent
@@ -852,10 +817,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
     MaterialComponent* material =
         scene.GetComponent<MaterialComponent>(m_SelectedEntity);
 
@@ -871,10 +832,6 @@ void Editor::RenderInspector(
                 scene.RemoveComponent<MaterialComponent>(m_SelectedEntity);
         }
     }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
 
     /*
      * Collider
@@ -938,10 +895,6 @@ void Editor::RenderInspector(
             }
         }
     }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
 
     InteractableComponent* interactable =
         scene.GetComponent<InteractableComponent>(m_SelectedEntity);
@@ -1232,16 +1185,7 @@ void Editor::RenderInspector(
     }
 
     ImGui::PopStyleColor(3);
-    ImGui::PopStyleVar(2);
-
-    // A clear end-cap separates the component stack from actions below it.
-    ImGui::Spacing();
-    const ImVec2 dividerStart = ImGui::GetCursorScreenPos();
-    ImGui::GetWindowDrawList()->AddRectFilled(
-        dividerStart,
-        ImVec2(dividerStart.x + ImGui::GetContentRegionAvail().x, dividerStart.y + 2.0f),
-        ImGui::GetColorU32(ImVec4(0.30f,0.31f,0.33f,1.0f)));
-    ImGui::Dummy(ImVec2(0.0f, 7.0f));
+    ImGui::PopStyleVar(3);
 
     /*
      * Add Component
