@@ -39,6 +39,8 @@ private:
     bool m_ShowDetails = true;
     bool m_ShowWidgetBounds = true;
     char m_HierarchySearch[96]{};
+    char m_RenameBuffer[256]{};
+    bool m_RenameRequested = false;
     std::vector<std::string> m_UndoStack;
     std::vector<std::string> m_RedoStack;
     static constexpr std::size_t MaxHistory = 64;
