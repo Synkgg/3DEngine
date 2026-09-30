@@ -1196,330 +1196,64 @@ void Editor::RenderInspector(
         );
     }
 
-    if (ImGui::BeginPopup(
-        "AddComponentPopup"))
+    ImGui::SetNextWindowSize(ImVec2(380.0f, 440.0f), ImGuiCond_Appearing);
+    if (ImGui::BeginPopup("AddComponentPopup"))
     {
-        mesh =
-            scene.GetComponent<
-            MeshComponent
-            >(
-                m_SelectedEntity
-            );
+        static char search[128] = {};
+        if (ImGui::IsWindowAppearing()) { search[0] = '\0'; ImGui::SetKeyboardFocusHere(); }
+        ImGui::TextDisabled("ADD COMPONENT");
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputTextWithHint("##ComponentSearch", "Search components...", search, sizeof(search));
+        ImGui::Separator();
 
-        color =
-            scene.GetComponent<
-            ColorComponent
-            >(
-                m_SelectedEntity
-            );
-
-        texture =
-            scene.GetComponent<
-            TextureComponent
-            >(
-                m_SelectedEntity
-            );
-
-        pawn = scene.GetComponent<PawnComponent>(m_SelectedEntity);
-        camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
+        mesh=scene.GetComponent<MeshComponent>(m_SelectedEntity);
+        color=scene.GetComponent<ColorComponent>(m_SelectedEntity);
+        texture=scene.GetComponent<TextureComponent>(m_SelectedEntity);
+        material=scene.GetComponent<MaterialComponent>(m_SelectedEntity);
+        pawn=scene.GetComponent<PawnComponent>(m_SelectedEntity);
+        camera=scene.GetComponent<CameraComponent>(m_SelectedEntity);
         playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
+        controller=scene.GetComponent<CharacterControllerComponent>(m_SelectedEntity);
+        light=scene.GetComponent<LightComponent>(m_SelectedEntity);
+        collider=scene.GetComponent<ColliderComponent>(m_SelectedEntity);
+        script=scene.GetComponent<ScriptComponent>(m_SelectedEntity);
+        interactable=scene.GetComponent<InteractableComponent>(m_SelectedEntity);
 
-        controller =
-            scene.GetComponent<
-            CharacterControllerComponent
-            >(
-                m_SelectedEntity
-            );
+        std::string q=search;
+        std::transform(q.begin(),q.end(),q.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});
+        auto match=[&](const char* label){std::string v=label;std::transform(v.begin(),v.end(),v.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});return q.empty()||v.find(q)!=std::string::npos;};
+        auto item=[&](const char* label,bool exists,auto add){if(!match(label))return;ImGui::PushID(label);if(exists)ImGui::BeginDisabled();if(ImGui::Selectable(label,false,0,ImVec2(0,28))&&!exists){add();ImGui::CloseCurrentPopup();}if(exists)ImGui::EndDisabled();ImGui::PopID();};
+        auto meshAdd=[&](){MeshComponent c;c.primitive=PrimitiveType::None;scene.AddComponent<MeshComponent>(m_SelectedEntity,c);Logger::Info("Added MeshComponent.");};
+        auto materialAdd=[&](){scene.AddComponent<MaterialComponent>(m_SelectedEntity);Logger::Info("Added MaterialComponent.");};
+        auto colorAdd=[&](){scene.AddComponent<ColorComponent>(m_SelectedEntity);Logger::Info("Added ColorComponent.");};
+        auto textureAdd=[&](){scene.AddComponent<TextureComponent>(m_SelectedEntity);Logger::Info("Added TextureComponent.");};
+        auto cameraAdd=[&](){scene.AddComponent<CameraComponent>(m_SelectedEntity);Logger::Info("Added CameraComponent.");};
+        auto lightAdd=[&](){scene.AddComponent<LightComponent>(m_SelectedEntity);Logger::Info("Added LightComponent.");};
+        auto colliderAdd=[&](){scene.AddComponent<ColliderComponent>(m_SelectedEntity);Logger::Info("Added ColliderComponent.");};
+        auto controllerAdd=[&](){scene.AddComponent<CharacterControllerComponent>(m_SelectedEntity);Logger::Info("Added CharacterControllerComponent.");};
+        auto pawnAdd=[&](){scene.AddComponent<PawnComponent>(m_SelectedEntity);Logger::Info("Added PawnComponent.");};
+        auto startAdd=[&](){scene.AddComponent<PlayerStartComponent>(m_SelectedEntity);Logger::Info("Added PlayerStartComponent.");};
+        auto interactAdd=[&](){scene.AddComponent<InteractableComponent>(m_SelectedEntity);Logger::Info("Added InteractableComponent.");};
+        auto scriptAdd=[&](){scene.AddComponent<ScriptComponent>(m_SelectedEntity);Logger::Info("Added ScriptComponent.");};
 
-        light =
-            scene.GetComponent<
-            LightComponent
-            >(
-                m_SelectedEntity
-            );
-
-        collider =
-            scene.GetComponent<
-            ColliderComponent
-            >(
-                m_SelectedEntity
-            );
-
-        script =
-            scene.GetComponent<
-            ScriptComponent
-            >(
-                m_SelectedEntity
-            );
-
-        interactable =
-            scene.GetComponent<
-            InteractableComponent
-            >(
-                m_SelectedEntity
-            );
-
-        /*
-         * Mesh
-         */
-        if (mesh == nullptr)
+        ImGui::BeginChild("##ComponentList",ImVec2(0,0),false);
+        if(!q.empty())
         {
-            if (ImGui::Selectable("Mesh"))
-            {
-                MeshComponent newMesh;
-
-                newMesh.primitive =
-                    PrimitiveType::None;
-
-                scene.AddComponent<
-                    MeshComponent
-                >(
-                    m_SelectedEntity,
-                    newMesh
-                );
-
-                Logger::Info(
-                    "Added MeshComponent."
-                );
-            }
+            item("Mesh",mesh!=nullptr,meshAdd); item("Material",material!=nullptr,materialAdd);
+            item("Color",color!=nullptr,colorAdd); item("Texture",texture!=nullptr,textureAdd);
+            item("Camera",camera!=nullptr,cameraAdd); item("Directional Light",light!=nullptr,lightAdd);
+            item("Collider",collider!=nullptr,colliderAdd); item("Character Controller",controller!=nullptr,controllerAdd);
+            item("Pawn",pawn!=nullptr,pawnAdd); item("Player Start",playerStart!=nullptr,startAdd);
+            item("Interactable",interactable!=nullptr,interactAdd); item("Script",script!=nullptr,scriptAdd);
         }
         else
         {
-            ImGui::BeginDisabled();
-            ImGui::Selectable("Mesh");
-            ImGui::EndDisabled();
+            if(ImGui::BeginMenu("Rendering")){item("Mesh",mesh!=nullptr,meshAdd);item("Material",material!=nullptr,materialAdd);item("Color",color!=nullptr,colorAdd);item("Texture",texture!=nullptr,textureAdd);item("Camera",camera!=nullptr,cameraAdd);item("Directional Light",light!=nullptr,lightAdd);ImGui::EndMenu();}
+            if(ImGui::BeginMenu("Physics")){item("Collider",collider!=nullptr,colliderAdd);item("Character Controller",controller!=nullptr,controllerAdd);ImGui::EndMenu();}
+            if(ImGui::BeginMenu("Gameplay")){item("Pawn",pawn!=nullptr,pawnAdd);item("Player Start",playerStart!=nullptr,startAdd);item("Interactable",interactable!=nullptr,interactAdd);ImGui::EndMenu();}
+            if(ImGui::BeginMenu("Scripting")){item("Script",script!=nullptr,scriptAdd);ImGui::EndMenu();}
         }
-
-        /*
-         * Color
-         */
-        if (color == nullptr)
-        {
-            if (ImGui::Selectable("Color"))
-            {
-                scene.AddComponent<
-                    ColorComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added ColorComponent."
-                );
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable("Color");
-            ImGui::EndDisabled();
-        }
-
-        /*
-         * Texture
-         */
-        if (texture == nullptr)
-        {
-            if (ImGui::Selectable("Texture"))
-            {
-                scene.AddComponent<
-                    TextureComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added TextureComponent."
-                );
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable("Texture");
-            ImGui::EndDisabled();
-        }
-
-        /* Player Start */
-        if(!playerStart){if(ImGui::Selectable("Player Start")){scene.AddComponent<PlayerStartComponent>(m_SelectedEntity);Logger::Info("Added PlayerStartComponent.");}}else{ImGui::BeginDisabled();ImGui::Selectable("Player Start");ImGui::EndDisabled();}
-        if(!camera){if(ImGui::Selectable("Camera")){scene.AddComponent<CameraComponent>(m_SelectedEntity);Logger::Info("Added CameraComponent.");}}else{ImGui::BeginDisabled();ImGui::Selectable("Camera");ImGui::EndDisabled();}
-        /*
-         * Pawn
-         */
-        if (pawn == nullptr)
-        {
-            if (ImGui::Selectable("Pawn"))
-            {
-                scene.AddComponent<PawnComponent>(m_SelectedEntity);
-                Logger::Info("Added PawnComponent.");
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable("Pawn");
-            ImGui::EndDisabled();
-        }
-
-        /*
-         * Character Controller
-         */
-        if (controller == nullptr)
-        {
-            if (ImGui::Selectable(
-                "Character Controller"))
-            {
-                scene.AddComponent<
-                    CharacterControllerComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added CharacterControllerComponent."
-                );
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable(
-                "Character Controller"
-            );
-            ImGui::EndDisabled();
-        }
-
-        /*
-         * Directional Light
-         */
-        if (light == nullptr)
-        {
-            if (ImGui::Selectable(
-                "Directional Light"))
-            {
-                scene.AddComponent<
-                    LightComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added LightComponent."
-                );
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable(
-                "Directional Light"
-            );
-            ImGui::EndDisabled();
-        }
-
-        /*
-         * Material
-         */
-        if (material == nullptr)
-        {
-            if (ImGui::Selectable("Material"))
-            {
-                scene.AddComponent<MaterialComponent>(m_SelectedEntity);
-                Logger::Info("Added MaterialComponent.");
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable("Material");
-            ImGui::EndDisabled();
-        }
-
-        /*
-         * Collider
-         */
-        if (collider == nullptr)
-        {
-            if (ImGui::Selectable(
-                "Collider"))
-            {
-                scene.AddComponent<
-                    ColliderComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added ColliderComponent."
-                );
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable(
-                "Collider"
-            );
-            ImGui::EndDisabled();
-        }
-
-        /*
-         * Interactable
-         */
-        if (interactable == nullptr)
-        {
-            if (ImGui::Selectable("Interactable"))
-            {
-                scene.AddComponent<
-                    InteractableComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added InteractableComponent."
-                );
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-
-            ImGui::Selectable(
-                "Interactable"
-            );
-
-            ImGui::EndDisabled();
-        }
-
-        /*
-         * Script
-         */
-        if (script == nullptr)
-        {
-            if (ImGui::Selectable(
-                "Script##AddScriptComponent"))
-            {
-                scene.AddComponent<
-                    ScriptComponent
-                >(
-                    m_SelectedEntity
-                );
-
-                Logger::Info(
-                    "Added ScriptComponent."
-                );
-            }
-        }
-        else
-        {
-            ImGui::BeginDisabled();
-            ImGui::Selectable(
-                "Script"
-            );
-            ImGui::EndDisabled();
-        }
-
+        ImGui::EndChild();
         ImGui::EndPopup();
     }
 
