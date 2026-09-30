@@ -420,9 +420,7 @@ void Editor::RenderInspector(
         >(m_SelectedEntity);
 
     if (transform != nullptr &&
-        ImGui::CollapsingHeader(
-            "Transform",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        DrawComponentHeader("Transform"))
     {
         Vec3& position =
             transform->transform.position;
@@ -509,9 +507,7 @@ void Editor::RenderInspector(
 
     if (mesh != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Mesh",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Mesh"))
         {
             const char* primitiveNames[] =
             {
@@ -614,9 +610,7 @@ void Editor::RenderInspector(
 
     if (color != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Color",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Color"))
         {
             float colorValues[4] =
             {
@@ -671,9 +665,7 @@ void Editor::RenderInspector(
 
     if (texture != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Texture",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Texture"))
         {
             if (DrawAssetPicker("Asset", texture->path,
                 { ".png", ".jpg", ".jpeg", ".bmp", ".tga" }))
@@ -702,14 +694,14 @@ void Editor::RenderInspector(
 
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
-    if(playerStart&&ImGui::CollapsingHeader("Player Start",ImGuiTreeNodeFlags_DefaultOpen)){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
+    if(playerStart&&DrawComponentHeader("Player Start")){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
     /*
      * Pawn
      */
     PawnComponent* pawn = scene.GetComponent<PawnComponent>(m_SelectedEntity);
     if (pawn != nullptr)
     {
-        if (ImGui::CollapsingHeader("Pawn", ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Pawn"))
         {
             ImGui::TextWrapped("Generic controllable entity. Input, camera and gameplay behavior are project-defined.");
             ImGui::Text("Controller ID: %u", pawn->controllerID);
@@ -732,9 +724,7 @@ void Editor::RenderInspector(
 
     if (controller != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Character Controller",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Character Controller"))
         {
             ImGui::DragFloat(
                 "Gravity",
@@ -785,7 +775,7 @@ void Editor::RenderInspector(
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
-        if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Camera"))
         {
             ImGui::SliderFloat("Field of View", &camera->fieldOfView, 30.0f, 120.0f);
             ImGui::DragFloat("Near Clip", &camera->nearClip, 0.01f, 0.01f, 10.0f);
@@ -810,9 +800,7 @@ void Editor::RenderInspector(
 
     if (light != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Light",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Light"))
         {
             int lightType = static_cast<int>(light->type);
             const char* lightTypes[] = { "Directional", "Point", "Spot" };
@@ -904,7 +892,7 @@ void Editor::RenderInspector(
 
     if (material != nullptr)
     {
-        if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Material"))
         {
             ImGui::SliderFloat("Metallic", &material->metallic, 0.0f, 1.0f);
             ImGui::SliderFloat("Roughness", &material->roughness, 0.04f, 1.0f);
@@ -925,9 +913,7 @@ void Editor::RenderInspector(
 
     if (collider != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Collider",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Collider"))
         {
             ImGui::Checkbox(
                 "Enabled",
@@ -983,9 +969,7 @@ void Editor::RenderInspector(
 
     if (interactable != nullptr)
     {
-        if (ImGui::CollapsingHeader(
-            "Interactable",
-            ImGuiTreeNodeFlags_DefaultOpen))
+        if (DrawComponentHeader("Interactable"))
         {
             ImGui::PushID("InteractableComponent");
 
