@@ -45,7 +45,7 @@ public:
     bool OpenScene(Scene& scene, const std::filesystem::path& path);
 
     std::string ConsumeOpenedUIAsset();
-    void RenderDetails(Renderer& renderer, Scene& scene);
+    const std::string& GetSceneFilePath() const { return m_SceneFilePath; }
 
     ProjectSettings& GetProjectSettings() { return m_ProjectSettings; }
     const ProjectSettings& GetProjectSettings() const { return m_ProjectSettings; }
