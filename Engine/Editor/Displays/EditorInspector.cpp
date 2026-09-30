@@ -266,21 +266,21 @@ namespace
         if (ImGui::IsItemClicked()) it->second = !it->second;
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
-        const ImU32 bg = ImGui::GetColorU32(hovered ? ImVec4(0.27f,0.28f,0.30f,1.0f) : ImVec4(0.225f,0.232f,0.245f,1.0f));
+        const ImU32 bg = ImGui::GetColorU32(hovered ? ImVec4(0.205f,0.215f,0.228f,1.0f) : ImVec4(0.160f,0.168f,0.178f,1.0f));
         draw->AddRectFilled(p, ImVec2(p.x + width, p.y + height), bg);
-        draw->AddLine(ImVec2(p.x,p.y+height),ImVec2(p.x+width,p.y+height),ImGui::GetColorU32(ImVec4(0.34f,0.35f,0.37f,1.0f)));
+        draw->AddLine(ImVec2(p.x,p.y+height),ImVec2(p.x+width,p.y+height),ImGui::GetColorU32(ImVec4(0.235f,0.245f,0.258f,1.0f)));
 
         const float cy=p.y+height*0.5f, ax=p.x+10.0f;
         if(it->second) draw->AddTriangleFilled(ImVec2(ax-4,cy-2),ImVec2(ax+4,cy-2),ImVec2(ax,cy+3),ImGui::GetColorU32(ImGuiCol_Text));
         else draw->AddTriangleFilled(ImVec2(ax-2,cy-4),ImVec2(ax-2,cy+4),ImVec2(ax+3,cy),ImGui::GetColorU32(ImGuiCol_Text));
-        draw->AddText(ImVec2(p.x+24.0f,p.y+4.0f),ImGui::GetColorU32(ImVec4(0.94f,0.95f,0.96f,1.0f)),label);
+        draw->AddText(ImVec2(p.x+24.0f,p.y+4.0f),ImGui::GetColorU32(ImVec4(0.84f,0.85f,0.87f,1.0f)),label);
 
         if(removable)
         {
             ImGui::SetCursorScreenPos(ImVec2(p.x+width-menuWidth,p.y));
             ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(0,0,0,0));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(0.34f,0.35f,0.37f,1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(0.38f,0.39f,0.41f,1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(0.225f,0.235f,0.248f,1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(0.255f,0.265f,0.280f,1.0f));
             if(ImGui::Button("...",ImVec2(menuWidth,height))) ImGui::OpenPopup("##ComponentMenu");
             ImGui::PopStyleColor(3);
             if(ImGui::BeginPopup("##ComponentMenu"))
