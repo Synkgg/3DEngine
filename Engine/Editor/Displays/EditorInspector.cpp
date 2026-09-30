@@ -246,8 +246,8 @@ namespace
         if (it == openStates.end())
             it = openStates.emplace(id, defaultOpen).first;
 
-        const float inset = 5.0f;
-        const float height = ImGui::GetTextLineHeight() + 8.0f;
+        const float inset = 2.0f;
+        const float height = ImGui::GetTextLineHeight() + 6.0f;
         ImVec2 p = ImGui::GetCursorScreenPos();
         p.x += inset;
         const float width = std::max(1.0f, ImGui::GetContentRegionAvail().x - inset * 2.0f);
@@ -262,9 +262,9 @@ namespace
             ? ImVec4(0.225f, 0.232f, 0.245f, 1.0f)
             : ImVec4(0.185f, 0.192f, 0.202f, 1.0f));
         ImDrawList* draw = ImGui::GetWindowDrawList();
-        draw->AddRectFilled(p, ImVec2(p.x + width, p.y + height), bg, 2.0f);
-        draw->AddRect(p, ImVec2(p.x + width, p.y + height),
-            ImGui::GetColorU32(ImVec4(0.29f, 0.30f, 0.32f, 1.0f)), 2.0f);
+        draw->AddRectFilled(p, ImVec2(p.x + width, p.y + height), bg);
+        draw->AddLine(ImVec2(p.x, p.y + height), ImVec2(p.x + width, p.y + height),
+            ImGui::GetColorU32(ImVec4(0.29f, 0.30f, 0.32f, 1.0f)));
 
         const float cy = p.y + height * 0.5f;
         const float ax = p.x + 9.0f;
@@ -275,20 +275,19 @@ namespace
             draw->AddTriangleFilled(ImVec2(ax - 2, cy - 4), ImVec2(ax - 2, cy + 4), ImVec2(ax + 3, cy),
                 ImGui::GetColorU32(ImGuiCol_Text));
 
-        draw->AddText(ImVec2(p.x + 22.0f, p.y + 4.0f), ImGui::GetColorU32(ImGuiCol_Text), label);
-        ImGui::SetCursorScreenPos(ImVec2(p.x - inset, p.y + height + 3.0f));
+        draw->AddText(ImVec2(p.x + 22.0f, p.y + 3.0f), ImGui::GetColorU32(ImGuiCol_Text), label);
+        ImGui::SetCursorScreenPos(ImVec2(p.x - inset, p.y + height + 2.0f));
         ImGui::PopID();
         return it->second;
     }
 
     void EndComponentSection()
     {
-        ImGui::Dummy(ImVec2(0.0f, 3.0f));
         const ImVec2 p = ImGui::GetCursorScreenPos();
         ImGui::GetWindowDrawList()->AddLine(
-            ImVec2(p.x + 5.0f, p.y),
-            ImVec2(p.x + ImGui::GetContentRegionAvail().x - 5.0f, p.y),
-            ImGui::GetColorU32(ImVec4(0.24f, 0.25f, 0.27f, 1.0f)));
+            ImVec2(p.x + 2.0f, p.y + 2.0f),
+            ImVec2(p.x + ImGui::GetContentRegionAvail().x - 2.0f, p.y + 2.0f),
+            ImGui::GetColorU32(ImVec4(0.20f, 0.21f, 0.23f, 1.0f)));
         ImGui::Dummy(ImVec2(0.0f, 5.0f));
     }
 
@@ -701,8 +700,6 @@ void Editor::RenderInspector(
         }
     }
 
-    EndComponentSection();
-
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
     if(playerStart&&ImGui::CollapsingHeader("Player Start",ImGuiTreeNodeFlags_DefaultOpen)){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
@@ -785,8 +782,6 @@ void Editor::RenderInspector(
         }
     }
 
-    EndComponentSection();
-
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
@@ -808,8 +803,6 @@ void Editor::RenderInspector(
     /*
      * Directional Light
      */
-    EndComponentSection();
-
     LightComponent* light =
         scene.GetComponent<
         LightComponent
@@ -906,8 +899,6 @@ void Editor::RenderInspector(
         }
     }
 
-    EndComponentSection();
-
     MaterialComponent* material =
         scene.GetComponent<MaterialComponent>(m_SelectedEntity);
 
@@ -986,8 +977,6 @@ void Editor::RenderInspector(
             }
         }
     }
-
-    EndComponentSection();
 
     InteractableComponent* interactable =
         scene.GetComponent<InteractableComponent>(m_SelectedEntity);
@@ -1274,8 +1263,6 @@ void Editor::RenderInspector(
             }
         }
     }
-
-    EndComponentSection();
 
     ImGui::PopStyleColor(5);
     ImGui::PopStyleVar(3);
