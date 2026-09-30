@@ -523,6 +523,8 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     /*
      * Mesh
      */
@@ -610,6 +612,8 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     /*
      * Color
      */
@@ -649,6 +653,8 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     /*
      * Texture
      */
@@ -670,9 +676,13 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
     if(playerStart&&DrawComponentHeader("Player Start").open){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");}
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     /*
      * Pawn
      */
@@ -685,6 +695,8 @@ void Editor::RenderInspector(
             ImGui::Text("Controller ID: %u", pawn->controllerID);
         }
     }
+
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
      * Character Controller
@@ -728,6 +740,8 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
@@ -747,6 +761,8 @@ void Editor::RenderInspector(
             ImGui::TextWrapped("The active Camera entity supplies the runtime view using its world transform.");
         }
     }
+
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
      * Directional Light
@@ -829,6 +845,8 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     MaterialComponent* material =
         scene.GetComponent<MaterialComponent>(m_SelectedEntity);
 
@@ -842,6 +860,8 @@ void Editor::RenderInspector(
             ImGui::DragFloat("Emissive", &material->emissive, 0.05f, 0.0f, 20.0f);
         }
     }
+
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
      * Collider
@@ -888,6 +908,8 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
     InteractableComponent* interactable =
         scene.GetComponent<InteractableComponent>(m_SelectedEntity);
 
@@ -926,6 +948,8 @@ void Editor::RenderInspector(
             ImGui::PopID();
         }
     }
+
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
   * Scripts
@@ -1155,6 +1179,8 @@ void Editor::RenderInspector(
             }
         }
     }
+
+    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     if (!g_RemoveComponentRequest.empty())
     {
