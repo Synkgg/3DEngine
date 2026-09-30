@@ -13,6 +13,7 @@
 #include "../../Graphics/Texture2D.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <algorithm>
 #include <cmath>
@@ -190,6 +191,26 @@ void UIEditor::Draw(
         if(!editingText && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) NudgeSelected(0,nudge);
     }
 
+    if (m_RenameRequested)
+    {
+        ImGui::OpenPopup("Rename Widget");
+        m_RenameRequested = false;
+    }
+    if (ImGui::BeginPopupModal("Rename Widget", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::SetNextItemWidth(280.0f);
+        const bool enter = ImGui::InputText("##RenameWidgetName", m_RenameBuffer, sizeof(m_RenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+        if ((enter || ImGui::Button("Rename")) && m_SelectedWidget && m_RenameBuffer[0] != '\0')
+        {
+            m_SelectedWidget->SetName(m_RenameBuffer);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
     ImGui::End();
 }
 
@@ -257,6 +278,31 @@ void UIEditor::DrawHierarchy(
         SelectWidget(
             &widget
         );
+    }
+
+    if (ImGui::BeginPopupContextItem("##WidgetContext"))
+    {
+        if (m_SelectedWidget != &widget)
+            SelectWidget(&widget);
+        if (ImGui::MenuItem("Rename", "F2"))
+            RenameSelected();
+        if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
+        {
+            if (UICanvas* canvas = dynamic_cast<UICanvas*>(widget.GetRoot()))
+            {
+                PushHistory(*canvas);
+                DuplicateSelected(*canvas);
+            }
+        }
+        if (ImGui::MenuItem("Delete", "Del", false, widget.GetParent() != nullptr))
+        {
+            if (UICanvas* canvas = dynamic_cast<UICanvas*>(widget.GetRoot()))
+            {
+                PushHistory(*canvas);
+                DeleteSelected(*canvas);
+            }
+        }
+        ImGui::EndPopup();
     }
 
     if (ImGui::BeginDragDropSource())
@@ -1952,13 +1998,10 @@ void UIEditor::AddWidget(
 void UIEditor::RenameSelected()
 {
     if (!m_SelectedWidget)
-    {
         return;
-    }
 
-    ImGui::OpenPopup(
-        "RenameWidget"
-    );
+    std::snprintf(m_RenameBuffer, sizeof(m_RenameBuffer), "%s", m_SelectedWidget->GetName().c_str());
+    m_RenameRequested = true;
 }
 
 void UIEditor::ResetView()
