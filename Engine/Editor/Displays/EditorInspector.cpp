@@ -247,6 +247,7 @@ namespace
 
     ComponentHeaderResult DrawComponentHeader(const char* label, bool removable = true, bool defaultOpen = true)
     {
+        ImGui::Dummy(ImVec2(0.0f, 3.0f));
         ComponentHeaderResult result;
         ImGui::PushID(label);
         static std::unordered_map<ImGuiID, bool> openStates;
@@ -523,8 +524,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     /*
      * Mesh
      */
@@ -612,8 +611,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     /*
      * Color
      */
@@ -653,8 +650,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     /*
      * Texture
      */
@@ -676,13 +671,9 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
     if(playerStart&&DrawComponentHeader("Player Start").open){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");}
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     /*
      * Pawn
      */
@@ -695,8 +686,6 @@ void Editor::RenderInspector(
             ImGui::Text("Controller ID: %u", pawn->controllerID);
         }
     }
-
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
      * Character Controller
@@ -740,8 +729,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
@@ -761,8 +748,6 @@ void Editor::RenderInspector(
             ImGui::TextWrapped("The active Camera entity supplies the runtime view using its world transform.");
         }
     }
-
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
      * Directional Light
@@ -845,8 +830,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     MaterialComponent* material =
         scene.GetComponent<MaterialComponent>(m_SelectedEntity);
 
@@ -860,8 +843,6 @@ void Editor::RenderInspector(
             ImGui::DragFloat("Emissive", &material->emissive, 0.05f, 0.0f, 20.0f);
         }
     }
-
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
      * Collider
@@ -908,8 +889,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     InteractableComponent* interactable =
         scene.GetComponent<InteractableComponent>(m_SelectedEntity);
 
@@ -948,8 +927,6 @@ void Editor::RenderInspector(
             ImGui::PopID();
         }
     }
-
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
     /*
   * Scripts
@@ -1180,8 +1157,6 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
     if (!g_RemoveComponentRequest.empty())
     {
         const std::string remove = g_RemoveComponentRequest;
@@ -1255,24 +1230,59 @@ void Editor::RenderInspector(
         auto interactAdd=[&](){scene.AddComponent<InteractableComponent>(m_SelectedEntity);Logger::Info("Added InteractableComponent.");};
         auto scriptAdd=[&](){scene.AddComponent<ScriptComponent>(m_SelectedEntity);Logger::Info("Added ScriptComponent.");};
 
-        ImGui::BeginChild("##ComponentList",ImVec2(0,0),false);
+        static int selectedCategory = 0;
+        const char* categories[] = { "Rendering", "Physics", "Gameplay", "Scripting" };
+
         if(!q.empty())
         {
+            ImGui::BeginChild("##SearchResults",ImVec2(0,0),false);
             item("Mesh",mesh!=nullptr,meshAdd); item("Material",material!=nullptr,materialAdd);
             item("Color",color!=nullptr,colorAdd); item("Texture",texture!=nullptr,textureAdd);
             item("Camera",camera!=nullptr,cameraAdd); item("Directional Light",light!=nullptr,lightAdd);
             item("Collider",collider!=nullptr,colliderAdd); item("Character Controller",controller!=nullptr,controllerAdd);
             item("Pawn",pawn!=nullptr,pawnAdd); item("Player Start",playerStart!=nullptr,startAdd);
             item("Interactable",interactable!=nullptr,interactAdd); item("Script",script!=nullptr,scriptAdd);
+            ImGui::EndChild();
         }
         else
         {
-            if(ImGui::BeginMenu("Rendering")){item("Mesh",mesh!=nullptr,meshAdd);item("Material",material!=nullptr,materialAdd);item("Color",color!=nullptr,colorAdd);item("Texture",texture!=nullptr,textureAdd);item("Camera",camera!=nullptr,cameraAdd);item("Directional Light",light!=nullptr,lightAdd);ImGui::EndMenu();}
-            if(ImGui::BeginMenu("Physics")){item("Collider",collider!=nullptr,colliderAdd);item("Character Controller",controller!=nullptr,controllerAdd);ImGui::EndMenu();}
-            if(ImGui::BeginMenu("Gameplay")){item("Pawn",pawn!=nullptr,pawnAdd);item("Player Start",playerStart!=nullptr,startAdd);item("Interactable",interactable!=nullptr,interactAdd);ImGui::EndMenu();}
-            if(ImGui::BeginMenu("Scripting")){item("Script",script!=nullptr,scriptAdd);ImGui::EndMenu();}
+            // Fixed two-pane picker: children/items on the left, categories on the right.
+            // Unlike BeginMenu(), both panes are part of this popup and can never overlap it.
+            const float gap = 6.0f;
+            const float categoryWidth = 92.0f;
+            const float availableWidth = ImGui::GetContentRegionAvail().x;
+            const float childWidth = std::max(100.0f, availableWidth - categoryWidth - gap);
+            const float paneHeight = ImGui::GetContentRegionAvail().y;
+
+            ImGui::BeginChild("##ComponentChildren",ImVec2(childWidth,paneHeight),true);
+            switch(selectedCategory)
+            {
+                case 0:
+                    item("Mesh",mesh!=nullptr,meshAdd); item("Material",material!=nullptr,materialAdd);
+                    item("Color",color!=nullptr,colorAdd); item("Texture",texture!=nullptr,textureAdd);
+                    item("Camera",camera!=nullptr,cameraAdd); item("Directional Light",light!=nullptr,lightAdd);
+                    break;
+                case 1:
+                    item("Collider",collider!=nullptr,colliderAdd);
+                    item("Character Controller",controller!=nullptr,controllerAdd);
+                    break;
+                case 2:
+                    item("Pawn",pawn!=nullptr,pawnAdd); item("Player Start",playerStart!=nullptr,startAdd);
+                    item("Interactable",interactable!=nullptr,interactAdd);
+                    break;
+                case 3:
+                    item("Script",script!=nullptr,scriptAdd);
+                    break;
+            }
+            ImGui::EndChild();
+
+            ImGui::SameLine(0.0f,gap);
+            ImGui::BeginChild("##ComponentCategories",ImVec2(categoryWidth,paneHeight),true);
+            for(int i=0;i<4;++i)
+                if(ImGui::Selectable(categories[i],selectedCategory==i,0,ImVec2(0,24)))
+                    selectedCategory=i;
+            ImGui::EndChild();
         }
-        ImGui::EndChild();
         ImGui::EndPopup();
     }
 
