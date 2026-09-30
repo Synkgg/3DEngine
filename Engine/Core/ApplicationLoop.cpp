@@ -158,7 +158,10 @@ void Application::Run()
             ImGui::SameLine();
             std::string uiLabel = std::filesystem::path(m_UIEditor.GetAssetPath()).filename().string();
             if (ImGui::Selectable(uiLabel.c_str(), m_UIEditorPageActive, 0, ImVec2(160.0f, 0.0f)))
+            {
                 m_UIEditorPageActive = true;
+                m_UIEditor.Focus();
+            }
         }
         ImGui::End();
 
@@ -186,6 +189,7 @@ void Application::Run()
                 else
                 {
                     m_UIEditorPageActive = true;
+                    m_UIEditor.Focus();
                 }
             }
 
