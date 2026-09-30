@@ -237,48 +237,60 @@ namespace
         return changed;
     }
 
-    bool DrawComponentHeader(const char* label, bool defaultOpen = true)
+    struct ComponentHeaderResult
     {
+        bool open = true;
+        bool removeRequested = false;
+    };
+
+    ComponentHeaderResult DrawComponentHeader(const char* label, bool removable = true, bool defaultOpen = true)
+    {
+        ComponentHeaderResult result;
         ImGui::PushID(label);
         static std::unordered_map<ImGuiID, bool> openStates;
         const ImGuiID id = ImGui::GetID("##ComponentHeader");
         auto it = openStates.find(id);
-        if (it == openStates.end())
-            it = openStates.emplace(id, defaultOpen).first;
+        if (it == openStates.end()) it = openStates.emplace(id, defaultOpen).first;
 
         const float inset = 2.0f;
-        const float height = ImGui::GetTextLineHeight() + 6.0f;
-        ImVec2 p = ImGui::GetCursorScreenPos();
-        p.x += inset;
+        const float height = ImGui::GetTextLineHeight() + 8.0f;
+        ImVec2 p = ImGui::GetCursorScreenPos(); p.x += inset;
         const float width = std::max(1.0f, ImGui::GetContentRegionAvail().x - inset * 2.0f);
+        const float menuWidth = removable ? 26.0f : 0.0f;
 
         ImGui::SetCursorScreenPos(p);
-        ImGui::InvisibleButton("##ComponentHeader", ImVec2(width, height));
+        ImGui::InvisibleButton("##ComponentHeader", ImVec2(width - menuWidth, height));
         const bool hovered = ImGui::IsItemHovered();
-        if (ImGui::IsItemClicked())
-            it->second = !it->second;
+        if (ImGui::IsItemClicked()) it->second = !it->second;
 
-        const ImU32 bg = ImGui::GetColorU32(hovered
-            ? ImVec4(0.225f, 0.232f, 0.245f, 1.0f)
-            : ImVec4(0.185f, 0.192f, 0.202f, 1.0f));
         ImDrawList* draw = ImGui::GetWindowDrawList();
+        const ImU32 bg = ImGui::GetColorU32(hovered ? ImVec4(0.27f,0.28f,0.30f,1.0f) : ImVec4(0.225f,0.232f,0.245f,1.0f));
         draw->AddRectFilled(p, ImVec2(p.x + width, p.y + height), bg);
-        draw->AddLine(ImVec2(p.x, p.y + height), ImVec2(p.x + width, p.y + height),
-            ImGui::GetColorU32(ImVec4(0.29f, 0.30f, 0.32f, 1.0f)));
+        draw->AddLine(ImVec2(p.x,p.y+height),ImVec2(p.x+width,p.y+height),ImGui::GetColorU32(ImVec4(0.34f,0.35f,0.37f,1.0f)));
 
-        const float cy = p.y + height * 0.5f;
-        const float ax = p.x + 9.0f;
-        if (it->second)
-            draw->AddTriangleFilled(ImVec2(ax - 4, cy - 2), ImVec2(ax + 4, cy - 2), ImVec2(ax, cy + 3),
-                ImGui::GetColorU32(ImGuiCol_Text));
-        else
-            draw->AddTriangleFilled(ImVec2(ax - 2, cy - 4), ImVec2(ax - 2, cy + 4), ImVec2(ax + 3, cy),
-                ImGui::GetColorU32(ImGuiCol_Text));
+        const float cy=p.y+height*0.5f, ax=p.x+10.0f;
+        if(it->second) draw->AddTriangleFilled(ImVec2(ax-4,cy-2),ImVec2(ax+4,cy-2),ImVec2(ax,cy+3),ImGui::GetColorU32(ImGuiCol_Text));
+        else draw->AddTriangleFilled(ImVec2(ax-2,cy-4),ImVec2(ax-2,cy+4),ImVec2(ax+3,cy),ImGui::GetColorU32(ImGuiCol_Text));
+        draw->AddText(ImVec2(p.x+24.0f,p.y+4.0f),ImGui::GetColorU32(ImVec4(0.94f,0.95f,0.96f,1.0f)),label);
 
-        draw->AddText(ImVec2(p.x + 22.0f, p.y + 3.0f), ImGui::GetColorU32(ImGuiCol_Text), label);
-        ImGui::SetCursorScreenPos(ImVec2(p.x - inset, p.y + height + 2.0f));
+        if(removable)
+        {
+            ImGui::SetCursorScreenPos(ImVec2(p.x+width-menuWidth,p.y));
+            ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(0,0,0,0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(0.34f,0.35f,0.37f,1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(0.38f,0.39f,0.41f,1.0f));
+            if(ImGui::Button("...",ImVec2(menuWidth,height))) ImGui::OpenPopup("##ComponentMenu");
+            ImGui::PopStyleColor(3);
+            if(ImGui::BeginPopup("##ComponentMenu"))
+            {
+                if(ImGui::MenuItem("Remove Component")) result.removeRequested=true;
+                ImGui::EndPopup();
+            }
+        }
+        result.open=it->second;
+        ImGui::SetCursorScreenPos(ImVec2(p.x-inset,p.y+height+5.0f));
         ImGui::PopID();
-        return it->second;
+        return result;
     }
 
     void EndComponentSection()
@@ -402,8 +414,8 @@ void Editor::RenderInspector(
 
     // Inspector-only component surfaces: strong headers, dark field bodies and
     // visible outlines create distinct cards without changing the global theme.
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 3.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 2.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7.0f, 4.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7.0f, 4.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.225f,0.230f,0.238f,1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.255f,0.262f,0.272f,1.0f));
@@ -420,7 +432,7 @@ void Editor::RenderInspector(
         >(m_SelectedEntity);
 
     if (transform != nullptr &&
-        DrawComponentHeader("Transform"))
+        DrawComponentHeader("Transform", false).open)
     {
         Vec3& position =
             transform->transform.position;
@@ -507,7 +519,7 @@ void Editor::RenderInspector(
 
     if (mesh != nullptr)
     {
-        if (DrawComponentHeader("Mesh"))
+        if (DrawComponentHeader("Mesh").open)
         {
             const char* primitiveNames[] =
             {
@@ -610,7 +622,7 @@ void Editor::RenderInspector(
 
     if (color != nullptr)
     {
-        if (DrawComponentHeader("Color"))
+        if (DrawComponentHeader("Color").open)
         {
             float colorValues[4] =
             {
@@ -665,7 +677,7 @@ void Editor::RenderInspector(
 
     if (texture != nullptr)
     {
-        if (DrawComponentHeader("Texture"))
+        if (DrawComponentHeader("Texture").open)
         {
             if (DrawAssetPicker("Asset", texture->path,
                 { ".png", ".jpg", ".jpeg", ".bmp", ".tga" }))
@@ -694,14 +706,14 @@ void Editor::RenderInspector(
 
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
-    if(playerStart&&DrawComponentHeader("Player Start")){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
+    if(playerStart&&DrawComponentHeader("Player Start").open){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");if(ImGui::Button("Remove Player Start"))scene.RemoveComponent<PlayerStartComponent>(m_SelectedEntity);}
     /*
      * Pawn
      */
     PawnComponent* pawn = scene.GetComponent<PawnComponent>(m_SelectedEntity);
     if (pawn != nullptr)
     {
-        if (DrawComponentHeader("Pawn"))
+        if (DrawComponentHeader("Pawn").open)
         {
             ImGui::TextWrapped("Generic controllable entity. Input, camera and gameplay behavior are project-defined.");
             ImGui::Text("Controller ID: %u", pawn->controllerID);
@@ -724,7 +736,7 @@ void Editor::RenderInspector(
 
     if (controller != nullptr)
     {
-        if (DrawComponentHeader("Character Controller"))
+        if (DrawComponentHeader("Character Controller").open)
         {
             ImGui::DragFloat(
                 "Gravity",
@@ -775,7 +787,7 @@ void Editor::RenderInspector(
     CameraComponent* camera = scene.GetComponent<CameraComponent>(m_SelectedEntity);
     if (camera != nullptr)
     {
-        if (DrawComponentHeader("Camera"))
+        if (DrawComponentHeader("Camera").open)
         {
             ImGui::SliderFloat("Field of View", &camera->fieldOfView, 30.0f, 120.0f);
             ImGui::DragFloat("Near Clip", &camera->nearClip, 0.01f, 0.01f, 10.0f);
@@ -800,7 +812,7 @@ void Editor::RenderInspector(
 
     if (light != nullptr)
     {
-        if (DrawComponentHeader("Light"))
+        if (DrawComponentHeader("Light").open)
         {
             int lightType = static_cast<int>(light->type);
             const char* lightTypes[] = { "Directional", "Point", "Spot" };
@@ -892,7 +904,7 @@ void Editor::RenderInspector(
 
     if (material != nullptr)
     {
-        if (DrawComponentHeader("Material"))
+        if (DrawComponentHeader("Material").open)
         {
             ImGui::SliderFloat("Metallic", &material->metallic, 0.0f, 1.0f);
             ImGui::SliderFloat("Roughness", &material->roughness, 0.04f, 1.0f);
@@ -913,7 +925,7 @@ void Editor::RenderInspector(
 
     if (collider != nullptr)
     {
-        if (DrawComponentHeader("Collider"))
+        if (DrawComponentHeader("Collider").open)
         {
             ImGui::Checkbox(
                 "Enabled",
@@ -969,7 +981,7 @@ void Editor::RenderInspector(
 
     if (interactable != nullptr)
     {
-        if (DrawComponentHeader("Interactable"))
+        if (DrawComponentHeader("Interactable").open)
         {
             ImGui::PushID("InteractableComponent");
 
@@ -1013,7 +1025,7 @@ void Editor::RenderInspector(
 
     if (script != nullptr)
     {
-        if (DrawComponentHeader("Script"))
+        if (DrawComponentHeader("Script").open)
         {
             if (script->scriptNames.empty())
             {
