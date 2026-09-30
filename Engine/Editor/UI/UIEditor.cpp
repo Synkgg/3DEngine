@@ -342,7 +342,7 @@ void UIEditor::DrawHierarchy(
     }
 }
 
-void UIEditor::DrawInspector(
+void UIEditor::DrawSelectedInspector()\n{\n    if (m_SelectedWidget) DrawInspector(*m_SelectedWidget);\n}\n\nvoid UIEditor::DrawInspector(
     UIWidget& widget)
 {
     char nameBuffer[256];
