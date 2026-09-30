@@ -721,9 +721,12 @@ void Editor::RenderInspector(
     {
         if (DrawComponentHeader("Camera").open)
         {
-            ImGui::SliderFloat("Field of View", &camera->fieldOfView, 30.0f, 120.0f);
-            ImGui::DragFloat("Near Clip", &camera->nearClip, 0.01f, 0.01f, 10.0f);
-            ImGui::DragFloat("Far Clip", &camera->farClip, 1.0f, 10.0f, 10000.0f);
+            if (ImGui::InputFloat("Field of View", &camera->fieldOfView, 0.0f, 0.0f, "%.1f"))
+                camera->fieldOfView = std::clamp(camera->fieldOfView, 30.0f, 120.0f);
+            if (ImGui::InputFloat("Near Clip", &camera->nearClip, 0.0f, 0.0f, "%.3f"))
+                camera->nearClip = std::clamp(camera->nearClip, 0.01f, 10.0f);
+            if (ImGui::InputFloat("Far Clip", &camera->farClip, 0.0f, 0.0f, "%.1f"))
+                camera->farClip = std::clamp(camera->farClip, 10.0f, 10000.0f);
             if (camera->farClip <= camera->nearClip) camera->farClip = camera->nearClip + 1.0f;
             if (ImGui::Checkbox("Active", &camera->active) && camera->active)
                 for (const Entity& other : scene.GetEntities())
