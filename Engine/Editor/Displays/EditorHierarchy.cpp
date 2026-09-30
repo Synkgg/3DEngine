@@ -900,7 +900,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
                 scene.SetParent(child, entity, false);
                 m_SelectedEntity = child;
             }
-            if (ImGui::MenuItem("Duplicate Hierarchy"))
+            if (ImGui::MenuItem("Duplicate"))
             {
                 Entity copy = scene.DuplicateEntity(entity, true);
                 if (copy.IsValid())
@@ -947,7 +947,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             if (scene.GetParent(entity).IsValid() && ImGui::MenuItem("Unparent"))
                 scene.ClearParent(entity, true);
             ImGui::Separator();
-            if (ImGui::MenuItem("Delete Hierarchy"))
+            if (ImGui::MenuItem("Delete"))
             {
                 const std::uint32_t deleted = entity.GetID();
                 scene.DestroyEntityHierarchy(entity);
