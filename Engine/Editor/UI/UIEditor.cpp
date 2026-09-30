@@ -144,20 +144,6 @@ void UIEditor::Draw(
     ImGui::End();
     ImGui::PopStyleColor();
 
-    if (m_ShowDetails)
-    {
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
-        ImGui::Begin("Details##UIEditor", &m_ShowDetails);
-        ImGui::TextDisabled("DETAILS");
-        ImGui::Separator();
-        if (m_SelectedWidget)
-            DrawInspector(*m_SelectedWidget);
-        else
-            ImGui::TextDisabled("Select a widget to edit its properties.");
-        ImGui::End();
-        ImGui::PopStyleColor();
-    }
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
@@ -835,7 +821,6 @@ void UIEditor::DrawToolbar(
     {
         ImGui::MenuItem("Palette", nullptr, &m_ShowPalette);
         ImGui::MenuItem("Hierarchy", nullptr, &m_ShowHierarchy);
-        ImGui::MenuItem("Details", nullptr, &m_ShowDetails);
         ImGui::EndPopup();
     }
 
@@ -960,21 +945,19 @@ void UIEditor::DrawDesigner(
     /*
      * Preserve the canvas aspect ratio.
      */
-    float scale =
-        std::min(
-            scaleX,
-            scaleY
-        );
+    const float fitScale = std::min(scaleX, scaleY);
 
-    // Fit-to-window is the base scale. Manual zoom is relative to that
-    // fit, so shrinking the editor never crops or distorts the canvas.
+    // Keep the canvas readable when this dock is small. The Designer becomes
+    // a viewport onto the authored UI instead of shrinking it to a thumbnail.
+    const float readableWidth = 720.0f;
+    const float readableHeight = 405.0f;
+    const float readableScale = std::min(
+        canvasSize.x > 0.0f ? readableWidth / canvasSize.x : 1.0f,
+        canvasSize.y > 0.0f ? readableHeight / canvasSize.y : 1.0f);
+
+    float scale = std::max(fitScale, std::min(1.0f, readableScale));
     scale *= m_Zoom;
-
-    scale =
-        std::max(
-            0.05f,
-            scale
-        );
+    scale = std::max(0.05f, scale);
 
     m_DesignerScale = scale;
 
