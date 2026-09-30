@@ -1246,7 +1246,7 @@ void Editor::RenderInspector(
         }
         else
         {
-            // Fixed two-pane picker: children/items on the left, categories on the right.
+            // Fixed two-pane picker: categories on the left, children/items on the right.
             // Unlike BeginMenu(), both panes are part of this popup and can never overlap it.
             const float gap = 6.0f;
             const float categoryWidth = 92.0f;
@@ -1254,6 +1254,13 @@ void Editor::RenderInspector(
             const float childWidth = std::max(100.0f, availableWidth - categoryWidth - gap);
             const float paneHeight = ImGui::GetContentRegionAvail().y;
 
+            ImGui::BeginChild("##ComponentCategories",ImVec2(categoryWidth,paneHeight),true);
+            for(int i=0;i<4;++i)
+                if(ImGui::Selectable(categories[i],selectedCategory==i,0,ImVec2(0,24)))
+                    selectedCategory=i;
+            ImGui::EndChild();
+
+            ImGui::SameLine(0.0f,gap);
             ImGui::BeginChild("##ComponentChildren",ImVec2(childWidth,paneHeight),true);
             switch(selectedCategory)
             {
@@ -1274,13 +1281,6 @@ void Editor::RenderInspector(
                     item("Script",script!=nullptr,scriptAdd);
                     break;
             }
-            ImGui::EndChild();
-
-            ImGui::SameLine(0.0f,gap);
-            ImGui::BeginChild("##ComponentCategories",ImVec2(categoryWidth,paneHeight),true);
-            for(int i=0;i<4;++i)
-                if(ImGui::Selectable(categories[i],selectedCategory==i,0,ImVec2(0,24)))
-                    selectedCategory=i;
             ImGui::EndChild();
         }
         ImGui::EndPopup();
