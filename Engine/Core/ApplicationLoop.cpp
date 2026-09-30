@@ -171,6 +171,10 @@ void Application::Run()
             m_UIEditor.Draw(m_UICanvas, m_Renderer);
         }
 
+        // Draw the shared Details panel after Widget Blueprint has processed
+        // this frame's hierarchy/designer selection.
+        m_Editor.RenderDetails(m_Renderer, m_Scene);
+
         if (m_Editor.IsPlaying() &&
             !m_Runtime.IsRunning())
         {
