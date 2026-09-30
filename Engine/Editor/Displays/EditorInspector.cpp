@@ -311,6 +311,11 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 7.0f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.22f,0.23f,0.25f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.28f,0.29f,0.32f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.31f,0.32f,0.35f,1.0f));
+
     /*
      * Transform
      */
@@ -1175,13 +1180,16 @@ void Editor::RenderInspector(
         }
     }
 
+    ImGui::PopStyleColor(3);
+    ImGui::PopStyleVar();
+
     /*
      * Add Component
      */
     ImGui::Separator();
 
     if (ImGui::Button(
-        "Add Component"))
+        "Add Component", ImVec2(-1.0f, 34.0f)))
     {
         ImGui::OpenPopup(
             "AddComponentPopup"
