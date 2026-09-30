@@ -64,12 +64,16 @@ void UIEditor::Draw(
     m_Renderer = &renderer;
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->WorkPos, ImGuiCond_Always);
-    ImGui::SetNextWindowSize(viewport->WorkSize, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(
+        ImVec2(viewport->WorkSize.x * 0.88f, viewport->WorkSize.y * 0.88f),
+        ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.06f,
+               viewport->WorkPos.y + viewport->WorkSize.y * 0.06f),
+        ImGuiCond_FirstUseEver);
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Widget Blueprint", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin("Widget Blueprint");
     ImGui::PopStyleVar();
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 29, 255));
