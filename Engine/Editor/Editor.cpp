@@ -303,11 +303,6 @@ void Editor::Render(
         scene
     );
 
-    RenderInspector(
-        renderer,
-        scene
-    );
-
     RenderConsole();
 
     RenderContentBrowser(
@@ -317,7 +312,7 @@ void Editor::Render(
     );
 }
 
-ImVec2 Editor::GetViewportPosition() const
+void Editor::RenderDetails(Renderer& renderer, Scene& scene)\n{\n    RenderInspector(renderer, scene);\n}\n\nImVec2 Editor::GetViewportPosition() const
 {
     return m_ViewportPosition;
 }
