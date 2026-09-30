@@ -311,10 +311,11 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 7.0f));
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.22f,0.23f,0.25f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.28f,0.29f,0.32f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.31f,0.32f,0.35f,1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 9.0f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.27f,0.28f,0.30f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.33f,0.34f,0.37f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.36f,0.37f,0.40f,1.0f));
 
     /*
      * Transform
@@ -1181,7 +1182,7 @@ void Editor::RenderInspector(
     }
 
     ImGui::PopStyleColor(3);
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
 
     /*
      * Add Component
@@ -1189,22 +1190,21 @@ void Editor::RenderInspector(
     ImGui::Separator();
 
     if (ImGui::Button(
-        "Add Component", ImVec2(-1.0f, 34.0f)))
+        "Add Component", ImVec2(180.0f, 28.0f)))
     {
         ImGui::OpenPopup(
             "AddComponentPopup"
         );
     }
 
-    ImGui::SetNextWindowSize(ImVec2(380.0f, 440.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ImVec2(285.0f, 315.0f), ImGuiCond_Appearing);
     if (ImGui::BeginPopup("AddComponentPopup"))
     {
         static char search[128] = {};
         if (ImGui::IsWindowAppearing()) { search[0] = '\0'; ImGui::SetKeyboardFocusHere(); }
-        ImGui::TextDisabled("ADD COMPONENT");
         ImGui::SetNextItemWidth(-1.0f);
         ImGui::InputTextWithHint("##ComponentSearch", "Search components...", search, sizeof(search));
-        ImGui::Separator();
+        ImGui::Spacing();
 
         mesh=scene.GetComponent<MeshComponent>(m_SelectedEntity);
         color=scene.GetComponent<ColorComponent>(m_SelectedEntity);
@@ -1222,7 +1222,7 @@ void Editor::RenderInspector(
         std::string q=search;
         std::transform(q.begin(),q.end(),q.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});
         auto match=[&](const char* label){std::string v=label;std::transform(v.begin(),v.end(),v.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});return q.empty()||v.find(q)!=std::string::npos;};
-        auto item=[&](const char* label,bool exists,auto add){if(!match(label))return;ImGui::PushID(label);if(exists)ImGui::BeginDisabled();if(ImGui::Selectable(label,false,0,ImVec2(0,28))&&!exists){add();ImGui::CloseCurrentPopup();}if(exists)ImGui::EndDisabled();ImGui::PopID();};
+        auto item=[&](const char* label,bool exists,auto add){if(!match(label))return;ImGui::PushID(label);if(exists)ImGui::BeginDisabled();if(ImGui::Selectable(label,false,0,ImVec2(0,24))&&!exists){add();ImGui::CloseCurrentPopup();}if(exists)ImGui::EndDisabled();ImGui::PopID();};
         auto meshAdd=[&](){MeshComponent c;c.primitive=PrimitiveType::None;scene.AddComponent<MeshComponent>(m_SelectedEntity,c);Logger::Info("Added MeshComponent.");};
         auto materialAdd=[&](){scene.AddComponent<MaterialComponent>(m_SelectedEntity);Logger::Info("Added MaterialComponent.");};
         auto colorAdd=[&](){scene.AddComponent<ColorComponent>(m_SelectedEntity);Logger::Info("Added ColorComponent.");};
