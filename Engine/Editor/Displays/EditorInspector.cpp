@@ -311,11 +311,13 @@ void Editor::RenderInspector(
         }
     }
 
+    // Inspector-only component surfaces: strong headers, dark field bodies and
+    // visible outlines create distinct cards without changing the global theme.
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 9.0f));
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.30f,0.31f,0.33f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.36f,0.37f,0.40f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.40f,0.41f,0.44f,1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 10.0f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.205f,0.215f,0.228f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.255f,0.265f,0.282f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.285f,0.300f,0.320f,1.0f));
 
     /*
      * Transform
@@ -1184,11 +1186,18 @@ void Editor::RenderInspector(
     ImGui::PopStyleColor(3);
     ImGui::PopStyleVar(2);
 
+    // A clear end-cap separates the component stack from actions below it.
+    ImGui::Spacing();
+    const ImVec2 dividerStart = ImGui::GetCursorScreenPos();
+    ImGui::GetWindowDrawList()->AddRectFilled(
+        dividerStart,
+        ImVec2(dividerStart.x + ImGui::GetContentRegionAvail().x, dividerStart.y + 2.0f),
+        ImGui::GetColorU32(ImVec4(0.30f,0.31f,0.33f,1.0f)));
+    ImGui::Dummy(ImVec2(0.0f, 7.0f));
+
     /*
      * Add Component
      */
-    ImGui::Separator();
-
     if (ImGui::Button(
         "Add Component", ImVec2(180.0f, 28.0f)))
     {
