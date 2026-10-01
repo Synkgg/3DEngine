@@ -9,7 +9,7 @@ local MAX_HEALTH, SHOT_DAMAGE = 100, 25
 local FIRE_INTERVAL, ROUNDS_TO_WIN = 0.18, 5
 local MAG_SIZE, START_RESERVE, RELOAD_TIME = 12, 48, 1.35
 local HIP_FOV, ADS_FOV = 90.0, 68.0
-local RECOIL_KICK, RECOIL_RECOVERY = 0.006, 10.0
+local RECOIL_KICK = 0.075
 local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
 local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
@@ -18,7 +18,6 @@ local fireCooldown = 0.0
 local ammo, reserveAmmo = MAG_SIZE, START_RESERVE
 local reloadTimer, hitmarkerTimer, muzzleTimer, viewKick = 0.0, 0.0, 0.0, 0.0
 local aiming = false
-local recoilPitch = 0.0
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
 local roundWinner, matchWinner = 0, 0
@@ -251,20 +250,19 @@ local function updateViewmodel(dt)
     aiming=Input.IsMouseButtonDown(3) and reloadTimer<=0
     if playerCamera~=0 then Camera.SetEntityFOV(playerCamera,aiming and ADS_FOV or HIP_FOV) end
 
-    viewKick=math.max(0.0,viewKick-dt*8.0)
-    recoilPitch=recoilPitch+(0.0-recoilPitch)*math.min(1.0,dt*RECOIL_RECOVERY)
+    viewKick=math.max(0.0,viewKick-dt*7.5)
     local c,f,r=Camera.GetPosition(),Camera.GetForward(),Camera.GetRight()
     local side=aiming and 0.055 or 0.34
     local forwardOffset=aiming and 0.70 or 0.62
     local down=aiming and -0.18 or -0.24
     local x=c.x+r.x*side+f.x*(forwardOffset-viewKick)
-    local y=c.y+r.y*side+f.y*(forwardOffset-viewKick)+down
+    local y=c.y+r.y*side+f.y*(forwardOffset-viewKick)+down+viewKick*1.15
     local z=c.z+r.z*side+f.z*(forwardOffset-viewKick)
     Scene.SetPosition(rifleViewmodel,x,y,z)
     local yaw=math.deg(math.atan(-f.x,-f.z))
     local horizontal=math.sqrt(f.x*f.x+f.z*f.z)
     local pitch=math.deg(math.atan(f.y,horizontal))
-    Scene.SetRotation(rifleViewmodel,-pitch,yaw,0.0)
+    Scene.SetRotation(rifleViewmodel,-pitch-viewKick*55.0,yaw,0.0)
 end
 
 local function startReload()
@@ -291,7 +289,7 @@ local function fire()
     viewKick=0.065
     Audio.PlaySFX("Assets/Audio/Weapons/rifle.wav",0.8)
 
-    recoilPitch=math.min(0.035,recoilPitch+RECOIL_KICK)
+    viewKick=RECOIL_KICK
 
     local c,f=Camera.GetPosition(),Camera.GetForward()
     local range=100.0
@@ -510,7 +508,7 @@ function OnUpdate(dt)
     sensitivity=State.GetNumber("mouse_sensitivity",0.01)
     local invert=State.GetBool("invert_y",false) and 1.0 or -1.0
     if playerCamera~=0 then
-        Camera.RotateEntity(playerCamera,Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert-recoilPitch)
+        Camera.RotateEntity(playerCamera,Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
     else
         Camera.Rotate(Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
     end
