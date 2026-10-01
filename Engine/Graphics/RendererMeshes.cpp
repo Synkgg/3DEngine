@@ -32,18 +32,25 @@ std::string Renderer::ResolveAssetPath(const std::string& path) const
     return (m_ProjectRoot / input).lexically_normal().string();
 }
 
-Mesh* Renderer::GetModelMesh(const std::string& modelPath)
+ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
 {
     if (modelPath.empty()) return nullptr;
     const std::string resolvedPath = ResolveAssetPath(modelPath);
     auto it = m_ModelCache.find(resolvedPath);
     if (it != m_ModelCache.end()) return it->second.get();
 
-    std::unique_ptr<Mesh> loaded = ModelLoader::LoadOBJ(resolvedPath);
+    std::unique_ptr<ModelAsset> loaded = ModelLoader::LoadModel(resolvedPath);
     if (!loaded) return nullptr;
-    Mesh* result = loaded.get();
+    ModelAsset* result = loaded.get();
     m_ModelCache.emplace(resolvedPath, std::move(loaded));
     return result;
+}
+
+Mesh* Renderer::GetModelMesh(const std::string& modelPath)
+{
+    ModelAsset* model = GetModelAsset(modelPath);
+    if (!model || model->sections.empty()) return nullptr;
+    return model->sections.front().mesh.get();
 }
 
 bool Renderer::EnsureModelPreviewTarget(unsigned int width, unsigned int height)
@@ -73,8 +80,15 @@ void Renderer::DestroyModelPreviewTarget()
 
 unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int width,unsigned int height)
 {
-    Mesh* mesh=GetModelMesh(path);
-    if(!mesh||mesh->GetVertices().empty()) return 0;
+    ModelAsset* model=GetModelAsset(path);
+    if(!model||model->sections.empty()) return 0;
+
+    const Vertex* firstVertex=nullptr;
+    for(const auto& section:model->sections)
+    {
+        if(section.mesh && !section.mesh->GetVertices().empty()){firstVertex=&section.mesh->GetVertices().front();break;}
+    }
+    if(!firstVertex) return 0;
 
     width=std::max(1u,width); height=std::max(1u,height);
     const std::string cacheKey=path+"#"+std::to_string(width)+"x"+std::to_string(height);
@@ -101,8 +115,16 @@ unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int w
         return 0;
     }
 
-    const auto& v=mesh->GetVertices(); Vec3 mn(v[0].position[0],v[0].position[1],v[0].position[2]),mx=mn;
-    for(const Vertex& x:v){mn.x=std::min(mn.x,x.position[0]);mn.y=std::min(mn.y,x.position[1]);mn.z=std::min(mn.z,x.position[2]);mx.x=std::max(mx.x,x.position[0]);mx.y=std::max(mx.y,x.position[1]);mx.z=std::max(mx.z,x.position[2]);}
+    Vec3 mn(firstVertex->position[0],firstVertex->position[1],firstVertex->position[2]),mx=mn;
+    for(const auto& section:model->sections)
+    {
+        if(!section.mesh) continue;
+        for(const Vertex& x:section.mesh->GetVertices())
+        {
+            mn.x=std::min(mn.x,x.position[0]);mn.y=std::min(mn.y,x.position[1]);mn.z=std::min(mn.z,x.position[2]);
+            mx.x=std::max(mx.x,x.position[0]);mx.y=std::max(mx.y,x.position[1]);mx.z=std::max(mx.z,x.position[2]);
+        }
+    }
     Vec3 center((mn.x+mx.x)*.5f,(mn.y+mx.y)*.5f,(mn.z+mx.z)*.5f);
     float radius=std::max(.1f,std::max(mx.x-mn.x,std::max(mx.y-mn.y,mx.z-mn.z))*.5f),dist=radius*3.1f;
     Mat4 view=Mat4::LookAt(Vec3(center.x+dist*.78f,center.y+dist*.58f,center.z+dist),center,Vec3(0,1,0));
@@ -112,8 +134,15 @@ unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int w
     GLint oldFbo=0,oldVp[4]{};glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&oldFbo);glGetIntegerv(GL_VIEWPORT,oldVp);
     glBindFramebuffer(GL_FRAMEBUFFER,target.framebuffer);glViewport(0,0,(GLsizei)width,(GLsizei)height);glEnable(GL_DEPTH_TEST);
     glClearColor(.075f,.082f,.095f,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    m_ModelPreviewShader.Bind();m_ModelPreviewShader.SetMat4("u_MVP",mvp);mesh->Bind();
-    glDrawElements(GL_TRIANGLES,(GLsizei)mesh->GetIndexCount(),GL_UNSIGNED_INT,nullptr);mesh->Unbind();m_ModelPreviewShader.Unbind();
+    m_ModelPreviewShader.Bind();m_ModelPreviewShader.SetMat4("u_MVP",mvp);
+    for(const auto& section:model->sections)
+    {
+        if(!section.mesh) continue;
+        section.mesh->Bind();
+        glDrawElements(GL_TRIANGLES,(GLsizei)section.mesh->GetIndexCount(),GL_UNSIGNED_INT,nullptr);
+        section.mesh->Unbind();
+    }
+    m_ModelPreviewShader.Unbind();
     glBindFramebuffer(GL_FRAMEBUFFER,(GLuint)oldFbo);glViewport(oldVp[0],oldVp[1],oldVp[2],oldVp[3]);
 
     const unsigned int texture=target.texture;
@@ -243,9 +272,27 @@ void Renderer::DrawModel(
     const Texture2D* roughnessMap, const Texture2D* aoMap,
     const Texture2D* emissiveMap)
 {
-    DrawMeshInternal(GetModelMesh(modelPath), transform, red, green, blue, alpha,
-        texture, metallic, roughness, ambientOcclusion, emissive,
-        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap);
+    ModelAsset* model=GetModelAsset(modelPath);
+    if(!model) return;
+    for(const MeshSection& section:model->sections)
+    {
+        if(!section.mesh) continue;
+        const ImportedMaterial* material=section.materialIndex<model->materials.size()?&model->materials[section.materialIndex]:nullptr;
+        const Texture2D* sectionTexture=texture;
+        if(!sectionTexture && material && !material->diffuseTexture.empty())
+            sectionTexture=LoadTexture(material->diffuseTexture);
+
+        const float sectionRed=material?red*material->diffuse[0]:red;
+        const float sectionGreen=material?green*material->diffuse[1]:green;
+        const float sectionBlue=material?blue*material->diffuse[2]:blue;
+        const float sectionAlpha=material?alpha*material->opacity:alpha;
+        const float sectionMetallic=material?std::max(metallic,material->Metallic()):metallic;
+        const float sectionRoughness=material?material->Roughness():roughness;
+
+        DrawMeshInternal(section.mesh.get(),transform,sectionRed,sectionGreen,sectionBlue,sectionAlpha,
+            sectionTexture,sectionMetallic,sectionRoughness,ambientOcclusion,emissive,
+            normalMap,metallicMap,roughnessMap,aoMap,emissiveMap);
+    }
 }
 
 Texture2D* Renderer::LoadTexture(

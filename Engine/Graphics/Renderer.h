@@ -13,6 +13,7 @@
 
 #include "Shader.h"
 #include "Mesh.h"
+#include "ModelAsset.h"
 
 #include "../Graphics/Camera.h"
 #include "Framebuffer.h"
@@ -213,7 +214,7 @@ private:
     std::unique_ptr<Mesh> m_PlaneMesh;
     std::unique_ptr<Mesh> m_SphereMesh;
     std::unique_ptr<Mesh> m_CylinderMesh;
-    std::unordered_map<std::string, std::unique_ptr<Mesh>> m_ModelCache;
+    std::unordered_map<std::string, std::unique_ptr<ModelAsset>> m_ModelCache;
     std::filesystem::path m_ProjectRoot;
 
     Camera m_Camera;
@@ -245,6 +246,7 @@ private:
     UIRenderer m_UIRenderer;
 
     Mesh* GetPrimitiveMesh(PrimitiveType primitive);
+    ModelAsset* GetModelAsset(const std::string& modelPath);
     Mesh* GetModelMesh(const std::string& modelPath);
     void DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha, const Texture2D* texture, float metallic, float roughness, float ambientOcclusion, float emissive, const Texture2D* normalMap, const Texture2D* metallicMap, const Texture2D* roughnessMap, const Texture2D* aoMap, const Texture2D* emissiveMap);
     void UploadFrameShaderState();

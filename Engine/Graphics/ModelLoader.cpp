@@ -4,7 +4,8 @@
 #include "../Core/Logger.h"
 
 #include <algorithm>
-#include <cmath>\n#include <cctype>
+#include <cmath>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -62,7 +63,7 @@ void GenerateNormals(std::vector<Vertex>& vertices,const std::vector<std::uint32
     }
 }
 
-void LoadMTL(const std::filesystem::path& path,std::vector<ImportedMaterial>& out)
+void LoadMTL(const std::filesystem::path& path,std::vector<ImportedMaterial>& out,bool importTextures)
 {
     std::ifstream file(path);
     if(!file){Logger::Warning("Could not open MTL: "+path.string());return;}
@@ -87,7 +88,7 @@ void LoadMTL(const std::filesystem::path& path,std::vector<ImportedMaterial>& ou
         {
             std::string texture;std::getline(ss,texture);
             texture=Trim(texture);
-            if(!texture.empty()) current->diffuseTexture=(path.parent_path()/texture).lexically_normal().string();
+            if(importTextures && !texture.empty()) current->diffuseTexture=(path.parent_path()/texture).lexically_normal().string();
         }
     }
 }
@@ -140,13 +141,25 @@ std::unique_ptr<ModelAsset> ModelLoader::LoadOBJModel(const std::string& filepat
     std::unordered_map<std::string,size_t> builderByMaterial;
     std::string currentMaterial="Default";
 
+    SectionBuilder* activeBuilder=nullptr;
     auto getBuilder=[&]() -> SectionBuilder& {
-        const std::string key=settings.mergeMaterialSections?currentMaterial:(currentMaterial+"#"+std::to_string(builders.size()));
-        auto it=builderByMaterial.find(key);
-        if(settings.mergeMaterialSections&&it!=builderByMaterial.end()) return builders[it->second];
-        const size_t index=builders.size();builders.push_back({});builders.back().material=currentMaterial;
-        if(settings.mergeMaterialSections) builderByMaterial[key]=index;
-        return builders.back();
+        if(settings.mergeMaterialSections)
+        {
+            auto it=builderByMaterial.find(currentMaterial);
+            if(it!=builderByMaterial.end()) return builders[it->second];
+            const size_t index=builders.size();
+            builders.push_back({});
+            builders.back().material=currentMaterial;
+            builderByMaterial[currentMaterial]=index;
+            return builders.back();
+        }
+        if(!activeBuilder)
+        {
+            builders.push_back({});
+            builders.back().material=currentMaterial;
+            activeBuilder=&builders.back();
+        }
+        return *activeBuilder;
     };
 
     std::string line;
@@ -160,11 +173,12 @@ std::unique_ptr<ModelAsset> ModelLoader::LoadOBJModel(const std::string& filepat
         else if(tag=="mtllib"&&settings.importMaterials)
         {
             std::string mtl;std::getline(ss,mtl);mtl=Trim(mtl);
-            if(!mtl.empty()) LoadMTL((std::filesystem::path(filepath).parent_path()/mtl).lexically_normal(),model->materials);
+            if(!mtl.empty()) LoadMTL((std::filesystem::path(filepath).parent_path()/mtl).lexically_normal(),model->materials,settings.importTextures);
         }
         else if(tag=="usemtl")
         {
             std::string name;std::getline(ss,name);name=Trim(name);currentMaterial=name.empty()?"Default":name;
+            activeBuilder=nullptr;
         }
         else if(tag=="f")
         {
