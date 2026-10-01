@@ -4,8 +4,13 @@ Properties = {
 
 local collected = false
 
+local function displayName()
+    if Properties.WeaponID == "rifle" then return "rifle" end
+    return "pistol"
+end
+
 function OnCreate()
-    self:SetInteractablePrompt("Pick up pistol")
+    self:SetInteractablePrompt("Pick up "..displayName())
 end
 
 function OnUpdate(dt)
@@ -17,10 +22,10 @@ end
 function OnInteract()
     if collected then return end
     collected = true
-    -- Numeric request keeps the pickup decoupled from the player script while
-    -- using the engine's existing shared runtime State API.
     if Properties.WeaponID == "pistol" then
         State.SetNumber("duelfps_weapon_pickup", 1)
+    elseif Properties.WeaponID == "rifle" then
+        State.SetNumber("duelfps_weapon_pickup", 2)
     end
     self:Destroy()
 end
