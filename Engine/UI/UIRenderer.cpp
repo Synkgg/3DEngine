@@ -91,8 +91,7 @@ namespace
                 float radius = min(u_CornerRadius, min(halfSize.x, halfSize.y));
                 vec2 q = abs(p - halfSize) - (halfSize - vec2(radius));
                 float sd = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - radius;
-                float coverage = 1.0 - smoothstep(-0.75, 0.75, sd);
-                if (coverage <= 0.001) discard;
+                if (sd > 0.0) discard;
             }
             float gradientT = u_GradientDirection == 1 ? v_UV.x : v_UV.y;
             vec4 baseColor = u_UseGradient != 0 ? mix(u_Color, u_GradientColor, gradientT) : u_Color;
