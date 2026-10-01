@@ -33,6 +33,12 @@ struct Bone
 {
     std::string name;
     int parent = -1;
+    std::array<float, 3> bindTranslation{ 0.0f, 0.0f, 0.0f };
+    std::array<float, 4> bindRotation{ 0.0f, 0.0f, 0.0f, 1.0f };
+    std::array<float, 3> bindScale{ 1.0f, 1.0f, 1.0f };
+    std::array<float, 16> bindLocalMatrix{
+        1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1
+    };
     std::array<float, 16> inverseBindMatrix{
         1,0,0,0,
         0,1,0,0,
@@ -97,4 +103,7 @@ struct ModelAsset
 
     bool IsSkeletal() const { return type == ModelAssetType::Skeletal; }
     bool Empty() const { return sections.empty(); }
+
+    std::vector<Mat4> EvaluateAnimation(std::size_t clipIndex, float time, bool loop = true) const;
+    std::vector<Mat4> BindPose() const;
 };

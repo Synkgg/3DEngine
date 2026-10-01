@@ -277,7 +277,7 @@ void Renderer::DrawModel(
     ModelAsset* model=GetModelAsset(modelPath);
     if(!model) return;
     std::vector<Mat4> bindBones;
-    if(model->IsSkeletal()){bindBones.reserve(model->skeleton.bones.size());for(const Bone& b:model->skeleton.bones){Mat4 m;for(int i=0;i<16;++i)m.elements[i]=b.inverseBindMatrix[i];bindBones.push_back(m);}}
+    if(model->IsSkeletal()) bindBones=model->BindPose();
     for(const MeshSection& section:model->sections)
     {
         if(!section.mesh) continue;
@@ -297,6 +297,14 @@ void Renderer::DrawModel(
             sectionTexture,sectionMetallic,sectionRoughness,ambientOcclusion,emissive,
             normalMap,metallicMap,roughnessMap,aoMap,emissiveMap,model->IsSkeletal()?&bindBones:nullptr);
     }
+}
+
+void Renderer::DrawAnimatedModel(const Transform& transform,const std::string& modelPath,std::size_t clipIndex,float animationTime,bool loop,float red,float green,float blue,float alpha)
+{
+    ModelAsset* model=GetModelAsset(modelPath);if(!model)return;
+    if(!model->IsSkeletal()||model->animations.empty()){DrawModel(transform,modelPath,red,green,blue,alpha);return;}
+    const std::vector<Mat4> bones=model->EvaluateAnimation(clipIndex,animationTime,loop);
+    for(const MeshSection& section:model->sections){if(!section.mesh)continue;const ImportedMaterial* material=section.materialIndex<model->materials.size()?&model->materials[section.materialIndex]:nullptr;const Texture2D* tex=nullptr;if(material&&!material->diffuseTexture.empty())tex=LoadTexture(material->diffuseTexture);DrawMeshInternal(section.mesh.get(),transform,material?red*material->diffuse[0]:red,material?green*material->diffuse[1]:green,material?blue*material->diffuse[2]:blue,material?alpha*material->opacity:alpha,tex,material?material->Metallic():0.0f,material?material->Roughness():0.65f,1.0f,0.0f,nullptr,nullptr,nullptr,nullptr,nullptr,&bones);}
 }
 
 Texture2D* Renderer::LoadTexture(

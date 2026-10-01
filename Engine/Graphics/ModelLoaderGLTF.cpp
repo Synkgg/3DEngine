@@ -89,8 +89,13 @@ std::unique_ptr<ModelAsset> LoadGLTFAsset(const std::string& filepath,const Mode
         {
             const int ni=NodeIndex(data,skin.joints[i]);
             boneByNode[ni]=static_cast<int>(i);
-            model->skeleton.bones[i].name=skin.joints[i]->name?skin.joints[i]->name:("Bone_"+std::to_string(i));
-            model->skeleton.bones[i].inverseBindMatrix=IdentityMatrix();
+            Bone& bone=model->skeleton.bones[i];
+            bone.name=skin.joints[i]->name?skin.joints[i]->name:("Bone_"+std::to_string(i));
+            bone.inverseBindMatrix=IdentityMatrix();
+            cgltf_float local[16]{};cgltf_node_transform_local(skin.joints[i],local);bone.bindLocalMatrix=MatrixToArray(local);
+            if(skin.joints[i]->has_translation)std::copy(skin.joints[i]->translation,skin.joints[i]->translation+3,bone.bindTranslation.begin());
+            if(skin.joints[i]->has_rotation)std::copy(skin.joints[i]->rotation,skin.joints[i]->rotation+4,bone.bindRotation.begin());
+            if(skin.joints[i]->has_scale)std::copy(skin.joints[i]->scale,skin.joints[i]->scale+3,bone.bindScale.begin());
         }
         for(cgltf_size i=0;i<skin.joints_count;++i)
         {

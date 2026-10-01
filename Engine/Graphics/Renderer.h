@@ -95,6 +95,11 @@ public:
         const Texture2D* roughnessMap = nullptr, const Texture2D* aoMap = nullptr,
         const Texture2D* emissiveMap = nullptr
     );
+    void DrawAnimatedModel(
+        const Transform& transform, const std::string& modelPath,
+        std::size_t clipIndex, float animationTime, bool loop = true,
+        float red = 1.0f, float green = 1.0f, float blue = 1.0f, float alpha = 1.0f
+    );
     void DrawShadowModel(const Transform& transform, const std::string& modelPath);
     unsigned int RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
 
