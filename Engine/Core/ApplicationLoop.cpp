@@ -231,13 +231,7 @@ void Application::Run()
         }
         ImGui::End();
 
-        // Shrink the main viewport work rectangle for the rest of this frame.
-        // DockSpaceOverViewport and embedded asset editors then naturally
-        // begin below the document bar instead of drawing underneath it.
-        mainViewport->WorkPos.y += documentBarHeight;
-        mainViewport->WorkSize.y = std::max(1.0f, mainViewport->WorkSize.y - documentBarHeight);
-
-        if (m_ActiveUIDocument >= 0 &&
+         if (m_ActiveUIDocument >= 0 &&
             m_ActiveUIDocument < static_cast<int>(m_UIDocuments.size()))
         {
             UIDocument& document = m_UIDocuments[m_ActiveUIDocument];
