@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Mesh.h"
+#include "../Math/Mat4.h"
 
 struct ImportedMaterial
 {
