@@ -134,7 +134,8 @@ Editor::Editor()
 void Editor::Render(
     Renderer& renderer,
     Scene& scene,
-    ImFont* iconFont)
+    ImFont* iconFont,
+    bool renderSceneDocument)
 {
     if (!m_StyleInitialized)
     {
@@ -293,28 +294,31 @@ void Editor::Render(
     // the Scene viewport, not to a second application-wide toolbar.
     ImGui::DockSpaceOverViewport();
 
-    RenderHierarchy(
-        scene,
-        iconFont
-    );
+    if (renderSceneDocument)
+    {
+        RenderHierarchy(
+            scene,
+            iconFont
+        );
 
-    RenderViewport(
-        renderer,
-        scene
-    );
+        RenderViewport(
+            renderer,
+            scene
+        );
 
-    RenderInspector(
-        renderer,
-        scene
-    );
+        RenderInspector(
+            renderer,
+            scene
+        );
 
-    RenderConsole();
+        RenderConsole();
 
-    RenderContentBrowser(
-        renderer,
-        scene,
-        iconFont
-    );
+        RenderContentBrowser(
+            renderer,
+            scene,
+            iconFont
+        );
+    }
 }
 
 ImVec2 Editor::GetViewportPosition() const
