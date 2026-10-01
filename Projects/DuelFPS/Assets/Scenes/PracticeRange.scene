@@ -366,5 +366,5 @@ Collider 1 1.4 0.8 2.2
 Scripts 1
 Script Assets/Scripts/WeaponPickup.lua
 ScriptProperties 1
-ScriptProperty Assets/Scripts/WeaponPickup.lua WeaponID String "rifle"
+ScriptProperty "Assets/Scripts/WeaponPickup.lua" "WeaponID" 2 "rifle"
 HierarchyFolders 0
