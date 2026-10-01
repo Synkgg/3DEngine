@@ -215,7 +215,7 @@ void Application::Run()
             ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking |
             ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-        auto drawDocumentTab = [&](const char* icon, const std::string& label, bool selected, float width)
+        auto drawDocumentTab = [&](const char* icon, const std::string& label, bool selected, float width, bool closable)
         {
             ImGui::PushID(label.c_str());
             const ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -239,6 +239,30 @@ void Application::Run()
             ImGui::InvisibleButton("##DocumentTab", size);
             const bool clicked = ImGui::IsItemClicked();
 
+            bool closeClicked = false;
+            if (closable)
+            {
+                const float closeSize = 16.0f;
+                const ImVec2 closePos(pos.x + size.x - closeSize - 6.0f, pos.y + 5.0f);
+                const bool closeHovered = ImGui::IsMouseHoveringRect(
+                    closePos, ImVec2(closePos.x + closeSize, closePos.y + closeSize));
+                if (closeHovered)
+                {
+                    drawList->AddRectFilled(closePos,
+                        ImVec2(closePos.x + closeSize, closePos.y + closeSize),
+                        IM_COL32(58, 62, 69, 255), 3.0f);
+                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+                        closeClicked = true;
+                }
+
+                const ImU32 closeColor = closeHovered
+                    ? IM_COL32(235, 237, 240, 255)
+                    : IM_COL32(130, 135, 143, 255);
+                const ImVec2 c(closePos.x + closeSize * 0.5f, closePos.y + closeSize * 0.5f);
+                drawList->AddLine(ImVec2(c.x - 3.0f, c.y - 3.0f), ImVec2(c.x + 3.0f, c.y + 3.0f), closeColor, 1.25f);
+                drawList->AddLine(ImVec2(c.x + 3.0f, c.y - 3.0f), ImVec2(c.x - 3.0f, c.y + 3.0f), closeColor, 1.25f);
+            }
+
             float x = pos.x + 9.0f;
             if (m_ImGuiLayer.GetIconFont())
             {
@@ -258,19 +282,19 @@ void Application::Run()
                 ? IM_COL32(235, 237, 240, 255)
                 : IM_COL32(178, 182, 188, 255);
             const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
-            const float available = std::max(0.0f, pos.x + size.x - x - 8.0f);
+            const float available = std::max(0.0f, pos.x + size.x - x - (closable ? 30.0f : 8.0f));
             drawList->PushClipRect(ImVec2(x, pos.y), ImVec2(x + available, pos.y + size.y), true);
             drawList->AddText(ImVec2(x, pos.y + (size.y - textSize.y) * 0.5f), textColor, label.c_str());
             drawList->PopClipRect();
 
             ImGui::PopID();
-            return clicked;
+            return closeClicked ? 2 : clicked ? 1 : 0;
         };
 
         std::string sceneLabel = m_Editor.GetSceneFilePath().empty()
             ? "Scene"
             : std::filesystem::path(m_Editor.GetSceneFilePath()).filename().string();
-        if (drawDocumentTab(ICON_FA_CUBES, sceneLabel, m_ActiveUIDocument < 0, 150.0f))
+        if (drawDocumentTab(ICON_FA_CUBES, sceneLabel, m_ActiveUIDocument < 0, 150.0f, false) == 1)
             m_ActiveUIDocument = -1;
 
         for (int i = 0; i < static_cast<int>(m_UIDocuments.size()); ++i)
@@ -278,12 +302,31 @@ void Application::Run()
             ImGui::SameLine();
             ImGui::PushID(i);
             const std::string label = std::filesystem::path(m_UIDocuments[i].path).filename().string();
-            if (drawDocumentTab(ICON_FA_OBJECT_GROUP, label, m_ActiveUIDocument == i, 165.0f))
+            const int tabAction = drawDocumentTab(
+                ICON_FA_OBJECT_GROUP, label, m_ActiveUIDocument == i, 165.0f, true);
+            ImGui::PopID();
+
+            if (tabAction == 2)
+            {
+                const bool wasActive = m_ActiveUIDocument == i;
+                m_UIDocuments.erase(m_UIDocuments.begin() + i);
+
+                if (m_UIDocuments.empty())
+                    m_ActiveUIDocument = -1;
+                else if (wasActive)
+                    m_ActiveUIDocument = std::min(i, static_cast<int>(m_UIDocuments.size()) - 1);
+                else if (m_ActiveUIDocument > i)
+                    --m_ActiveUIDocument;
+
+                --i;
+                continue;
+            }
+
+            if (tabAction == 1)
             {
                 m_ActiveUIDocument = i;
                 m_UIDocuments[i].editor->Focus();
             }
-            ImGui::PopID();
         }
 
         const ImVec2 windowPos = ImGui::GetWindowPos();
