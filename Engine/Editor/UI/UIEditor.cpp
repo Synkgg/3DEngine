@@ -546,6 +546,10 @@ void UIEditor::DrawInspector(
         );
     }
 
+    float cornerRadius=widget.GetCornerRadius();
+    if(ImGui::DragFloat("Corner Radius",&cornerRadius,0.5f,0.0f,512.0f))
+        widget.SetCornerRadius(cornerRadius);
+
     bool gradient = widget.HasGradient();
     if (ImGui::Checkbox("Gradient", &gradient)) widget.SetGradientEnabled(gradient);
     if (gradient)
@@ -628,6 +632,15 @@ void UIEditor::DrawInspector(
                 fontSize
             );
         }
+
+        int horizontal=static_cast<int>(text->GetHorizontalAlignment());
+        const char* horizontalOptions[]={"Left","Center","Right"};
+        if(ImGui::Combo("Horizontal Alignment",&horizontal,horizontalOptions,3))
+            text->SetHorizontalAlignment(static_cast<UITextHorizontalAlignment>(horizontal));
+        int vertical=static_cast<int>(text->GetVerticalAlignment());
+        const char* verticalOptions[]={"Top","Center","Bottom"};
+        if(ImGui::Combo("Vertical Alignment",&vertical,verticalOptions,3))
+            text->SetVerticalAlignment(static_cast<UITextVerticalAlignment>(vertical));
     }
 
     if (UIImage* image =
@@ -758,6 +771,20 @@ void UIEditor::DrawInspector(
         Vec4 disabledColor = button->GetDisabledColor();
         if (ImGui::ColorEdit4("Disabled", &disabledColor.x))
             button->SetDisabledColor(disabledColor);
+
+        ImGui::Spacing();
+        ImGui::TextDisabled("State Brushes");
+        auto editButtonBrush=[&](const char* label,const std::string& current,const std::function<void(const std::string&)>& setter)
+        {
+            char buffer[512]={};
+            std::snprintf(buffer,sizeof(buffer),"%s",current.c_str());
+            if(ImGui::InputText(label,buffer,sizeof(buffer))) setter(buffer);
+            if(ImGui::IsItemHovered()) ImGui::SetTooltip("Project texture path, e.g. Assets/UI/button_normal.png");
+        };
+        editButtonBrush("Normal Image",button->GetNormalImage(),[&](const std::string& v){button->SetNormalImage(v);});
+        editButtonBrush("Hovered Image",button->GetHoveredImage(),[&](const std::string& v){button->SetHoveredImage(v);});
+        editButtonBrush("Pressed Image",button->GetPressedImage(),[&](const std::string& v){button->SetPressedImage(v);});
+        editButtonBrush("Disabled Image",button->GetDisabledImage(),[&](const std::string& v){button->SetDisabledImage(v);});
 
         const std::string clickSoundPath = button->GetClickSoundPath();
         const std::string clickSoundPreview = clickSoundPath.empty()
