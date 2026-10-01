@@ -18,7 +18,9 @@ return {
     adsForward = 0.62,
     hipDown = -0.20,
     adsDown = -0.14,
-    cameraKick = 0.032,
-    viewKick = 0.085,
-    kickRecovery = 8.5
+    cameraKick = 0.010,
+    viewKick = 0.045,
+    kickRecovery = 6.0,
+    recoilRiseSpeed = 12.0,
+    recoilReturnSpeed = 7.0
 }
