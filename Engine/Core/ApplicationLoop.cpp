@@ -13,6 +13,7 @@
 #include "../Core/Logger.h"
 #include "../UI/UISerializer.h"
 #include "../UI/UIText.h"
+#include "../Editor/Fonts/IconsFontAwesome6.h"
 
 void Application::Run()
 {
@@ -200,21 +201,74 @@ void Application::Run()
             }
         }
 
-        // Reserve a second top bar below the main menu, just like ImGui's
-        // main menu bar reserves space above the editor workspace.
+        // Document strip: compact editor chrome shared by scene and asset pages.
         const float documentBarHeight = 34.0f;
         ImGuiViewport* mainViewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(mainViewport->WorkPos, ImGuiCond_Always);
         ImGui::SetNextWindowSize(ImVec2(mainViewport->WorkSize.x, documentBarHeight), ImGuiCond_Always);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(7.0f, 4.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.0f, 0.0f));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(27, 29, 32, 255));
         ImGui::Begin("##EditorDocuments", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
             ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking |
             ImGuiWindowFlags_NoBringToFrontOnFocus);
 
+        auto drawDocumentTab = [&](const char* icon, const std::string& label, bool selected, float width)
+        {
+            ImGui::PushID(label.c_str());
+            const ImVec2 pos = ImGui::GetCursorScreenPos();
+            const ImVec2 size(width, 26.0f);
+            const bool hovered = ImGui::IsMouseHoveringRect(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            if (selected)
+                drawList->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y),
+                    IM_COL32(46, 49, 55, 255), 4.0f);
+            else if (hovered)
+                drawList->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y),
+                    IM_COL32(37, 40, 45, 255), 4.0f);
+
+            if (selected)
+                drawList->AddRectFilled(
+                    ImVec2(pos.x + 7.0f, pos.y + size.y - 2.0f),
+                    ImVec2(pos.x + size.x - 7.0f, pos.y + size.y),
+                    IM_COL32(92, 153, 230, 255), 1.0f);
+
+            ImGui::InvisibleButton("##DocumentTab", size);
+            const bool clicked = ImGui::IsItemClicked();
+
+            float x = pos.x + 9.0f;
+            if (m_ImGuiLayer.GetIconFont())
+            {
+                ImGui::PushFont(m_ImGuiLayer.GetIconFont());
+                drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
+                    ImVec2(x, pos.y + 5.0f),
+                    selected ? IM_COL32(205, 221, 242, 255) : IM_COL32(145, 151, 160, 255),
+                    icon);
+                const float iconWidth = ImGui::CalcTextSize(icon).x;
+                ImGui::PopFont();
+                x += iconWidth + 7.0f;
+            }
+
+            const ImU32 textColor = selected
+                ? IM_COL32(235, 237, 240, 255)
+                : IM_COL32(178, 182, 188, 255);
+            const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+            const float available = std::max(0.0f, pos.x + size.x - x - 8.0f);
+            drawList->PushClipRect(ImVec2(x, pos.y), ImVec2(x + available, pos.y + size.y), true);
+            drawList->AddText(ImVec2(x, pos.y + (size.y - textSize.y) * 0.5f), textColor, label.c_str());
+            drawList->PopClipRect();
+
+            ImGui::PopID();
+            return clicked;
+        };
+
         std::string sceneLabel = m_Editor.GetSceneFilePath().empty()
             ? "Scene"
             : std::filesystem::path(m_Editor.GetSceneFilePath()).filename().string();
-        if (ImGui::Selectable(sceneLabel.c_str(), m_ActiveUIDocument < 0, 0, ImVec2(140.0f, 0.0f)))
+        if (drawDocumentTab(ICON_FA_CUBES, sceneLabel, m_ActiveUIDocument < 0, 150.0f))
             m_ActiveUIDocument = -1;
 
         for (int i = 0; i < static_cast<int>(m_UIDocuments.size()); ++i)
@@ -222,16 +276,26 @@ void Application::Run()
             ImGui::SameLine();
             ImGui::PushID(i);
             const std::string label = std::filesystem::path(m_UIDocuments[i].path).filename().string();
-            if (ImGui::Selectable(label.c_str(), m_ActiveUIDocument == i, 0, ImVec2(160.0f, 0.0f)))
+            if (drawDocumentTab(ICON_FA_OBJECT_GROUP, label, m_ActiveUIDocument == i, 165.0f))
             {
                 m_ActiveUIDocument = i;
                 m_UIDocuments[i].editor->Focus();
             }
             ImGui::PopID();
         }
-        ImGui::End();
 
-         if (m_ActiveUIDocument >= 0 &&
+        const ImVec2 windowPos = ImGui::GetWindowPos();
+        const ImVec2 windowSize = ImGui::GetWindowSize();
+        ImGui::GetWindowDrawList()->AddLine(
+            ImVec2(windowPos.x, windowPos.y + windowSize.y - 1.0f),
+            ImVec2(windowPos.x + windowSize.x, windowPos.y + windowSize.y - 1.0f),
+            IM_COL32(48, 51, 57, 255));
+
+        ImGui::End();
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar(2);
+
+        if (m_ActiveUIDocument >= 0 &&
             m_ActiveUIDocument < static_cast<int>(m_UIDocuments.size()))
         {
             UIDocument& document = m_UIDocuments[m_ActiveUIDocument];
