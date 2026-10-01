@@ -46,6 +46,11 @@ ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
     return result;
 }
 
+void Renderer::InvalidateModelAsset(const std::string& modelPath)
+{
+    const std::string resolvedPath=ResolveAssetPath(modelPath);m_ModelCache.erase(resolvedPath);m_ModelPreviewCache.erase(resolvedPath);
+}
+
 Mesh* Renderer::GetModelMesh(const std::string& modelPath)
 {
     ModelAsset* model = GetModelAsset(modelPath);

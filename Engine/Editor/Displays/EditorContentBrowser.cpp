@@ -381,7 +381,8 @@ void Editor::RenderContentBrowser(
                 !entry.directory &&
                 extension == ".obj" ||
                 extension == ".gltf" ||
-                extension == ".glb";
+                extension == ".glb" ||
+                extension == ".modelasset";
 
             const bool isPrefab =
                 !entry.directory &&
@@ -1069,12 +1070,19 @@ void Editor::RenderContentBrowser(
                     settings.mergeMaterialSections = m_ModelImportMergeSections;
                     std::unique_ptr<ModelAsset> imported = ModelLoader::LoadModel(m_MeshPreviewPath, settings);
                     if (imported)
-                        Logger::Info("Validated model import settings for " + fs::path(m_MeshPreviewPath).filename().string() + ": " + std::to_string(imported->sections.size()) + " sections, " + std::to_string(imported->materials.size()) + " materials, " + std::to_string(imported->skeleton.bones.size()) + " bones, " + std::to_string(imported->animations.size()) + " animations");
+                    {
+                        fs::path output = fs::path(m_MeshPreviewPath); output.replace_extension(".modelasset");
+                        if (ModelLoader::SaveImportedAsset(output.string(), *imported, settings))
+                        {
+                            renderer.InvalidateModelAsset(output.string());
+                            Logger::Info("Imported " + fs::path(m_MeshPreviewPath).filename().string() + " -> " + output.filename().string() + ": " + std::to_string(imported->sections.size()) + " sections, " + std::to_string(imported->materials.size()) + " materials, " + std::to_string(imported->skeleton.bones.size()) + " bones, " + std::to_string(imported->animations.size()) + " animations");
+                        }
+                    }
                     else
                         Logger::Error("Model import validation failed: " + m_MeshPreviewPath);
                 }
                 ImGui::SameLine();
-                ImGui::TextDisabled("Source assets are currently loaded directly; persistent .asset output is next.");
+                ImGui::TextDisabled("Reimport writes a persistent .modelasset beside the source.");
             }
             ImGui::Separator();
             ImGui::TextDisabled("%s", m_MeshPreviewPath.c_str());

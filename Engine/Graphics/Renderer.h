@@ -104,6 +104,7 @@ public:
     unsigned int RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
     unsigned int RenderAnimatedModelPreview(const std::string& modelPath, std::size_t clipIndex, float animationTime, unsigned int width = 256, unsigned int height = 256);
     ModelAsset* GetModelAsset(const std::string& modelPath);
+    void InvalidateModelAsset(const std::string& modelPath);
 
     SDL_GLContext GetContext() const;
     unsigned int GetViewportTexture() const;
