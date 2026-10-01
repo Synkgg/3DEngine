@@ -141,7 +141,11 @@ void Application::Run()
 
         // Persistent editor shell: scenes and asset editors are documents.
         // Scene rendering stays alive regardless of which document is active.
-        m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
+        m_Editor.Render(
+            m_Renderer,
+            m_Scene,
+            m_ImGuiLayer.GetIconFont(),
+            m_ActiveUIDocument < 0);
 
         if (m_Editor.ConsumeProjectHubRequest())
         {
