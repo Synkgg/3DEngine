@@ -7,6 +7,11 @@ function OnCreate()
     if Network.IsConnected() then Network.Disconnect() end
 end
 
+function OnPracticeClicked()
+    Input.SetCursorVisible(false)
+    Scene.Load("Assets/Scenes/PracticeRange.scene")
+end
+
 function OnHostClicked()
     if Network.Host(7777) then
         UI.SetText("NetworkStatus","HOSTING // WAITING FOR OPPONENT")
