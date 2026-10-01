@@ -200,11 +200,16 @@ void Application::Run()
             }
         }
 
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->WorkPos, ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(ImGui::GetMainViewport()->WorkSize.x, 34.0f), ImGuiCond_Always);
+        // Reserve a second top bar below the main menu, just like ImGui's
+        // main menu bar reserves space above the editor workspace.
+        const float documentBarHeight = 34.0f;
+        ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(mainViewport->WorkPos, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(mainViewport->WorkSize.x, documentBarHeight), ImGuiCond_Always);
         ImGui::Begin("##EditorDocuments", nullptr,
             ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking);
+            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking |
+            ImGuiWindowFlags_NoBringToFrontOnFocus);
 
         std::string sceneLabel = m_Editor.GetSceneFilePath().empty()
             ? "Scene"
@@ -225,6 +230,12 @@ void Application::Run()
             ImGui::PopID();
         }
         ImGui::End();
+
+        // Shrink the main viewport work rectangle for the rest of this frame.
+        // DockSpaceOverViewport and embedded asset editors then naturally
+        // begin below the document bar instead of drawing underneath it.
+        mainViewport->WorkPos.y += documentBarHeight;
+        mainViewport->WorkSize.y = std::max(1.0f, mainViewport->WorkSize.y - documentBarHeight);
 
         if (m_ActiveUIDocument >= 0 &&
             m_ActiveUIDocument < static_cast<int>(m_UIDocuments.size()))
