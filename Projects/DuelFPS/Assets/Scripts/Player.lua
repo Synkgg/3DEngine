@@ -354,6 +354,25 @@ function OnCreate()
     if Network.IsHost() then beginMatch() end
 end
 
+function OnResumeClicked()
+    if paused then setPaused(false) end
+end
+
+function OnDisconnectClicked()
+    if paused then returnToMenu() end
+end
+
+function OnRematchClicked()
+    if matchState==MATCH_END and Network.IsHost() then
+        Input.SetCursorVisible(false)
+        beginMatch()
+    end
+end
+
+function OnReturnToMenuClicked()
+    if matchState==MATCH_END then returnToMenu() end
+end
+
 function OnUpdate(dt)
     if not Network.IsConnected() then
         Input.SetCursorVisible(true)
@@ -382,20 +401,12 @@ function OnUpdate(dt)
 
     if paused then
         CharacterController.Move(0.0,0.0)
-        if UI.WasClicked("ResumeButton") then setPaused(false)
-        elseif UI.WasClicked("DisconnectButton") then returnToMenu() end
         return
     end
 
     if matchState==MATCH_END then
         CharacterController.Move(0.0,0.0)
         Input.SetCursorVisible(true)
-        if UI.WasClicked("RematchButton") and Network.IsHost() then
-            Input.SetCursorVisible(false)
-            beginMatch()
-        elseif UI.WasClicked("ReturnToMenuButton") then
-            returnToMenu()
-        end
         return
     end
 
