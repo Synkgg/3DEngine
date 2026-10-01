@@ -16,6 +16,10 @@ static const char* vertexShaderSource = R"(
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_UV;
+layout(location = 3) in uvec4 a_Joints;
+layout(location = 4) in vec4 a_Weights;
+uniform int u_Skinned;
+uniform mat4 u_Bones[128];
 
 uniform mat4 u_Transform;
 uniform mat4 u_Model;
@@ -28,16 +32,20 @@ uniform mat4 u_LightSpaceMatrices[3];
 
 void main()
 {
+    mat4 skin=mat4(1.0);
+    if(u_Skinned!=0) skin=a_Weights.x*u_Bones[a_Joints.x]+a_Weights.y*u_Bones[a_Joints.y]+a_Weights.z*u_Bones[a_Joints.z]+a_Weights.w*u_Bones[a_Joints.w];
+    vec4 localPosition=skin*vec4(a_Position,1.0);
+    vec3 localNormal=mat3(skin)*a_Normal;
     mat3 normalMatrix = transpose(inverse(mat3(u_Model)));
-    v_Normal = normalize(normalMatrix * a_Normal);
-    v_WorldPosition = vec3(u_Model * vec4(a_Position, 1.0));
+    v_Normal = normalize(normalMatrix * localNormal);
+    v_WorldPosition = vec3(u_Model * localPosition);
     v_UV = a_UV;
     for (int i = 0; i < 3; ++i)
         v_LightSpacePosition[i] = u_LightSpaceMatrices[i] * vec4(v_WorldPosition, 1.0);
 
     gl_Position =
         u_Transform *
-        vec4(a_Position, 1.0);
+        localPosition;
 }
 )";
 

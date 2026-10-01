@@ -7,6 +7,8 @@
 #include "../Core/VertexBuffer.h"
 #include "../Core/IndexBuffer.h"
 
+struct BoneWeight;
+
 struct Vertex
 {
     float position[3];
@@ -31,6 +33,7 @@ public:
 
     const std::vector<Vertex>& GetVertices() const;
     const std::vector<std::uint32_t>& GetIndices() const;
+    void SetSkinWeights(const std::vector<BoneWeight>& weights);
 
 private:
     std::vector<Vertex> m_Vertices;
@@ -39,4 +42,5 @@ private:
     VertexArray m_VertexArray;
     VertexBuffer m_VertexBuffer;
     IndexBuffer m_IndexBuffer;
+    unsigned int m_SkinBuffer = 0;
 };

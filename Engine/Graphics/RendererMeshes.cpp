@@ -220,7 +220,7 @@ void Renderer::DrawMeshInternal(
     const Texture2D* texture, float metallic, float roughness,
     float ambientOcclusion, float emissive, const Texture2D* normalMap,
     const Texture2D* metallicMap, const Texture2D* roughnessMap,
-    const Texture2D* aoMap, const Texture2D* emissiveMap)
+    const Texture2D* aoMap, const Texture2D* emissiveMap, const std::vector<Mat4>* bones)
 {
     if (!mesh) return;
     const Mat4 model = transform.GetMatrix();
@@ -231,6 +231,8 @@ void Renderer::DrawMeshInternal(
     m_Shader.SetMat4("u_Transform",cameraTransform);
     m_Shader.SetVec4("u_Color",red,green,blue,alpha);
     m_Shader.SetMat4("u_Model",model);
+    const bool skinned=bones&&!bones->empty();m_Shader.SetInt("u_Skinned",skinned?1:0);
+    if(skinned){const std::size_t count=std::min<std::size_t>(bones->size(),128);for(std::size_t i=0;i<count;++i){const std::string n="u_Bones["+std::to_string(i)+"]";m_Shader.SetMat4(n.c_str(),(*bones)[i]);}}
     m_Shader.SetFloat("u_Metallic",metallic);m_Shader.SetFloat("u_Roughness",roughness);m_Shader.SetFloat("u_AO",ambientOcclusion);m_Shader.SetFloat("u_Emissive",emissive);
     const Texture2D* maps[5]={normalMap,metallicMap,roughnessMap,aoMap,emissiveMap};
     static const char* samplers[5]={"u_NormalMap","u_MetallicMap","u_RoughnessMap","u_AOMap","u_EmissiveMap"};
@@ -260,7 +262,7 @@ void Renderer::DrawMesh(
 {
     DrawMeshInternal(GetPrimitiveMesh(primitive), transform, red, green, blue, alpha,
         texture, metallic, roughness, ambientOcclusion, emissive,
-        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap);
+        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap, nullptr);
 }
 
 void Renderer::DrawModel(
@@ -274,6 +276,8 @@ void Renderer::DrawModel(
 {
     ModelAsset* model=GetModelAsset(modelPath);
     if(!model) return;
+    std::vector<Mat4> bindBones;
+    if(model->IsSkeletal()){bindBones.reserve(model->skeleton.bones.size());for(const Bone& b:model->skeleton.bones){Mat4 m;for(int i=0;i<16;++i)m.elements[i]=b.inverseBindMatrix[i];bindBones.push_back(m);}}
     for(const MeshSection& section:model->sections)
     {
         if(!section.mesh) continue;
@@ -291,7 +295,7 @@ void Renderer::DrawModel(
 
         DrawMeshInternal(section.mesh.get(),transform,sectionRed,sectionGreen,sectionBlue,sectionAlpha,
             sectionTexture,sectionMetallic,sectionRoughness,ambientOcclusion,emissive,
-            normalMap,metallicMap,roughnessMap,aoMap,emissiveMap);
+            normalMap,metallicMap,roughnessMap,aoMap,emissiveMap,model->IsSkeletal()?&bindBones:nullptr);
     }
 }
 

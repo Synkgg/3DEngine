@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include "../ModelAsset.h"
 
 #include <glad/gl.h>
 #include <cstddef>
@@ -93,4 +94,16 @@ const std::vector<Vertex>& Mesh::GetVertices() const
 const std::vector<std::uint32_t>& Mesh::GetIndices() const
 {
     return m_Indices;
+}
+void Mesh::SetSkinWeights(const std::vector<BoneWeight>& weights)
+{
+    if(weights.size()!=m_Vertices.size()||weights.empty()) return;
+    struct GPUWeight{std::uint32_t joints[4];float weights[4];};
+    std::vector<GPUWeight> gpu(weights.size());
+    for(std::size_t i=0;i<weights.size();++i)for(int k=0;k<4;++k){gpu[i].joints[k]=weights[i].joints[k];gpu[i].weights[k]=weights[i].weights[k];}
+    m_VertexArray.Bind();
+    unsigned int buffer=0;glGenBuffers(1,&buffer);glBindBuffer(GL_ARRAY_BUFFER,buffer);glBufferData(GL_ARRAY_BUFFER,gpu.size()*sizeof(GPUWeight),gpu.data(),GL_STATIC_DRAW);
+    glEnableVertexAttribArray(3);glVertexAttribIPointer(3,4,GL_UNSIGNED_INT,sizeof(GPUWeight),(void*)offsetof(GPUWeight,joints));
+    glEnableVertexAttribArray(4);glVertexAttribPointer(4,4,GL_FLOAT,GL_FALSE,sizeof(GPUWeight),(void*)offsetof(GPUWeight,weights));
+    m_SkinBuffer=buffer;m_VertexArray.Unbind();
 }

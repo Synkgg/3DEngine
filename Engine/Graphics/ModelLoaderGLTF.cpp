@@ -145,6 +145,7 @@ std::unique_ptr<ModelAsset> LoadGLTFAsset(const std::string& filepath,const Mode
             section.name=mesh.name?mesh.name:("Mesh_"+std::to_string(mi)+"_"+std::to_string(pi));
             section.materialIndex=prim.material?static_cast<std::uint32_t>((prim.material-data->materials)+1):0u;
             section.mesh=std::make_unique<Mesh>(vertices,indices);
+            if(joints&&weights) section.mesh->SetSkinWeights(skinWeights);
             model->sections.push_back(std::move(section));
             model->skinWeights.push_back(std::move(skinWeights));
         }
