@@ -19,6 +19,7 @@
 #include "../Components/MaterialComponent.h"
 #include "../Components/ScriptComponent.h"
 #include "../Components/InteractableComponent.h"
+#include "../Components/HierarchyGroupComponent.h"
 
 #include "../../Core/Logger.h"
 
@@ -407,6 +408,7 @@ bool SceneSerializer::Save(
         file << "Parent " << (parent.IsValid() ? parent.GetID() : 0) << '\n';
         const std::string prefabSource = m_Scene.GetPrefabSource(entity);
         file << "PrefabSource " << std::quoted(prefabSource) << '\n';
+        file << "HierarchyGroup " << (m_Scene.HasComponent<HierarchyGroupComponent>(entity) ? 1 : 0) << '\n';
 
         /*
          * Mesh
