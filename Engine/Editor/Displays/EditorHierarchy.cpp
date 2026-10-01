@@ -718,6 +718,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
         migrateFolder = [&](const HierarchyFolder& folder, Entity parent)
         {
             Entity group = scene.CreateEntity();
+            scene.AddComponent<HierarchyGroupComponent>(group);
             if (NameComponent* name = scene.GetComponent<NameComponent>(group))
                 name->name = MakeUniqueName(scene, folder.name.empty() ? "Group" : folder.name, group);
             if (parent.IsValid()) scene.SetParent(group, parent, false);
