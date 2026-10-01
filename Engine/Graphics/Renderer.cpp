@@ -335,7 +335,8 @@ static const char* modelPreviewFragmentShaderSource = R"(
 #version 450 core
 in vec3 v_Normal;
 out vec4 FragColor;
-void main(){ vec3 n=normalize(v_Normal); float d=max(dot(n,normalize(vec3(-0.45,0.75,0.55))),0.0); vec3 b=vec3(0.58,0.62,0.68); FragColor=vec4(b*(0.30+d*0.78),1.0); }
+uniform vec4 u_Color;
+void main(){ vec3 n=normalize(v_Normal); float d=max(dot(n,normalize(vec3(-0.45,0.75,0.55))),0.0); FragColor=vec4(u_Color.rgb*(0.30+d*0.78),u_Color.a); }
 )";
 
 static const char* shadowVertexShaderSource = R"(
