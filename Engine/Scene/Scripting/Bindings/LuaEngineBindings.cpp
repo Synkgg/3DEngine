@@ -569,6 +569,35 @@ void LuaScript::BindEngineAPI()
         time;
 
     /*
+     * Tween - generic scalar interpolation owned by this script instance.
+     * Starting another tween with the same id replaces the previous one.
+     */
+    sol::table tween = m_Lua->create_table();
+    tween.set_function("Cancel", [this](const std::string& id)
+    {
+        const auto before=m_Tweens.size();
+        m_Tweens.erase(std::remove_if(m_Tweens.begin(),m_Tweens.end(),
+            [&](const TweenJob& job){return job.id==id;}),m_Tweens.end());
+        return before!=m_Tweens.size();
+    });
+    tween.set_function("Value", [this](const std::string& id, float from, float to, float duration,
+        const std::string& easing, sol::protected_function callback)
+    {
+        m_Tweens.erase(std::remove_if(m_Tweens.begin(),m_Tweens.end(),
+            [&](const TweenJob& job){return job.id==id;}),m_Tweens.end());
+        TweenJob job; job.id=id; job.duration=std::max(0.0f,duration); job.easing=easing;
+        job.apply=[from,to,callback](float t) mutable
+        {
+            if(!callback.valid()) return;
+            sol::protected_function_result result=callback(from+(to-from)*t);
+            (void)result;
+        };
+        m_Tweens.push_back(std::move(job));
+        return true;
+    });
+    (*m_Environment)["Tween"] = tween;
+
+    /*
      * Camera
      */
     sol::table camera =
