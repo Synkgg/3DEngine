@@ -78,6 +78,7 @@ uniform int u_UseMetallicMap;
 uniform int u_UseRoughnessMap;
 uniform int u_UseAOMap;
 uniform int u_UseEmissiveMap;
+uniform int u_UseCombinedMR;
 uniform int u_FogEnabled;
 uniform float u_FogDensity;
 uniform float u_ViewDistance;
@@ -209,8 +210,9 @@ void main()
     // working color space. Converting them with pow(2.2) here crushes the
     // deliberately dark/saturated palette used by existing scenes.
     vec3 albedo = max(baseColor.rgb, vec3(0.0));
-    float metallic = clamp(u_UseMetallicMap != 0 ? texture(u_MetallicMap, v_UV).r : u_Metallic, 0.0, 1.0);
-    float roughness = clamp(u_UseRoughnessMap != 0 ? texture(u_RoughnessMap, v_UV).r : u_Roughness, 0.045, 1.0);
+    vec4 mrSample = u_UseCombinedMR != 0 ? texture(u_MetallicMap, v_UV) : vec4(0.0);
+    float metallic = clamp(u_UseCombinedMR != 0 ? mrSample.b * u_Metallic : (u_UseMetallicMap != 0 ? texture(u_MetallicMap, v_UV).r : u_Metallic), 0.0, 1.0);
+    float roughness = clamp(u_UseCombinedMR != 0 ? mrSample.g * u_Roughness : (u_UseRoughnessMap != 0 ? texture(u_RoughnessMap, v_UV).r : u_Roughness), 0.045, 1.0);
     float ao = clamp(u_UseAOMap != 0 ? texture(u_AOMap, v_UV).r : u_AO, 0.0, 1.0);
 
     vec3 N = normalize(v_Normal);
@@ -342,11 +344,16 @@ void main(){ vec3 n=normalize(v_Normal); float d=max(dot(n,normalize(vec3(-0.45,
 static const char* shadowVertexShaderSource = R"(
 #version 450 core
 layout(location = 0) in vec3 a_Position;
+layout(location = 3) in uvec4 a_Joints;
+layout(location = 4) in vec4 a_Weights;
 uniform mat4 u_Model;
+uniform int u_Skinned;
+uniform mat4 u_Bones[128];
 uniform mat4 u_LightSpaceMatrix;
 void main()
 {
-    gl_Position = u_LightSpaceMatrix * u_Model * vec4(a_Position, 1.0);
+    mat4 skin=mat4(1.0);if(u_Skinned!=0)skin=a_Weights.x*u_Bones[a_Joints.x]+a_Weights.y*u_Bones[a_Joints.y]+a_Weights.z*u_Bones[a_Joints.z]+a_Weights.w*u_Bones[a_Joints.w];
+    gl_Position = u_LightSpaceMatrix * u_Model * skin * vec4(a_Position, 1.0);
 }
 )";
 

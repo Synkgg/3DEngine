@@ -71,6 +71,11 @@ Mesh::Mesh(
     m_VertexArray.Unbind();
 }
 
+Mesh::~Mesh()
+{
+    if(m_SkinBuffer) glDeleteBuffers(1,&m_SkinBuffer);
+}
+
 void Mesh::Bind()
 {
     m_VertexArray.Bind();
@@ -102,6 +107,7 @@ void Mesh::SetSkinWeights(const std::vector<BoneWeight>& weights)
     std::vector<GPUWeight> gpu(weights.size());
     for(std::size_t i=0;i<weights.size();++i)for(int k=0;k<4;++k){gpu[i].joints[k]=weights[i].joints[k];gpu[i].weights[k]=weights[i].weights[k];}
     m_VertexArray.Bind();
+    if(m_SkinBuffer){glDeleteBuffers(1,&m_SkinBuffer);m_SkinBuffer=0;}
     unsigned int buffer=0;glGenBuffers(1,&buffer);glBindBuffer(GL_ARRAY_BUFFER,buffer);glBufferData(GL_ARRAY_BUFFER,gpu.size()*sizeof(GPUWeight),gpu.data(),GL_STATIC_DRAW);
     glEnableVertexAttribArray(3);glVertexAttribIPointer(3,4,GL_UNSIGNED_INT,sizeof(GPUWeight),(void*)offsetof(GPUWeight,joints));
     glEnableVertexAttribArray(4);glVertexAttribPointer(4,4,GL_FLOAT,GL_FALSE,sizeof(GPUWeight),(void*)offsetof(GPUWeight,weights));

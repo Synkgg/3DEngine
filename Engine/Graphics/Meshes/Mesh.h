@@ -20,6 +20,9 @@ class Mesh
 {
 public:
     Mesh() = default;
+    ~Mesh();
+    Mesh(const Mesh&) = delete;
+    Mesh& operator=(const Mesh&) = delete;
 
     Mesh(
         const std::vector<Vertex>& vertices,

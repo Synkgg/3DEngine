@@ -101,6 +101,7 @@ public:
         float red = 1.0f, float green = 1.0f, float blue = 1.0f, float alpha = 1.0f
     );
     void DrawShadowModel(const Transform& transform, const std::string& modelPath);
+    void DrawAnimatedShadowModel(const Transform& transform, const std::string& modelPath, std::size_t clipIndex, float animationTime, bool loop = true);
     unsigned int RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
     unsigned int RenderAnimatedModelPreview(const std::string& modelPath, std::size_t clipIndex, float animationTime, unsigned int width = 256, unsigned int height = 256);
     ModelAsset* GetModelAsset(const std::string& modelPath);

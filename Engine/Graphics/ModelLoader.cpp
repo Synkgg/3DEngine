@@ -231,12 +231,14 @@ float ImportedMaterial::Roughness() const
     // Legacy MTL Ns describes specular highlight size, not PBR metalness.
     // Keep the conversion deliberately broad so old Blender materials retain
     // their diffuse colour instead of collapsing into chrome-like surfaces.
+    if(roughnessFactor>=0.0f) return std::clamp(roughnessFactor,0.04f,1.0f);
     const float ns=std::clamp(shininess,0.0f,1000.0f);
     return std::clamp(0.92f-0.55f*std::sqrt(ns/1000.0f),0.28f,0.92f);
 }
 
 float ImportedMaterial::Metallic() const
 {
+    if(metallicFactor>=0.0f) return std::clamp(metallicFactor,0.0f,1.0f);
     // Wavefront Ks is specular reflectance and cannot reliably identify
     // whether a surface is a metal. Treat legacy OBJ/MTL materials as
     // dielectric by default; explicit PBR assets/maps can provide metalness.
@@ -380,27 +382,31 @@ bool ReadString(std::ifstream& in,std::string& s){std::uint32_t n=0;if(!ReadPod(
 bool ModelLoader::SaveImportedAsset(const std::string& filepath,const ModelAsset& asset,const ModelImportSettings& settings)
 {
     std::ofstream out(filepath,std::ios::binary);if(!out){Logger::Error("Could not create imported model asset: "+filepath);return false;}
-    const char magic[8]={'S','3','D','M','D','L','1','\0'};out.write(magic,8);std::uint32_t version=1;WritePod(out,version);WriteString(out,asset.sourcePath);
+    const char magic[8]={'S','3','D','M','D','L','1','\0'};out.write(magic,8);std::uint32_t version=2;WritePod(out,version);WriteString(out,asset.sourcePath);
     std::uint8_t flags=(settings.generateNormals?1:0)|(settings.importMaterials?2:0)|(settings.importTextures?4:0)|(settings.mergeMaterialSections?8:0);WritePod(out,flags);std::uint8_t type=(std::uint8_t)asset.type;WritePod(out,type);
-    std::uint32_t mc=(std::uint32_t)asset.materials.size();WritePod(out,mc);for(const auto& m:asset.materials){WriteString(out,m.name);out.write((const char*)m.diffuse,sizeof(m.diffuse));out.write((const char*)m.specular,sizeof(m.specular));WritePod(out,m.shininess);WritePod(out,m.opacity);WriteString(out,m.diffuseTexture);}
+    std::uint32_t mc=(std::uint32_t)asset.materials.size();WritePod(out,mc);for(const auto& m:asset.materials){WriteString(out,m.name);out.write((const char*)m.diffuse,sizeof(m.diffuse));out.write((const char*)m.specular,sizeof(m.specular));WritePod(out,m.shininess);WritePod(out,m.opacity);WriteString(out,m.diffuseTexture);WritePod(out,m.metallicFactor);WritePod(out,m.roughnessFactor);WriteString(out,m.normalTexture);WriteString(out,m.metallicRoughnessTexture);WriteString(out,m.occlusionTexture);WriteString(out,m.emissiveTexture);out.write((const char*)m.emissiveFactor,sizeof(m.emissiveFactor));}
     std::uint32_t sc=(std::uint32_t)asset.sections.size();WritePod(out,sc);for(std::uint32_t i=0;i<sc;++i){const auto& s=asset.sections[i];WriteString(out,s.name);WritePod(out,s.materialIndex);const auto& v=s.mesh->GetVertices();const auto& ix=s.mesh->GetIndices();std::uint32_t vc=(std::uint32_t)v.size(),ic=(std::uint32_t)ix.size();WritePod(out,vc);WritePod(out,ic);out.write((const char*)v.data(),v.size()*sizeof(Vertex));out.write((const char*)ix.data(),ix.size()*sizeof(std::uint32_t));const auto& sw=i<asset.skinWeights.size()?asset.skinWeights[i]:std::vector<BoneWeight>{};std::uint32_t wc=(std::uint32_t)sw.size();WritePod(out,wc);out.write((const char*)sw.data(),sw.size()*sizeof(BoneWeight));}
     std::uint32_t bc=(std::uint32_t)asset.skeleton.bones.size();WritePod(out,bc);for(const auto& bone:asset.skeleton.bones){WriteString(out,bone.name);WritePod(out,bone.parent);out.write((const char*)bone.bindTranslation.data(),sizeof(float)*3);out.write((const char*)bone.bindRotation.data(),sizeof(float)*4);out.write((const char*)bone.bindScale.data(),sizeof(float)*3);out.write((const char*)bone.bindLocalMatrix.data(),sizeof(float)*16);out.write((const char*)bone.inverseBindMatrix.data(),sizeof(float)*16);}
-    std::uint32_t ac=(std::uint32_t)asset.animations.size();WritePod(out,ac);for(const auto& clip:asset.animations){WriteString(out,clip.name);WritePod(out,clip.duration);std::uint32_t cc=(std::uint32_t)clip.channels.size();WritePod(out,cc);for(const auto& ch:clip.channels){WritePod(out,ch.bone);auto w3=[&](const auto& keys){std::uint32_t n=(std::uint32_t)keys.size();WritePod(out,n);for(const auto& k:keys){WritePod(out,k.time);out.write((const char*)k.value.data(),sizeof(k.value));}};w3(ch.translations);w3(ch.rotations);w3(ch.scales);}}
+    std::uint32_t ac=(std::uint32_t)asset.animations.size();WritePod(out,ac);for(const auto& clip:asset.animations){WriteString(out,clip.name);WritePod(out,clip.duration);std::uint32_t cc=(std::uint32_t)clip.channels.size();WritePod(out,cc);for(const auto& ch:clip.channels){WritePod(out,ch.bone);WritePod(out,ch.translationInterpolation);WritePod(out,ch.rotationInterpolation);WritePod(out,ch.scaleInterpolation);auto w3=[&](const auto& keys){std::uint32_t n=(std::uint32_t)keys.size();WritePod(out,n);for(const auto& k:keys){WritePod(out,k.time);out.write((const char*)k.value.data(),sizeof(k.value));out.write((const char*)k.inTangent.data(),sizeof(k.inTangent));out.write((const char*)k.outTangent.data(),sizeof(k.outTangent));}};w3(ch.translations);w3(ch.rotations);w3(ch.scales);}}
     if(!out){Logger::Error("Failed writing imported model asset: "+filepath);return false;}Logger::Info("Saved imported model asset: "+filepath);return true;
+}
+bool ModelLoader::IsImportedAssetCurrent(const std::string& filepath)
+{
+    std::ifstream in(filepath,std::ios::binary);if(!in)return false;char magic[8]{};in.read(magic,8);std::uint32_t version=0;return std::string(magic,7)=="S3DMDL1"&&ReadPod(in,version)&&version==2;
 }
 bool ModelLoader::ReadImportedAssetSettings(const std::string& filepath,ModelImportSettings& settings,std::string* sourcePath)
 {
-    std::ifstream in(filepath,std::ios::binary);if(!in)return false;char magic[8]{};in.read(magic,8);std::uint32_t version=0;if(std::string(magic,7)!="S3DMDL1"||!ReadPod(in,version)||version!=1)return false;
+    std::ifstream in(filepath,std::ios::binary);if(!in)return false;char magic[8]{};in.read(magic,8);std::uint32_t version=0;if(std::string(magic,7)!="S3DMDL1"||!ReadPod(in,version)||(version!=1&&version!=2))return false;
     std::string storedSource;if(!ReadString(in,storedSource))return false;std::uint8_t flags=0;if(!ReadPod(in,flags))return false;
     settings.generateNormals=(flags&1)!=0;settings.importMaterials=(flags&2)!=0;settings.importTextures=(flags&4)!=0;settings.mergeMaterialSections=(flags&8)!=0;if(sourcePath)*sourcePath=std::move(storedSource);return true;
 }
 std::unique_ptr<ModelAsset> ModelLoader::LoadImportedAsset(const std::string& filepath)
 {
-    std::ifstream in(filepath,std::ios::binary);if(!in)return nullptr;char magic[8]{};in.read(magic,8);std::uint32_t version=0;if(std::string(magic,7)!="S3DMDL1"||!ReadPod(in,version)||version!=1){Logger::Error("Invalid imported model asset: "+filepath);return nullptr;}
+    std::ifstream in(filepath,std::ios::binary);if(!in)return nullptr;char magic[8]{};in.read(magic,8);std::uint32_t version=0;if(std::string(magic,7)!="S3DMDL1"||!ReadPod(in,version)||(version!=1&&version!=2)){Logger::Error("Invalid imported model asset: "+filepath);return nullptr;}
     auto a=std::make_unique<ModelAsset>();ReadString(in,a->sourcePath);std::uint8_t flags=0,type=0;ReadPod(in,flags);ReadPod(in,type);a->type=(ModelAssetType)type;
-    std::uint32_t mc=0;ReadPod(in,mc);a->materials.resize(mc);for(auto& m:a->materials){ReadString(in,m.name);in.read((char*)m.diffuse,sizeof(m.diffuse));in.read((char*)m.specular,sizeof(m.specular));ReadPod(in,m.shininess);ReadPod(in,m.opacity);ReadString(in,m.diffuseTexture);}
+    std::uint32_t mc=0;ReadPod(in,mc);a->materials.resize(mc);for(auto& m:a->materials){ReadString(in,m.name);in.read((char*)m.diffuse,sizeof(m.diffuse));in.read((char*)m.specular,sizeof(m.specular));ReadPod(in,m.shininess);ReadPod(in,m.opacity);ReadString(in,m.diffuseTexture);if(version>=2){ReadPod(in,m.metallicFactor);ReadPod(in,m.roughnessFactor);ReadString(in,m.normalTexture);ReadString(in,m.metallicRoughnessTexture);ReadString(in,m.occlusionTexture);ReadString(in,m.emissiveTexture);in.read((char*)m.emissiveFactor,sizeof(m.emissiveFactor));}}
     std::uint32_t sc=0;ReadPod(in,sc);a->skinWeights.resize(sc);for(std::uint32_t i=0;i<sc;++i){MeshSection s;ReadString(in,s.name);ReadPod(in,s.materialIndex);std::uint32_t vc=0,ic=0;ReadPod(in,vc);ReadPod(in,ic);std::vector<Vertex> v(vc);std::vector<std::uint32_t> ix(ic);in.read((char*)v.data(),v.size()*sizeof(Vertex));in.read((char*)ix.data(),ix.size()*sizeof(std::uint32_t));std::uint32_t wc=0;ReadPod(in,wc);a->skinWeights[i].resize(wc);in.read((char*)a->skinWeights[i].data(),wc*sizeof(BoneWeight));s.mesh=std::make_unique<Mesh>(v,ix);if(wc==vc&&wc)s.mesh->SetSkinWeights(a->skinWeights[i]);a->sections.push_back(std::move(s));}
     std::uint32_t bc=0;ReadPod(in,bc);a->skeleton.bones.resize(bc);for(auto& bone:a->skeleton.bones){ReadString(in,bone.name);ReadPod(in,bone.parent);in.read((char*)bone.bindTranslation.data(),sizeof(float)*3);in.read((char*)bone.bindRotation.data(),sizeof(float)*4);in.read((char*)bone.bindScale.data(),sizeof(float)*3);in.read((char*)bone.bindLocalMatrix.data(),sizeof(float)*16);in.read((char*)bone.inverseBindMatrix.data(),sizeof(float)*16);}
-    std::uint32_t ac=0;ReadPod(in,ac);a->animations.resize(ac);for(auto& clip:a->animations){ReadString(in,clip.name);ReadPod(in,clip.duration);std::uint32_t cc=0;ReadPod(in,cc);clip.channels.resize(cc);for(auto& ch:clip.channels){ReadPod(in,ch.bone);auto r=[&](auto& keys){std::uint32_t n=0;ReadPod(in,n);keys.resize(n);for(auto& k:keys){ReadPod(in,k.time);in.read((char*)k.value.data(),sizeof(k.value));}};r(ch.translations);r(ch.rotations);r(ch.scales);}}
+    std::uint32_t ac=0;ReadPod(in,ac);a->animations.resize(ac);for(auto& clip:a->animations){ReadString(in,clip.name);ReadPod(in,clip.duration);std::uint32_t cc=0;ReadPod(in,cc);clip.channels.resize(cc);for(auto& ch:clip.channels){ReadPod(in,ch.bone);if(version>=2){ReadPod(in,ch.translationInterpolation);ReadPod(in,ch.rotationInterpolation);ReadPod(in,ch.scaleInterpolation);}auto r=[&](auto& keys){std::uint32_t n=0;ReadPod(in,n);keys.resize(n);for(auto& k:keys){ReadPod(in,k.time);in.read((char*)k.value.data(),sizeof(k.value));if(version>=2){in.read((char*)k.inTangent.data(),sizeof(k.inTangent));in.read((char*)k.outTangent.data(),sizeof(k.outTangent));}}};r(ch.translations);r(ch.rotations);r(ch.scales);}}
     if(!in){Logger::Error("Corrupt imported model asset: "+filepath);return nullptr;}return a;
 }

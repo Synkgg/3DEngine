@@ -189,6 +189,7 @@ void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitiv
     if (!mesh) return;
 
     mesh->Bind();
+    m_ShadowShader.SetInt("u_Skinned",0);
     m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
     mesh->Unbind();
@@ -200,6 +201,9 @@ void Renderer::DrawShadowModel(const Transform& transform, const std::string& mo
     ModelAsset* model = GetModelAsset(modelPath);
     if (!model) return;
     m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
+    const std::vector<Mat4> bones=model->IsSkeletal()?model->BindPose():std::vector<Mat4>{};
+    m_ShadowShader.SetInt("u_Skinned",bones.empty()?0:1);
+    for(std::size_t i=0;i<std::min<std::size_t>(bones.size(),128);++i){const std::string n="u_Bones["+std::to_string(i)+"]";m_ShadowShader.SetMat4(n.c_str(),bones[i]);}
     for (const MeshSection& section : model->sections)
     {
         if (!section.mesh) continue;
@@ -207,6 +211,14 @@ void Renderer::DrawShadowModel(const Transform& transform, const std::string& mo
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(section.mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
         section.mesh->Unbind();
     }
+}
+
+void Renderer::DrawAnimatedShadowModel(const Transform& transform,const std::string& modelPath,std::size_t clipIndex,float animationTime,bool loop)
+{
+    if(!m_RenderSettings.shadows||!m_ShadowFramebuffers[m_ActiveShadowCascade])return;ModelAsset* model=GetModelAsset(modelPath);if(!model)return;
+    const std::vector<Mat4> bones=model->EvaluateAnimation(clipIndex,animationTime,loop);m_ShadowShader.SetMat4("u_Model",transform.GetMatrix());m_ShadowShader.SetInt("u_Skinned",bones.empty()?0:1);
+    for(std::size_t i=0;i<std::min<std::size_t>(bones.size(),128);++i){const std::string n="u_Bones["+std::to_string(i)+"]";m_ShadowShader.SetMat4(n.c_str(),bones[i]);}
+    for(const MeshSection& section:model->sections){if(!section.mesh)continue;section.mesh->Bind();glDrawElements(GL_TRIANGLES,(GLsizei)section.mesh->GetIndexCount(),GL_UNSIGNED_INT,nullptr);section.mesh->Unbind();}
 }
 
 void Renderer::EndShadowPass()

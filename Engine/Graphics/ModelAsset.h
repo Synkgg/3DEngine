@@ -18,6 +18,13 @@ struct ImportedMaterial
     float shininess = 0.0f;
     float opacity = 1.0f;
     std::string diffuseTexture;
+    float metallicFactor = -1.0f;
+    float roughnessFactor = -1.0f;
+    std::string normalTexture;
+    std::string metallicRoughnessTexture;
+    std::string occlusionTexture;
+    std::string emissiveTexture;
+    float emissiveFactor[3]{ 0.0f, 0.0f, 0.0f };
 
     float Roughness() const;
     float Metallic() const;
@@ -59,16 +66,27 @@ struct BoneWeight
     std::array<float, 4> weights{};
 };
 
+enum class AnimationInterpolation : std::uint8_t
+{
+    Linear,
+    Step,
+    CubicSpline
+};
+
 struct AnimationKeyVec3
 {
     float time = 0.0f;
     std::array<float, 3> value{};
+    std::array<float, 3> inTangent{};
+    std::array<float, 3> outTangent{};
 };
 
 struct AnimationKeyQuat
 {
     float time = 0.0f;
     std::array<float, 4> value{ 0.0f, 0.0f, 0.0f, 1.0f };
+    std::array<float, 4> inTangent{};
+    std::array<float, 4> outTangent{};
 };
 
 struct AnimationChannel
@@ -77,6 +95,9 @@ struct AnimationChannel
     std::vector<AnimationKeyVec3> translations;
     std::vector<AnimationKeyQuat> rotations;
     std::vector<AnimationKeyVec3> scales;
+    AnimationInterpolation translationInterpolation = AnimationInterpolation::Linear;
+    AnimationInterpolation rotationInterpolation = AnimationInterpolation::Linear;
+    AnimationInterpolation scaleInterpolation = AnimationInterpolation::Linear;
 };
 
 struct AnimationClip

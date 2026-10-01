@@ -44,7 +44,7 @@ ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
         importedPath.replace_extension(".modelasset");
         std::error_code ec;
         const bool importedExists = std::filesystem::exists(importedPath, ec) && !ec;
-        bool needsImport = !importedExists;
+        bool needsImport = !importedExists || (importedExists && !ModelLoader::IsImportedAssetCurrent(importedPath.string()));
         if (importedExists)
         {
             const auto sourceTime = std::filesystem::last_write_time(sourcePath, ec);
@@ -300,6 +300,7 @@ void Renderer::DrawMeshInternal(
     const bool skinned=bones&&!bones->empty();m_Shader.SetInt("u_Skinned",skinned?1:0);
     if(skinned){const std::size_t count=std::min<std::size_t>(bones->size(),128);for(std::size_t i=0;i<count;++i){const std::string n="u_Bones["+std::to_string(i)+"]";m_Shader.SetMat4(n.c_str(),(*bones)[i]);}}
     m_Shader.SetFloat("u_Metallic",metallic);m_Shader.SetFloat("u_Roughness",roughness);m_Shader.SetFloat("u_AO",ambientOcclusion);m_Shader.SetFloat("u_Emissive",emissive);
+    m_Shader.SetInt("u_UseCombinedMR",metallicMap&&roughnessMap&&metallicMap==roughnessMap?1:0);
     const Texture2D* maps[5]={normalMap,metallicMap,roughnessMap,aoMap,emissiveMap};
     static const char* samplers[5]={"u_NormalMap","u_MetallicMap","u_RoughnessMap","u_AOMap","u_EmissiveMap"};
     static const char* toggles[5]={"u_UseNormalMap","u_UseMetallicMap","u_UseRoughnessMap","u_UseAOMap","u_UseEmissiveMap"};
@@ -359,9 +360,12 @@ void Renderer::DrawModel(
         const float sectionMetallic=material?std::max(metallic,material->Metallic()):metallic;
         const float sectionRoughness=material?material->Roughness():roughness;
 
+        const Texture2D* sectionNormal=normalMap;const Texture2D* sectionMR=nullptr;const Texture2D* sectionAO=aoMap;const Texture2D* sectionEmissive=emissiveMap;
+        if(material){if(!sectionNormal&&!material->normalTexture.empty())sectionNormal=LoadTexture(material->normalTexture);if(!material->metallicRoughnessTexture.empty())sectionMR=LoadTexture(material->metallicRoughnessTexture);if(!sectionAO&&!material->occlusionTexture.empty())sectionAO=LoadTexture(material->occlusionTexture);if(!sectionEmissive&&!material->emissiveTexture.empty())sectionEmissive=LoadTexture(material->emissiveTexture);}
+        const float sectionEmissiveAmount=material?std::max({emissive,material->emissiveFactor[0],material->emissiveFactor[1],material->emissiveFactor[2]}):emissive;
         DrawMeshInternal(section.mesh.get(),transform,sectionRed,sectionGreen,sectionBlue,sectionAlpha,
-            sectionTexture,sectionMetallic,sectionRoughness,ambientOcclusion,emissive,
-            normalMap,metallicMap,roughnessMap,aoMap,emissiveMap,model->IsSkeletal()?&bindBones:nullptr);
+            sectionTexture,sectionMetallic,sectionRoughness,ambientOcclusion,sectionEmissiveAmount,
+            sectionNormal,sectionMR?sectionMR:metallicMap,sectionMR?sectionMR:roughnessMap,sectionAO,sectionEmissive,model->IsSkeletal()?&bindBones:nullptr);
     }
 }
 
@@ -370,7 +374,7 @@ void Renderer::DrawAnimatedModel(const Transform& transform,const std::string& m
     ModelAsset* model=GetModelAsset(modelPath);if(!model)return;
     if(!model->IsSkeletal()||model->animations.empty()){DrawModel(transform,modelPath,red,green,blue,alpha);return;}
     const std::vector<Mat4> bones=model->EvaluateAnimation(clipIndex,animationTime,loop);
-    for(const MeshSection& section:model->sections){if(!section.mesh)continue;const ImportedMaterial* material=section.materialIndex<model->materials.size()?&model->materials[section.materialIndex]:nullptr;const Texture2D* tex=nullptr;if(material&&!material->diffuseTexture.empty())tex=LoadTexture(material->diffuseTexture);DrawMeshInternal(section.mesh.get(),transform,material?red*material->diffuse[0]:red,material?green*material->diffuse[1]:green,material?blue*material->diffuse[2]:blue,material?alpha*material->opacity:alpha,tex,material?material->Metallic():0.0f,material?material->Roughness():0.65f,1.0f,0.0f,nullptr,nullptr,nullptr,nullptr,nullptr,&bones);}
+    for(const MeshSection& section:model->sections){if(!section.mesh)continue;const ImportedMaterial* material=section.materialIndex<model->materials.size()?&model->materials[section.materialIndex]:nullptr;const Texture2D* tex=nullptr;const Texture2D* normal=nullptr;const Texture2D* mr=nullptr;const Texture2D* ao=nullptr;const Texture2D* em=nullptr;float emAmount=0.0f;if(material){if(!material->diffuseTexture.empty())tex=LoadTexture(material->diffuseTexture);if(!material->normalTexture.empty())normal=LoadTexture(material->normalTexture);if(!material->metallicRoughnessTexture.empty())mr=LoadTexture(material->metallicRoughnessTexture);if(!material->occlusionTexture.empty())ao=LoadTexture(material->occlusionTexture);if(!material->emissiveTexture.empty())em=LoadTexture(material->emissiveTexture);emAmount=std::max({material->emissiveFactor[0],material->emissiveFactor[1],material->emissiveFactor[2]});}DrawMeshInternal(section.mesh.get(),transform,material?red*material->diffuse[0]:red,material?green*material->diffuse[1]:green,material?blue*material->diffuse[2]:blue,material?alpha*material->opacity:alpha,tex,material?material->Metallic():0.0f,material?material->Roughness():0.65f,1.0f,emAmount,normal,mr,mr,ao,em,&bones);}
 }
 
 Texture2D* Renderer::LoadTexture(
