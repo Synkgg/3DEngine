@@ -8,11 +8,8 @@ local possessedControllerID = 0
 local remotePawns, remotePlayersByEntity, remoteTargets = {}, {}, {}
 local REMOTE_INTERPOLATION_SPEED = 20.0
 
-local MAX_HEALTH, SHOT_DAMAGE = 100, 25
-local FIRE_INTERVAL, ROUNDS_TO_WIN = 0.18, 5
-local MAG_SIZE, START_RESERVE, RELOAD_TIME = 12, 48, 1.35
-local HIP_FOV, ADS_FOV = 90.0, 68.0
-local RECOIL_KICK = 0.075
+local MAX_HEALTH = 100
+local ROUNDS_TO_WIN = 5
 local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
 local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
@@ -442,6 +439,8 @@ function OnUpdate(dt)
     if practiceMode then
         UI.SetText("MatchStatus","PRACTICE RANGE // HITS "..practiceHits)
         UI.SetText("ScoreText","TARGET HITS  "..practiceHits)
+        local prompt=Scene.GetInteractionPrompt()
+        UI.SetText("CenterMessage",prompt~="" and ("[E]  "..string.upper(prompt)) or "")
         UI.SetVisible("RoundIntro",false)
         UI.SetVisible("RoundResult",false)
         UI.SetVisible("MatchResult",false)
