@@ -1,5 +1,5 @@
 MyEngineScene
-Entities 4
+Entities 2
 Entity 1
 Name Pistol Viewmodel
 Position 0 0 0
@@ -19,52 +19,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 2
-Name Pistol Slide
-Position 0 0 -0.12
-Rotation 0 0 0
-Scale 0.13 0.10 0.34
+Name Pistol Model
+Position -0.16 -0.20 0
+Rotation 0 1.5708 0
+Scale 0.25 0.25 0.25
 Parent 1
 PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.07 0.075 0.085 1
+Mesh 1 0 "Assets/Models/Weapons/Pistol.obj" 0
+Color 1 0.10 0.11 0.12 1
 Texture 0
-Material 1 0.72 0.28 1 0 "" "" "" "" ""
-Interactable 0
-Player 0
-PlayerStart 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 3
-Name Pistol Grip
-Position 0 -0.16 0.04
-Rotation -0.22 0 0
-Scale 0.11 0.22 0.12
-Parent 1
-PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.045 0.05 0.055 1
-Texture 0
-Material 1 0.8 0.2 1 0 "" "" "" "" ""
-Interactable 0
-Player 0
-PlayerStart 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 4
-Name Front Sight
-Position 0 0.115 -0.39
-Rotation 0 0 0
-Scale 0.025 0.035 0.025
-Parent 1
-PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.9 0.22 0.06 1
-Texture 0
-Material 1 0.25 0.4 1 0.08 "" "" "" "" ""
+Material 1 0.72 0.3 1 0 "" "" "" "" ""
 Interactable 0
 Player 0
 PlayerStart 0
