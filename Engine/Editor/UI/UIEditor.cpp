@@ -546,9 +546,13 @@ void UIEditor::DrawInspector(
         );
     }
 
+    ImGui::TextDisabled("Shape");
     float cornerRadius=widget.GetCornerRadius();
-    if(ImGui::DragFloat("Corner Radius",&cornerRadius,0.5f,0.0f,512.0f))
+    if(ImGui::DragFloat("Corner Radius",&cornerRadius,0.5f,0.0f,512.0f,"%.1f px"))
         widget.SetCornerRadius(cornerRadius);
+    ImGui::SameLine();
+    if(ImGui::SmallButton("Reset##CornerRadius")) widget.SetCornerRadius(0.0f);
+    if(ImGui::IsItemHovered()) ImGui::SetTooltip("Reset corner rounding.");
 
     bool gradient = widget.HasGradient();
     if (ImGui::Checkbox("Gradient", &gradient)) widget.SetGradientEnabled(gradient);
@@ -593,9 +597,8 @@ void UIEditor::DrawInspector(
         dynamic_cast<UIText*>(
             &widget))
     {
-        ImGui::TextUnformatted(
-            "Text"
-        );
+        ImGui::Spacing();
+        ImGui::SeparatorText("Text");
 
         char textBuffer[1024];
 
@@ -633,13 +636,16 @@ void UIEditor::DrawInspector(
             );
         }
 
+        ImGui::TextDisabled("Alignment");
         int horizontal=static_cast<int>(text->GetHorizontalAlignment());
         const char* horizontalOptions[]={"Left","Center","Right"};
-        if(ImGui::Combo("Horizontal Alignment",&horizontal,horizontalOptions,3))
+        ImGui::SetNextItemWidth(-1.0f);
+        if(ImGui::Combo("Horizontal##TextAlignment",&horizontal,horizontalOptions,3))
             text->SetHorizontalAlignment(static_cast<UITextHorizontalAlignment>(horizontal));
         int vertical=static_cast<int>(text->GetVerticalAlignment());
         const char* verticalOptions[]={"Top","Center","Bottom"};
-        if(ImGui::Combo("Vertical Alignment",&vertical,verticalOptions,3))
+        ImGui::SetNextItemWidth(-1.0f);
+        if(ImGui::Combo("Vertical##TextAlignment",&vertical,verticalOptions,3))
             text->SetVerticalAlignment(static_cast<UITextVerticalAlignment>(vertical));
     }
 
@@ -779,7 +785,14 @@ void UIEditor::DrawInspector(
             const std::string preview=current.empty() ? "None" : std::filesystem::path(current).filename().string();
             if(ImGui::BeginCombo(label,preview.c_str()))
             {
+                static char brushSearch[128] = {};
+                ImGui::SetNextItemWidth(-1.0f);
+                ImGui::InputTextWithHint("##ButtonBrushSearch","Search textures...",brushSearch,sizeof(brushSearch));
+                ImGui::Separator();
                 if(ImGui::Selectable("None",current.empty())) { setter(""); ImGui::CloseCurrentPopup(); }
+                std::string brushQuery=brushSearch;
+                std::transform(brushQuery.begin(),brushQuery.end(),brushQuery.begin(),
+                    [](unsigned char c){return static_cast<char>(std::tolower(c));});
                 std::error_code ec; std::filesystem::path assetRoot("Assets");
                 const std::filesystem::path uiPath(m_UIAssetPath);
                 for(std::filesystem::path parent=uiPath.parent_path();!parent.empty();parent=parent.parent_path())
@@ -798,6 +811,10 @@ void UIEditor::DrawInspector(
                         const std::filesystem::path rel=std::filesystem::path("Assets")/std::filesystem::relative(entry.path(),assetRoot,ec);
                         if(ec) continue;
                         const std::string assetPath=rel.lexically_normal().generic_string();
+                        std::string searchable=assetPath;
+                        std::transform(searchable.begin(),searchable.end(),searchable.begin(),
+                            [](unsigned char c){return static_cast<char>(std::tolower(c));});
+                        if(!brushQuery.empty()&&searchable.find(brushQuery)==std::string::npos) continue;
                         Texture2D* texture=m_Renderer?m_Renderer->LoadTexture(assetPath):nullptr;
                         ImGui::PushID((std::string(label)+assetPath).c_str());
                         if(texture&&texture->IsLoaded()){ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),ImVec2(28,28),ImVec2(0,1),ImVec2(1,0));ImGui::SameLine();}
@@ -807,6 +824,16 @@ void UIEditor::DrawInspector(
                     }
                 }
                 ImGui::EndCombo();
+            }
+            if(!current.empty()&&m_Renderer)
+            {
+                Texture2D* texture=m_Renderer->LoadTexture(current);
+                if(texture&&texture->IsLoaded())
+                {
+                    ImGui::Indent();
+                    ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),ImVec2(72,40),ImVec2(0,1),ImVec2(1,0));
+                    ImGui::Unindent();
+                }
             }
         };
         editButtonBrush("Normal Image",button->GetNormalImage(),[&](const std::string& v){button->SetNormalImage(v);});
