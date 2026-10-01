@@ -235,11 +235,27 @@ bool LuaScript::Create()
     return true;
 }
 
+void LuaScript::UpdateTweens(float deltaTime)
+{
+    auto ease=[](float t,const std::string& name)
+    {
+        t=std::clamp(t,0.0f,1.0f);
+        if(name=="EaseInQuad") return t*t;
+        if(name=="EaseOutQuad") return 1.0f-(1.0f-t)*(1.0f-t);
+        if(name=="EaseInOutQuad") return t<0.5f ? 2.0f*t*t : 1.0f-std::pow(-2.0f*t+2.0f,2.0f)*0.5f;
+        if(name=="EaseOutCubic") return 1.0f-std::pow(1.0f-t,3.0f);
+        return t;
+    };
+    for(auto& tween:m_Tweens){tween.elapsed+=deltaTime;const float raw=tween.duration<=0.0f?1.0f:std::min(1.0f,tween.elapsed/tween.duration);if(tween.apply)tween.apply(ease(raw,tween.easing));}
+    m_Tweens.erase(std::remove_if(m_Tweens.begin(),m_Tweens.end(),[](const TweenJob& t){return t.duration<=0.0f||t.elapsed>=t.duration;}),m_Tweens.end());
+}
+
 bool LuaScript::Update(
     float deltaTime)
 {
     m_DeltaTime =
         deltaTime;
+    UpdateTweens(deltaTime);
 
     if (!m_OnUpdate.valid())
     {
