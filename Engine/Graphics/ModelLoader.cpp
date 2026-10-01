@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 #include <iomanip>
+#include <iterator>
 
 namespace
 {
@@ -390,6 +391,82 @@ bool ModelLoader::SaveImportedAsset(const std::string& filepath,const ModelAsset
     std::uint32_t ac=(std::uint32_t)asset.animations.size();WritePod(out,ac);for(const auto& clip:asset.animations){WriteString(out,clip.name);WritePod(out,clip.duration);std::uint32_t cc=(std::uint32_t)clip.channels.size();WritePod(out,cc);for(const auto& ch:clip.channels){WritePod(out,ch.bone);WritePod(out,ch.translationInterpolation);WritePod(out,ch.rotationInterpolation);WritePod(out,ch.scaleInterpolation);auto w3=[&](const auto& keys){std::uint32_t n=(std::uint32_t)keys.size();WritePod(out,n);for(const auto& k:keys){WritePod(out,k.time);out.write((const char*)k.value.data(),sizeof(k.value));out.write((const char*)k.inTangent.data(),sizeof(k.inTangent));out.write((const char*)k.outTangent.data(),sizeof(k.outTangent));}};w3(ch.translations);w3(ch.rotations);w3(ch.scales);}}
     if(!out){Logger::Error("Failed writing imported model asset: "+filepath);return false;}Logger::Info("Saved imported model asset: "+filepath);return true;
 }
+bool ModelLoader::SourceDependenciesNewer(const std::string& sourcePath,const std::string& importedPath)
+{
+    namespace fs=std::filesystem;
+    std::error_code ec;
+    const auto importedTime=fs::last_write_time(importedPath,ec);
+    if(ec) return true;
+
+    auto newer=[&](const fs::path& path)
+    {
+        ec.clear();
+        if(!fs::exists(path,ec)||ec) return false;
+        const auto time=fs::last_write_time(path,ec);
+        return !ec&&time>importedTime;
+    };
+
+    const fs::path source(sourcePath);
+    if(newer(source)) return true;
+
+    std::string ext=source.extension().string();
+    std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char ch){return static_cast<char>(std::tolower(ch));});
+
+    if(ext==".obj")
+    {
+        std::ifstream obj(source);
+        std::string line;
+        while(std::getline(obj,line))
+        {
+            std::stringstream stream(line);
+            std::string tag;
+            stream>>tag;
+            if(tag!="mtllib") continue;
+
+            std::string mtlName;
+            while(stream>>mtlName)
+            {
+                const fs::path mtlPath=(source.parent_path()/mtlName).lexically_normal();
+                if(newer(mtlPath)) return true;
+
+                std::ifstream mtl(mtlPath);
+                std::string materialLine;
+                while(std::getline(mtl,materialLine))
+                {
+                    std::stringstream materialStream(materialLine);
+                    std::string materialTag;
+                    materialStream>>materialTag;
+                    if(materialTag.rfind("map_",0)!=0) continue;
+                    std::string texture;
+                    std::getline(materialStream,texture);
+                    texture=Trim(texture);
+                    if(!texture.empty()&&newer((mtlPath.parent_path()/texture).lexically_normal())) return true;
+                }
+            }
+        }
+    }
+    else if(ext==".gltf")
+    {
+        std::ifstream gltf(source,std::ios::binary);
+        const std::string text((std::istreambuf_iterator<char>(gltf)),std::istreambuf_iterator<char>());
+        std::size_t position=0;
+        while((position=text.find("\"uri\"",position))!=std::string::npos)
+        {
+            position=text.find(':',position);
+            if(position==std::string::npos) break;
+            position=text.find('"',position);
+            if(position==std::string::npos) break;
+            const std::size_t end=text.find('"',++position);
+            if(end==std::string::npos) break;
+            const std::string uri=text.substr(position,end-position);
+            if(uri.rfind("data:",0)!=0&&newer((source.parent_path()/uri).lexically_normal())) return true;
+            position=end+1;
+        }
+    }
+
+    return false;
+}
+
 bool ModelLoader::IsImportedAssetCurrent(const std::string& filepath)
 {
     std::ifstream in(filepath,std::ios::binary);if(!in)return false;char magic[8]{};in.read(magic,8);std::uint32_t version=0;return std::string(magic,7)=="S3DMDL1"&&ReadPod(in,version)&&version==2;
