@@ -291,6 +291,22 @@ void LuaScript::Interact()
     }
 }
 
+bool LuaScript::Invoke(const std::string& functionName)
+{
+    if (functionName.empty() || m_Environment == nullptr) return false;
+    sol::object object = (*m_Environment)[functionName];
+    if (!object.is<sol::protected_function>()) return false;
+    sol::protected_function callback = object.as<sol::protected_function>();
+    sol::protected_function_result result = callback();
+    if (!result.valid())
+    {
+        sol::error error = result;
+        Logger::Error("Lua UI event error in " + functionName + ": " + error.what());
+        return false;
+    }
+    return true;
+}
+
 bool LuaScript::Destroy()
 {
     if (!m_OnDestroy.valid())
