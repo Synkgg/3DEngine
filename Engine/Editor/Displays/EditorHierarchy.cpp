@@ -15,6 +15,7 @@
 #include "../../Scene/Components/CameraComponent.h"
 #include "../../Scene/Components/ColliderComponent.h"
 #include "../../Scene/Components/TextureComponent.h"
+#include "../../Scene/Components/HierarchyGroupComponent.h"
 
 #include "../../Graphics/PrimitiveType.h"
 #include "../../Core/Logger.h"
@@ -755,7 +756,15 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             m_SelectedEntity = entity;
         };
 
-        if (ImGui::Selectable("Group / Empty")) createEmpty("Group");
+        if (ImGui::Selectable("Empty Entity")) createEmpty("Empty Entity");
+        if (ImGui::Selectable("Group / Folder"))
+        {
+            Entity group = scene.CreateEntity();
+            scene.AddComponent<HierarchyGroupComponent>(group);
+            if (NameComponent* name = scene.GetComponent<NameComponent>(group)) name->name = MakeUniqueName(scene, "Group", group);
+            if (m_SelectedEntity.IsValid()) scene.SetParent(group, m_SelectedEntity, false);
+            m_SelectedEntity = group;
+        }
         ImGui::Separator();
         if (ImGui::Selectable("Cube")) CreatePrimitiveEntity(scene, PrimitiveType::Cube, "Cube");
         if (ImGui::Selectable("Sphere")) CreatePrimitiveEntity(scene, PrimitiveType::Sphere, "Sphere");
@@ -820,16 +829,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
 
         ImGui::PushID(static_cast<int>(entity.GetID()));
 
-        // Empty scene-graph entities act as hierarchy folders/groups.
-        const bool isGroup =
-            !scene.HasComponent<MeshComponent>(entity) &&
-            !scene.HasComponent<PawnComponent>(entity) &&
-            !scene.HasComponent<PlayerStartComponent>(entity) &&
-            !scene.HasComponent<CharacterControllerComponent>(entity) &&
-            !scene.HasComponent<LightComponent>(entity) &&
-            !scene.HasComponent<CameraComponent>(entity) &&
-            !scene.HasComponent<ColliderComponent>(entity) &&
-            !scene.HasComponent<TextureComponent>(entity);
+        // Groups are explicit. A normal entity stays a normal entity even when\n        // Transform + Name are its only components.\n        const bool isGroup = scene.HasComponent<HierarchyGroupComponent>(entity);
 
         // Entity type is communicated by its icon; the tree arrow only means
         // that the entity has children. Empty entities remain folder/group nodes.
@@ -895,6 +895,7 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
             if (ImGui::MenuItem("Create Child Group"))
             {
                 Entity child = scene.CreateEntity();
+                scene.AddComponent<HierarchyGroupComponent>(child);
                 if (NameComponent* childName = scene.GetComponent<NameComponent>(child))
                     childName->name = MakeUniqueName(scene, "Group", child);
                 scene.SetParent(child, entity, false);
