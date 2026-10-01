@@ -292,10 +292,34 @@ void Editor::Render(
 
     if (renderSceneDocument)
     {
-        // The scene document owns the application's root dockspace only while
-        // the scene page is active. Asset documents provide their own
-        // workspace/dockspace instead of competing with this one.
-        ImGui::DockSpaceOverViewport();
+        // Keep the scene document inside the same reserved content rectangle
+        // used by asset documents. The main menu is already excluded from
+        // WorkPos; reserve the document strip immediately below it.
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        const float documentBarHeight = 34.0f;
+        const ImVec2 sceneWorkspacePos(
+            viewport->WorkPos.x,
+            viewport->WorkPos.y + documentBarHeight);
+        const ImVec2 sceneWorkspaceSize(
+            viewport->WorkSize.x,
+            std::max(1.0f, viewport->WorkSize.y - documentBarHeight));
+
+        ImGui::SetNextWindowPos(sceneWorkspacePos, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(sceneWorkspaceSize, ImGuiCond_Always);
+        const ImGuiWindowFlags sceneHostFlags =
+            ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_NoDocking |
+            ImGuiWindowFlags_NoBringToFrontOnFocus;
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("##SceneDocumentWorkspace", nullptr, sceneHostFlags);
+        ImGui::PopStyleVar();
+        const ImGuiID sceneDockspaceId = ImGui::GetID("SceneDocumentDockSpace");
+        ImGui::DockSpace(sceneDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+        ImGui::End();
+
+        ImGui::SetNextWindowDockID(sceneDockspaceId, ImGuiCond_FirstUseEver);
         RenderHierarchy(
             scene,
             iconFont
