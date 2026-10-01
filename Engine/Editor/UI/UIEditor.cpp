@@ -834,6 +834,19 @@ void UIEditor::DrawInspector(
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Select a WAV asset from the current project's Assets folder.");
 
+        ImGui::Spacing();
+        ImGui::SeparatorText("Events");
+        ImGui::TextDisabled("On Click");
+        char onClickScript[256] = {};
+        std::snprintf(onClickScript, sizeof(onClickScript), "%s", button->GetOnClickScript().c_str());
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::InputTextWithHint("##OnClickScript", "Assets/Scripts/MainMenu.lua", onClickScript, sizeof(onClickScript))) button->SetOnClickScript(onClickScript);
+        char onClickFunction[128] = {};
+        std::snprintf(onClickFunction, sizeof(onClickFunction), "%s", button->GetOnClickFunction().c_str());
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::InputTextWithHint("##OnClickFunction", "OnPlayClicked", onClickFunction, sizeof(onClickFunction))) button->SetOnClickFunction(onClickFunction);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Called once when this exact button instance is clicked.");
+
         bool textHighlight = button->GetAffectChildText();
         if (ImGui::Checkbox("Highlight Child Text", &textHighlight)) button->SetAffectChildText(textHighlight);
         if (textHighlight)
