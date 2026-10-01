@@ -29,6 +29,123 @@ Ref ParseRef(const std::string& s)
 
 int Resolve(int i,int size) { return i>0?i-1:(i<0?size+i:-1); }
 
+float LegacyMTLColor(float value)
+{
+    // These Blender-era MTL files store very dark linear-looking Kd values.
+    // The engine's base-color path expects display-space values, so convert
+    // them before lighting rather than rendering the asset nearly black.
+    return std::pow(std::clamp(value,0.0f,1.0f),1.0f/2.2f);
+}
+
+struct P2 { float x=0.0f,y=0.0f; };
+
+float Cross2(const P2& a,const P2& b,const P2& c)
+{
+    return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+}
+
+bool PointInTriangle(const P2& p,const P2& a,const P2& b,const P2& c,float winding)
+{
+    const float e0=Cross2(a,b,p)*winding;
+    const float e1=Cross2(b,c,p)*winding;
+    const float e2=Cross2(c,a,p)*winding;
+    constexpr float eps=-0.000001f;
+    return e0>=eps&&e1>=eps&&e2>=eps;
+}
+
+std::vector<std::uint32_t> TriangulateFace(const std::vector<std::string>& face,const std::vector<V3>& positions)
+{
+    std::vector<std::uint32_t> result;
+    if(face.size()<3) return result;
+    if(face.size()==3) return {0,1,2};
+
+    std::vector<V3> points;
+    points.reserve(face.size());
+    for(const std::string& token:face)
+    {
+        const Ref r=ParseRef(token);
+        const int pi=Resolve(r.p,(int)positions.size());
+        if(pi<0||pi>=(int)positions.size()) return {};
+        points.push_back(positions[pi]);
+    }
+
+    // Newell normal gives a stable projection axis for arbitrary OBJ n-gons.
+    V3 n{};
+    for(size_t i=0;i<points.size();++i)
+    {
+        const V3& a=points[i];
+        const V3& c=points[(i+1)%points.size()];
+        n.x+=(a.y-c.y)*(a.z+c.z);
+        n.y+=(a.z-c.z)*(a.x+c.x);
+        n.z+=(a.x-c.x)*(a.y+c.y);
+    }
+    const float ax=std::abs(n.x),ay=std::abs(n.y),az=std::abs(n.z);
+    int drop=2;
+    if(ax>=ay&&ax>=az) drop=0;
+    else if(ay>=az) drop=1;
+
+    std::vector<P2> projected(points.size());
+    for(size_t i=0;i<points.size();++i)
+    {
+        if(drop==0) projected[i]={points[i].y,points[i].z};
+        else if(drop==1) projected[i]={points[i].x,points[i].z};
+        else projected[i]={points[i].x,points[i].y};
+    }
+
+    float area=0.0f;
+    for(size_t i=0;i<projected.size();++i)
+    {
+        const P2& a=projected[i];const P2& c=projected[(i+1)%projected.size()];
+        area+=a.x*c.y-c.x*a.y;
+    }
+    const float winding=area>=0.0f?1.0f:-1.0f;
+
+    std::vector<std::uint32_t> remaining(face.size());
+    for(std::uint32_t i=0;i<(std::uint32_t)face.size();++i) remaining[i]=i;
+
+    size_t guard=0;
+    while(remaining.size()>3&&guard++<face.size()*face.size())
+    {
+        bool clipped=false;
+        for(size_t i=0;i<remaining.size();++i)
+        {
+            const std::uint32_t ia=remaining[(i+remaining.size()-1)%remaining.size()];
+            const std::uint32_t ib=remaining[i];
+            const std::uint32_t ic=remaining[(i+1)%remaining.size()];
+            const P2& a=projected[ia];const P2& bb=projected[ib];const P2& c=projected[ic];
+            if(Cross2(a,bb,c)*winding<=0.000001f) continue;
+
+            bool contains=false;
+            for(std::uint32_t p:remaining)
+            {
+                if(p==ia||p==ib||p==ic) continue;
+                if(PointInTriangle(projected[p],a,bb,c,winding)){contains=true;break;}
+            }
+            if(contains) continue;
+
+            result.push_back(ia);result.push_back(ib);result.push_back(ic);
+            remaining.erase(remaining.begin()+i);
+            clipped=true;
+            break;
+        }
+        if(!clipped) break;
+    }
+
+    if(remaining.size()==3)
+    {
+        result.push_back(remaining[0]);result.push_back(remaining[1]);result.push_back(remaining[2]);
+        return result;
+    }
+
+    // Degenerate/non-planar fallback: retain the old behavior instead of dropping a face.
+    result.clear();
+    for(std::uint32_t i=1;i+1<(std::uint32_t)face.size();++i)
+    {
+        result.push_back(0);result.push_back(i);result.push_back(i+1);
+    }
+    return result;
+}
+
 std::string Trim(const std::string& value)
 {
     const auto first=value.find_first_not_of(" \t\r\n");
@@ -79,7 +196,13 @@ void LoadMTL(const std::filesystem::path& path,std::vector<ImportedMaterial>& ou
             std::string name;std::getline(ss,name);
             out.emplace_back();out.back().name=Trim(name);current=&out.back();
         }
-        else if(current&&tag=="Kd") ss>>current->diffuse[0]>>current->diffuse[1]>>current->diffuse[2];
+        else if(current&&tag=="Kd")
+        {
+            float r=1.0f,g=1.0f,b=1.0f;ss>>r>>g>>b;
+            current->diffuse[0]=LegacyMTLColor(r);
+            current->diffuse[1]=LegacyMTLColor(g);
+            current->diffuse[2]=LegacyMTLColor(b);
+        }
         else if(current&&tag=="Ks") ss>>current->specular[0]>>current->specular[1]>>current->specular[2];
         else if(current&&tag=="Ns") ss>>current->shininess;
         else if(current&&tag=="d") ss>>current->opacity;
@@ -194,7 +317,8 @@ std::unique_ptr<ModelAsset> ModelLoader::LoadOBJModel(const std::string& filepat
                 if(ni>=0){v.normal[0]=normals[ni].x;v.normal[1]=normals[ni].y;v.normal[2]=normals[ni].z;}
                 const auto id=(std::uint32_t)b.vertices.size();b.vertices.push_back(v);b.cache[key]=id;return id;
             };
-            for(size_t i=1;i+1<face.size();++i){b.indices.push_back(emit(face[0]));b.indices.push_back(emit(face[i]));b.indices.push_back(emit(face[i+1]));}
+            const std::vector<std::uint32_t> triangles=TriangulateFace(face,positions);
+            for(std::uint32_t corner:triangles) b.indices.push_back(emit(face[corner]));
         }
     }
 
