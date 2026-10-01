@@ -301,18 +301,6 @@ set_target_properties(
 # SDL3, Lua, GLAD, ImGui and ImGuizmo are statically linked, so no
 # project-owned runtime DLL needs to be copied beside the executable.
 
-add_custom_command(
-    TARGET 3DEngine
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_FILE_DIR:3DEngine>/Assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
-            "$<TARGET_FILE_DIR:3DEngine>/Assets"
-    COMMENT "Syncing Assets for $<CONFIG> runtime"
-    VERBATIM
-)
-
 
 # Make the engine executable the startup target for Visual Studio generators.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3DEngine)
