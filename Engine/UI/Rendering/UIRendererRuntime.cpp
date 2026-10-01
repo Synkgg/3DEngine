@@ -373,6 +373,13 @@ void UIRenderer::DrawElement(
         element.alpha
     );
 
+    // Legacy/scripted runtime elements do not expose corner radius yet.
+    // Explicitly clear the canvas-widget shader state so a previously drawn
+    // rounded widget cannot leak its radius into these rectangles.
+    m_Shader.SetVec2("u_RectSize", std::max(0.0f, element.width), std::max(0.0f, element.height));
+    m_Shader.SetFloat("u_CornerRadius", 0.0f);
+    m_Shader.SetInt("u_UseGradient", 0);
+
     if (element.texture != nullptr)
     {
         glActiveTexture(GL_TEXTURE0);
@@ -558,6 +565,9 @@ void UIRenderer::DrawTextPixel(
         blue,
         alpha
     );
+    m_Shader.SetVec2("u_RectSize", size, size);
+    m_Shader.SetFloat("u_CornerRadius", 0.0f);
+    m_Shader.SetInt("u_UseGradient", 0);
 
     m_Shader.SetInt(
         "u_UseTexture",
