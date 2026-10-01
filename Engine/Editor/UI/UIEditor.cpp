@@ -63,26 +63,34 @@ void UIEditor::Draw(
 
     m_Renderer = &renderer;
 
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const float documentBarHeight = 34.0f;
+    const ImVec2 workspacePos(
+        viewport->WorkPos.x,
+        viewport->WorkPos.y + documentBarHeight);
+    const ImVec2 workspaceSize(
+        viewport->WorkSize.x,
+        std::max(1.0f, viewport->WorkSize.y - documentBarHeight));
+
+    const std::string hostName =
+        std::string("##UIWorkspace_") + m_UIAssetPath;
+    ImGui::SetNextWindowPos(workspacePos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(workspaceSize, ImGuiCond_Always);
     if (m_FocusRequested)
     {
         ImGui::SetNextWindowFocus();
         m_FocusRequested = false;
     }
 
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowSize(
-        ImVec2(viewport->WorkSize.x * 0.88f, viewport->WorkSize.y * 0.88f),
-        ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowPos(
-        ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.06f,
-               viewport->WorkPos.y + viewport->WorkSize.y * 0.06f),
-        ImGuiCond_FirstUseEver);
-
-    const std::string documentWindowName =
-        std::string("Widget Blueprint##") + m_UIAssetPath;
+    const ImGuiWindowFlags hostFlags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoDocking |
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin(documentWindowName.c_str());
+    ImGui::Begin(hostName.c_str(), nullptr, hostFlags);
     ImGui::PopStyleVar();
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 29, 255));
@@ -92,6 +100,7 @@ void UIEditor::Draw(
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
+    ImGui::PushID(m_UIAssetPath.c_str());
     const ImGuiID dockspaceId = ImGui::GetID("WidgetBlueprintDockSpace");
     ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
@@ -214,6 +223,7 @@ void UIEditor::Draw(
         ImGui::EndPopup();
     }
 
+    ImGui::PopID();
     ImGui::End();
 }
 
