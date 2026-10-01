@@ -395,6 +395,9 @@ function OnCreate()
     UI.SetVisible("RoundResult",false)
     UI.SetVisible("MatchResult",false)
     UI.SetVisible("MatchActions",false)
+    UI.SetVisible("ReloadText",false)
+    UI.SetVisible("Hitmarker",false)
+    UI.SetVisible("MuzzleFlash",false)
     playerCamera=Scene.FindEntity("FirstPersonCamera").id
     if playerCamera~=0 then Camera.SetActive(playerCamera) end
     rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
