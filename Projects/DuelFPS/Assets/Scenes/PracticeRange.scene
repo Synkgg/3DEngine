@@ -368,13 +368,13 @@ Script Assets/Scripts/WeaponPickup.lua
 ScriptProperties 1
 ScriptProperty "Assets/Scripts/WeaponPickup.lua" "WeaponID" 2 "rifle"
 Entity 21
-Name Pistol Pickup Slide
-Position 0 0 -0.12
-Rotation 0 0 0
-Scale 0.26 0.20 0.68
+Name Pistol Pickup Model
+Position -0.20 -0.18 0
+Rotation 0 1.5708 0
+Scale 0.32 0.32 0.32
 Parent 19
 PrefabSource ""
-Mesh 1 1 ""
+Mesh 1 0 "Assets/Models/Weapons/Pistol.obj" 0
 Color 1 0.07 0.075 0.085 1
 Texture 0
 Material 1 0.72 0.28 1 0 "" "" "" "" ""
@@ -392,7 +392,7 @@ Rotation -0.22 0 0
 Scale 0.22 0.44 0.24
 Parent 19
 PrefabSource ""
-Mesh 1 1 ""
+Mesh 0
 Color 1 0.045 0.05 0.055 1
 Texture 0
 Material 1 0.8 0.2 1 0 "" "" "" "" ""
@@ -410,7 +410,7 @@ Rotation 0 0 0
 Scale 0.05 0.07 0.05
 Parent 19
 PrefabSource ""
-Mesh 1 1 ""
+Mesh 0
 Color 1 0.9 0.22 0.06 1
 Texture 0
 Material 1 0.25 0.4 1 0.08 "" "" "" "" ""
@@ -422,13 +422,13 @@ Light 0
 Collider 0
 Scripts 0
 Entity 24
-Name Rifle Pickup Body
-Position 0 0 0
-Rotation 0 0 0
-Scale 0.28 0.245 1.26
+Name Rifle Pickup Model
+Position -0.45 -0.20 0
+Rotation 0 1.5708 0
+Scale 0.38 0.38 0.38
 Parent 20
 PrefabSource ""
-Mesh 1 1 ""
+Mesh 1 0 "Assets/Models/Weapons/Rifle.obj" 0
 Color 1 0.055 0.065 0.075 1
 Texture 0
 Material 1 0.65 0.3 1 0 "" "" "" "" ""
@@ -446,7 +446,7 @@ Rotation 1.5708 0 0
 Scale 0.12 0.74 0.12
 Parent 20
 PrefabSource ""
-Mesh 1 4 ""
+Mesh 0
 Color 1 0.12 0.13 0.14 1
 Texture 0
 Material 1 0.8 0.22 1 0 "" "" "" "" ""
@@ -464,7 +464,7 @@ Rotation 0 0 0
 Scale 0.14 0.096 0.56
 Parent 20
 PrefabSource ""
-Mesh 1 1 ""
+Mesh 0
 Color 1 0.95 0.28 0.055 1
 Texture 0
 Material 1 0.25 0.35 1 0.12 "" "" "" "" ""
