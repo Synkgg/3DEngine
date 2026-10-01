@@ -424,9 +424,12 @@ void UIEditor::DrawInspector(
         return "Widget";
     };
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5.0f, 4.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 6.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 9.0f);
 
+    ImGui::Dummy(ImVec2(0.0f,2.0f));
     ImGui::TextColored(ImVec4(0.55f,0.72f,0.95f,1.0f), "%s", typeName(widget.GetType()));
     if (widget.GetParent())
     {
@@ -440,7 +443,11 @@ void UIEditor::DrawInspector(
     if(ImGui::InputText("##WidgetName",nameBuffer,sizeof(nameBuffer)))
         widget.SetName(nameBuffer);
 
-    const float filterButtonWidth=44.0f;
+    ImGui::Dummy(ImVec2(0.0f,2.0f));
+    ImGui::Separator();
+    ImGui::Dummy(ImVec2(0.0f,2.0f));
+
+    const float filterButtonWidth=48.0f;
     ImGui::SetNextItemWidth(std::max(80.0f,ImGui::GetContentRegionAvail().x-filterButtonWidth-4.0f));
     ImGui::InputTextWithHint("##DetailsSearch","Search Details",m_DetailsSearch,sizeof(m_DetailsSearch));
     ImGui::SameLine();
@@ -479,13 +486,18 @@ void UIEditor::DrawInspector(
     {
         if(!categoryVisible(name,keywords)) return;
         ImGui::PushID(name);
+        ImGui::Dummy(ImVec2(0.0f,3.0f));
         if(!query.empty() || m_DetailsExpandRequest!=0)
             ImGui::SetNextItemOpen(!query.empty() || m_DetailsExpandRequest>0,ImGuiCond_Always);
         ImGuiTreeNodeFlags flags=defaultOpen?ImGuiTreeNodeFlags_DefaultOpen:ImGuiTreeNodeFlags_None;
+        ImGui::PushStyleColor(ImGuiCol_Header,ImVec4(0.15f,0.17f,0.20f,1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered,ImVec4(0.19f,0.22f,0.26f,1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive,ImVec4(0.22f,0.25f,0.30f,1.0f));
         if(ImGui::CollapsingHeader(name,flags))
         {
-            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding,ImVec2(5.0f,4.0f));
-            if(ImGui::BeginTable("##Properties",2,ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerH))
+            ImGui::Dummy(ImVec2(0.0f,2.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding,ImVec2(7.0f,5.0f));
+            if(ImGui::BeginTable("##Properties",2,ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerH|ImGuiTableFlags_RowBg))
             {
                 ImGui::TableSetupColumn("Property",ImGuiTableColumnFlags_WidthFixed,std::clamp(ImGui::GetContentRegionAvail().x*0.42f,86.0f,150.0f));
                 ImGui::TableSetupColumn("Value",ImGuiTableColumnFlags_WidthStretch);
@@ -495,7 +507,9 @@ void UIEditor::DrawInspector(
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::AlignTextToFramePadding();
+                    ImGui::PushStyleColor(ImGuiCol_Text,ImVec4(0.78f,0.80f,0.84f,1.0f));
                     ImGui::TextUnformatted(label);
+                    ImGui::PopStyleColor();
                     ImGui::TableSetColumnIndex(1);
                     ImGui::PushID(label);
                     ImGui::SetNextItemWidth(-1.0f);
@@ -506,7 +520,9 @@ void UIEditor::DrawInspector(
                 ImGui::EndTable();
             }
             ImGui::PopStyleVar();
+            ImGui::Dummy(ImVec2(0.0f,1.0f));
         }
+        ImGui::PopStyleColor(3);
         ImGui::PopID();
     };
 
@@ -744,7 +760,8 @@ void UIEditor::DrawInspector(
     });
 
     m_DetailsExpandRequest=0;
-    ImGui::PopStyleVar(2);
+    ImGui::Dummy(ImVec2(0.0f,6.0f));
+    ImGui::PopStyleVar(4);
 }
 
 void UIEditor::DrawToolbar(
