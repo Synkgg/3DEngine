@@ -17,6 +17,8 @@
 
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
+#include <cmath>
 
 #include "../Scene.h"
 #include "../PrefabSerializer.h"
