@@ -18,6 +18,12 @@ public:
     void SetClicked(bool clicked);
     bool ConsumeClick();
 
+    const std::string& GetOnClickScript() const { return m_OnClickScript; }
+    void SetOnClickScript(const std::string& value) { m_OnClickScript = value; }
+    const std::string& GetOnClickFunction() const { return m_OnClickFunction; }
+    void SetOnClickFunction(const std::string& value) { m_OnClickFunction = value; }
+    bool ConsumeClickEvent();
+
     const Vec4& GetNormalColor() const;
     void SetNormalColor(const Vec4& color);
 
@@ -47,6 +53,9 @@ private:
     bool m_Hovered = false;
     bool m_Pressed = false;
     bool m_Clicked = false;
+    bool m_ClickEventPending = false;
+    std::string m_OnClickScript;
+    std::string m_OnClickFunction;
 
     Vec4 m_NormalColor = Vec4(0.22f, 0.24f, 0.28f, 1.0f);
     Vec4 m_HoveredColor = Vec4(0.30f, 0.34f, 0.40f, 1.0f);
