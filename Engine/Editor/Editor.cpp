@@ -1,4 +1,5 @@
 #include "Editor.h"
+#include <imgui_internal.h>
 
 #include "../Graphics/Renderer.h"
 #include "../Graphics/PrimitiveType.h"
@@ -316,10 +317,30 @@ void Editor::Render(
         ImGui::Begin("##SceneDocumentWorkspace", nullptr, sceneHostFlags);
         ImGui::PopStyleVar();
         const ImGuiID sceneDockspaceId = ImGui::GetID("SceneDocumentDockSpace");
+
+        // Build the shipped layout only when no saved docking node exists.
+        // Existing imgui.ini state remains authoritative for user customization.
+        if (ImGui::DockBuilderGetNode(sceneDockspaceId) == nullptr)
+        {
+            ImGui::DockBuilderRemoveNode(sceneDockspaceId);
+            ImGui::DockBuilderAddNode(sceneDockspaceId, ImGuiDockNodeFlags_DockSpace);
+            ImGui::DockBuilderSetNodeSize(sceneDockspaceId, sceneWorkspaceSize);
+
+            ImGuiID center = sceneDockspaceId;
+            ImGuiID left = ImGui::DockBuilderSplitNode(center, ImGuiDir_Left, 0.122f, nullptr, &center);
+            ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.203f, nullptr, &center);
+            ImGuiID bottom = ImGui::DockBuilderSplitNode(center, ImGuiDir_Down, 0.225f, nullptr, &center);
+
+            ImGui::DockBuilderDockWindow("Hierarchy", left);
+            ImGui::DockBuilderDockWindow("Scene", center);
+            ImGui::DockBuilderDockWindow("Details", right);
+            ImGui::DockBuilderDockWindow("Assets", bottom);
+            ImGui::DockBuilderDockWindow("Console", bottom);
+            ImGui::DockBuilderFinish(sceneDockspaceId);
+        }
+
         ImGui::DockSpace(sceneDockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
         ImGui::End();
-
-        ImGui::SetNextWindowDockID(sceneDockspaceId, ImGuiCond_FirstUseEver);
         RenderHierarchy(
             scene,
             iconFont
