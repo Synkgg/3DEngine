@@ -247,6 +247,7 @@ std::unique_ptr<ModelAsset> ModelLoader::LoadModel(const std::string& filepath,c
     const std::string ext=std::filesystem::path(filepath).extension().string();
     std::string lower=ext;std::transform(lower.begin(),lower.end(),lower.begin(),[](unsigned char c){return (char)std::tolower(c);});
     if(lower==".obj") return LoadOBJModel(filepath,settings);
+    if(lower==".gltf"||lower==".glb") return LoadGLTFModel(filepath,settings);
     Logger::Error("Unsupported model format: "+filepath+" (OBJ is enabled; glTF/GLB skeletal data structures are ready for the next importer backend)");
     return nullptr;
 }
@@ -344,6 +345,12 @@ std::unique_ptr<ModelAsset> ModelLoader::LoadOBJModel(const std::string& filepat
     if(model->sections.empty()){Logger::Error("OBJ contains no renderable faces: "+filepath);return nullptr;}
     Logger::Info("Loaded OBJ model: "+filepath+" ("+std::to_string(model->sections.size())+" sections, "+std::to_string(model->materials.size())+" materials, "+std::to_string(triangleCount)+" triangles)");
     return model;
+}
+
+std::unique_ptr<ModelAsset> ModelLoader::LoadGLTFModel(const std::string& filepath,const ModelImportSettings& settings)
+{
+    extern std::unique_ptr<ModelAsset> LoadGLTFAsset(const std::string&,const ModelImportSettings&);
+    return LoadGLTFAsset(filepath,settings);
 }
 
 std::unique_ptr<Mesh> ModelLoader::LoadOBJ(const std::string& filepath)

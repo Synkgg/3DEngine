@@ -25,6 +25,11 @@ public:
         const ModelImportSettings& settings = {}
     );
 
+    static std::unique_ptr<ModelAsset> LoadGLTFModel(
+        const std::string& filepath,
+        const ModelImportSettings& settings = {}
+    );
+
     // Compatibility path for callers that still require one merged mesh.
     static std::unique_ptr<Mesh> LoadOBJ(const std::string& filepath);
 };

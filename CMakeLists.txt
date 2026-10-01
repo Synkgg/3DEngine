@@ -101,6 +101,17 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(sol2)
 
+#
+# cgltf - lightweight glTF 2.0 / GLB parser
+#
+FetchContent_Declare(
+    cgltf
+    GIT_REPOSITORY https://github.com/jkuhlmann/cgltf.git
+    GIT_TAG v1.15
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(cgltf)
+
 add_library(
     sol2_headers
     INTERFACE
@@ -200,6 +211,7 @@ target_include_directories(
     vendor/ImGuizmo/src
 
     "${lua54_SOURCE_DIR}"
+    "${cgltf_SOURCE_DIR}"
 )
 
 #

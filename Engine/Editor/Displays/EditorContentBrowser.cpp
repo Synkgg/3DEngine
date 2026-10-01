@@ -376,7 +376,9 @@ void Editor::RenderContentBrowser(
 
             const bool isMesh =
                 !entry.directory &&
-                extension == ".obj";
+                extension == ".obj" ||
+                extension == ".gltf" ||
+                extension == ".glb";
 
             const bool isPrefab =
                 !entry.directory &&
