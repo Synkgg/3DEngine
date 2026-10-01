@@ -126,6 +126,10 @@ private:
     float m_MeshPreviewTime = 0.0f;
     double m_MeshPreviewLastTick = 0.0;
     bool m_MeshPreviewPlaying = true;
+    bool m_ModelImportGenerateNormals = true;
+    bool m_ModelImportMaterials = true;
+    bool m_ModelImportTextures = true;
+    bool m_ModelImportMergeSections = true;
     unsigned int m_MeshPreviewFramebuffer = 0;
     unsigned int m_MeshPreviewTexture = 0;
     unsigned int m_MeshPreviewDepth = 0;

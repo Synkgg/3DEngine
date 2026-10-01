@@ -3,6 +3,7 @@
 
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/ModelAsset.h"
+#include "../../Graphics/ModelLoader.h"
 #include "../../Graphics/Texture2D.h"
 #include "../../Core/Logger.h"
 #include "../../Scene/Scene.h"
@@ -1044,6 +1045,37 @@ void Editor::RenderContentBrowser(
                 ImGui::TextDisabled("Unable to render this model.");
             }
 
+            ImGui::Separator();
+            if (ImGui::CollapsingHeader("Import Settings", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Checkbox("Generate normals when missing", &m_ModelImportGenerateNormals);
+                ImGui::Checkbox("Import materials", &m_ModelImportMaterials);
+                ImGui::BeginDisabled(!m_ModelImportMaterials);
+                ImGui::Checkbox("Import textures", &m_ModelImportTextures);
+                ImGui::EndDisabled();
+                ImGui::Checkbox("Merge material sections", &m_ModelImportMergeSections);
+                if (previewAsset)
+                {
+                    ImGui::TextDisabled("Detected: %s", skeletal ? "Skeletal Mesh" : "Static Mesh");
+                    if (!previewAsset->materials.empty()) ImGui::TextDisabled("Materials: %zu", previewAsset->materials.size() > 0 ? previewAsset->materials.size() - 1 : 0);
+                    if (skeletal) ImGui::TextDisabled("Skeleton: %zu bones   Animation clips: %zu", previewAsset->skeleton.bones.size(), previewAsset->animations.size());
+                }
+                if (ImGui::Button("Reimport With Settings"))
+                {
+                    ModelImportSettings settings;
+                    settings.generateNormals = m_ModelImportGenerateNormals;
+                    settings.importMaterials = m_ModelImportMaterials;
+                    settings.importTextures = m_ModelImportTextures && m_ModelImportMaterials;
+                    settings.mergeMaterialSections = m_ModelImportMergeSections;
+                    std::unique_ptr<ModelAsset> imported = ModelLoader::LoadModel(m_MeshPreviewPath, settings);
+                    if (imported)
+                        Logger::Info("Validated model import settings for " + fs::path(m_MeshPreviewPath).filename().string() + ": " + std::to_string(imported->sections.size()) + " sections, " + std::to_string(imported->materials.size()) + " materials, " + std::to_string(imported->skeleton.bones.size()) + " bones, " + std::to_string(imported->animations.size()) + " animations");
+                    else
+                        Logger::Error("Model import validation failed: " + m_MeshPreviewPath);
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("Source assets are currently loaded directly; persistent .asset output is next.");
+            }
             ImGui::Separator();
             ImGui::TextDisabled("%s", m_MeshPreviewPath.c_str());
         }
