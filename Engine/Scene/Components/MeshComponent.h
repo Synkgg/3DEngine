@@ -13,6 +13,13 @@ struct MeshComponent
     // Remote replicas still render it, which is useful for first-person bodies.
     bool ownerNoSee = false;
 
+    // Skeletal animation playback. Ignored for static model assets.
+    bool animationPlaying = true;
+    bool animationLoop = true;
+    int animationClip = 0;
+    float animationTime = 0.0f;
+    float animationSpeed = 1.0f;
+
     Vec3 offset = Vec3(0.0f, 0.0f, 0.0f);
     Vec3 rotation = Vec3(0.0f, 0.0f, 0.0f);
 };

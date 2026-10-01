@@ -29,6 +29,7 @@ public:
     static std::unique_ptr<ModelAsset> LoadImportedAsset(const std::string& filepath);
     static bool ReadImportedAssetSettings(const std::string& filepath, ModelImportSettings& settings, std::string* sourcePath = nullptr);
     static bool IsImportedAssetCurrent(const std::string& filepath);
+    static bool SourceDependenciesNewer(const std::string& sourcePath, const std::string& importedPath);
 
     static std::unique_ptr<ModelAsset> LoadGLTFModel(
         const std::string& filepath,

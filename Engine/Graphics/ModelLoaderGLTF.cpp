@@ -42,11 +42,14 @@ std::unique_ptr<ModelAsset> LoadGLTFAsset(const std::string& filepath,const Mode
  cgltf_options options{};cgltf_data* data=nullptr;
  if(cgltf_parse_file(&options,filepath.c_str(),&data)!=cgltf_result_success){Logger::Error("Could not parse glTF/GLB: "+filepath);return nullptr;}
  struct G{cgltf_data* p;~G(){cgltf_free(p);}} guard{data};
- if(cgltf_load_buffers(&options,data,filepath.c_str())!=cgltf_result_success){Logger::Error("Could not load glTF buffers: "+filepath);return nullptr;}
+ if(cgltf_load_buffers(&options,data,filepath.c_str())!=cgltf_result_success){Logger::Error("Could not load glTF buffers: "+filepath);return nullptr;}if(cgltf_validate(data)!=cgltf_result_success){Logger::Error("glTF validation failed: "+filepath);return nullptr;}
  auto model=std::make_unique<ModelAsset>();model->sourcePath=filepath;model->type=data->skins_count?ModelAssetType::Skeletal:ModelAssetType::Static;
  ImportedMaterial fallback;fallback.name="Default";model->materials.push_back(fallback);
  if(settings.importMaterials)for(cgltf_size i=0;i<data->materials_count;++i){
   const cgltf_material& s=data->materials[i];ImportedMaterial m;m.name=s.name?s.name:("Material_"+std::to_string(i));
+  if(s.unlit) Logger::Warning("glTF unlit material is approximated by the PBR renderer: "+m.name);
+  if(s.alpha_mode!=cgltf_alpha_mode_opaque) Logger::Warning("glTF alpha mode for "+m.name+" is imported as opacity only; alpha cutoff/blending policy is not yet material-state driven.");
+  if(s.double_sided) Logger::Warning("glTF double-sided material "+m.name+" requires per-material culling state; rendering remains engine-default.");
   if(s.has_pbr_metallic_roughness){const auto& p=s.pbr_metallic_roughness;m.diffuse[0]=p.base_color_factor[0];m.diffuse[1]=p.base_color_factor[1];m.diffuse[2]=p.base_color_factor[2];m.opacity=p.base_color_factor[3];m.metallicFactor=p.metallic_factor;m.roughnessFactor=p.roughness_factor;
    if(settings.importTextures){m.diffuseTexture=TexturePath(filepath,p.base_color_texture);m.metallicRoughnessTexture=TexturePath(filepath,p.metallic_roughness_texture);}}
   m.emissiveFactor[0]=s.emissive_factor[0];m.emissiveFactor[1]=s.emissive_factor[1];m.emissiveFactor[2]=s.emissive_factor[2];

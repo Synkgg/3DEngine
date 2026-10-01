@@ -9,6 +9,7 @@
 #include "../Scene/Components/ColliderComponent.h"
 #include "../Scene/Components/TextureComponent.h"
 #include "../Scene/Components/MaterialComponent.h"
+#include "../Graphics/ModelAsset.h"
 #include "../Graphics/PrimitiveType.h"
 #include "../Core/Logger.h"
 #include "../UI/UISerializer.h"
@@ -586,7 +587,10 @@ void Application::Run()
             shadowTransform.rotation.z += mesh->rotation.z;
 
             if (!mesh->modelPath.empty())
-                m_Renderer.DrawShadowModel(shadowTransform, m_ProjectManager.ResolveAssetPath(mesh->modelPath));
+            {
+                const std::string resolved=m_ProjectManager.ResolveAssetPath(mesh->modelPath);ModelAsset* asset=m_Renderer.GetModelAsset(resolved);
+                if(asset&&asset->IsSkeletal()&&!asset->animations.empty())m_Renderer.DrawAnimatedShadowModel(shadowTransform,resolved,(std::size_t)std::max(mesh->animationClip,0),mesh->animationTime,mesh->animationLoop);else m_Renderer.DrawShadowModel(shadowTransform,resolved);
+            }
             else
                 m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
         }
@@ -687,8 +691,14 @@ void Application::Run()
 
                 if (!mesh->modelPath.empty())
                 {
-                    m_Renderer.DrawModel(
-                        meshTransform, m_ProjectManager.ResolveAssetPath(mesh->modelPath),
+                    const std::string resolvedModel=m_ProjectManager.ResolveAssetPath(mesh->modelPath);ModelAsset* modelAsset=m_Renderer.GetModelAsset(resolvedModel);
+                    if(modelAsset&&modelAsset->IsSkeletal()&&!modelAsset->animations.empty())
+                    {
+                        if(mesh->animationPlaying)mesh->animationTime+=m_Time.GetDeltaTime()*mesh->animationSpeed;
+                        m_Renderer.DrawAnimatedModel(meshTransform,resolvedModel,(std::size_t)std::max(mesh->animationClip,0),mesh->animationTime,mesh->animationLoop,red,green,blue,alpha);
+                    }
+                    else m_Renderer.DrawModel(
+                        meshTransform, resolvedModel,
                         red, green, blue, alpha, texture,
                         material ? material->metallic : 0.0f,
                         material ? material->roughness : 0.65f,

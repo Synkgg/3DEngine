@@ -672,8 +672,10 @@ bool SceneSerializer::Load(
 
                 // Optional for scenes saved before Owner No See existed.
                 int ownerNoSee = 0;
-                if (meshLine >> ownerNoSee)
-                    mesh.ownerNoSee = ownerNoSee != 0;
+                if (meshLine >> ownerNoSee) mesh.ownerNoSee = ownerNoSee != 0;
+                int animationPlaying=1,animationLoop=1;
+                if(meshLine>>animationPlaying>>animationLoop>>mesh.animationClip>>mesh.animationTime>>mesh.animationSpeed){mesh.animationPlaying=animationPlaying!=0;mesh.animationLoop=animationLoop!=0;}
+                else meshLine.clear();
 
                 m_Scene.AddComponent<
                     MeshComponent

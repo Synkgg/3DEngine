@@ -1068,15 +1068,16 @@ void Editor::RenderContentBrowser(
                     settings.importMaterials = m_ModelImportMaterials;
                     settings.importTextures = m_ModelImportTextures && m_ModelImportMaterials;
                     settings.mergeMaterialSections = m_ModelImportMergeSections;
-                    std::unique_ptr<ModelAsset> imported = ModelLoader::LoadModel(m_MeshPreviewPath, settings);
+                    std::string importSource=m_MeshPreviewPath;fs::path output=fs::path(m_MeshPreviewPath);if(output.extension()==".modelasset"){ModelImportSettings stored;std::string storedSource;if(ModelLoader::ReadImportedAssetSettings(m_MeshPreviewPath,stored,&storedSource)&&!storedSource.empty())importSource=storedSource;else{Logger::Error("Imported model has no valid source metadata: "+m_MeshPreviewPath);importSource.clear();}}
+                    std::unique_ptr<ModelAsset> imported = importSource.empty()?nullptr:ModelLoader::LoadModel(importSource, settings);
                     if (imported)
                     {
-                        fs::path output = fs::path(m_MeshPreviewPath); output.replace_extension(".modelasset");
+                        output=fs::path(importSource); output.replace_extension(".modelasset");
                         if (ModelLoader::SaveImportedAsset(output.string(), *imported, settings))
                         {
                             renderer.InvalidateModelAsset(output.string());
                             renderer.InvalidateModelAsset(m_MeshPreviewPath);
-                            Logger::Info("Imported " + fs::path(m_MeshPreviewPath).filename().string() + " -> " + output.filename().string() + ": " + std::to_string(imported->sections.size()) + " sections, " + std::to_string(imported->materials.size()) + " materials, " + std::to_string(imported->skeleton.bones.size()) + " bones, " + std::to_string(imported->animations.size()) + " animations");
+                            Logger::Info("Imported " + fs::path(importSource).filename().string() + " -> " + output.filename().string() + ": " + std::to_string(imported->sections.size()) + " sections, " + std::to_string(imported->materials.size()) + " materials, " + std::to_string(imported->skeleton.bones.size()) + " bones, " + std::to_string(imported->animations.size()) + " animations");
                         }
                     }
                     else

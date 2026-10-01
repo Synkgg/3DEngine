@@ -45,15 +45,7 @@ ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
         std::error_code ec;
         const bool importedExists = std::filesystem::exists(importedPath, ec) && !ec;
         bool needsImport = !importedExists || (importedExists && !ModelLoader::IsImportedAssetCurrent(importedPath.string()));
-        if (importedExists)
-        {
-            const auto sourceTime = std::filesystem::last_write_time(sourcePath, ec);
-            if (!ec)
-            {
-                const auto importedTime = std::filesystem::last_write_time(importedPath, ec);
-                if (!ec) needsImport = sourceTime > importedTime;
-            }
-        }
+        if(importedExists && ModelLoader::SourceDependenciesNewer(sourcePath.string(),importedPath.string())) needsImport=true;
 
         if (needsImport)
         {
@@ -95,7 +87,7 @@ ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
 
 void Renderer::InvalidateModelAsset(const std::string& modelPath)
 {
-    const std::string resolvedPath=ResolveAssetPath(modelPath);m_ModelCache.erase(resolvedPath);m_ModelPreviewCache.erase(resolvedPath);
+    const std::string resolvedPath=ResolveAssetPath(modelPath);m_ModelCache.erase(resolvedPath);for(auto it=m_ModelPreviewCache.begin();it!=m_ModelPreviewCache.end();){if(it->first==resolvedPath||it->first.rfind(resolvedPath+"#",0)==0)it=m_ModelPreviewCache.erase(it);else ++it;}
 }
 
 Mesh* Renderer::GetModelMesh(const std::string& modelPath)

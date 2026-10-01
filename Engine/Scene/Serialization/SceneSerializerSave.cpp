@@ -424,6 +424,11 @@ bool SceneSerializer::Save(
                 << static_cast<int>(mesh->primitive)
                 << " " << std::quoted(mesh->modelPath)
                 << " " << (mesh->ownerNoSee ? 1 : 0)
+                << " " << (mesh->animationPlaying ? 1 : 0)
+                << " " << (mesh->animationLoop ? 1 : 0)
+                << " " << mesh->animationClip
+                << " " << mesh->animationTime
+                << " " << mesh->animationSpeed
                 << '\n';
         }
         else
