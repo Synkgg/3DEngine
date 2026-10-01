@@ -43,6 +43,35 @@ ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
         std::filesystem::path importedPath = sourcePath;
         importedPath.replace_extension(".modelasset");
         std::error_code ec;
+        const bool importedExists = std::filesystem::exists(importedPath, ec) && !ec;
+        bool needsImport = !importedExists;
+        if (importedExists)
+        {
+            const auto sourceTime = std::filesystem::last_write_time(sourcePath, ec);
+            if (!ec)
+            {
+                const auto importedTime = std::filesystem::last_write_time(importedPath, ec);
+                if (!ec) needsImport = sourceTime > importedTime;
+            }
+        }
+
+        if (needsImport)
+        {
+            ModelImportSettings settings;
+            std::unique_ptr<ModelAsset> imported = ModelLoader::LoadModel(sourcePath.string(), settings);
+            if (imported && ModelLoader::SaveImportedAsset(importedPath.string(), *imported, settings))
+            {
+                Logger::Info(std::string(importedExists ? "Auto-reimported model: " : "Auto-imported model: ") +
+                    sourcePath.filename().string() + " -> " + importedPath.filename().string());
+                m_ModelCache.erase(importedPath.lexically_normal().string());
+            }
+            else if (!importedExists)
+            {
+                Logger::Warning("Automatic model import failed; using source asset: " + sourcePath.string());
+            }
+        }
+
+        ec.clear();
         if (std::filesystem::exists(importedPath, ec) && !ec)
             resolvedPath = importedPath.lexically_normal().string();
     }
