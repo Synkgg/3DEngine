@@ -332,7 +332,7 @@ local function returnToMenu()
 end
 
 local function updateHUD()
-    local localID=Controller.GetLocalID()
+    local localID=practiceMode and 1 or Controller.GetLocalID()
     local opponentID=localID==1 and 2 or 1
     local localHealth=health[localID] or MAX_HEALTH
     local dead=localHealth<=0
