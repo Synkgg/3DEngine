@@ -175,6 +175,11 @@ void Shader::SetVec4(
     );
 }
 
+void Shader::SetVec2(const char* name, float x, float y)
+{
+    glUniform2f(glGetUniformLocation(m_Program, name), x, y);
+}
+
 void Shader::SetVec3(
     const char* name,
     float x,
