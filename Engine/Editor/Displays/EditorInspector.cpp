@@ -238,17 +238,6 @@ namespace
     }
 
     std::string g_RemoveComponentRequest;
-    std::string g_InspectorFilter;
-    int g_InspectorExpandRequest = 0;
-
-    bool InspectorMatches(const char* label)
-    {
-        if (g_InspectorFilter.empty()) return true;
-        std::string value = label ? label : "";
-        std::transform(value.begin(), value.end(), value.begin(),
-            [](unsigned char ch){ return static_cast<char>(std::tolower(ch)); });
-        return value.find(g_InspectorFilter) != std::string::npos;
-    }
 
     struct ComponentHeaderResult
     {
@@ -258,15 +247,13 @@ namespace
 
     ComponentHeaderResult DrawComponentHeader(const char* label, bool removable = true, bool defaultOpen = true)
     {
+        ImGui::Dummy(ImVec2(0.0f, 3.0f));
         ComponentHeaderResult result;
-        if (!InspectorMatches(label)) { result.open = false; return result; }
-        ImGui::Dummy(ImVec2(0.0f, 5.0f));
         ImGui::PushID(label);
         static std::unordered_map<ImGuiID, bool> openStates;
         const ImGuiID id = ImGui::GetID("##ComponentHeader");
         auto it = openStates.find(id);
         if (it == openStates.end()) it = openStates.emplace(id, defaultOpen).first;
-        if (g_InspectorExpandRequest != 0) it->second = g_InspectorExpandRequest > 0;
 
         const float inset = 2.0f;
         const float height = ImGui::GetTextLineHeight() + 8.0f;
@@ -339,8 +326,8 @@ void Editor::RenderInspector(
 {
     ImGui::Begin("Details");
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 6.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+    ImGui::TextDisabled("DETAILS");
+    ImGui::Separator();
 
     if (!m_SelectedEntity.IsValid())
     {
@@ -351,15 +338,17 @@ void Editor::RenderInspector(
             "Nothing selected"
         );
 
-        ImGui::PopStyleVar(2);
         ImGui::End();
 
         return;
     }
 
-    ImGui::TextColored(ImVec4(0.55f,0.72f,0.95f,1.0f),"Entity");
-    ImGui::SameLine();
-    ImGui::TextDisabled("#%u",m_SelectedEntity.GetID());
+    ImGui::Text(
+        "Entity %u",
+        m_SelectedEntity.GetID()
+    );
+
+    ImGui::Separator();
 
     /*
      * Name
@@ -385,9 +374,8 @@ void Editor::RenderInspector(
                 m_SelectedEntity.GetID();
         }
 
-        ImGui::SetNextItemWidth(-1.0f);
         if (ImGui::InputText(
-            "##EntityName",
+            "Name",
             m_NameEditBuffer,
             sizeof(m_NameEditBuffer),
             ImGuiInputTextFlags_EnterReturnsTrue))
@@ -397,33 +385,9 @@ void Editor::RenderInspector(
         }
     }
 
-    ImGui::Dummy(ImVec2(0.0f,2.0f));
     ImGui::Separator();
-    ImGui::Dummy(ImVec2(0.0f,2.0f));
 
-    const float viewWidth=48.0f;
-    ImGui::SetNextItemWidth(std::max(80.0f,ImGui::GetContentRegionAvail().x-viewWidth-5.0f));
-    ImGui::InputTextWithHint("##InspectorSearch","Search Details",m_InspectorSearchBuffer,sizeof(m_InspectorSearchBuffer));
-    ImGui::SameLine();
-    if(ImGui::Button("View",ImVec2(viewWidth,0))) ImGui::OpenPopup("##InspectorView");
-    if(ImGui::BeginPopup("##InspectorView"))
-    {
-        ImGui::MenuItem("Show Advanced",nullptr,&m_InspectorShowAdvanced);
-        ImGui::Separator();
-        if(ImGui::MenuItem("Expand All")) m_InspectorExpandRequest=1;
-        if(ImGui::MenuItem("Collapse All")) m_InspectorExpandRequest=-1;
-        if(ImGui::MenuItem("Clear Search")) m_InspectorSearchBuffer[0]='\0';
-        ImGui::EndPopup();
-    }
-
-    g_InspectorFilter=m_InspectorSearchBuffer;
-    std::transform(g_InspectorFilter.begin(),g_InspectorFilter.end(),g_InspectorFilter.begin(),
-        [](unsigned char ch){return static_cast<char>(std::tolower(ch));});
-    g_InspectorExpandRequest=m_InspectorExpandRequest;
-
-    ImGui::Dummy(ImVec2(0.0f,3.0f));
-
-    if (g_InspectorFilter.empty() && ImGui::CollapsingHeader("Relationship", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::CollapsingHeader("Relationship", ImGuiTreeNodeFlags_DefaultOpen))
     {
         Entity parent = scene.GetParent(m_SelectedEntity);
         if (parent.IsValid())
@@ -441,7 +405,7 @@ void Editor::RenderInspector(
         ImGui::TextDisabled("Drag an entity onto another entity in Hierarchy to parent it.");
     }
 
-    if (g_InspectorFilter.empty() && PrefabSerializer::IsInstanceRoot(scene, m_SelectedEntity))
+    if (PrefabSerializer::IsInstanceRoot(scene, m_SelectedEntity))
     {
         if (ImGui::CollapsingHeader("Prefab", ImGuiTreeNodeFlags_DefaultOpen))
         {
@@ -465,13 +429,13 @@ void Editor::RenderInspector(
 
     // Inspector-only component surfaces: strong headers, dark field bodies and
     // visible outlines create distinct cards without changing the global theme.
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7.0f, 5.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7.0f, 6.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7.0f, 4.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(7.0f, 4.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 12.0f);
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.225f,0.230f,0.238f,1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.255f,0.262f,0.272f,1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.275f,0.285f,0.300f,1.0f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.115f,0.120f,0.128f,1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.105f,0.110f,0.118f,1.0f));
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.245f,0.252f,0.265f,1.0f));
 
     /*
@@ -558,7 +522,6 @@ void Editor::RenderInspector(
             scale.z =
                 scaleValues[2];
         }
-        EndComponentSection();
     }
 
     /*
@@ -649,8 +612,6 @@ void Editor::RenderInspector(
         }
     }
 
-    EndComponentSection();
-
     /*
      * Color
      */
@@ -690,8 +651,6 @@ void Editor::RenderInspector(
         }
     }
 
-    EndComponentSection();
-
     /*
      * Texture
      */
@@ -716,8 +675,6 @@ void Editor::RenderInspector(
     /* Player Start */
     PlayerStartComponent* playerStart=scene.GetComponent<PlayerStartComponent>(m_SelectedEntity);
     if(playerStart&&DrawComponentHeader("Player Start").open){int slot=(int)playerStart->slot;if(ImGui::InputInt("Player Slot",&slot))playerStart->slot=(std::uint32_t)std::max(0,slot);ImGui::TextWrapped("Generic Pawn spawn location. Slot 0 is a default/any start.");}
-    EndComponentSection();
-
     /*
      * Pawn
      */
@@ -730,8 +687,6 @@ void Editor::RenderInspector(
             ImGui::Text("Controller ID: %u", pawn->controllerID);
         }
     }
-
-    EndComponentSection();
 
     /*
      * Character Controller
@@ -889,8 +844,6 @@ void Editor::RenderInspector(
             ImGui::DragFloat("Emissive", &material->emissive, 0.05f, 0.0f, 20.0f);
         }
     }
-
-    EndComponentSection();
 
     /*
      * Collider
@@ -1226,26 +1179,20 @@ void Editor::RenderInspector(
     ImGui::PopStyleColor(5);
     ImGui::PopStyleVar(3);
 
-    m_InspectorExpandRequest=0;
-    g_InspectorExpandRequest=0;
-
     /*
      * Add Component
      */
     const float addComponentWidth = 180.0f;
-    if(!g_InspectorFilter.empty()) ImGui::BeginDisabled();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.0f, (ImGui::GetContentRegionAvail().x - addComponentWidth) * 0.5f));
     if (ImGui::Button(
-        "Add Component", ImVec2(addComponentWidth, 30.0f)))
+        "Add Component", ImVec2(addComponentWidth, 28.0f)))
     {
         ImGui::OpenPopup(
             "AddComponentPopup"
         );
     }
 
-    if(!g_InspectorFilter.empty()) ImGui::EndDisabled();
-
-    ImGui::SetNextWindowSize(ImVec2(310.0f, 340.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ImVec2(285.0f, 315.0f), ImGuiCond_Appearing);
     if (ImGui::BeginPopup("AddComponentPopup"))
     {
         static char search[128] = {};
@@ -1340,6 +1287,5 @@ void Editor::RenderInspector(
         ImGui::EndPopup();
     }
 
-    ImGui::PopStyleVar(2);
     ImGui::End();
 }
