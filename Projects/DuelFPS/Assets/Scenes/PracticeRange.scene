@@ -1,6 +1,6 @@
 MyEngineScene
 Environment 1 4 1 1 1 180 0.78 0.0004 0.12 1 85
-Entities 18
+Entities 19
 Entity 1
 Name Player
 Position 0 1.5 14
@@ -327,4 +327,23 @@ CharacterController 0
 Light 1 0 1 0.94 0.8 1.4 45
 Collider 0
 Scripts 0
+Entity 19
+Name Pistol Pickup
+Position 0 1.05 10.5
+Rotation 0 0 0
+Scale 0.7 0.35 1.1
+Parent 0
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 0.12 0.13 0.15 1
+Texture 0
+Material 1 0.65 0.28 1 0
+Interactable 1 1 "Pick up pistol"
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1.2 0.8 1.8
+Scripts 1
+Script Assets/Scripts/WeaponPickup.lua
 HierarchyFolders 0
