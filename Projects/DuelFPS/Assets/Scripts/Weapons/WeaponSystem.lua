@@ -11,6 +11,8 @@ function WeaponSystem.new(api)
         cooldown = 0.0,
         reloadTimer = 0.0,
         kick = 0.0,
+        recoilTarget = 0.0,
+        recoilApplied = 0.0,
         aiming = false
     }, WeaponSystem)
 end
@@ -49,6 +51,8 @@ function WeaponSystem:Equip(weaponID)
     self.equipped = weaponID
     self.reloadTimer = 0.0
     self.kick = 0.0
+    self.recoilTarget = 0.0
+    self.recoilApplied = 0.0
     self.viewmodel = self.api.Scene.InstantiatePrefab(def.viewmodelPrefab, 0)
     return true
 end
@@ -88,10 +92,24 @@ end
 
 function WeaponSystem:Update(dt, cameraEntity)
     self.cooldown = math.max(0.0, self.cooldown - dt)
-    self.kick = math.max(0.0, self.kick - dt * ((self:GetDefinition() and self:GetDefinition().kickRecovery) or 8.0))
 
     local def, item = self:GetDefinition(), self:GetItem()
     if not def or not item then return end
+
+    self.kick = math.max(0.0, self.kick - dt * (def.kickRecovery or 6.0))
+
+    -- Smooth camera recoil: ease upward toward the accumulated shot impulse,
+    -- then ease the exact applied offset back to zero.
+    local target = self.recoilTarget
+    local speed = target > self.recoilApplied and (def.recoilRiseSpeed or 12.0) or (def.recoilReturnSpeed or 7.0)
+    local alpha = math.min(1.0, dt * speed)
+    local nextApplied = self.recoilApplied + (target - self.recoilApplied) * alpha
+    local delta = nextApplied - self.recoilApplied
+    if cameraEntity ~= 0 and math.abs(delta) > 0.000001 then
+        self.api.Camera.RotateEntity(cameraEntity, 0.0, delta)
+    end
+    self.recoilApplied = nextApplied
+    self.recoilTarget = math.max(0.0, self.recoilTarget - dt * (def.recoilReturnSpeed or 7.0) * def.cameraKick)
 
     if self.reloadTimer > 0.0 then
         self.reloadTimer = math.max(0.0, self.reloadTimer - dt)
@@ -134,14 +152,9 @@ function WeaponSystem:Fire(ownerEntity, cameraEntity)
 
     item.ammo = item.ammo - 1
     self.cooldown = def.fireInterval
-    self.kick = def.viewKick
+    self.kick = math.min(def.viewKick * 1.35, self.kick + def.viewKick)
+    self.recoilTarget = math.min(def.cameraKick * 1.5, self.recoilTarget + def.cameraKick)
     self.api.Audio.PlaySFX(def.fireSound, 0.9)
-
-    -- Camera recoil is an immediate upward impulse. It intentionally does not
-    -- auto-correct the player's aim back down.
-    if cameraEntity ~= 0 then
-        self.api.Camera.RotateEntity(cameraEntity, 0.0, -def.cameraKick)
-    end
 
     local c, f = self.api.Camera.GetPosition(), self.api.Camera.GetForward()
     local hit = self.api.Physics.Raycast(c.x, c.y, c.z, f.x, f.y, f.z, def.range, ownerEntity)
