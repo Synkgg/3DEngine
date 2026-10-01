@@ -13,7 +13,18 @@ bool UIButton::IsPressed() const { return m_Pressed; }
 void UIButton::SetPressed(bool pressed) { m_Pressed = pressed; }
 
 bool UIButton::WasClicked() const { return m_Clicked; }
-void UIButton::SetClicked(bool clicked) { m_Clicked = clicked; }
+void UIButton::SetClicked(bool clicked)
+{
+    m_Clicked = clicked;
+    if (clicked && !m_OnClickFunction.empty()) m_ClickEventPending = true;
+}
+
+bool UIButton::ConsumeClickEvent()
+{
+    const bool pending = m_ClickEventPending;
+    m_ClickEventPending = false;
+    return pending;
+}
 
 bool UIButton::ConsumeClick()
 {
