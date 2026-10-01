@@ -104,12 +104,36 @@ void UIEditor::Draw(
 
     ImGui::PushID(m_UIAssetPath.c_str());
     const ImGuiID dockspaceId = ImGui::GetID("WidgetBlueprintDockSpace");
+
+    // Recreate the provided default Widget Blueprint layout only when this
+    // document has no saved docking state. Saved imgui.ini layouts still win.
+    if (ImGui::DockBuilderGetNode(dockspaceId) == nullptr)
+    {
+        const ImVec2 dockSize(
+            workspaceSize.x,
+            std::max(1.0f, workspaceSize.y - 42.0f));
+
+        ImGui::DockBuilderRemoveNode(dockspaceId);
+        ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockspaceId, dockSize);
+
+        ImGuiID center = dockspaceId;
+        ImGuiID left = ImGui::DockBuilderSplitNode(center, ImGuiDir_Left, 0.143f, nullptr, &center);
+        ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.146f, nullptr, &center);
+        ImGuiID hierarchy = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.392f, nullptr, &left);
+
+        ImGui::DockBuilderDockWindow("Palette##UIEditor", left);
+        ImGui::DockBuilderDockWindow("Hierarchy##UIEditor", hierarchy);
+        ImGui::DockBuilderDockWindow("Designer##UIEditor", center);
+        ImGui::DockBuilderDockWindow("Details##UIEditor", right);
+        ImGui::DockBuilderFinish(dockspaceId);
+    }
+
     ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
     if (m_ShowPalette)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
         ImGui::Begin("Palette##UIEditor", &m_ShowPalette);
         ImGui::TextDisabled("PALETTE");
         ImGui::Separator();
@@ -152,7 +176,6 @@ void UIEditor::Draw(
     if (m_ShowHierarchy)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
-        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
         ImGui::Begin("Hierarchy##UIEditor", &m_ShowHierarchy);
         ImGui::TextDisabled("HIERARCHY");
         ImGui::Separator();
@@ -176,7 +199,6 @@ void UIEditor::Draw(
     if (m_ShowDetails)
     {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-        ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
         ImGui::Begin("Details##UIEditor", &m_ShowDetails);
         ImGui::TextDisabled("DETAILS");
         ImGui::Separator();
