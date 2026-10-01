@@ -9,7 +9,7 @@ local MAX_HEALTH, SHOT_DAMAGE = 100, 25
 local FIRE_INTERVAL, ROUNDS_TO_WIN = 0.18, 5
 local MAG_SIZE, START_RESERVE, RELOAD_TIME = 12, 48, 1.35
 local HIP_FOV, ADS_FOV = 90.0, 68.0
-local RECOIL_PITCH, RECOIL_YAW = 0.012, 0.004
+local RECOIL_KICK, RECOIL_RECOVERY = 0.006, 10.0
 local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
 local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
@@ -18,6 +18,7 @@ local fireCooldown = 0.0
 local ammo, reserveAmmo = MAG_SIZE, START_RESERVE
 local reloadTimer, hitmarkerTimer, muzzleTimer, viewKick = 0.0, 0.0, 0.0, 0.0
 local aiming = false
+local recoilPitch = 0.0
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
 local roundWinner, matchWinner = 0, 0
@@ -250,7 +251,8 @@ local function updateViewmodel(dt)
     aiming=Input.IsMouseButtonDown(3) and reloadTimer<=0
     if playerCamera~=0 then Camera.SetEntityFOV(playerCamera,aiming and ADS_FOV or HIP_FOV) end
 
-    viewKick=math.max(0.0,viewKick-dt*5.5)
+    viewKick=math.max(0.0,viewKick-dt*8.0)
+    recoilPitch=recoilPitch+(0.0-recoilPitch)*math.min(1.0,dt*RECOIL_RECOVERY)
     local c,f,r=Camera.GetPosition(),Camera.GetForward(),Camera.GetRight()
     local side=aiming and 0.055 or 0.34
     local forwardOffset=aiming and 0.70 or 0.62
@@ -281,7 +283,7 @@ end
 local function fire()
     local localID=Controller.GetLocalID()
     if not practiceMode and matchState~=ROUND_ACTIVE or fireCooldown>0 or reloadTimer>0 or (health[localID] or 0)<=0 then return end
-    if ammo<=0 then startReload(); return end
+    if ammo<=0 then return end
 
     ammo=ammo-1
     fireCooldown=FIRE_INTERVAL
@@ -289,10 +291,7 @@ local function fire()
     viewKick=0.065
     Audio.PlaySFX("Assets/Audio/Weapons/rifle.wav",0.8)
 
-    if playerCamera~=0 then
-        local horizontalRecoil=(math.random()*2.0-1.0)*RECOIL_YAW
-        Camera.RotateEntity(playerCamera,horizontalRecoil,-RECOIL_PITCH)
-    end
+    recoilPitch=math.min(0.035,recoilPitch+RECOIL_KICK)
 
     local c,f=Camera.GetPosition(),Camera.GetForward()
     local range=100.0
@@ -321,7 +320,6 @@ local function fire()
         Debug.DrawLine(c.x,c.y,c.z,c.x+f.x*range,c.y+f.y*range,c.z+f.z*range,1.0,0.2,0.2,0.08)
     end
 
-    if ammo==0 and reserveAmmo>0 then startReload() end
 end
 
 local function returnToMenu()
@@ -512,7 +510,7 @@ function OnUpdate(dt)
     sensitivity=State.GetNumber("mouse_sensitivity",0.01)
     local invert=State.GetBool("invert_y",false) and 1.0 or -1.0
     if playerCamera~=0 then
-        Camera.RotateEntity(playerCamera,Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
+        Camera.RotateEntity(playerCamera,Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert-recoilPitch)
     else
         Camera.Rotate(Input.GetMouseDeltaX()*sensitivity,Input.GetMouseDeltaY()*sensitivity*invert)
     end
