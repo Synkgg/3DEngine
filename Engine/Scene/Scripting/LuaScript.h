@@ -47,6 +47,7 @@ public:
     bool Update(float deltaTime);
 
     void Interact();
+    bool Invoke(const std::string& functionName);
 
     bool Destroy();
 
