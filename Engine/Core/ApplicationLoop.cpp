@@ -243,7 +243,7 @@ void Application::Run()
             if (m_ImGuiLayer.GetIconFont())
             {
                 ImGui::PushFont(m_ImGuiLayer.GetIconFont());
-                const float iconSize = ImGui::GetFontSize() * 0.72f;
+                const float iconSize = ImGui::GetFontSize() * 0.66f;
                 drawList->AddText(ImGui::GetFont(), iconSize,
                     ImVec2(x, pos.y + (size.y - iconSize) * 0.5f),
                     selected ? IM_COL32(205, 221, 242, 255) : IM_COL32(145, 151, 160, 255),
