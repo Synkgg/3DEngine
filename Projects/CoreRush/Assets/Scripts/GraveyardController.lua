@@ -59,14 +59,7 @@ function OnUpdate(deltaTime)
   Input.SetCursorVisible(paused)
  end
 
- if paused then
-  if UI.WasClicked("ResumeButton") then
-   paused=false Scene.SetPaused(false) UI.SetVisible("PauseMenu",false) Input.SetCursorVisible(false)
-  elseif UI.WasClicked("PauseMainMenuButton") then
-   Scene.SetPaused(false) Network.Disconnect() Scene.Load("Assets/Scenes/MainMenu.scene")
-  end
-  return
- end
+ if paused then return end
 
  if Input.IsKeyPressed("Tab") and not gateOpen then
   inventoryOpen=not inventoryOpen
@@ -74,8 +67,28 @@ function OnUpdate(deltaTime)
   Input.SetCursorVisible(inventoryOpen)
  end
 
- if gateOpen then
-  if UI.WasClicked("PlayAgainButton") then Scene.SetPaused(false) Scene.Load("Assets/Scenes/Graveyard.scene")
-  elseif UI.WasClicked("MainMenuButton") then Scene.SetPaused(false) Network.Disconnect() Scene.Load("Assets/Scenes/MainMenu.scene") end
- end
+end
+
+function OnResumeClicked()
+ paused=false
+ Scene.SetPaused(false)
+ UI.SetVisible("PauseMenu",false)
+ Input.SetCursorVisible(false)
+end
+
+function OnPauseMainMenuClicked()
+ Scene.SetPaused(false)
+ Network.Disconnect()
+ Scene.Load("Assets/Scenes/MainMenu.scene")
+end
+
+function OnPlayAgainClicked()
+ Scene.SetPaused(false)
+ Scene.Load("Assets/Scenes/Graveyard.scene")
+end
+
+function OnMainMenuClicked()
+ Scene.SetPaused(false)
+ Network.Disconnect()
+ Scene.Load("Assets/Scenes/MainMenu.scene")
 end
