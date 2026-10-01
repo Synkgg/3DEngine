@@ -776,10 +776,38 @@ void UIEditor::DrawInspector(
         ImGui::TextDisabled("State Brushes");
         auto editButtonBrush=[&](const char* label,const std::string& current,const std::function<void(const std::string&)>& setter)
         {
-            char buffer[512]={};
-            std::snprintf(buffer,sizeof(buffer),"%s",current.c_str());
-            if(ImGui::InputText(label,buffer,sizeof(buffer))) setter(buffer);
-            if(ImGui::IsItemHovered()) ImGui::SetTooltip("Project texture path, e.g. Assets/UI/button_normal.png");
+            const std::string preview=current.empty() ? "None" : std::filesystem::path(current).filename().string();
+            if(ImGui::BeginCombo(label,preview.c_str()))
+            {
+                if(ImGui::Selectable("None",current.empty())) { setter(""); ImGui::CloseCurrentPopup(); }
+                std::error_code ec; std::filesystem::path assetRoot("Assets");
+                const std::filesystem::path uiPath(m_UIAssetPath);
+                for(std::filesystem::path parent=uiPath.parent_path();!parent.empty();parent=parent.parent_path())
+                {
+                    if(parent.filename()=="Assets"){assetRoot=parent;break;}
+                    if(parent==parent.root_path()) break;
+                }
+                if(std::filesystem::exists(assetRoot,ec))
+                {
+                    for(const auto& entry:std::filesystem::recursive_directory_iterator(assetRoot,ec))
+                    {
+                        if(ec||!entry.is_regular_file()) continue;
+                        std::string ext=entry.path().extension().string();
+                        std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});
+                        if(ext!=".png"&&ext!=".jpg"&&ext!=".jpeg"&&ext!=".bmp"&&ext!=".tga") continue;
+                        const std::filesystem::path rel=std::filesystem::path("Assets")/std::filesystem::relative(entry.path(),assetRoot,ec);
+                        if(ec) continue;
+                        const std::string assetPath=rel.lexically_normal().generic_string();
+                        Texture2D* texture=m_Renderer?m_Renderer->LoadTexture(assetPath):nullptr;
+                        ImGui::PushID((std::string(label)+assetPath).c_str());
+                        if(texture&&texture->IsLoaded()){ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),ImVec2(28,28),ImVec2(0,1),ImVec2(1,0));ImGui::SameLine();}
+                        if(ImGui::Selectable(entry.path().filename().string().c_str(),current==assetPath,ImGuiSelectableFlags_None,ImVec2(0,28)))
+                        { setter(assetPath); ImGui::CloseCurrentPopup(); }
+                        ImGui::PopID();
+                    }
+                }
+                ImGui::EndCombo();
+            }
         };
         editButtonBrush("Normal Image",button->GetNormalImage(),[&](const std::string& v){button->SetNormalImage(v);});
         editButtonBrush("Hovered Image",button->GetHoveredImage(),[&](const std::string& v){button->SetHoveredImage(v);});
