@@ -548,10 +548,10 @@ void UIEditor::DrawInspector(
 
     ImGui::TextDisabled("Shape");
     float cornerRadius=widget.GetCornerRadius();
-    if(ImGui::DragFloat("Corner Radius",&cornerRadius,0.5f,0.0f,512.0f,"%.1f px"))
+    if(ImGui::DragFloat("Corner Radius (px)",&cornerRadius,0.5f,0.0f,512.0f,"%.1f"))
         widget.SetCornerRadius(cornerRadius);
     ImGui::SameLine();
-    if(ImGui::SmallButton("Reset##CornerRadius")) widget.SetCornerRadius(0.0f);
+    if(ImGui::SmallButton("0##CornerRadius")) widget.SetCornerRadius(0.0f);
     if(ImGui::IsItemHovered()) ImGui::SetTooltip("Reset corner rounding.");
 
     bool gradient = widget.HasGradient();
