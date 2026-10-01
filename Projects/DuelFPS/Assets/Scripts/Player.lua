@@ -266,7 +266,7 @@ end
 local function startReload()
     if reloadTimer>0 or ammo>=MAG_SIZE or reserveAmmo<=0 then return end
     reloadTimer=RELOAD_TIME
-    Audio.PlaySFX("Assets/Audio/Weapons/reload.wav",0.65)
+    Audio.PlaySFX("Assets/Audio/UI/click.wav",0.45)
 end
 
 local function finishReload()
