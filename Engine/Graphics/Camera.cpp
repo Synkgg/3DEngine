@@ -309,3 +309,34 @@ void Camera::Reset()
     m_Yaw = DefaultYaw;
     m_Pitch = DefaultPitch;
 }
+
+void Camera::SetNearPlane(float nearPlane)
+{
+    m_NearPlane = std::clamp(nearPlane, 0.001f, 10.0f);
+    if (m_FarPlane <= m_NearPlane) m_FarPlane = m_NearPlane + 1.0f;
+}
+
+float Camera::GetNearPlane() const
+{
+    return m_NearPlane;
+}
+
+void Camera::SetFarPlane(float farPlane)
+{
+    m_FarPlane = std::clamp(farPlane, 25.0f, 10000.0f);
+}
+
+float Camera::GetFarPlane() const
+{
+    return m_FarPlane;
+}
+
+void Camera::SetFovDegrees(float degrees)
+{
+    m_Fov = std::clamp(degrees, 50.0f, 120.0f) * DegreesToRadians;
+}
+
+float Camera::GetFovDegrees() const
+{
+    return m_Fov / DegreesToRadians;
+}

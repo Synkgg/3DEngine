@@ -2,12 +2,30 @@
 
 #include "Entity.h"
 #include "ComponentStorage.h"
+#include "../Math/Transform.h"
 
 #include <cstdint>
 #include <memory>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include <unordered_set>
+#include <string>
+
+struct SceneEnvironment
+{
+    bool antiAliasing = true;
+    int antiAliasingSamples = 4;
+    bool shadows = true;
+    bool fog = false;
+    bool bloom = true;
+    float viewDistance = 1000.0f;
+    float exposure = 1.0f;
+    float fogDensity = 0.003f;
+    float bloomStrength = 0.32f;
+    int shadowQuality = 2;
+    float shadowDistance = 80.0f;
+};
 
 class Scene
 {
@@ -31,6 +49,28 @@ public:
     );
 
     void Clear();
+
+    bool SetParent(Entity child, Entity parent, bool keepWorldTransform = false);
+    void ClearParent(Entity child, bool keepWorldTransform = false);
+    std::vector<Entity> GetChildren(Entity parent) const;
+    Entity FindEntityByName(const std::string& name) const;
+    Entity FindEntityByID(std::uint32_t id) const;
+    std::vector<Entity> GetRootEntities() const;
+    Entity GetParent(Entity child) const;
+    bool IsDescendant(Entity entity, Entity possibleAncestor) const;
+    Transform GetWorldTransform(Entity entity) const;
+    Entity DuplicateEntity(Entity source, bool duplicateChildren = true);
+    Entity CloneEntityTo(Entity source, Scene& destination, bool cloneChildren = true) const;
+    void DestroyEntityHierarchy(Entity root);
+    void QueueDestroyEntityHierarchy(Entity root);
+    std::vector<Entity> ConsumePendingDestroyEntities();
+
+    SceneEnvironment& GetEnvironment() { return m_Environment; }
+    const SceneEnvironment& GetEnvironment() const { return m_Environment; }
+
+    void SetPrefabSource(Entity entity, const std::string& source);
+    void ClearPrefabSource(Entity entity);
+    std::string GetPrefabSource(Entity entity) const;
 
     const std::vector<Entity>& GetEntities() const
     {
@@ -173,9 +213,14 @@ public:
     }
 
 private:
+    SceneEnvironment m_Environment;
     std::vector<Entity> m_Entities;
 
     std::uint32_t m_NextEntityID = 1;
+
+    std::unordered_map<std::uint32_t, std::uint32_t> m_Parents;
+    std::unordered_map<std::uint32_t, std::string> m_PrefabSources;
+    std::vector<std::uint32_t> m_PendingDestroyEntities;
 
     std::unordered_map<
         std::type_index,

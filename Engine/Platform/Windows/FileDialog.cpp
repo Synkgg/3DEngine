@@ -4,6 +4,7 @@
 #include <shobjidl.h>
 
 #include <string>
+#include <filesystem>
 
 namespace
 {
@@ -49,21 +50,29 @@ namespace
         return result;
     }
 
-    bool InitializeCOM()
+    bool InitializeCOM(bool& shouldUninitialize)
     {
-        HRESULT result =
+        const HRESULT result =
             CoInitializeEx(
                 nullptr,
                 COINIT_APARTMENTTHREADED |
                 COINIT_DISABLE_OLE1DDE
             );
 
-        return SUCCEEDED(result);
+        shouldUninitialize = SUCCEEDED(result);
+
+        // The editor may already have COM initialized in another apartment
+        // model. File dialogs are still available in that case; only skip the
+        // matching CoUninitialize because this call did not initialize COM.
+        return SUCCEEDED(result) || result == RPC_E_CHANGED_MODE;
     }
 
-    void ShutdownCOM()
+    void ShutdownCOM(bool shouldUninitialize)
     {
-        CoUninitialize();
+        if (shouldUninitialize)
+        {
+            CoUninitialize();
+        }
     }
 }
 
@@ -71,7 +80,8 @@ namespace FileDialog
 {
     bool OpenScene(std::string& path)
     {
-        if (!InitializeCOM())
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize))
         {
             return false;
         }
@@ -88,7 +98,7 @@ namespace FileDialog
 
         if (FAILED(result))
         {
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -118,7 +128,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -130,7 +140,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -152,14 +162,15 @@ namespace FileDialog
         item->Release();
         dialog->Release();
 
-        ShutdownCOM();
+        ShutdownCOM(shouldUninitialize);
 
         return !path.empty();
     }
 
     bool SaveScene(std::string& path)
     {
-        if (!InitializeCOM())
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize))
         {
             return false;
         }
@@ -176,7 +187,7 @@ namespace FileDialog
 
         if (FAILED(result))
         {
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -219,7 +230,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -231,7 +242,7 @@ namespace FileDialog
         if (FAILED(result))
         {
             dialog->Release();
-            ShutdownCOM();
+            ShutdownCOM(shouldUninitialize);
             return false;
         }
 
@@ -253,8 +264,138 @@ namespace FileDialog
         item->Release();
         dialog->Release();
 
-        ShutdownCOM();
+        ShutdownCOM(shouldUninitialize);
 
+        return !path.empty();
+    }
+
+    bool OpenProject(std::string& path)
+    {
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize)) return false;
+
+        IFileOpenDialog* dialog = nullptr;
+        HRESULT result = CoCreateInstance(
+            CLSID_FileOpenDialog,
+            nullptr,
+            CLSCTX_INPROC_SERVER,
+            IID_PPV_ARGS(&dialog));
+
+        if (FAILED(result))
+        {
+            ShutdownCOM(shouldUninitialize);
+            return false;
+        }
+
+        const COMDLG_FILTERSPEC filters[] =
+        {
+            { L"Engine Project (*.project)", L"*.project" },
+            { L"All Files", L"*.*" }
+        };
+
+        dialog->SetFileTypes(2, filters);
+        dialog->SetFileTypeIndex(1);
+        dialog->SetTitle(L"Open Project");
+
+        DWORD options = 0;
+        if (SUCCEEDED(dialog->GetOptions(&options)))
+        {
+            dialog->SetOptions(
+                options |
+                FOS_FORCEFILESYSTEM |
+                FOS_PATHMUSTEXIST |
+                FOS_FILEMUSTEXIST |
+                FOS_NOCHANGEDIR);
+        }
+
+        // Start in the nearest Projects folder instead of whatever location
+        // Windows happened to remember for this dialog. This works both when
+        // running from the repository and from out/build/<configuration>.
+        std::filesystem::path cursor = std::filesystem::current_path();
+        std::filesystem::path projectsDirectory;
+
+        for (int depth = 0; depth < 8 && !cursor.empty(); ++depth)
+        {
+            const std::filesystem::path candidate = cursor / "Projects";
+            std::error_code error;
+            if (std::filesystem::is_directory(candidate, error))
+            {
+                projectsDirectory = candidate;
+                break;
+            }
+
+            const std::filesystem::path parent = cursor.parent_path();
+            if (parent == cursor) break;
+            cursor = parent;
+        }
+
+        if (!projectsDirectory.empty())
+        {
+            IShellItem* projectsItem = nullptr;
+            const std::wstring widePath = projectsDirectory.wstring();
+            if (SUCCEEDED(SHCreateItemFromParsingName(
+                    widePath.c_str(),
+                    nullptr,
+                    IID_PPV_ARGS(&projectsItem))))
+            {
+                // SetFolder controls the folder shown when the dialog opens.
+                // SetDefaultFolder gives Windows a fallback without preventing
+                // the user from navigating anywhere else on disk.
+                dialog->SetDefaultFolder(projectsItem);
+                dialog->SetFolder(projectsItem);
+                projectsItem->Release();
+            }
+        }
+
+        result = dialog->Show(nullptr);
+        if (SUCCEEDED(result))
+        {
+            IShellItem* item = nullptr;
+            if (SUCCEEDED(dialog->GetResult(&item)))
+            {
+                PWSTR filePath = nullptr;
+                if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &filePath)))
+                {
+                    path = WideToUTF8(filePath);
+                    CoTaskMemFree(filePath);
+                }
+                item->Release();
+            }
+        }
+
+        dialog->Release();
+        ShutdownCOM(shouldUninitialize);
+        return !path.empty();
+    }
+
+    bool SelectFolder(std::string& path)
+    {
+        bool shouldUninitialize = false;
+        if (!InitializeCOM(shouldUninitialize)) return false;
+        IFileOpenDialog* dialog = nullptr;
+        HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
+        if (FAILED(result)) { ShutdownCOM(shouldUninitialize); return false; }
+        DWORD options = 0;
+        dialog->GetOptions(&options);
+        dialog->SetOptions(options | FOS_PICKFOLDERS | FOS_PATHMUSTEXIST);
+        dialog->SetTitle(L"Choose Project Location");
+        result = dialog->Show(nullptr);
+        if (SUCCEEDED(result))
+        {
+            IShellItem* item = nullptr;
+            if (SUCCEEDED(dialog->GetResult(&item)))
+            {
+                PWSTR folderPath = nullptr;
+                if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &folderPath)))
+                {
+                    path = WideToUTF8(folderPath);
+                    CoTaskMemFree(folderPath);
+                }
+                item->Release();
+            }
+        }
+        dialog->Release();
+        ShutdownCOM(shouldUninitialize);
         return !path.empty();
     }
 }

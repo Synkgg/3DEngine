@@ -6,11 +6,14 @@
 #include "../../UI/UIText.h"
 #include "../../UI/UIImage.h"
 #include "../../UI/UIButton.h"
+#include "../../UI/UITextInput.h"
+#include "../../UI/UISlider.h"
 #include "../../UI/UISerializer.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <algorithm>
 #include <cmath>
@@ -19,29 +22,77 @@
 #include <string>
 #include <filesystem>
 #include <vector>
+#include <functional>
 #include <cctype>
 #include <cstdint>
+#include <fstream>
+#include <sstream>
+#include <chrono>
 
 bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
 {
     m_SelectedWidget = nullptr;
+    m_Visible = true;
 
     if (!UISerializer::Load(canvas, path))
         return false;
 
-    m_UIAssetPath = std::filesystem::path(path).generic_string();
+    m_UIAssetPath = std::filesystem::absolute(std::filesystem::path(path)).lexically_normal().generic_string();
     ResetView();
     return true;
+}
+
+void UIEditor::SetVisible(bool visible)
+{
+    m_Visible = visible;
+    if (!visible)
+    {
+        m_SelectedWidget = nullptr;
+        m_Dragging = false;
+        m_Resizing = false;
+        m_ResizeHandle = -1;
+    }
 }
 
 void UIEditor::Draw(
     UICanvas& canvas,
     Renderer& renderer)
 {
+    if (!m_Visible)
+        return;
+
     m_Renderer = &renderer;
 
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    // The main menu is already excluded from WorkPos/WorkSize. Reserve the
+    // document strip locally without mutating ImGui's global viewport state.
+    const float documentBarHeight = 34.0f;
+    const ImVec2 workspacePos(
+        viewport->WorkPos.x,
+        viewport->WorkPos.y + documentBarHeight);
+    const ImVec2 workspaceSize(
+        viewport->WorkSize.x,
+        std::max(1.0f, viewport->WorkSize.y - documentBarHeight));
+
+    const std::string hostName =
+        std::string("##UIWorkspace_") + m_UIAssetPath;
+    ImGui::SetNextWindowPos(workspacePos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(workspaceSize, ImGuiCond_Always);
+    if (m_FocusRequested)
+    {
+        ImGui::SetNextWindowFocus();
+        m_FocusRequested = false;
+    }
+
+    const ImGuiWindowFlags hostFlags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoDocking |
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Widget Blueprint");
+    ImGui::Begin(hostName.c_str(), nullptr, hostFlags);
     ImGui::PopStyleVar();
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 29, 255));
@@ -51,71 +102,159 @@ void UIEditor::Draw(
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    const ImVec2 available = ImGui::GetContentRegionAvail();
-    const float paletteWidth = 170.0f;
-    const float hierarchyWidth = 225.0f;
-    const float inspectorWidth = 300.0f;
-    const float designerWidth = std::max(
-        180.0f, available.x - paletteWidth - hierarchyWidth - inspectorWidth);
+    ImGui::PushID(m_UIAssetPath.c_str());
+    const ImGuiID dockspaceId = ImGui::GetID("WidgetBlueprintDockSpace");
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-    ImGui::BeginChild("Palette", ImVec2(paletteWidth, 0.0f), true);
-    ImGui::TextDisabled("PALETTE");
-    ImGui::Separator();
-    ImGui::TextDisabled("Common");
-    if (ImGui::Selectable("Panel")) AddWidget(canvas, UIWidgetType::Panel);
-    if (ImGui::Selectable("Text")) AddWidget(canvas, UIWidgetType::Text);
-    if (ImGui::Selectable("Image")) AddWidget(canvas, UIWidgetType::Image);
-    if (ImGui::Selectable("Button")) AddWidget(canvas, UIWidgetType::Button);
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::TextDisabled("User Interface");
-    ImGui::TextWrapped("Select a container in the Hierarchy, then add a widget from the Palette.");
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
+    // Recreate the provided default Widget Blueprint layout only when this
+    // document has no saved docking state. Saved imgui.ini layouts still win.
+    if (ImGui::DockBuilderGetNode(dockspaceId) == nullptr)
+    {
+        const ImVec2 dockSize(
+            workspaceSize.x,
+            std::max(1.0f, workspaceSize.y - 42.0f));
 
-    ImGui::SameLine(0.0f, 0.0f);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
-    ImGui::BeginChild("HierarchyPanel", ImVec2(hierarchyWidth, 0.0f), true);
-    ImGui::TextDisabled("HIERARCHY");
-    ImGui::Separator();
-    if (canvas.GetRoot()) DrawHierarchy(*canvas.GetRoot());
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
+        ImGui::DockBuilderRemoveNode(dockspaceId);
+        ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockspaceId, dockSize);
 
-    ImGui::SameLine(0.0f, 0.0f);
+        ImGuiID center = dockspaceId;
+        ImGuiID left = ImGui::DockBuilderSplitNode(center, ImGuiDir_Left, 0.143f, nullptr, &center);
+        ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.146f, nullptr, &center);
+        ImGuiID hierarchy = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.392f, nullptr, &left);
+
+        ImGui::DockBuilderDockWindow("Palette##UIEditor", left);
+        ImGui::DockBuilderDockWindow("Hierarchy##UIEditor", hierarchy);
+        ImGui::DockBuilderDockWindow("Designer##UIEditor", center);
+        ImGui::DockBuilderDockWindow("Details##UIEditor", right);
+        ImGui::DockBuilderFinish(dockspaceId);
+    }
+
+    ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+    if (m_ShowPalette)
+    {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+        ImGui::Begin("Palette##UIEditor", &m_ShowPalette);
+        ImGui::TextDisabled("PALETTE");
+        ImGui::Separator();
+        static char paletteSearch[64] = {};
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputTextWithHint("##PaletteSearch", "Search widgets...", paletteSearch, sizeof(paletteSearch));
+        std::string paletteQuery = paletteSearch;
+        std::transform(paletteQuery.begin(), paletteQuery.end(), paletteQuery.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+        auto paletteItem = [&](const char* label, UIWidgetType type)
+        {
+            std::string lower = label;
+            std::transform(lower.begin(), lower.end(), lower.begin(),
+                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (!paletteQuery.empty() && lower.find(paletteQuery) == std::string::npos)
+                return;
+            if (ImGui::Selectable(label))
+                AddWidget(canvas, type);
+            if (ImGui::BeginDragDropSource())
+            {
+                const int payloadType = static_cast<int>(type);
+                ImGui::SetDragDropPayload("UI_PALETTE_WIDGET", &payloadType, sizeof(payloadType));
+                ImGui::Text("Add %s", label);
+                ImGui::EndDragDropSource();
+            }
+        };
+        paletteItem("Panel", UIWidgetType::Panel);
+        paletteItem("Text", UIWidgetType::Text);
+        paletteItem("Image", UIWidgetType::Image);
+        paletteItem("Button", UIWidgetType::Button);
+        paletteItem("Text Input", UIWidgetType::TextInput);
+        paletteItem("Slider", UIWidgetType::Slider);
+        ImGui::Spacing();
+        ImGui::TextDisabled("Click to add, or drag into the Designer");
+        ImGui::End();
+        ImGui::PopStyleColor();
+    }
+
+    if (m_ShowHierarchy)
+    {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(24, 26, 30, 255));
+        ImGui::Begin("Hierarchy##UIEditor", &m_ShowHierarchy);
+        ImGui::TextDisabled("HIERARCHY");
+        ImGui::Separator();
+        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::InputTextWithHint("##UIHierarchySearch", "Search hierarchy...", m_HierarchySearch, sizeof(m_HierarchySearch));
+        std::string hierarchyQuery=m_HierarchySearch;
+        std::transform(hierarchyQuery.begin(),hierarchyQuery.end(),hierarchyQuery.begin(),
+            [](unsigned char c){return static_cast<char>(std::tolower(c));});
+        if (canvas.GetRoot()) DrawHierarchy(canvas, *canvas.GetRoot(), hierarchyQuery);
+        ImGui::End();
+        ImGui::PopStyleColor();
+    }
+
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(17, 18, 21, 255));
-    ImGui::BeginChild("DesignerPanel", ImVec2(designerWidth, 0.0f), true);
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
+    ImGui::Begin("Designer##UIEditor");
     DrawDesigner(canvas);
-    ImGui::EndChild();
+    ImGui::End();
     ImGui::PopStyleColor();
 
-    ImGui::SameLine(0.0f, 0.0f);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
-    ImGui::BeginChild("DetailsPanel", ImVec2(inspectorWidth, 0.0f), true);
-    ImGui::TextDisabled("DETAILS");
-    ImGui::Separator();
-    if (m_SelectedWidget)
-        DrawInspector(*m_SelectedWidget);
-    else
-        ImGui::TextDisabled("Select a widget to edit its properties.");
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
+    if (m_ShowDetails)
+    {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(29, 31, 35, 255));
+        ImGui::Begin("Details##UIEditor", &m_ShowDetails);
+        ImGui::TextDisabled("DETAILS");
+        ImGui::Separator();
+        if (m_SelectedWidget)
+            DrawInspector(*m_SelectedWidget);
+        else
+            ImGui::TextDisabled("Select a widget to edit its properties.");
+        ImGui::End();
+        ImGui::PopStyleColor();
+    }
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
-        if (ImGui::IsKeyPressed(ImGuiKey_Delete)) DeleteSelected(canvas);
+        const bool editingText = ImGui::GetIO().WantTextInput;
         const bool ctrl = ImGui::GetIO().KeyCtrl;
-        if (ctrl && ImGui::IsKeyPressed(ImGuiKey_D)) DuplicateSelected(canvas);
-        if (ImGui::IsKeyPressed(ImGuiKey_F2)) RenameSelected();
-        if (ImGui::IsKeyPressed(ImGuiKey_F)) ResetView();
+        if (!editingText && ImGui::IsKeyPressed(ImGuiKey_Delete)) { PushHistory(canvas); DeleteSelected(canvas); }
+        if (!editingText && ctrl && ImGui::IsKeyPressed(ImGuiKey_D)) { PushHistory(canvas); DuplicateSelected(canvas); }
+        if (!editingText && ctrl && ImGui::IsKeyPressed(ImGuiKey_Z)) Undo(canvas);
+        if (!editingText && ctrl && ImGui::IsKeyPressed(ImGuiKey_Y)) Redo(canvas);
+        if (!editingText && ImGui::IsKeyPressed(ImGuiKey_F2)) RenameSelected();
+        if (!editingText && ImGui::IsKeyPressed(ImGuiKey_F)) ResetView();
+        const float nudge=ImGui::GetIO().KeyShift ? std::max(1.0f,m_GridSize) : 1.0f;
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) NudgeSelected(-nudge,0);
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_RightArrow)) NudgeSelected(nudge,0);
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) NudgeSelected(0,-nudge);
+        if(!editingText && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) NudgeSelected(0,nudge);
     }
 
+    if (m_RenameRequested)
+    {
+        ImGui::OpenPopup("Rename Widget");
+        m_RenameRequested = false;
+    }
+    if (ImGui::BeginPopupModal("Rename Widget", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::SetNextItemWidth(280.0f);
+        const bool enter = ImGui::InputText("##RenameWidgetName", m_RenameBuffer, sizeof(m_RenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+        if ((enter || ImGui::Button("Rename")) && m_SelectedWidget && m_RenameBuffer[0] != '\0')
+        {
+            m_SelectedWidget->SetName(m_RenameBuffer);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopID();
     ImGui::End();
 }
 
 void UIEditor::DrawHierarchy(
-    UIWidget& widget)
+    UICanvas& canvas,
+    UIWidget& widget,
+    const std::string& search)
 {
     ImGuiTreeNodeFlags flags =
         ImGuiTreeNodeFlags_OpenOnArrow |
@@ -142,11 +281,32 @@ void UIEditor::DrawHierarchy(
         label = "Widget";
     }
 
+    std::string lowerLabel=label;
+    std::transform(lowerLabel.begin(),lowerLabel.end(),lowerLabel.begin(),
+        [](unsigned char c){return static_cast<char>(std::tolower(c));});
+    std::function<bool(const UIWidget&)> matches=[&](const UIWidget& w)
+    {
+        std::string n=w.GetName();
+        std::transform(n.begin(),n.end(),n.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});
+        if(search.empty() || n.find(search)!=std::string::npos) return true;
+        for(const auto& child:w.GetChildren()) if(child && matches(*child)) return true;
+        return false;
+    };
+    if(!matches(widget)) return;
+    if(!search.empty()) flags |= ImGuiTreeNodeFlags_DefaultOpen;
+
+    const char* typeName = widget.GetType()==UIWidgetType::Panel ? "[Panel]" :
+        widget.GetType()==UIWidgetType::Text ? "[Text]" :
+        widget.GetType()==UIWidgetType::Image ? "[Image]" :
+        widget.GetType()==UIWidgetType::Button ? "[Button]" :
+        widget.GetType()==UIWidgetType::TextInput ? "[TextInput]" : "[Slider]";
     const bool open =
         ImGui::TreeNodeEx(
             &widget,
             flags,
-            "%s",
+            "%s  %s%s",
+            typeName,
+            widget.IsVisible() ? "" : "(hidden) ",
             label.c_str()
         );
 
@@ -158,6 +318,63 @@ void UIEditor::DrawHierarchy(
         );
     }
 
+    if (ImGui::BeginPopupContextItem("##WidgetContext"))
+    {
+        if (m_SelectedWidget != &widget)
+            SelectWidget(&widget);
+        if (ImGui::MenuItem("Rename", "F2"))
+            RenameSelected();
+        if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
+        {
+            PushHistory(canvas);
+            DuplicateSelected(canvas);
+        }
+        if (ImGui::MenuItem("Delete", "Del", false, widget.GetParent() != nullptr))
+        {
+            PushHistory(canvas);
+            DeleteSelected(canvas);
+        }
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginDragDropSource())
+    {
+        UIWidget* draggedWidget = &widget;
+        ImGui::SetDragDropPayload("UI_WIDGET_REPARENT", &draggedWidget, sizeof(draggedWidget));
+        ImGui::Text("Move %s", label.c_str());
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("UI_WIDGET_REPARENT"))
+        {
+            if (payload->DataSize == sizeof(UIWidget*))
+            {
+                UIWidget* draggedWidget = *static_cast<UIWidget* const*>(payload->Data);
+                const bool targetCanContainChildren =
+                    widget.GetType() == UIWidgetType::Panel;
+                if (draggedWidget && draggedWidget != &widget &&
+                    draggedWidget->GetParent() != &widget &&
+                    targetCanContainChildren &&
+                    !widget.IsDescendantOf(draggedWidget))
+                {
+                    UIWidget* oldParent = draggedWidget->GetParent();
+                    if (oldParent)
+                    {
+                        std::unique_ptr<UIWidget> moved = oldParent->DetachChild(draggedWidget);
+                        if (moved)
+                        {
+                            widget.AddChild(std::move(moved));
+                            SelectWidget(draggedWidget);
+                        }
+                    }
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
     if (open)
     {
         for (const auto& child :
@@ -166,7 +383,9 @@ void UIEditor::DrawHierarchy(
             if (child)
             {
                 DrawHierarchy(
-                    *child
+                    canvas,
+                    *child,
+                    search
                 );
             }
         }
@@ -197,8 +416,9 @@ void UIEditor::DrawInspector(
         );
     }
 
-    ImGui::Separator();
-
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Layout", ImGuiTreeNodeFlags_DefaultOpen))
+    {
     Vec2 position =
         widget.GetPosition();
 
@@ -258,23 +478,27 @@ void UIEditor::DrawInspector(
         widget.SetAnchors(anchorMin, anchorMax);
     }
 
-    if (ImGui::Button("Top Left"))
-    {
-        widget.SetAnchor(Vec2(0.0f, 0.0f));
-        widget.SetPivot(Vec2(0.0f, 0.0f));
-    }
+    ImGui::TextDisabled("Anchor Presets");
+    if (ImGui::Button("Top Left")) { widget.SetAnchor(Vec2(0,0)); widget.SetPivot(Vec2(0,0)); }
     ImGui::SameLine();
-    if (ImGui::Button("Center"))
-    {
-        widget.SetAnchor(Vec2(0.5f, 0.5f));
-        widget.SetPivot(Vec2(0.5f, 0.5f));
-    }
+    if (ImGui::Button("Top")) { widget.SetAnchor(Vec2(.5f,0)); widget.SetPivot(Vec2(.5f,0)); }
     ImGui::SameLine();
-    if (ImGui::Button("Fill"))
-    {
-        widget.SetAnchors(Vec2(0.0f, 0.0f), Vec2(1.0f, 1.0f));
-        widget.SetPivot(Vec2(0.0f, 0.0f));
-    }
+    if (ImGui::Button("Top Right")) { widget.SetAnchor(Vec2(1,0)); widget.SetPivot(Vec2(1,0)); }
+    if (ImGui::Button("Left")) { widget.SetAnchor(Vec2(0,.5f)); widget.SetPivot(Vec2(0,.5f)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Center")) { widget.SetAnchor(Vec2(.5f,.5f)); widget.SetPivot(Vec2(.5f,.5f)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Right")) { widget.SetAnchor(Vec2(1,.5f)); widget.SetPivot(Vec2(1,.5f)); }
+    if (ImGui::Button("Bottom Left")) { widget.SetAnchor(Vec2(0,1)); widget.SetPivot(Vec2(0,1)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Bottom")) { widget.SetAnchor(Vec2(.5f,1)); widget.SetPivot(Vec2(.5f,1)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Bottom Right")) { widget.SetAnchor(Vec2(1,1)); widget.SetPivot(Vec2(1,1)); }
+    if (ImGui::Button("Fill Width")) { widget.SetAnchors(Vec2(0,anchorMin.y),Vec2(1,anchorMax.y)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Fill Height")) { widget.SetAnchors(Vec2(anchorMin.x,0),Vec2(anchorMax.x,1)); }
+    ImGui::SameLine();
+    if (ImGui::Button("Fill")) { widget.SetAnchors(Vec2(0,0),Vec2(1,1)); widget.SetPivot(Vec2(0,0)); }
 
     Vec2 pivot =
         widget.GetPivot();
@@ -305,6 +529,11 @@ void UIEditor::DrawInspector(
         );
     }
 
+    }
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Appearance");
+
     Vec4 color =
         widget.GetColor();
 
@@ -316,6 +545,21 @@ void UIEditor::DrawInspector(
             color
         );
     }
+
+    bool gradient = widget.HasGradient();
+    if (ImGui::Checkbox("Gradient", &gradient)) widget.SetGradientEnabled(gradient);
+    if (gradient)
+    {
+        Vec4 end = widget.GetGradientColor();
+        if (ImGui::ColorEdit4("Gradient End", &end.x)) widget.SetGradientColor(end);
+        int direction = static_cast<int>(widget.GetGradientDirection());
+        const char* directions[] = { "Vertical", "Horizontal" };
+        if (ImGui::Combo("Gradient Direction", &direction, directions, 2))
+            widget.SetGradientDirection(static_cast<UIGradientDirection>(direction));
+    }
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Behavior");
 
     bool visible =
         widget.IsVisible();
@@ -341,8 +585,6 @@ void UIEditor::DrawInspector(
     if (ImGui::DragInt("Z Order", &zOrder, 1.0f, -1000, 1000))
         widget.SetZOrder(zOrder);
 
-    ImGui::Separator();
-
     if (UIText* text =
         dynamic_cast<UIText*>(
             &widget))
@@ -360,14 +602,16 @@ void UIEditor::DrawInspector(
             text->GetText().c_str()
         );
 
-        if (ImGui::InputText(
+        // Keep the widget synchronized with ImGui's multiline buffer on
+        // every edit. InputTextMultiline already inserts real newline
+        // characters, so those newlines are then preserved by UISerializer.
+        if (ImGui::InputTextMultiline(
             "Content",
             textBuffer,
-            sizeof(textBuffer)))
+            sizeof(textBuffer),
+            ImVec2(-1.0f, 92.0f)))
         {
-            text->SetText(
-                textBuffer
-            );
+            text->SetText(textBuffer);
         }
 
         float fontSize =
@@ -393,23 +637,40 @@ void UIEditor::DrawInspector(
         ImGui::SeparatorText("Appearance");
         ImGui::TextDisabled("Brush / Image");
 
-        const std::string& currentPath = image->GetTexturePath();
-        ImGui::TextWrapped("%s",
-            currentPath.empty() ? "No image selected" : currentPath.c_str());
+        const std::string currentPath = image->GetTexturePath();
+        const std::string preview = currentPath.empty()
+            ? "None"
+            : std::filesystem::path(currentPath).filename().string();
 
-        if (ImGui::Button("Choose Image...", ImVec2(-1.0f, 0.0f)))
-            ImGui::OpenPopup("SelectUIImage");
-
-        if (ImGui::BeginPopup("SelectUIImage"))
+        if (ImGui::BeginCombo("Image Asset", preview.c_str()))
         {
-            ImGui::TextDisabled("TEXTURES");
+            static char imageSearch[128] = {};
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputTextWithHint("##UIImageSearch", "Search textures...", imageSearch, sizeof(imageSearch));
             ImGui::Separator();
 
+            if (ImGui::Selectable("None", currentPath.empty()))
+                image->SetTexturePath("");
+
+            std::string query = imageSearch;
+            std::transform(query.begin(), query.end(), query.begin(),
+                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
             std::error_code ec;
-            const std::filesystem::path root("Assets");
-            if (std::filesystem::exists(root, ec))
+            std::filesystem::path assetRoot("Assets");
+            const std::filesystem::path uiPath(m_UIAssetPath);
+            for (std::filesystem::path parent = uiPath.parent_path(); !parent.empty(); parent = parent.parent_path())
             {
-                for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec))
+                if (parent.filename() == "Assets")
+                {
+                    assetRoot = parent;
+                    break;
+                }
+                if (parent == parent.root_path()) break;
+            }
+            if (std::filesystem::exists(assetRoot, ec))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(assetRoot, ec))
                 {
                     if (ec) break;
                     if (!entry.is_regular_file()) continue;
@@ -417,52 +678,179 @@ void UIEditor::DrawInspector(
                     std::string ext = entry.path().extension().string();
                     std::transform(ext.begin(), ext.end(), ext.begin(),
                         [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-
                     if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" &&
                         ext != ".bmp" && ext != ".tga")
                         continue;
 
-                    const std::string path = entry.path().generic_string();
-                    if (ImGui::Selectable(path.c_str(), path == currentPath))
+                    const std::filesystem::path relativeAsset =
+                        std::filesystem::path("Assets") / std::filesystem::relative(entry.path(), assetRoot, ec);
+                    if (ec) continue;
+                    const std::string assetPath = relativeAsset.lexically_normal().generic_string();
+                    std::string searchable = assetPath;
+                    std::transform(searchable.begin(), searchable.end(), searchable.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                    if (!query.empty() && searchable.find(query) == std::string::npos)
+                        continue;
+
+                    ImGui::PushID(assetPath.c_str());
+                    Texture2D* texture = m_Renderer ? m_Renderer->LoadTexture(assetPath) : nullptr;
+                    if (texture && texture->IsLoaded())
                     {
-                        image->SetTexturePath(path);
+                        ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),
+                            ImVec2(34.0f, 34.0f), ImVec2(0, 1), ImVec2(1, 0));
+                        ImGui::SameLine();
+                    }
+
+                    const bool selected = currentPath == assetPath;
+                    if (ImGui::Selectable(entry.path().filename().string().c_str(), selected,
+                        ImGuiSelectableFlags_None, ImVec2(0.0f, 34.0f)))
+                    {
+                        image->SetTexturePath(assetPath);
                         ImGui::CloseCurrentPopup();
                     }
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", assetPath.c_str());
+                    ImGui::PopID();
                 }
             }
-            ImGui::EndPopup();
+            ImGui::EndCombo();
         }
 
-        if (!currentPath.empty() && ImGui::Button("Clear Image"))
-            image->SetTexturePath("");
+        if (!currentPath.empty() && m_Renderer)
+        {
+            Texture2D* texture = m_Renderer->LoadTexture(currentPath);
+            if (texture && texture->IsLoaded())
+            {
+                ImGui::TextDisabled("Preview");
+                ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),
+                    ImVec2(96.0f, 96.0f), ImVec2(0, 1), ImVec2(1, 0));
+            }
+        }
+
     }
 
-    if (UIButton* button =
-        dynamic_cast<UIButton*>(
-            &widget))
+    if (UISlider* slider=dynamic_cast<UISlider*>(&widget))
     {
-        ImGui::TextUnformatted(
-            "Button State"
-        );
+        ImGui::Spacing(); ImGui::SeparatorText("Slider");
+        float value=slider->GetValue(); if(ImGui::SliderFloat("Value",&value,0.0f,1.0f,"%.2f"))slider->SetValue(value);
+        Vec4 fill=slider->GetFillColor(); if(ImGui::ColorEdit4("Fill Color",&fill.x))slider->SetFillColor(fill);
+        Vec4 handle=slider->GetHandleColor(); if(ImGui::ColorEdit4("Handle Color",&handle.x))slider->SetHandleColor(handle);
+    }
 
-        bool hovered =
-            button->IsHovered();
+    if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+    {
+        ImGui::Spacing();
+        ImGui::SeparatorText("Button Style");
+        ImGui::TextDisabled("Per-state appearance");
 
-        bool pressed =
-            button->IsPressed();
+        Vec4 normal = button->GetNormalColor();
+        if (ImGui::ColorEdit4("Normal", &normal.x))
+            button->SetNormalColor(normal);
 
+        Vec4 hoveredColor = button->GetHoveredColor();
+        if (ImGui::ColorEdit4("Hovered", &hoveredColor.x))
+            button->SetHoveredColor(hoveredColor);
+
+        Vec4 pressedColor = button->GetPressedColor();
+        if (ImGui::ColorEdit4("Pressed", &pressedColor.x))
+            button->SetPressedColor(pressedColor);
+
+        Vec4 disabledColor = button->GetDisabledColor();
+        if (ImGui::ColorEdit4("Disabled", &disabledColor.x))
+            button->SetDisabledColor(disabledColor);
+
+        const std::string clickSoundPath = button->GetClickSoundPath();
+        const std::string clickSoundPreview = clickSoundPath.empty()
+            ? "None"
+            : std::filesystem::path(clickSoundPath).filename().string();
+
+        if (ImGui::BeginCombo("Click Sound", clickSoundPreview.c_str()))
+        {
+            static char audioSearch[128] = {};
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputTextWithHint("##UIButtonAudioSearch", "Search sounds...", audioSearch, sizeof(audioSearch));
+            ImGui::Separator();
+
+            if (ImGui::Selectable("None", clickSoundPath.empty()))
+            {
+                button->SetClickSoundPath("");
+                ImGui::CloseCurrentPopup();
+            }
+
+            std::string query = audioSearch;
+            std::transform(query.begin(), query.end(), query.begin(),
+                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+            std::error_code ec;
+            std::filesystem::path assetRoot("Assets");
+            const std::filesystem::path uiPath(m_UIAssetPath);
+            for (std::filesystem::path parent = uiPath.parent_path(); !parent.empty(); parent = parent.parent_path())
+            {
+                if (parent.filename() == "Assets")
+                {
+                    assetRoot = parent;
+                    break;
+                }
+                if (parent == parent.root_path()) break;
+            }
+            if (std::filesystem::exists(assetRoot, ec))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(assetRoot, ec))
+                {
+                    if (ec) break;
+                    if (!entry.is_regular_file()) continue;
+
+                    std::string ext = entry.path().extension().string();
+                    std::transform(ext.begin(), ext.end(), ext.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                    if (ext != ".wav")
+                        continue;
+
+                    const std::filesystem::path relativeAsset =
+                        std::filesystem::path("Assets") / std::filesystem::relative(entry.path(), assetRoot, ec);
+                    if (ec) continue;
+                    const std::string assetPath = relativeAsset.lexically_normal().generic_string();
+                    std::string searchable = assetPath;
+                    std::transform(searchable.begin(), searchable.end(), searchable.begin(),
+                        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                    if (!query.empty() && searchable.find(query) == std::string::npos)
+                        continue;
+
+                    ImGui::PushID(assetPath.c_str());
+                    const bool selected = clickSoundPath == assetPath;
+                    if (ImGui::Selectable(entry.path().filename().string().c_str(), selected))
+                    {
+                        button->SetClickSoundPath(assetPath);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", assetPath.c_str());
+                    ImGui::PopID();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Select a WAV asset from the current project's Assets folder.");
+
+        bool textHighlight = button->GetAffectChildText();
+        if (ImGui::Checkbox("Highlight Child Text", &textHighlight)) button->SetAffectChildText(textHighlight);
+        if (textHighlight)
+        {
+            Vec4 tc = button->GetNormalTextColor(); if (ImGui::ColorEdit4("Text Normal", &tc.x)) button->SetNormalTextColor(tc);
+            tc = button->GetHoveredTextColor(); if (ImGui::ColorEdit4("Text Hovered", &tc.x)) button->SetHoveredTextColor(tc);
+            tc = button->GetPressedTextColor(); if (ImGui::ColorEdit4("Text Pressed", &tc.x)) button->SetPressedTextColor(tc);
+            tc = button->GetDisabledTextColor(); if (ImGui::ColorEdit4("Text Disabled", &tc.x)) button->SetDisabledTextColor(tc);
+        }
+
+        ImGui::Spacing();
+        ImGui::TextDisabled("Runtime state");
+        bool hovered = button->IsHovered();
+        bool pressed = button->IsPressed();
         ImGui::BeginDisabled();
-
-        ImGui::Checkbox(
-            "Hovered",
-            &hovered
-        );
-
-        ImGui::Checkbox(
-            "Pressed",
-            &pressed
-        );
-
+        ImGui::Checkbox("Hovered##RuntimeState", &hovered);
+        ImGui::Checkbox("Pressed##RuntimeState", &pressed);
         ImGui::EndDisabled();
     }
 }
@@ -470,40 +858,79 @@ void UIEditor::DrawInspector(
 void UIEditor::DrawToolbar(
     UICanvas& canvas)
 {
-    if (ImGui::Button("Open UI..."))
-        ImGui::OpenPopup("SelectUIAsset");
+    const float width = ImGui::GetContentRegionAvail().x;
+    const bool compact = width < 900.0f;
 
+    if (ImGui::Button("Open"))
+        ImGui::OpenPopup("SelectUIAsset");
     ImGui::SameLine();
     if (ImGui::Button("Save"))
         UISerializer::Save(canvas, m_UIAssetPath);
 
-    ImGui::SameLine();
-    ImGui::TextDisabled("%s", m_UIAssetPath.c_str());
+    if (!compact)
+    {
+        ImGui::SameLine();
+        ImGui::TextDisabled("%s",
+            std::filesystem::path(m_UIAssetPath).filename().string().c_str());
+    }
 
     ImGui::SameLine();
-    ImGui::Dummy(ImVec2(18.0f, 0.0f));
-    ImGui::SameLine();
+    if (ImGui::Button("Panels"))
+        ImGui::OpenPopup("UIPanelsPopup");
 
-    if (ImGui::Button("Duplicate")) DuplicateSelected(canvas);
-    ImGui::SameLine();
-    if (ImGui::Button("Delete")) DeleteSelected(canvas);
-    ImGui::SameLine();
-    if (ImGui::Button("Rename")) RenameSelected();
-    ImGui::SameLine();
-    if (ImGui::Button("Frame")) ResetView();
+    if (ImGui::BeginPopup("UIPanelsPopup"))
+    {
+        ImGui::MenuItem("Palette", nullptr, &m_ShowPalette);
+        ImGui::MenuItem("Hierarchy", nullptr, &m_ShowHierarchy);
+        ImGui::MenuItem("Details", nullptr, &m_ShowDetails);
+        ImGui::EndPopup();
+    }
 
     ImGui::SameLine();
-    ImGui::Dummy(ImVec2(18.0f, 0.0f));
+    if (ImGui::Button("Edit"))
+        ImGui::OpenPopup("UIEditPopup");
+
+    if (ImGui::BeginPopup("UIEditPopup"))
+    {
+        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, !m_UndoStack.empty())) Undo(canvas);
+        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, !m_RedoStack.empty())) Redo(canvas);
+        ImGui::Separator();
+        if (ImGui::MenuItem("Duplicate", "Ctrl+D")) { PushHistory(canvas); DuplicateSelected(canvas); }
+        if (ImGui::MenuItem("Rename", "F2")) RenameSelected();
+        if (ImGui::MenuItem("Delete", "Del")) { PushHistory(canvas); DeleteSelected(canvas); }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Align Left")) AlignSelected(canvas,0);
+        if (ImGui::MenuItem("Align Center X")) AlignSelected(canvas,1);
+        if (ImGui::MenuItem("Align Right")) AlignSelected(canvas,2);
+        if (ImGui::MenuItem("Align Top")) AlignSelected(canvas,3);
+        if (ImGui::MenuItem("Align Center Y")) AlignSelected(canvas,4);
+        if (ImGui::MenuItem("Align Bottom")) AlignSelected(canvas,5);
+        ImGui::EndPopup();
+    }
+
     ImGui::SameLine();
-    ImGui::Checkbox("Grid", &m_ShowGrid);
-    ImGui::SameLine();
-    ImGui::Checkbox("Snap", &m_SnapToGrid);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(60.0f);
-    ImGui::DragFloat("##GridSize", &m_GridSize, 1.0f, 1.0f, 200.0f, "%.0f");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(85.0f);
-    ImGui::SliderFloat("##Zoom", &m_Zoom, 0.25f, 2.0f, "%.2fx");
+    if (ImGui::Button("View"))
+        ImGui::OpenPopup("UIViewPopup");
+
+    if (ImGui::BeginPopup("UIViewPopup"))
+    {
+        ImGui::MenuItem("Grid", nullptr, &m_ShowGrid);
+        ImGui::MenuItem("Snap", nullptr, &m_SnapToGrid);
+        ImGui::MenuItem("Widget Bounds", nullptr, &m_ShowWidgetBounds);
+        if (ImGui::MenuItem("Frame Canvas", "F")) ResetView();
+        ImGui::Separator();
+        ImGui::TextDisabled("Grid size");
+        ImGui::SetNextItemWidth(110.0f);
+        ImGui::DragFloat("##GridSizePopup", &m_GridSize, 1.0f, 1.0f, 200.0f, "%.0f");
+        ImGui::EndPopup();
+    }
+
+    if (!compact)
+    {
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(95.0f);
+        ImGui::SliderFloat("##Zoom", &m_Zoom, 0.25f, 2.0f, "%.2fx");
+    }
 
     if (ImGui::BeginPopup("SelectUIAsset"))
     {
@@ -540,12 +967,9 @@ void UIEditor::DrawToolbar(
 void UIEditor::DrawDesigner(
     UICanvas& canvas)
 {
-    ImGui::Text(
-        "Canvas: %.0f x %.0f",
-        canvas.GetSize().x,
-        canvas.GetSize().y
-    );
-
+    ImGui::TextDisabled("%.0f x %.0f", canvas.GetSize().x, canvas.GetSize().y);
+    ImGui::SameLine();
+    ImGui::TextDisabled("  %.0f%%", m_DesignerScale * 100.0f);
     ImGui::Separator();
 
     const ImVec2 contentMin =
@@ -583,23 +1007,19 @@ void UIEditor::DrawDesigner(
     /*
      * Preserve the canvas aspect ratio.
      */
-    float scale =
-        std::min(
-            scaleX,
-            scaleY
-        );
+    const float fitScale = std::min(scaleX, scaleY);
 
-    /*
-     * Apply editor zoom after fitting
-     * the canvas into the available area.
-     */
+    // Keep the canvas readable when this dock is small. The Designer becomes
+    // a viewport onto the authored UI instead of shrinking it to a thumbnail.
+    const float readableWidth = 720.0f;
+    const float readableHeight = 405.0f;
+    const float readableScale = std::min(
+        canvasSize.x > 0.0f ? readableWidth / canvasSize.x : 1.0f,
+        canvasSize.y > 0.0f ? readableHeight / canvasSize.y : 1.0f);
+
+    float scale = std::max(fitScale, std::min(1.0f, readableScale));
     scale *= m_Zoom;
-
-    scale =
-        std::max(
-            0.05f,
-            scale
-        );
+    scale = std::max(0.05f, scale);
 
     m_DesignerScale = scale;
 
@@ -616,14 +1036,11 @@ void UIEditor::DrawDesigner(
      */
     const ImVec2 canvasPosition(
         contentMin.x +
-        (availableSize.x -
-            canvasPixelSize.x) *
-        0.5f,
-
+        (availableSize.x - canvasPixelSize.x) * 0.5f +
+        m_DesignerPan.x,
         contentMin.y +
-        (availableSize.y -
-            canvasPixelSize.y) *
-        0.5f
+        (availableSize.y - canvasPixelSize.y) * 0.5f +
+        m_DesignerPan.y
     );
 
     m_DesignerCanvasPosition = canvasPosition;
@@ -788,114 +1205,121 @@ void UIEditor::DrawDesigner(
         }
     }
 
-    /*
-     * Mouse interaction.
-     */
-    if (mouseInsideCanvas)
+    // Register the designer before processing mouse input. ImGui only reports
+    // clicks/drags against items submitted earlier in the frame.
+    ImGui::SetCursorScreenPos(contentMin);
+    ImGui::InvisibleButton("##UIDesignerDropTarget", availableSize,
+        ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
+
+    // Pan the zoomed designer with middle mouse, or Space + left mouse.
+    // Mouse-wheel zoom, centered on the cursor.
+    if (ImGui::IsItemHovered() && !m_Panning && ImGui::GetIO().MouseWheel != 0.0f)
     {
-        /*
-         * The mouse is converted into UI design
-         * coordinates here. This is the important
-         * scaling fix.
-         */
-        const float uiMouseX =
-            (mouse.x -
-                canvasPosition.x) /
-            scale;
-
-        const float uiMouseY =
-            (mouse.y -
-                canvasPosition.y) /
-            scale;
-
-        (void)uiMouseX;
-        (void)uiMouseY;
-
-        if (m_SelectedWidget)
+        const float oldZoom = m_Zoom;
+        const float newZoom = std::clamp(oldZoom * std::pow(1.12f, ImGui::GetIO().MouseWheel), 0.20f, 5.0f);
+        if (std::abs(newZoom - oldZoom) > 0.0001f)
         {
-            const UIRect selectedRect =
-                GetAbsoluteRect(
-                    *m_SelectedWidget,
-                    UIRect{
-                        0.0f,
-                        0.0f,
-                        canvasSize.x,
-                        canvasSize.y
-                    }
-                );
-
-            if (!m_Dragging &&
-                !m_Resizing &&
-                ImGui::IsMouseClicked(
-                    ImGuiMouseButton_Left))
-            {
-                const int handle =
-                    GetResizeHandle(
-                        selectedRect,
-                        mouse,
-                        canvasPosition,
-                        scale
-                    );
-
-                if (handle >= 0)
-                {
-                    BeginResize(
-                        *m_SelectedWidget,
-                        handle
-                    );
-                }
-                else if (
-                    IsMouseInsideRect(
-                        selectedRect,
-                        mouse,
-                        canvasPosition,
-                        scale
-                    ))
-                {
-                    BeginDrag(
-                        *m_SelectedWidget
-                    );
-                }
-            }
-        }
-
-        if (m_Dragging &&
-            m_SelectedWidget)
-        {
-            UpdateDrag(
-                *m_SelectedWidget
-            );
-        }
-
-        if (m_Resizing &&
-            m_SelectedWidget)
-        {
-            UpdateResize(
-                *m_SelectedWidget
-            );
-        }
-
-        if (ImGui::IsMouseReleased(
-            ImGuiMouseButton_Left))
-        {
-            m_Dragging =
-                false;
-
-            m_Resizing =
-                false;
-
-            m_ResizeHandle =
-                -1;
+            const float newScale = scale / oldZoom * newZoom;
+            const ImVec2 center(contentMin.x + availableSize.x * 0.5f, contentMin.y + availableSize.y * 0.5f);
+            const ImVec2 oldBase(center.x - canvasPixelSize.x * 0.5f, center.y - canvasPixelSize.y * 0.5f);
+            const ImVec2 uiPoint((mouse.x - oldBase.x - m_DesignerPan.x) / scale,
+                                 (mouse.y - oldBase.y - m_DesignerPan.y) / scale);
+            const ImVec2 newSize(canvasSize.x * newScale, canvasSize.y * newScale);
+            const ImVec2 newBase(center.x - newSize.x * 0.5f, center.y - newSize.y * 0.5f);
+            m_Zoom = newZoom;
+            m_DesignerPan = ImVec2(mouse.x - newBase.x - uiPoint.x * newScale,
+                                   mouse.y - newBase.y - uiPoint.y * newScale);
         }
     }
 
-    /*
-     * Keep ImGui's item system aware of the
-     * designer region.
-     */
-    ImGui::Dummy(
-        availableSize
-    );
+    const bool panPressed = ImGui::IsMouseClicked(ImGuiMouseButton_Middle) ||
+        (ImGui::IsKeyDown(ImGuiKey_Space) && ImGui::IsMouseClicked(ImGuiMouseButton_Left));
+    if (ImGui::IsItemHovered() && panPressed)
+    {
+        m_Panning = true;
+        m_PanStartMouse = ImGui::GetMousePos();
+        m_PanStartOffset = m_DesignerPan;
+    }
+    if (m_Panning)
+    {
+        const ImVec2 current = ImGui::GetMousePos();
+        m_DesignerPan = ImVec2(
+            m_PanStartOffset.x + current.x - m_PanStartMouse.x,
+            m_PanStartOffset.y + current.y - m_PanStartMouse.y);
+        if ((!ImGui::IsMouseDown(ImGuiMouseButton_Middle) && !ImGui::IsKeyDown(ImGuiKey_Space)) ||
+            (ImGui::IsKeyDown(ImGuiKey_Space) && !ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+             !ImGui::IsMouseDown(ImGuiMouseButton_Middle)))
+            m_Panning = false;
+    }
+
+    if (mouseInsideCanvas && !m_Panning)
+    {
+        if (m_SelectedWidget && !m_Dragging && !m_Resizing &&
+            ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            const UIRect selectedRect = GetAbsoluteRect(
+                *m_SelectedWidget,
+                UIRect{0.0f,0.0f,canvasSize.x,canvasSize.y});
+
+            const int handle = GetResizeHandle(
+                selectedRect, mouse, canvasPosition, scale);
+            if (handle >= 0)
+                BeginResize(*m_SelectedWidget, handle);
+            else if (IsMouseInsideRect(
+                selectedRect, mouse, canvasPosition, scale))
+                BeginDrag(*m_SelectedWidget);
+        }
+
+        if (m_Dragging && m_SelectedWidget)
+            UpdateDrag(*m_SelectedWidget);
+        if (m_Resizing && m_SelectedWidget)
+            UpdateResize(*m_SelectedWidget);
+    }
+
+    // Always terminate an active gesture, even if the pointer was released
+    // just outside the canvas.
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+    {
+        m_Dragging=false;
+        m_Resizing=false;
+        m_ResizeHandle=-1;
+    }
+
+    if (mouseInsideCanvas && ImGui::IsItemClicked(ImGuiMouseButton_Right))
+        ImGui::OpenPopup("DesignerCreatePopup");
+    if (ImGui::BeginPopup("DesignerCreatePopup"))
+    {
+        ImGui::TextDisabled("CREATE WIDGET");
+        if(ImGui::MenuItem("Panel")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Panel); }
+        if(ImGui::MenuItem("Text")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Text); }
+        if(ImGui::MenuItem("Image")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Image); }
+        if(ImGui::MenuItem("Button")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Button); }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("UI_PALETTE_WIDGET"))
+        {
+            if (payload->DataSize == sizeof(int))
+            {
+                const int value = *static_cast<const int*>(payload->Data);
+                if (value >= static_cast<int>(UIWidgetType::Panel) &&
+                    value <= static_cast<int>(UIWidgetType::Button))
+                {
+                    AddWidget(canvas, static_cast<UIWidgetType>(value));
+                    if (m_SelectedWidget)
+                    {
+                        Vec2 position(
+                            (ImGui::GetMousePos().x - canvasPosition.x) / scale,
+                            (ImGui::GetMousePos().y - canvasPosition.y) / scale);
+                        if (m_SnapToGrid) { position.x = SnapValue(position.x); position.y = SnapValue(position.y); }
+                        m_SelectedWidget->SetPosition(position);
+                    }
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
 }
 
 void UIEditor::DrawWidget(
@@ -984,23 +1408,40 @@ void UIEditor::DrawWidget(
                 text->GetFontSize() *
                 scale;
 
-            // The old preview effectively looked like a bitmap font because
-            // text was scaled down with the canvas and then sampled at tiny
-            // sizes. Keep the requested UI size, but never render below the
-            // editor font's native size. ImGui's atlas then provides the same
-            // smooth Inter face used by the rest of the editor.
-            ImFont* previewFont = ImGui::GetFont();
-            const float previewSize = std::max(
-                ImGui::GetFontSize(),
-                std::max(1.0f, fontSize));
+            // Use the same Inter face as the runtime UI. The editor's first
+            // regular font is loaded from Assets/Fonts/InterVariable.ttf;
+            // avoid whichever temporary/icon font happens to be active while
+            // the Widget Blueprint window is drawing.
+            ImFont* previewFont = ImGui::GetIO().Fonts->Fonts.empty()
+                ? ImGui::GetFont()
+                : ImGui::GetIO().Fonts->Fonts.front();
+            const float previewSize = std::max(1.0f, fontSize);
 
-            drawList->AddText(
-                previewFont,
-                previewSize,
-                min,
-                fillColor,
-                textValue
-            );
+            // ImDrawList::AddText does not lay out embedded newlines for
+            // our designer preview, so render each saved line explicitly.
+            float lineY = min.y;
+            const float lineHeight = previewSize * 1.2f;
+            std::string line;
+            const std::string& previewText = text->GetText();
+            for (std::size_t i = 0; i <= previewText.size(); ++i)
+            {
+                if (i == previewText.size() || previewText[i] == '\n')
+                {
+                    drawList->AddText(
+                        previewFont,
+                        previewSize,
+                        ImVec2(min.x, lineY),
+                        fillColor,
+                        line.c_str()
+                    );
+                    line.clear();
+                    lineY += lineHeight;
+                }
+                else if (previewText[i] != '\r')
+                {
+                    line += previewText[i];
+                }
+            }
         }
     }
     else if (widget.GetType() == UIWidgetType::Image)
@@ -1030,12 +1471,17 @@ void UIEditor::DrawWidget(
     }
     else
     {
-        drawList->AddRectFilled(
-            min,
-            max,
-            fillColor,
-            4.0f
-        );
+        if (widget.HasGradient())
+        {
+            const Vec4 gc = widget.GetGradientColor();
+            const ImU32 endColor = IM_COL32((int)(std::clamp(gc.x,0.0f,1.0f)*255.0f),(int)(std::clamp(gc.y,0.0f,1.0f)*255.0f),(int)(std::clamp(gc.z,0.0f,1.0f)*255.0f),(int)(std::clamp(gc.w,0.0f,1.0f)*255.0f));
+            if (widget.GetGradientDirection() == UIGradientDirection::Horizontal)
+                drawList->AddRectFilledMultiColor(min,max,fillColor,endColor,endColor,fillColor);
+            else
+                drawList->AddRectFilledMultiColor(min,max,fillColor,fillColor,endColor,endColor);
+        }
+        else
+            drawList->AddRectFilled(min,max,fillColor,4.0f);
 
         drawList->AddRect(
             min,
@@ -1053,6 +1499,9 @@ void UIEditor::DrawWidget(
         // not visible UI text. Add a UIText child when the button needs a label.
 
     }
+
+    if (m_ShowWidgetBounds && m_SelectedWidget != &widget)
+        drawList->AddRect(min,max,IM_COL32(110,120,135,80),0.0f,0,1.0f);
 
     /*
      * Selection outline and resize handles.
@@ -1502,120 +1951,19 @@ void UIEditor::DeleteSelected(
         -1;
 }
 
-void UIEditor::DuplicateSelected(
-    UICanvas& canvas)
+void UIEditor::DuplicateSelected(UICanvas& canvas)
 {
-    if (!m_SelectedWidget)
-    {
-        return;
-    }
-
-    UIWidget* parent =
-        m_SelectedWidget->GetParent();
-
-    if (!parent)
-    {
-        parent =
-            canvas.GetRoot();
-    }
-
-    if (!parent)
-    {
-        return;
-    }
-
-    std::unique_ptr<UIWidget> copy =
-        UIWidgetFactory::Create(
-            m_SelectedWidget->GetType()
-        );
-
-    if (!copy)
-    {
-        return;
-    }
-
-    copy->SetName(
-        m_SelectedWidget->GetName() +
-        " Copy"
-    );
-
-    copy->SetPosition(
-        m_SelectedWidget->GetPosition()
-    );
-
-    Vec2 position =
-        copy->GetPosition();
-
-    position.x +=
-        m_GridSize;
-
-    position.y +=
-        m_GridSize;
-
-    copy->SetPosition(
-        position
-    );
-
-    copy->SetSize(
-        m_SelectedWidget->GetSize()
-    );
-
-    copy->SetAnchor(
-        m_SelectedWidget->GetAnchor()
-    );
-
-    copy->SetPivot(
-        m_SelectedWidget->GetPivot()
-    );
-
-    copy->SetColor(
-        m_SelectedWidget->GetColor()
-    );
-
-    copy->SetVisible(
-        m_SelectedWidget->IsVisible()
-    );
-
-    if (UIText* sourceText =
-        dynamic_cast<UIText*>(
-            m_SelectedWidget))
-    {
-        if (UIText* destinationText =
-            dynamic_cast<UIText*>(
-                copy.get()))
-        {
-            destinationText->SetText(
-                sourceText->GetText()
-            );
-
-            destinationText->SetFontSize(
-                sourceText->GetFontSize()
-            );
-        }
-    }
-
-    if (UIImage* sourceImage =
-        dynamic_cast<UIImage*>(
-            m_SelectedWidget))
-    {
-        if (UIImage* destinationImage =
-            dynamic_cast<UIImage*>(
-                copy.get()))
-        {
-            destinationImage->SetTexturePath(
-                sourceImage->GetTexturePath()
-            );
-        }
-    }
-
-    UIWidget* newWidget =
-        parent->AddChild(
-            std::move(copy)
-        );
-
-    SelectWidget(
-        newWidget
-    );
+    if(!m_SelectedWidget) return;
+    UIWidget* parent=m_SelectedWidget->GetParent();
+    if(!parent) parent=canvas.GetRoot();
+    if(!parent) return;
+    std::unique_ptr<UIWidget> copy=CloneWidget(*m_SelectedWidget);
+    if(!copy) return;
+    copy->SetName(m_SelectedWidget->GetName()+" Copy");
+    Vec2 position=copy->GetPosition();
+    position.x+=m_GridSize; position.y+=m_GridSize; copy->SetPosition(position);
+    UIWidget* added=parent->AddChild(std::move(copy));
+    SelectWidget(added);
 }
 
 void UIEditor::AddWidget(
@@ -1631,7 +1979,7 @@ void UIEditor::AddWidget(
         parent->GetType() ==
         UIWidgetType::Image ||
         parent->GetType() ==
-        UIWidgetType::Button)
+        UIWidgetType::Button || parent->GetType() == UIWidgetType::TextInput || parent->GetType() == UIWidgetType::Slider)
     {
         parent =
             canvas.GetRoot();
@@ -1681,19 +2029,17 @@ void UIEditor::AddWidget(
 void UIEditor::RenameSelected()
 {
     if (!m_SelectedWidget)
-    {
         return;
-    }
 
-    ImGui::OpenPopup(
-        "RenameWidget"
-    );
+    std::snprintf(m_RenameBuffer, sizeof(m_RenameBuffer), "%s", m_SelectedWidget->GetName().c_str());
+    m_RenameRequested = true;
 }
 
 void UIEditor::ResetView()
 {
-    m_Zoom =
-        1.0f;
+    m_Zoom = 1.0f;
+    m_DesignerPan = ImVec2(0.0f, 0.0f);
+    m_Panning = false;
 }
 
 UIRect UIEditor::GetAbsoluteRect(
@@ -1706,4 +2052,78 @@ UIRect UIEditor::GetAbsoluteRect(
 
     const UIRect parentRect = GetAbsoluteRect(*parent, canvasRect);
     return UILayout::Calculate(widget, parentRect);
+}
+
+std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
+{
+    std::unique_ptr<UIWidget> copy=UIWidgetFactory::Create(source.GetType());
+    if(!copy) return nullptr;
+    copy->SetName(source.GetName()); copy->SetPosition(source.GetPosition()); copy->SetSize(source.GetSize());
+    copy->SetAnchors(source.GetAnchorMinimum(),source.GetAnchorMaximum()); copy->SetPivot(source.GetPivot());
+    copy->SetColor(source.GetColor()); copy->SetVisible(source.IsVisible()); copy->SetEnabled(source.IsEnabled());
+    copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder());
+    if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); }
+    if(auto* a=dynamic_cast<const UISlider*>(&source)) if(auto* b=dynamic_cast<UISlider*>(copy.get())) { b->SetValue(a->GetValue()); b->SetFillColor(a->GetFillColor()); b->SetHandleColor(a->GetHandleColor()); }
+    if(auto* a=dynamic_cast<const UIImage*>(&source)) if(auto* b=dynamic_cast<UIImage*>(copy.get())) b->SetTexturePath(a->GetTexturePath());
+    if(auto* a=dynamic_cast<const UIButton*>(&source)) if(auto* b=dynamic_cast<UIButton*>(copy.get())) {
+        b->SetNormalColor(a->GetNormalColor()); b->SetHoveredColor(a->GetHoveredColor());
+        b->SetPressedColor(a->GetPressedColor()); b->SetDisabledColor(a->GetDisabledColor());
+    }
+    for(const auto& child:source.GetChildren()) if(child) copy->AddChild(CloneWidget(*child));
+    return copy;
+}
+
+void UIEditor::NudgeSelected(float x,float y)
+{
+    if(!m_SelectedWidget) return;
+    Vec2 p=m_SelectedWidget->GetPosition(); p.x+=x; p.y+=y; m_SelectedWidget->SetPosition(p);
+}
+
+void UIEditor::AlignSelected(UICanvas& canvas,int mode)
+{
+    if(!m_SelectedWidget || m_SelectedWidget==canvas.GetRoot()) return;
+    UIWidget* parent=m_SelectedWidget->GetParent();
+    Vec2 bounds=parent && parent!=canvas.GetRoot()?parent->GetSize():canvas.GetSize();
+    Vec2 p=m_SelectedWidget->GetPosition(), size=m_SelectedWidget->GetSize();
+    if(mode==0)p.x=0; else if(mode==1)p.x=(bounds.x-size.x)*.5f; else if(mode==2)p.x=bounds.x-size.x;
+    else if(mode==3)p.y=0; else if(mode==4)p.y=(bounds.y-size.y)*.5f; else if(mode==5)p.y=bounds.y-size.y;
+    m_SelectedWidget->SetPosition(p);
+}
+
+std::string UIEditor::CaptureCanvas(UICanvas& canvas) const
+{
+    if(m_UIAssetPath.empty()) return {};
+    const std::filesystem::path temp=std::filesystem::temp_directory_path()/"vortek_ui_editor_history.ui";
+    if(!UISerializer::Save(canvas,temp.string())) return {};
+    std::ifstream in(temp,std::ios::binary); return std::string((std::istreambuf_iterator<char>(in)),{});
+}
+
+bool UIEditor::RestoreCanvas(UICanvas& canvas,const std::string& snapshot)
+{
+    if(snapshot.empty()) return false;
+    const std::filesystem::path temp=std::filesystem::temp_directory_path()/"vortek_ui_editor_history.ui";
+    { std::ofstream out(temp,std::ios::binary|std::ios::trunc); out<<snapshot; }
+    m_SelectedWidget=nullptr; m_Dragging=false; m_Resizing=false;
+    return UISerializer::Load(canvas,temp.string());
+}
+
+void UIEditor::PushHistory(UICanvas& canvas)
+{
+    std::string snapshot=CaptureCanvas(canvas); if(snapshot.empty()) return;
+    if(m_UndoStack.size()>=MaxHistory) m_UndoStack.erase(m_UndoStack.begin());
+    m_UndoStack.push_back(std::move(snapshot)); m_RedoStack.clear();
+}
+
+void UIEditor::Undo(UICanvas& canvas)
+{
+    if(m_UndoStack.empty()) return;
+    std::string current=CaptureCanvas(canvas); std::string previous=std::move(m_UndoStack.back()); m_UndoStack.pop_back();
+    if(!current.empty()) m_RedoStack.push_back(std::move(current)); RestoreCanvas(canvas,previous);
+}
+
+void UIEditor::Redo(UICanvas& canvas)
+{
+    if(m_RedoStack.empty()) return;
+    std::string current=CaptureCanvas(canvas); std::string next=std::move(m_RedoStack.back()); m_RedoStack.pop_back();
+    if(!current.empty()) m_UndoStack.push_back(std::move(current)); RestoreCanvas(canvas,next);
 }

@@ -1,0 +1,3 @@
+#pragma once
+#include "../../Math/Mat4.h"
+class Shader { public: Shader(); ~Shader(); bool Initialize(const char*,const char*); void Bind(); void Unbind(); void Shutdown(); void SetMat4(const char*,const Mat4&); void SetVec4(const char*,float,float,float,float); void SetVec3(const char*,float,float,float); void SetFloat(const char*,float); void SetInt(const char*,int); private: unsigned int m_Program; };

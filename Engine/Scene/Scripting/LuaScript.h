@@ -2,15 +2,29 @@
 
 #include <memory>
 #include <string>
+#include <cstdint>
 
 #include <sol/sol.hpp>
 
 #include "../Entity.h"
+#include "../Components/ScriptComponent.h"
+#include <unordered_map>
 
 class Scene;
 class Input;
 class Renderer;
 class UICanvas;
+class Runtime;
+class ProjectSettings;
+
+struct LuaEntityHandle
+{
+    Scene* scene = nullptr;
+    std::uint32_t id = 0;
+    LuaEntityHandle() = default;
+    explicit LuaEntityHandle(std::uint32_t entityID) : id(entityID) {}
+    LuaEntityHandle(Scene* owner, std::uint32_t entityID) : scene(owner), id(entityID) {}
+};
 
 class LuaScript
 {
@@ -23,10 +37,12 @@ public:
         Input& input,
         Renderer& renderer,
         UICanvas& uiCanvas,
-        sol::state& lua
+        sol::state& lua,
+        Runtime* runtime = nullptr,
+        ProjectSettings* projectSettings = nullptr
     );
 
-    bool Load(const std::string& filepath);
+    bool Load(const std::string& filepath, const std::unordered_map<std::string, ScriptPropertyValue>* propertyOverrides = nullptr);
     bool Create();
     bool Update(float deltaTime);
 
@@ -53,6 +69,8 @@ private:
     Input* m_Input = nullptr;
     Renderer* m_Renderer = nullptr;
     UICanvas* m_UICanvas = nullptr;
+    Runtime* m_Runtime = nullptr;
+    ProjectSettings* m_ProjectSettings = nullptr;
 
     float m_DeltaTime = 0.0f;
 };

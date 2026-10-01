@@ -4,6 +4,8 @@
 #include "UIText.h"
 #include "UIImage.h"
 #include "UIButton.h"
+#include "UITextInput.h"
+#include "UISlider.h"
 
 std::unique_ptr<UIWidget>
 UIWidgetFactory::Create(UIWidgetType type)
@@ -21,6 +23,12 @@ UIWidgetFactory::Create(UIWidgetType type)
 
     case UIWidgetType::Button:
         return std::make_unique<UIButton>();
+
+    case UIWidgetType::TextInput:
+        return std::make_unique<UITextInput>();
+
+    case UIWidgetType::Slider:
+        return std::make_unique<UISlider>();
     }
 
     return nullptr;

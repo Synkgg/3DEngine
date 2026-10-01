@@ -6,18 +6,25 @@
 #include "../../Platform/SDL/Input.h"
 
 #include "../../Core/Logger.h"
+#include "../../Core/ProjectManager.h"
 #include "../../Graphics/Renderer.h"
 #include "../../UI/UICanvas.h"
 
 #include <filesystem>
 
+namespace fs = std::filesystem;
+
 void LuaScriptSystem::Start(
     Scene& scene,
     Input& input,
     Renderer& renderer,
-    UICanvas& uiCanvas)
+    UICanvas& uiCanvas,
+    Runtime* runtime,
+    ProjectSettings* projectSettings,
+    ProjectManager* projectManager)
 {
     m_Instances.clear();
+    m_Scene = &scene;
 
     m_Lua =
         std::make_unique<
@@ -28,7 +35,8 @@ void LuaScriptSystem::Start(
         sol::lib::base,
         sol::lib::math,
         sol::lib::table,
-        sol::lib::string
+        sol::lib::string,
+        sol::lib::package
     );
 
     m_Lua->set_function(
@@ -41,16 +49,17 @@ void LuaScriptSystem::Start(
         }
     );
 
-    if (!LoadGlobalScript(
-        "Assets\\Scripts\\Systems\\InventoryManager.lua"))
+    // Project/game modules are loaded explicitly by authored Lua through require().
+    // The engine must never know the name of a particular game or game script.
+    sol::table package = (*m_Lua)["package"];
+    std::string packagePath = package["path"].get_or(std::string());
+    if (projectManager)
     {
-        Logger::Error(
-            "Failed to load InventoryManager.lua."
-        );
+        const std::string root = projectManager->GetActiveProject().rootDirectory.generic_string();
+        packagePath += ";" + root + "/?.lua;" + root + "/?/init.lua;" + root + "/Assets/?.lua;" + root + "/Assets/?/init.lua";
     }
-
-    namespace fs =
-        std::filesystem;
+    packagePath += ";./?.lua;./?/init.lua";
+    package["path"] = packagePath;
 
     for (const Entity& entity :
         scene.GetEntities())
@@ -76,9 +85,9 @@ void LuaScriptSystem::Start(
                 continue;
             }
 
-            fs::path fullPath =
-                fs::current_path() /
-                scriptPath;
+            fs::path fullPath = projectManager
+                ? fs::path(projectManager->ResolveAssetPath(scriptPath))
+                : (fs::current_path() / scriptPath);
 
             if (!fs::exists(
                 fullPath))
@@ -102,11 +111,18 @@ void LuaScriptSystem::Start(
                 input,
                 renderer,
                 uiCanvas,
-                *m_Lua
+                *m_Lua,
+                runtime,
+                projectSettings
             );
 
+            const auto propertyIt = scriptComponent->properties.find(scriptPath);
+            const std::unordered_map<std::string, ScriptPropertyValue>* propertyOverrides =
+                propertyIt == scriptComponent->properties.end() ? nullptr : &propertyIt->second;
+
             if (!script->Load(
-                fullPath.string()))
+                fullPath.string(),
+                propertyOverrides))
             {
                 continue;
             }
@@ -163,6 +179,8 @@ void LuaScriptSystem::Update(
             );
         }
     }
+
+    ProcessPendingDestructions();
 }
 
 void LuaScriptSystem::Interact(
@@ -187,6 +205,36 @@ void LuaScriptSystem::Interact(
             instance.script->Interact();
         }
     }
+
+    ProcessPendingDestructions();
+}
+
+void LuaScriptSystem::ProcessPendingDestructions()
+{
+    if (m_Scene == nullptr) return;
+
+    const std::vector<Entity> roots = m_Scene->ConsumePendingDestroyEntities();
+    for (Entity root : roots)
+    {
+        std::vector<Entity> hierarchy;
+        hierarchy.push_back(root);
+        for (std::size_t i = 0; i < hierarchy.size(); ++i)
+        {
+            const std::vector<Entity> children = m_Scene->GetChildren(hierarchy[i]);
+            hierarchy.insert(hierarchy.end(), children.begin(), children.end());
+        }
+
+        for (Entity entity : hierarchy)
+        {
+            auto it = m_Instances.find(entity.GetID());
+            if (it == m_Instances.end()) continue;
+            for (ScriptInstance& instance : it->second)
+                if (instance.script) instance.script->Destroy();
+            m_Instances.erase(it);
+        }
+
+        m_Scene->DestroyEntityHierarchy(root);
+    }
 }
 
 void LuaScriptSystem::Stop()
@@ -210,6 +258,7 @@ void LuaScriptSystem::Stop()
     m_Instances.clear();
 
     m_Lua.reset();
+    m_Scene = nullptr;
 }
 
 bool LuaScriptSystem::LoadGlobalScript(

@@ -2,6 +2,7 @@
 
 #include "../../Graphics/Renderer.h"
 #include "../../Scene/Scene.h"
+#include "../../Scene/PrefabSerializer.h"
 #include "../../Scene/Components/TransformComponent.h"
 #include "../../Scene/Components/MeshComponent.h"
 
@@ -10,6 +11,8 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <filesystem>
+#include <string>
 
 namespace
 {
@@ -615,107 +618,120 @@ void Editor::RenderViewport(
 	Renderer& renderer,
 	Scene& scene)
 {
-	ImGui::Begin("Viewport");
+	ImGui::Begin("Scene");
 
 	// m_ViewportPosition/m_ViewportSize represent the actual game image,
 	// not the surrounding ImGui window. They are assigned after the
 	// viewport toolbar when the image rectangle is known.
 
-	ImGui::BeginChild(
-		"ViewportToolbar",
-		ImVec2(0.0f, 36.0f),
-		ImGuiChildFlags_Borders
-	);
+	// Scene-local transport: keep play controls attached to the viewport so
+	// the rest of the editor stays visually quiet and the scene remains primary.
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 5.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 0.0f));
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.125f, 0.130f, 0.138f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.205f, 0.215f, 0.228f, 1.0f));
+	ImGui::BeginChild("ViewportToolbar", ImVec2(0.0f, 42.0f), ImGuiChildFlags_Borders);
 
-	const char* buttonText =
-		m_Playing ? "Stop" : "Play";
 
-	const float buttonWidth =
-		ImGui::CalcTextSize(buttonText).x +
-		ImGui::GetStyle().FramePadding.x * 2.0f;
+	// Keep secondary viewport controls out of the way. The transport remains
+	// visually independent and is positioned from the toolbar's full width.
+	if (ImGui::Button("Viewport  v"))
+		ImGui::OpenPopup("SceneViewportOptions");
 
-	ImGui::SetCursorPosX(
-		(ImGui::GetContentRegionAvail().x -
-			buttonWidth) * 0.5f
-	);
-
-	if (m_Playing)
+	if (ImGui::BeginPopup("SceneViewportOptions"))
 	{
-		if (ImGui::Button("Stop"))
-		{
-			m_Playing = false;
+		ImGui::TextDisabled("VIEWPORT");
+		ImGui::Separator();
 
+		ImGui::Checkbox("Show Grid", &m_ShowGrid);
+
+		ImGui::SetNextItemWidth(170.0f);
+		ImGui::DragFloat("Camera Speed", &m_EditorCameraSpeed, 0.25f, 0.5f, 40.0f, "%.1f");
+
+		const char* viewNames[] = { "Lit", "Normals", "Roughness", "Depth", "AO", "Reflections" };
+		int debugView = static_cast<int>(renderer.GetDebugView());
+		ImGui::SetNextItemWidth(170.0f);
+		if (ImGui::Combo("View Mode", &debugView, viewNames, 6))
+			renderer.SetDebugView(static_cast<RenderDebugView>(debugView));
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::TextDisabled("RENDERING");
+
+		RenderSettings settings = m_ProjectSettings.GetRenderSettings();
+		bool changed = false;
+		changed |= ImGui::Checkbox("Shadows", &settings.shadows);
+		changed |= ImGui::Checkbox("Bloom", &settings.bloom);
+		changed |= ImGui::Checkbox("SSR", &settings.screenSpaceReflections);
+		changed |= ImGui::SliderFloat("Exposure", &settings.exposure, 0.1f, 4.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Bloom Strength", &settings.bloomStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("SSR Strength", &settings.screenSpaceReflectionStrength, 0.0f, 1.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Indirect Diffuse", &settings.indirectLightStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Environment Reflections", &settings.environmentReflectionStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Reflection Strength", &settings.reflectionStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("GI Strength", &settings.giStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Atmosphere", &settings.atmosphereStrength, 0.0f, 2.0f, "%.2f");
+		changed |= ImGui::SliderFloat("Sky", &settings.skyIntensity, 0.0f, 3.0f, "%.2f");
+
+		if (changed)
+		{
+			m_ProjectSettings.SetRenderSettings(settings);
+			renderer.SetRenderSettings(settings);
+			renderer.InvalidateTemporalHistory();
+			if (!m_ProjectSettings.Save())
+				Logger::Error("Failed to save project rendering settings.");
+		}
+
+		ImGui::EndPopup();
+	}
+
+	// Center Play/Stop against the entire Scene toolbar, not against the
+	// controls to its left.
+	const float transportWidth = 108.0f;
+	ImGui::SameLine();
+	ImGui::SetCursorPosX((ImGui::GetWindowWidth() - transportWidth) * 0.5f);
+
+	if (!m_Playing)
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.12f, 0.38f, 0.56f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.15f, 0.49f, 0.70f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.18f, 0.58f, 0.82f, 1.0f));
+		if (ImGui::Button("  PLAY  ", ImVec2(108.0f, 30.0f)))
+		{
+			m_Playing = true;
 			m_SelectedEntity = Entity();
 			m_NameEditEntityID = 0;
 			m_NameEditBuffer[0] = '\0';
-
-			Logger::Info(
-				"Play mode stopped."
-			);
+			Logger::Info("Play mode started.");
 		}
+		ImGui::PopStyleColor(3);
 	}
 	else
 	{
-		if (ImGui::Button("Play"))
-		{
-			m_Playing = true;
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.52f, 0.12f, 0.18f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.68f, 0.17f, 0.24f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.80f, 0.22f, 0.30f, 1.0f));
+		if (ImGui::Button("  STOP  ", ImVec2(108.0f, 30.0f)))
+			StopPlaying();
+		ImGui::PopStyleColor(3);
+	}
 
+	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+	{
+		if (ImGui::IsKeyPressed(ImGuiKey_W)) m_GizmoOperation = ImGuizmo::TRANSLATE;
+		if (ImGui::IsKeyPressed(ImGuiKey_E)) m_GizmoOperation = ImGuizmo::ROTATE;
+		if (ImGui::IsKeyPressed(ImGuiKey_R)) m_GizmoOperation = ImGuizmo::SCALE;
+		if (ImGui::IsKeyPressed(ImGuiKey_Escape) && !m_Playing)
+		{
 			m_SelectedEntity = Entity();
 			m_NameEditEntityID = 0;
 			m_NameEditBuffer[0] = '\0';
-
-			Logger::Info(
-				"Play mode started."
-			);
 		}
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::IsWindowFocused(
-		ImGuiFocusedFlags_RootAndChildWindows))
-	{
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_W))
-		{
-			m_GizmoOperation =
-				ImGuizmo::TRANSLATE;
-		}
-
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_E))
-		{
-			m_GizmoOperation =
-				ImGuizmo::ROTATE;
-		}
-
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_R))
-		{
-			m_GizmoOperation =
-				ImGuizmo::SCALE;
-		}
-
-		if (ImGui::IsKeyPressed(
-			ImGuiKey_Escape))
-		{
-			m_SelectedEntity =
-				Entity();
-
-			m_NameEditEntityID =
-				0;
-
-			m_NameEditBuffer[0] =
-				'\0';
-		}
-	}
-
-	if (ImGui::Button("Reset Camera"))
-	{
-		renderer.ResetCamera();
 	}
 
 	ImGui::EndChild();
+	ImGui::PopStyleColor(2);
+	ImGui::PopStyleVar(2);
 
 	m_ViewportHovered =
 		ImGui::IsWindowHovered();
@@ -799,6 +815,39 @@ void Editor::RenderViewport(
 	bool viewportImageHovered =
 		ImGui::IsItemHovered();
 
+	// Asset drops land directly in the scene. Prefabs instantiate as complete
+	// hierarchies; models create a normal mesh entity.
+	if (!m_Playing && ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_FILE"))
+		{
+			const std::string path = static_cast<const char*>(payload->Data);
+			const std::filesystem::path asset(path);
+			const std::string extension = asset.extension().string();
+			Entity created;
+			if (extension == ".prefab")
+				created = PrefabSerializer::Instantiate(scene, path);
+			else if (extension == ".obj")
+			{
+				created = scene.CreateEntity();
+				MeshComponent mesh;
+				mesh.modelPath = path;
+				scene.AddComponent<MeshComponent>(created, mesh);
+			}
+			if (created.IsValid())
+			{
+				if (TransformComponent* droppedTransform = scene.GetComponent<TransformComponent>(created))
+				{
+					const Vec3 origin = renderer.GetCameraPosition();
+					const Vec3 direction = renderer.GetCameraRayDirection(0.0f, 0.0f);
+					droppedTransform->transform.position = origin + direction * 5.0f;
+				}
+				m_SelectedEntity = created;
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
+
 	/*
  * Transform toolbar overlay
  */
@@ -837,42 +886,22 @@ void Editor::RenderViewport(
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ChildBg,
-		ImVec4(
-			0.05f,
-			0.06f,
-			0.08f,
-			0.75f
-		)
+		ImVec4(0.105f, 0.110f, 0.118f, 0.94f)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_Button,
-		ImVec4(
-			0.10f,
-			0.12f,
-			0.16f,
-			0.65f
-		)
+		ImVec4(0.155f, 0.162f, 0.172f, 0.94f)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonHovered,
-		ImVec4(
-			0.18f,
-			0.22f,
-			0.30f,
-			0.85f
-		)
+		ImVec4(0.18f, 0.205f, 0.225f, 0.96f)
 	);
 
 	ImGui::PushStyleColor(
 		ImGuiCol_ButtonActive,
-		ImVec4(
-			0.20f,
-			0.35f,
-			0.55f,
-			0.95f
-		)
+		ImVec4(0.12f, 0.45f, 0.66f, 0.96f)
 	);
 
 	ImGui::BeginChild(
@@ -899,12 +928,7 @@ void Editor::RenderViewport(
 			{
 				ImGui::PushStyleColor(
 					ImGuiCol_Button,
-					ImVec4(
-						0.18f,
-						0.32f,
-						0.52f,
-						0.90f
-					)
+					ImVec4(0.12f, 0.35f, 0.52f, 0.96f)
 				);
 			}
 
@@ -972,7 +996,7 @@ void Editor::RenderViewport(
 		>(m_SelectedEntity)
 		: nullptr;
 
-	if (transform != nullptr)
+	if (!m_Playing && transform != nullptr)
 	{
 		Mat4 model =
 			transform->transform.GetMatrix();
@@ -1075,7 +1099,8 @@ void Editor::RenderViewport(
 		mousePosition.y <=
 		toolbarY + toolbarHeight;
 
-	if (mouseOverViewport &&
+	if (!m_Playing &&
+		mouseOverViewport &&
 		!mouseOverToolbar &&
 		ImGui::IsMouseClicked(
 			ImGuiMouseButton_Left) &&

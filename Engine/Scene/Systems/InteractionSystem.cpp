@@ -15,6 +15,7 @@
 #include "../../Platform/SDL/Input.h"
 
 #include "../../Core/Logger.h"
+#include "../../Audio/AudioEngine.h"
 
 #include <algorithm>
 #include <cmath>
@@ -146,7 +147,8 @@ void InteractionSystem::Update(
     Scene& scene,
     Renderer& renderer,
     Input& input,
-    LuaScriptSystem& luaScriptSystem)
+    LuaScriptSystem& luaScriptSystem,
+    AudioEngine* audio)
 {
     m_CurrentPrompt.clear();
 
@@ -182,9 +184,7 @@ void InteractionSystem::Update(
         }
 
         TransformComponent* transform =
-            scene.GetComponent<
-            TransformComponent
-            >(entity);
+            scene.GetComponent<TransformComponent>(entity);
 
         ColliderComponent* collider =
             scene.GetComponent<
@@ -197,8 +197,8 @@ void InteractionSystem::Update(
             continue;
         }
 
-        const Vec3 scale =
-            transform->transform.scale;
+        const Transform worldTransform = scene.GetWorldTransform(entity);
+        const Vec3 scale = worldTransform.scale;
 
         const Vec3 halfExtents(
             collider->width *
@@ -219,7 +219,7 @@ void InteractionSystem::Update(
         if (!RayIntersectsAABB(
             rayOrigin,
             rayDirection,
-            transform->transform.position,
+            worldTransform.position,
             halfExtents,
             distance))
         {
@@ -275,6 +275,8 @@ void InteractionSystem::Update(
             interactable->prompt
         );
     }
+
+    if (audio) audio->PlayInteractSound();
 
     luaScriptSystem.Interact(
         closestEntity

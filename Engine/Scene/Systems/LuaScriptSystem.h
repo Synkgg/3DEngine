@@ -14,6 +14,9 @@ class Scene;
 class Input;
 class Renderer;
 class UICanvas;
+class Runtime;
+class ProjectSettings;
+class ProjectManager;
 
 class LuaScriptSystem
 {
@@ -22,7 +25,10 @@ public:
         Scene& scene,
         Input& input,
         Renderer& renderer,
-        UICanvas& uiCanvas
+        UICanvas& uiCanvas,
+        Runtime* runtime = nullptr,
+        ProjectSettings* projectSettings = nullptr,
+        ProjectManager* projectManager = nullptr
     );
 
     void Update(
@@ -43,6 +49,8 @@ private:
         std::unique_ptr<LuaScript> script;
     };
 
+    void ProcessPendingDestructions();
+
     bool LoadGlobalScript(
         const std::string& filepath
     );
@@ -53,4 +61,5 @@ private:
     > m_Instances;
 
     std::unique_ptr<sol::state> m_Lua;
+    Scene* m_Scene = nullptr;
 };

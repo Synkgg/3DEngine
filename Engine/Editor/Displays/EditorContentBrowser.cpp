@@ -6,6 +6,7 @@
 #include "../../Core/Logger.h"
 #include "../../Scene/Scene.h"
 #include "../../Scene/SceneSerializer.h"
+#include "../../Scene/PrefabSerializer.h"
 
 #include "../Fonts/IconsFontAwesome6.h"
 
@@ -77,14 +78,15 @@ void Editor::RenderContentBrowser(
     namespace fs = std::filesystem;
 
     ImGui::Begin(
-        "Content Browser"
+        "Assets"
     );
 
     fs::path currentPath =
         m_ContentBrowserPath;
 
-    const fs::path assetsRoot =
-        fs::current_path() / "Assets";
+    const fs::path assetsRoot = m_AssetRoot.empty()
+        ? fs::current_path() / "Assets"
+        : m_AssetRoot;
 
     std::error_code error;
 
@@ -193,6 +195,21 @@ void Editor::RenderContentBrowser(
             '\0';
     }
 
+    ImGui::Separator();
+
+    int folderCount = 0;
+    int assetCount = 0;
+    {
+        std::error_code countError;
+        for (const fs::directory_entry& entry : fs::directory_iterator(currentPath, countError))
+        {
+            if (countError) break;
+            if (entry.is_directory()) ++folderCount; else ++assetCount;
+        }
+    }
+    ImGui::TextDisabled("%d folders   %d assets", folderCount, assetCount);
+    ImGui::SameLine();
+    ImGui::TextDisabled("   Drag assets into Details to assign them");
     ImGui::Separator();
 
     /*
@@ -304,7 +321,7 @@ void Editor::RenderContentBrowser(
      * Grid.
      */
     const float itemWidth =
-        120.0f;
+        104.0f;
 
     int columnCount =
         static_cast<int>(
@@ -357,6 +374,14 @@ void Editor::RenderContentBrowser(
                 !entry.directory &&
                 extension == ".ui";
 
+            const bool isMesh =
+                !entry.directory &&
+                extension == ".obj";
+
+            const bool isPrefab =
+                !entry.directory &&
+                extension == ".prefab";
+
             ImGui::PushID(
                 entry.path.string().c_str()
             );
@@ -388,10 +413,7 @@ void Editor::RenderContentBrowser(
                     ImGui::ImageButton(
                         "##thumbnail",
                         textureID,
-                        ImVec2(
-                            82.0f,
-                            82.0f
-                        ),
+                        ImVec2(72.0f, 72.0f),
                         ImVec2(
                             0.0f,
                             1.0f
@@ -413,16 +435,36 @@ void Editor::RenderContentBrowser(
 
                     ImGui::Button(
                         ICON_FA_FILE_IMAGE,
-                        ImVec2(
-                            82.0f,
-                            82.0f
-                        )
+                        ImVec2(72.0f, 72.0f)
                     );
 
                     if (iconFont != nullptr)
                     {
                         ImGui::PopFont();
                     }
+                }
+            }
+            else if (isMesh)
+            {
+                std::error_code previewError;
+                const std::string modelPath =
+                    fs::relative(entry.path, fs::current_path(), previewError).generic_string();
+                const unsigned int previewTexture =
+                    previewError ? 0 : renderer.RenderModelPreview(modelPath, 144, 144);
+
+                if (previewTexture != 0)
+                {
+                    ImGui::ImageButton(
+                        "##meshThumbnail",
+                        (ImTextureID)(std::intptr_t)previewTexture,
+                        ImVec2(72.0f, 72.0f),
+                        ImVec2(0.0f, 1.0f),
+                        ImVec2(1.0f, 0.0f)
+                    );
+                }
+                else
+                {
+                    ImGui::Button(ICON_FA_CUBE, ImVec2(72.0f, 72.0f));
                 }
             }
             else
@@ -464,6 +506,11 @@ void Editor::RenderContentBrowser(
                             1.0f
                         );
                 }
+                else if (isMesh || isPrefab)
+                {
+                    icon = ICON_FA_CUBE;
+                    iconColor = isPrefab ? ImVec4(0.35f, 0.9f, 0.55f, 1.0f) : ImVec4(0.35f, 0.78f, 0.95f, 1.0f);
+                }
                 else if (isScript)
                 {
                     icon =
@@ -492,10 +539,7 @@ void Editor::RenderContentBrowser(
 
                 ImGui::Button(
                     icon,
-                    ImVec2(
-                        82.0f,
-                        82.0f
-                    )
+                    ImVec2(72.0f, 72.0f)
                 );
 
                 ImGui::PopStyleColor();
@@ -585,6 +629,18 @@ void Editor::RenderContentBrowser(
                 }
             }
 
+            if (isPrefab &&
+                ImGui::IsItemHovered() &&
+                ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                Entity instance = PrefabSerializer::Instantiate(scene, entry.path.string());
+                if (instance.IsValid())
+                {
+                    m_SelectedEntity = instance;
+                    Logger::Info("Instantiated prefab: " + entry.path.filename().string());
+                }
+            }
+
             /*
              * Open UI asset in the Widget Blueprint editor.
              */
@@ -594,6 +650,13 @@ void Editor::RenderContentBrowser(
             {
                 m_SelectedAssetPath = entry.path.string();
                 m_PendingUIAssetPath = entry.path.string();
+            }
+
+            if (isMesh &&
+                ImGui::IsItemHovered() &&
+                ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                m_MeshPreviewPath = fs::relative(entry.path, fs::current_path(), error).generic_string();
             }
 
             /*
@@ -755,6 +818,11 @@ void Editor::RenderContentBrowser(
                             );
                         }
                     }
+                    else if (isPrefab)
+                    {
+                        Entity instance = PrefabSerializer::Instantiate(scene, entry.path.string());
+                        if (instance.IsValid()) m_SelectedEntity = instance;
+                    }
                     else if (isUI)
                     {
                         m_SelectedAssetPath = entry.path.string();
@@ -904,6 +972,11 @@ void Editor::RenderContentBrowser(
                         "Type: Scene"
                     );
                 }
+                else if (isMesh)
+                {
+                    ImGui::Text("Type: OBJ Mesh");
+                    ImGui::TextDisabled("Double-click to preview");
+                }
                 else if (isScript)
                 {
                     ImGui::Text(
@@ -929,6 +1002,44 @@ void Editor::RenderContentBrowser(
         }
 
         ImGui::EndTable();
+    }
+
+    if (!m_MeshPreviewPath.empty())
+    {
+        ImGui::SetNextWindowSize(ImVec2(520.0f, 590.0f), ImGuiCond_FirstUseEver);
+        bool previewOpen = true;
+        if (ImGui::Begin("Mesh Preview", &previewOpen))
+        {
+            ImGui::TextDisabled("STATIC MESH");
+            ImGui::SameLine();
+            ImGui::Text("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
+            ImGui::Separator();
+
+            const ImVec2 available = ImGui::GetContentRegionAvail();
+            const float side = std::max(180.0f, std::min(available.x, available.y - 70.0f));
+            const unsigned int texture = renderer.RenderModelPreview(
+                m_MeshPreviewPath,
+                (unsigned int)std::max(1.0f, side * 2.0f),
+                (unsigned int)std::max(1.0f, side * 2.0f));
+
+            if (texture != 0)
+            {
+                const float x = std::max(0.0f, (available.x - side) * 0.5f);
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + x);
+                ImGui::Image((ImTextureID)(std::intptr_t)texture, ImVec2(side, side),
+                    ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+            }
+            else
+            {
+                ImGui::TextDisabled("Unable to render this model.");
+            }
+
+            ImGui::Separator();
+            ImGui::TextDisabled("%s", m_MeshPreviewPath.c_str());
+        }
+        ImGui::End();
+        if (!previewOpen)
+            m_MeshPreviewPath.clear();
     }
 
     /*

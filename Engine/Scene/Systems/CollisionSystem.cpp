@@ -646,3 +646,44 @@ void CollisionSystem::Update(
         }
     }
 }
+
+RaycastHit CollisionSystem::Raycast(const Scene& scene, const Vec3& origin, const Vec3& direction, float maxDistance, Entity ignore)
+{
+    RaycastHit best;
+    if (maxDistance <= 0.0f) return best;
+    const Vec3 dir = Normalize(direction);
+    if (Length(dir) <= EPSILON) return best;
+    float bestDistance = maxDistance;
+
+    for (const Entity& entity : scene.GetEntities())
+    {
+        if (!entity.IsValid() || (ignore.IsValid() && entity.GetID() == ignore.GetID())) continue;
+        const ColliderComponent* collider = scene.GetComponent<ColliderComponent>(entity);
+        const TransformComponent* local = scene.GetComponent<TransformComponent>(entity);
+        if (!collider || !collider->enabled || !local) continue;
+
+        TransformComponent worldComponent = *local;
+        worldComponent.transform = scene.GetWorldTransform(entity);
+        const OBB box = CreateOBB(worldComponent, *collider);
+        const Vec3 delta = origin - box.center;
+        const Vec3 localOrigin(Dot(delta,box.axisX),Dot(delta,box.axisY),Dot(delta,box.axisZ));
+        const Vec3 localDir(Dot(dir,box.axisX),Dot(dir,box.axisY),Dot(dir,box.axisZ));
+        const float o[3]={localOrigin.x,localOrigin.y,localOrigin.z};
+        const float d[3]={localDir.x,localDir.y,localDir.z};
+        const float e[3]={box.halfExtents.x,box.halfExtents.y,box.halfExtents.z};
+        float tMin=0.0f,tMax=bestDistance;int hitAxis=-1;float hitSign=0.0f;bool miss=false;
+        for(int axis=0;axis<3;++axis)
+        {
+            if(std::abs(d[axis])<=EPSILON){if(o[axis]<-e[axis]||o[axis]>e[axis]){miss=true;break;}continue;}
+            float t1=(-e[axis]-o[axis])/d[axis],t2=(e[axis]-o[axis])/d[axis];float sign=-1.0f;
+            if(t1>t2){std::swap(t1,t2);sign=1.0f;}
+            if(t1>tMin){tMin=t1;hitAxis=axis;hitSign=sign;}
+            tMax=std::min(tMax,t2);if(tMin>tMax){miss=true;break;}
+        }
+        if(miss||tMin<0.0f||tMin>bestDistance) continue;
+        bestDistance=tMin;best.hit=true;best.entity=entity;best.distance=tMin;best.point=origin+dir*tMin;
+        const Vec3 axes[3]={box.axisX,box.axisY,box.axisZ};
+        best.normal=hitAxis>=0?axes[hitAxis]*hitSign:Vec3(0.0f,1.0f,0.0f);
+    }
+    return best;
+}

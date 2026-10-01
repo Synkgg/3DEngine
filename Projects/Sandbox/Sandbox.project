@@ -1,0 +1,5 @@
+Version 1
+Name "Sandbox"
+AssetDirectory "Assets"
+StartupScene ""
+Settings "ProjectSettings.cfg"

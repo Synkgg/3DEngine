@@ -5,6 +5,8 @@
 
 #include <imgui.h>
 #include <string>
+#include <vector>
+#include <memory>
 
 class Renderer;
 
@@ -17,9 +19,15 @@ public:
     );
 
     bool OpenAsset(UICanvas& canvas, const std::string& path);
+    void SetVisible(bool visible);
+    bool IsVisible() const { return m_Visible; }
+    const std::string& GetAssetPath() const { return m_UIAssetPath; }
+    void Focus() { m_FocusRequested = true; }
 
 private:
     UIWidget* m_SelectedWidget = nullptr;
+    bool m_Visible = false;
+    bool m_FocusRequested = false;
     Renderer* m_Renderer = nullptr;
     std::string m_UIAssetPath = "Assets/UI/Main.ui";
 
@@ -30,18 +38,34 @@ private:
 
     bool m_ShowGrid = true;
     bool m_SnapToGrid = true;
+    bool m_ShowPalette = true;
+    bool m_ShowHierarchy = true;
+    bool m_ShowDetails = true;
+    bool m_ShowWidgetBounds = true;
+    char m_HierarchySearch[96]{};
+    char m_RenameBuffer[256]{};
+    bool m_RenameRequested = false;
+    std::vector<std::string> m_UndoStack;
+    std::vector<std::string> m_RedoStack;
+    static constexpr std::size_t MaxHistory = 64;
 
     float m_GridSize = 10.0f;
     float m_Zoom = 1.0f;
     float m_DesignerScale = 1.0f;
     ImVec2 m_DesignerCanvasPosition = ImVec2(0.0f, 0.0f);
+    ImVec2 m_DesignerPan = ImVec2(0.0f, 0.0f);
+    ImVec2 m_PanStartMouse = ImVec2(0.0f, 0.0f);
+    ImVec2 m_PanStartOffset = ImVec2(0.0f, 0.0f);
+    bool m_Panning = false;
 
     Vec2 m_DragStartMouse;
     Vec2 m_DragStartPosition;
     Vec2 m_DragStartSize;
 
     void DrawHierarchy(
-        UIWidget& widget
+        UICanvas& canvas,
+        UIWidget& widget,
+        const std::string& search = ""
     );
 
     void DrawInspector(
@@ -117,6 +141,15 @@ private:
     );
 
     void RenameSelected();
+
+    void NudgeSelected(float x, float y);
+    void AlignSelected(UICanvas& canvas, int mode);
+    void PushHistory(UICanvas& canvas);
+    void Undo(UICanvas& canvas);
+    void Redo(UICanvas& canvas);
+    std::string CaptureCanvas(UICanvas& canvas) const;
+    bool RestoreCanvas(UICanvas& canvas, const std::string& snapshot);
+    std::unique_ptr<UIWidget> CloneWidget(const UIWidget& source) const;
 
     void ResetView();
 

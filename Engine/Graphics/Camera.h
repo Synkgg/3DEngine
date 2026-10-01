@@ -22,6 +22,12 @@ public:
     void SetRotation(float yaw, float pitch);
     void SetAspectRatio(float aspectRatio);
     void SetMoveSpeed(float speed);
+    void SetNearPlane(float nearPlane);
+    void SetFarPlane(float farPlane);
+    void SetFovDegrees(float degrees);
+    float GetFovDegrees() const;
+    float GetNearPlane() const;
+    float GetFarPlane() const;
 
     void Rotate(float yawDelta, float pitchDelta);
     void Move(float forward, float right, float up, float deltaTime);

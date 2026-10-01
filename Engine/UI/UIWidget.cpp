@@ -101,6 +101,26 @@ UIWidget* UIWidget::AddChild(std::unique_ptr<UIWidget> child)
     return result;
 }
 
+std::unique_ptr<UIWidget> UIWidget::DetachChild(UIWidget* child)
+{
+    if (!child) return nullptr;
+    auto it = std::find_if(m_Children.begin(), m_Children.end(),
+        [child](const std::unique_ptr<UIWidget>& widget) { return widget.get() == child; });
+    if (it == m_Children.end()) return nullptr;
+    std::unique_ptr<UIWidget> detached = std::move(*it);
+    m_Children.erase(it);
+    detached->m_Parent = nullptr;
+    return detached;
+}
+
+bool UIWidget::IsDescendantOf(const UIWidget* widget) const
+{
+    if (!widget) return false;
+    for (const UIWidget* parent = m_Parent; parent; parent = parent->m_Parent)
+        if (parent == widget) return true;
+    return false;
+}
+
 void UIWidget::RemoveChild(UIWidget* child)
 {
     if (!child) return;

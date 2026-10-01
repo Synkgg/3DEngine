@@ -1,6 +1,8 @@
 #include "Application.h"
 #include <SDL3/SDL.h>
 #include <iostream>
+#include <cfloat>
+#include <imgui.h>
 
 #include "../Scene/Entity.h"
 
@@ -10,6 +12,7 @@
 #include "../Scene/Components/LightComponent.h"
 #include "../Scene/Components/ColliderComponent.h"
 #include "../Scene/Components/TextureComponent.h"
+#include "../Scene/Components/MaterialComponent.h"
 
 #include "../Graphics/PrimitiveType.h"
 
@@ -17,8 +20,15 @@
 
 #include "../UI/UITest.h"
 #include "../UI/UISerializer.h"
+#include "../UI/UIText.h"
+#include "../Platform/Windows/FileDialog.h"
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <algorithm>
+#include <cstdio>
 
-Application::Application()
+Application::Application(const std::string& projectPath)
     : m_Running(false),
     m_Window("MyEngine", 1280, 720),
     m_Renderer(),
@@ -26,6 +36,7 @@ Application::Application()
     m_Time(),
     m_ImGuiLayer(),
     m_Editor(),
+    m_ProjectPath(projectPath),
     m_CameraControlActive(false),
     m_RuntimeMouseCaptured(false)
 {
@@ -33,7 +44,7 @@ Application::Application()
 
 bool Application::Initialize()
 {
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
         Logger::Error( std::string("Failed to initialize SDL: ") + SDL_GetError());
 
@@ -67,641 +78,88 @@ bool Application::Initialize()
         return false;
     }
 
+#ifdef ENGINE_DEBUG
     UITest::Run();
+#endif
 
-    if (!UISerializer::Load(
-        m_UICanvas,
-        "Assets/UI/UIEditorTest.ui"))
+    // Runtime UI is opt-in. Scenes/scripts explicitly load the UI they need
+    // through UI.Load(), rather than inheriting whichever asset was open in
+    // the Widget Blueprint editor.
+    m_UICanvas.Clear();
+    m_UIDocuments.clear();
+    m_ActiveUIDocument = -1;
+    m_Audio.Initialize();
+    m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
+    m_Runtime.SetAudioEngine(&m_Audio);
+    m_Runtime.SetProjectManager(&m_ProjectManager);
+    LoadRecentProjects();
+    if (!m_ProjectPath.empty())
     {
-        UITest::SetupCanvas(
-            m_UICanvas
-        );
+        if (!m_ProjectManager.Load(m_ProjectPath)) return false;
+        if (!m_ProjectSettings.Load(m_ProjectManager.GetActiveProject().GetSettingsPath().string()))
+            m_ProjectSettings.Save(m_ProjectManager.GetActiveProject().GetSettingsPath().string());
+    }
+    else
+    {
+        m_ProjectManager.UseLegacyWorkspace();
+        m_ProjectSettings.EnsureLoaded();
+        m_ShowProjectHub = true;
+        const std::string defaultLocation = (std::filesystem::current_path() / "Projects").string();
+        std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", defaultLocation.c_str());
+    }
+    const Project& activeProject = m_ProjectManager.GetActiveProject();
+
+    // Keep asset references portable without changing the process working
+    // directory. Renderer/runtime resolve authored Assets/... paths against
+    // the active project explicitly.
+    m_Renderer.SetProjectRoot(activeProject.rootDirectory);
+    m_Audio.SetProjectRoot(activeProject.rootDirectory);
+    m_Editor.ConfigureProject(activeProject.GetAssetRoot(), activeProject.GetSettingsPath());
+
+    // The editor owns the live project settings instance. Runtime and renderer
+    // must share that same object so edits cannot diverge from Play mode.
+    ProjectSettings& liveProjectSettings = m_Editor.GetProjectSettings();
+    m_Renderer.SetRenderSettings(liveProjectSettings.GetRenderSettings());
+    m_Runtime.SetProjectSettings(&liveProjectSettings);
+
+    if (m_ProjectManager.HasProject() && !activeProject.startupScene.empty())
+    {
+        if (!m_Editor.OpenScene(m_Scene, activeProject.GetStartupScenePath()))
+            return false;
+    }
+
+    if (m_ProjectManager.HasProject())
+    {
+        AddRecentProject(activeProject);
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), (activeProject.name + " - Editor").c_str());
     }
 
     return true;
 }
 
-void Application::Run()
-{
-    m_Running = true;
-
-    SDL_Event event;
-
-    while (m_Running)
-    {
-        m_Time.Update();
-
-        while (SDL_PollEvent(&event))
-        {
-            m_ImGuiLayer.ProcessEvent(&event);
-
-            if (event.type == SDL_EVENT_QUIT)
-            {
-                m_Running = false;
-            }
-
-            if (event.type ==
-                SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
-            {
-                m_Window.UpdateSize();
-
-                int pixelWidth = 0;
-                int pixelHeight = 0;
-
-                SDL_GetWindowSizeInPixels(
-                    m_Window.GetNativeWindow(),
-                    &pixelWidth,
-                    &pixelHeight
-                );
-
-                if (pixelWidth > 0 &&
-                    pixelHeight > 0)
-                {
-                    m_Renderer.ResizeViewport(
-                        pixelWidth,
-                        pixelHeight
-                    );
-                }
-            }
-
-            if (event.type == SDL_EVENT_KEY_DOWN &&
-                event.key.scancode == SDL_SCANCODE_F11)
-            {
-                m_Window.ToggleFullscreen();
-            }
-        }
-
-        m_Input.Update();
-
-        if (m_Runtime.IsRunning() &&
-            m_Input.IsKeyDown(SDL_SCANCODE_ESCAPE))
-        {
-            m_Editor.StopPlaying();
-        }
-
-        m_ImGuiLayer.BeginFrame();
-
-        m_UIEditor.Draw(m_UICanvas, m_Renderer);
-
-        m_Editor.Render(m_Renderer, m_Scene, m_ImGuiLayer.GetIconFont());
-
-        const std::string openedUIAsset = m_Editor.ConsumeOpenedUIAsset();
-        if (!openedUIAsset.empty())
-        {
-            if (!m_UIEditor.OpenAsset(m_UICanvas, openedUIAsset))
-            {
-                Logger::Error(
-                    std::string("Failed to open UI asset: ") +
-                    openedUIAsset);
-            }
-        }
-
-        if (m_Editor.IsPlaying() &&
-            !m_Runtime.IsRunning())
-        {
-            StartRuntime();
-        }
-        else if (!m_Editor.IsPlaying() &&
-            m_Runtime.IsRunning())
-        {
-            StopRuntime();
-        }
-
-        if (!m_Runtime.IsRunning())
-        {
-            bool rightMouseDown =
-                m_Input.IsMouseButtonDown(
-                    SDL_BUTTON_RIGHT
-                );
-
-            bool captureStarted = false;
-
-            if (!m_CameraControlActive)
-            {
-                if (m_Editor.IsViewportHovered() &&
-                    rightMouseDown)
-                {
-                    m_CameraControlActive = true;
-                    captureStarted = true;
-
-                    m_Input.SetMouseCapture(
-                        m_Window.GetNativeWindow(),
-                        true
-                    );
-                }
-            }
-            else if (!rightMouseDown)
-            {
-                m_CameraControlActive = false;
-
-                m_Input.SetMouseCapture(
-                    m_Window.GetNativeWindow(),
-                    false
-                );
-            }
-
-            if (captureStarted)
-            {
-                m_Input.Update();
-            }
-
-            if (m_CameraControlActive)
-            {
-                constexpr float mouseSensitivity =
-                    0.003f;
-
-                m_Renderer.RotateCamera(
-                    m_Input.GetMouseDeltaX() *
-                    mouseSensitivity,
-
-                    -m_Input.GetMouseDeltaY() *
-                    mouseSensitivity
-                );
-
-                float forward = 0.0f;
-                float right = 0.0f;
-                float up = 0.0f;
-
-                if (m_Input.IsKeyDown(
-                    SDL_SCANCODE_W))
-                {
-                    forward += 1.0f;
-                }
-
-                if (m_Input.IsKeyDown(
-                    SDL_SCANCODE_S))
-                {
-                    forward -= 1.0f;
-                }
-
-                if (m_Input.IsKeyDown(
-                    SDL_SCANCODE_D))
-                {
-                    right += 1.0f;
-                }
-
-                if (m_Input.IsKeyDown(
-                    SDL_SCANCODE_A))
-                {
-                    right -= 1.0f;
-                }
-
-                if (m_Input.IsKeyDown(
-                    SDL_SCANCODE_E))
-                {
-                    up += 1.0f;
-                }
-
-                if (m_Input.IsKeyDown(
-                    SDL_SCANCODE_Q))
-                {
-                    up -= 1.0f;
-                }
-
-                m_Renderer.MoveCamera(
-                    forward,
-                    right,
-                    up,
-                    m_Time.GetDeltaTime()
-                );
-            }
-        }
-        else
-        {
-            if (m_CameraControlActive)
-            {
-                m_CameraControlActive = false;
-
-                m_Input.SetMouseCapture(
-                    m_Window.GetNativeWindow(),
-                    false
-                );
-            }
-        }
-
-        if (m_Runtime.IsRunning())
-        {
-            /*
-             * Play-in-editor must leave the OS cursor available.
-             * The new canvas UI uses absolute mouse coordinates for
-             * hit testing, so relative mouse capture would make menus
-             * impossible to click. Camera/player look can opt into
-             * capture later when the game explicitly requests it.
-             */
-            if (m_RuntimeMouseCaptured)
-            {
-                m_Input.SetMouseCapture(
-                    m_Window.GetNativeWindow(),
-                    false
-                );
-
-                m_RuntimeMouseCaptured = false;
-            }
-        }
-        else if (m_RuntimeMouseCaptured)
-        {
-            m_Input.SetMouseCapture(
-                m_Window.GetNativeWindow(),
-                false
-            );
-
-            m_RuntimeMouseCaptured =
-                false;
-        }
-
-        // Update UI input before Lua. UI.WasClicked() consumes the click
-        // during the runtime update, so hit testing must happen first.
-        if (m_Runtime.IsRunning())
-        {
-            UIRenderer& ui = m_Renderer.GetUIRenderer();
-            const Vec2 canvasSize = m_UICanvas.GetSize();
-            const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
-            const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
-
-            ui.SetLogicalSize(canvasSize.x, canvasSize.y);
-            ui.UpdateInput(
-                m_UICanvas,
-                m_Input,
-                gameViewportPosition.x,
-                gameViewportPosition.y,
-                gameViewportSize.x,
-                gameViewportSize.y
-            );
-
-            m_Runtime.Update(
-                m_Scene,
-                m_Renderer,
-                m_Input,
-                m_Time.GetDeltaTime()
-            );
-        }
-
-        if (m_Runtime.IsRunning())
-        {
-            const std::string& prompt =
-                m_Runtime.GetInteractionPrompt();
-
-            if (!prompt.empty())
-            {
-                const ImVec2 viewportPosition =
-                    m_Editor.GetViewportPosition();
-
-                const ImVec2 viewportSize =
-                    m_Editor.GetViewportSize();
-
-                ImDrawList* drawList =
-                    ImGui::GetForegroundDrawList();
-
-                /*
-                 * Exact center of the game viewport.
-                 * This is the same center used by the
-                 * crosshair below.
-                 */
-                const float centerX =
-                    viewportPosition.x +
-                    viewportSize.x * 0.5f;
-
-                const float centerY =
-                    viewportPosition.y +
-                    viewportSize.y * 0.5f;
-
-                /*
-                 * Place the interaction prompt directly
-                 * below the center crosshair.
-                 */
-                const float promptCenterY =
-                    centerY + 40.0f;
-
-                const std::string keyText = "E";
-                const std::string actionText = prompt;
-
-                const float keySize = 32.0f;
-                const float padding = 10.0f;
-                const float spacing = 8.0f;
-
-                const ImVec2 keyTextSize =
-                    ImGui::CalcTextSize(
-                        keyText.c_str()
-                    );
-
-                const ImVec2 actionTextSize =
-                    ImGui::CalcTextSize(
-                        actionText.c_str()
-                    );
-
-                const float totalWidth =
-                    keySize +
-                    spacing +
-                    actionTextSize.x +
-                    padding * 2.0f;
-
-                const float totalHeight =
-                    keySize +
-                    padding * 2.0f;
-
-                const ImVec2 backgroundMin(
-                    centerX - totalWidth * 0.5f,
-
-                    promptCenterY -
-                    totalHeight * 0.5f
-                );
-
-                const ImVec2 backgroundMax(
-                    centerX + totalWidth * 0.5f,
-
-                    promptCenterY +
-                    totalHeight * 0.5f
-                );
-
-                drawList->AddRectFilled(
-                    backgroundMin,
-                    backgroundMax,
-                    IM_COL32(15, 17, 21, 220),
-                    8.0f
-                );
-
-                drawList->AddRect(
-                    backgroundMin,
-                    backgroundMax,
-                    IM_COL32(255, 255, 255, 45),
-                    8.0f,
-                    0,
-                    1.0f
-                );
-
-                const ImVec2 keyMin(
-                    backgroundMin.x + padding,
-                    backgroundMin.y + padding
-                );
-
-                const ImVec2 keyMax(
-                    keyMin.x + keySize,
-                    keyMin.y + keySize
-                );
-
-                drawList->AddRectFilled(
-                    keyMin,
-                    keyMax,
-                    IM_COL32(255, 255, 255, 235),
-                    6.0f
-                );
-
-                const ImVec2 keyTextPosition(
-                    keyMin.x +
-                    (keySize - keyTextSize.x) *
-                    0.5f,
-
-                    keyMin.y +
-                    (keySize - keyTextSize.y) *
-                    0.5f
-                );
-
-                drawList->AddText(
-                    keyTextPosition,
-                    IM_COL32(15, 17, 21, 255),
-                    keyText.c_str()
-                );
-
-                const ImVec2 actionTextPosition(
-                    keyMax.x + spacing,
-
-                    backgroundMin.y +
-                    (totalHeight -
-                        actionTextSize.y) *
-                    0.5f
-                );
-
-                drawList->AddText(
-                    actionTextPosition,
-                    IM_COL32(255, 255, 255, 255),
-                    actionText.c_str()
-                );
-            }
-        }
-
-        if (m_Runtime.IsRunning())
-        {
-            const ImVec2 viewportPosition =
-                m_Editor.GetViewportPosition();
-
-            const ImVec2 viewportSize =
-                m_Editor.GetViewportSize();
-
-            ImDrawList* drawList =
-                ImGui::GetForegroundDrawList();
-
-            const float centerX =
-                viewportPosition.x +
-                viewportSize.x * 0.5f;
-
-            const float centerY =
-                viewportPosition.y +
-                viewportSize.y * 0.5f;
-
-            const float crosshairSize =
-                4.0f;
-
-            drawList->AddCircleFilled(
-                ImVec2(
-                    centerX,
-                    centerY
-                ),
-                crosshairSize,
-                IM_COL32(
-                    255,
-                    255,
-                    255,
-                    220
-                )
-            );
-        }
-
-        UpdateLighting();
-
-        m_Renderer.BeginFrame();
-
-        m_Renderer.DrawGrid();
-
-        for (const Entity& entity : m_Scene.GetEntities())
-        {
-            TransformComponent* transform =
-                m_Scene.GetComponent<TransformComponent>(
-                    entity
-                );
-
-            MeshComponent* mesh =
-                m_Scene.GetComponent<MeshComponent>(
-                    entity
-                );
-
-            ColorComponent* color =
-                m_Scene.GetComponent<ColorComponent>(
-                    entity
-                );
-
-            TextureComponent* textureComponent =
-                m_Scene.GetComponent<TextureComponent>(
-                    entity
-                );
-
-            if (transform != nullptr &&
-                mesh != nullptr)
-            {
-                float red = 1.0f;
-                float green = 1.0f;
-                float blue = 1.0f;
-                float alpha = 1.0f;
-
-                if (color != nullptr)
-                {
-                    red = color->r;
-                    green = color->g;
-                    blue = color->b;
-                    alpha = color->a;
-                }
-
-                Texture2D* texture = nullptr;
-
-                if (textureComponent != nullptr &&
-                    !textureComponent->path.empty())
-                {
-                    texture =
-                        m_Renderer.LoadTexture(
-                            textureComponent->path
-                        );
-                }
-
-                Transform meshTransform =
-                    transform->transform;
-
-                meshTransform.position.x +=
-                    mesh->offset.x;
-
-                meshTransform.position.y +=
-                    mesh->offset.y;
-
-                meshTransform.position.z +=
-                    mesh->offset.z;
-
-                meshTransform.rotation.x +=
-                    mesh->rotation.x;
-
-                meshTransform.rotation.y +=
-                    mesh->rotation.y;
-
-                meshTransform.rotation.z +=
-                    mesh->rotation.z;
-
-                m_Renderer.DrawMesh(
-                    meshTransform,
-                    mesh->primitive,
-                    red,
-                    green,
-                    blue,
-                    alpha,
-                    texture
-                );
-            }
-        }
-
-        Entity selectedEntity =
-            m_Editor.GetSelectedEntity();
-
-        LightComponent* selectedLight = nullptr;
-
-        TransformComponent* selectedTransform = nullptr;
-
-        if (selectedEntity.IsValid())
-        {
-            selectedLight =
-                m_Scene.GetComponent<LightComponent>(
-                    selectedEntity
-                );
-
-            selectedTransform =
-                m_Scene.GetComponent<TransformComponent>(
-                    selectedEntity
-                );
-        }
-
-        if (selectedLight != nullptr &&
-            selectedTransform != nullptr)
-        {
-            m_Renderer.DrawDirectionalLight(
-                selectedTransform->transform.position,
-                selectedLight->direction
-            );
-        }
-
-        if (selectedEntity.IsValid())
-        {
-            ColliderComponent* collider =
-                m_Scene.GetComponent<
-                ColliderComponent
-                >(selectedEntity);
-
-            TransformComponent* transform =
-                m_Scene.GetComponent<
-                TransformComponent
-                >(selectedEntity);
-
-            if (collider != nullptr &&
-                collider->enabled &&
-                transform != nullptr)
-            {
-                const Vec3 scale =
-                    transform->transform.scale;
-
-                m_Renderer.DrawCollider(
-                    transform->transform,
-                    collider->width *
-                    std::abs(scale.x),
-
-                    collider->height *
-                    std::abs(scale.y),
-
-                    collider->depth *
-                    std::abs(scale.z)
-                );
-            }
-        }
-
-        /*
-         * Game UI
-         */
-        if (m_Runtime.IsRunning())
-        {
-            UIRenderer& ui =
-                m_Renderer.GetUIRenderer();
-
-            const Vec2 canvasSize =
-                m_UICanvas.GetSize();
-
-            ui.SetLogicalSize(
-                canvasSize.x,
-                canvasSize.y
-            );
-
-            ui.Begin();
-
-            ui.RenderCanvas(
-                m_UICanvas,
-                &m_Renderer
-            );
-
-            ui.End();
-        }
-
-        m_Renderer.EndScene();
-
-        m_ImGuiLayer.EndFrame();
-
-        m_Renderer.EndFrame();
-    }
-}
 
 void Application::Shutdown()
 {
+    // Runtime owns Lua scripts and network state that can still reference the
+    // UI canvas, renderer, input, and audio systems. Stop it while all of
+    // those dependencies are still alive. Previously the application could
+    // tear down SDL/audio/rendering first and leave runtime/UI pointers alive
+    // until object destruction, causing a shutdown-time read access violation.
+    if (m_Runtime.IsRunning())
+    {
+        m_Editor.StopPlaying();
+        StopRuntime();
+    }
+
+    // UIRenderer keeps a non-owning AudioEngine pointer for button sounds.
+    // Detach it before the audio engine is shut down so no late UI cleanup can
+    // observe a destroyed audio backend.
+    m_Renderer.GetUIRenderer().SetMouseInteractionEnabled(false);
+    m_Renderer.GetUIRenderer().SetAudioEngine(nullptr);
+    m_Renderer.GetUIRenderer().Clear();
+    m_UICanvas.Clear();
+
+    m_Audio.Shutdown();
     m_ImGuiLayer.Shutdown();
     m_Renderer.Shutdown();
     m_Window.Shutdown();
@@ -709,71 +167,426 @@ void Application::Shutdown()
     SDL_Quit();
 }
 
-void Application::StartRuntime()
+
+
+
+
+
+void Application::ReturnToProjectHub()
 {
-    m_Renderer.GetUIRenderer().Clear();
-
-    // The editor and runtime share the same UICanvas. Do not deserialize over
-    // that live widget tree here: the UI editor may still hold a selected
-    // widget pointer into it, which would become dangling and crash on the
-    // next editor frame. UI assets are loaded when editing/opening them;
-    // Play simply starts from the current in-memory canvas.
-
-    m_Runtime.SaveCameraState(m_Renderer);
-
-    m_Runtime.Start(
-        m_Scene,
-        m_Renderer,
-        m_Input,
-        m_UICanvas
-    );
-}
-
-void Application::StopRuntime()
-{
-    m_Renderer.GetUIRenderer().Clear();
-
-    m_Runtime.Stop(
-        m_Scene
-    );
-
-    m_Runtime.RestoreCameraState(
-        m_Renderer
-    );
-}
-
-void Application::UpdateLighting()
-{
-    LightComponent* sceneLight = nullptr;
-
-    for (const Entity& entity :
-        m_Scene.GetEntities())
+    // Leave the active workspace in a predictable state before showing the Hub.
+    if (m_Runtime.IsRunning())
     {
-        sceneLight =
-            m_Scene.GetComponent<LightComponent>(
-                entity
-            );
-
-        if (sceneLight != nullptr)
-        {
-            break;
-        }
+        m_Editor.StopPlaying();
+        StopRuntime();
     }
 
-    if (sceneLight != nullptr)
+    if (m_CameraControlActive || m_RuntimeMouseCaptured)
     {
-        m_Renderer.SetDirectionalLight(
-            sceneLight->direction,
-            sceneLight->color,
-            sceneLight->intensity
-        );
+        m_Input.SetMouseCapture(m_Window.GetNativeWindow(), false);
+        m_CameraControlActive = false;
+        m_RuntimeMouseCaptured = false;
+    }
+
+    m_Renderer.GetUIRenderer().SetMouseInteractionEnabled(false);
+    m_Renderer.GetUIRenderer().Clear();
+    m_UICanvas.Clear();
+    m_UIDocuments.clear();
+    m_ActiveUIDocument = -1;
+
+    // The Hub owns no scene. Drop project entities/resources from the editor
+    // workspace, then use the compatibility workspace until another project
+    // is selected.
+    m_Scene = Scene();
+    m_ProjectManager.UseLegacyWorkspace();
+    m_ProjectPath.clear();
+
+    const Project& workspace = m_ProjectManager.GetActiveProject();
+    m_Renderer.SetProjectRoot(workspace.rootDirectory);
+    m_Audio.SetProjectRoot(workspace.rootDirectory);
+    m_Editor.ConfigureProject(workspace.GetAssetRoot(), workspace.GetSettingsPath());
+
+    ProjectSettings& liveSettings = m_Editor.GetProjectSettings();
+    m_Renderer.SetRenderSettings(liveSettings.GetRenderSettings());
+    m_Runtime.SetProjectSettings(&liveSettings);
+    m_Runtime.SetProjectManager(&m_ProjectManager);
+
+    m_ShowProjectHub = true;
+    m_ProjectHubError.clear();
+    SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Project Hub");
+    Logger::Info("Returned to Project Hub.");
+}
+
+bool Application::ActivateProject(const std::string& descriptorPath)
+{
+    if (!m_ProjectManager.Load(descriptorPath))
+    {
+        m_ProjectHubError = "Could not open that project.";
+        return false;
+    }
+
+    const Project& project = m_ProjectManager.GetActiveProject();
+
+    m_Renderer.SetProjectRoot(project.rootDirectory);
+    m_Audio.SetProjectRoot(project.rootDirectory);
+    m_Editor.ConfigureProject(project.GetAssetRoot(), project.GetSettingsPath());
+    ProjectSettings& liveProjectSettings = m_Editor.GetProjectSettings();
+    m_Renderer.SetRenderSettings(liveProjectSettings.GetRenderSettings());
+    m_Runtime.SetProjectSettings(&liveProjectSettings);
+    m_Runtime.SetProjectManager(&m_ProjectManager);
+
+    if (!project.startupScene.empty() &&
+        !m_Editor.OpenScene(m_Scene, project.GetStartupScenePath()))
+    {
+        m_ProjectHubError = "Project opened, but its startup scene could not be loaded.";
+        return false;
+    }
+
+    m_ProjectPath = project.descriptorPath.string();
+    AddRecentProject(project);
+    m_ShowProjectHub = false;
+    m_ProjectHubError.clear();
+    SDL_SetWindowTitle(m_Window.GetNativeWindow(), (project.name + " - Editor").c_str());
+    return true;
+}
+
+bool Application::CreateProject(const std::string& parentDirectory, const std::string& name)
+{
+    if (name.empty() || parentDirectory.empty())
+    {
+        m_ProjectHubError = "Project name and location are required.";
+        return false;
+    }
+
+    const std::filesystem::path root =
+        (std::filesystem::path(parentDirectory) / name).lexically_normal();
+
+    if (!m_ProjectManager.Create(root.string(), name))
+    {
+        m_ProjectHubError = "Could not create the project workspace.";
+        return false;
+    }
+
+    return ActivateProject(
+        m_ProjectManager.GetActiveProject().descriptorPath.string());
+}
+
+std::string Application::GetHubStatePath() const
+{
+    char* prefPath = SDL_GetPrefPath("3DEngine", "Editor");
+    if (prefPath == nullptr)
+        return (std::filesystem::current_path() / "Saved" / "RecentProjects.txt").string();
+
+    std::filesystem::path path(prefPath);
+    SDL_free(prefPath);
+    return (path / "RecentProjects.txt").string();
+}
+
+void Application::LoadRecentProjects()
+{
+    m_RecentProjects.clear();
+
+    std::ifstream in(GetHubStatePath());
+    if (!in)
+        return;
+
+    std::string name;
+    std::string path;
+    while (in >> std::quoted(name) >> std::quoted(path))
+    {
+        if (!path.empty())
+            m_RecentProjects.push_back({ name, path });
+    }
+}
+
+void Application::SaveRecentProjects() const
+{
+    const std::filesystem::path statePath(GetHubStatePath());
+    std::error_code error;
+    std::filesystem::create_directories(statePath.parent_path(), error);
+    if (error)
+        return;
+
+    std::ofstream out(statePath, std::ios::trunc);
+    if (!out)
+        return;
+
+    for (const RecentProject& recent : m_RecentProjects)
+        out << std::quoted(recent.name) << ' ' << std::quoted(recent.descriptorPath) << '\n';
+}
+
+void Application::AddRecentProject(const Project& project)
+{
+    if (project.descriptorPath.empty())
+        return;
+
+    const std::string path =
+        std::filesystem::absolute(project.descriptorPath).lexically_normal().string();
+
+    m_RecentProjects.erase(
+        std::remove_if(
+            m_RecentProjects.begin(),
+            m_RecentProjects.end(),
+            [&](const RecentProject& recent)
+            {
+                return std::filesystem::path(recent.descriptorPath).lexically_normal() ==
+                       std::filesystem::path(path).lexically_normal();
+            }),
+        m_RecentProjects.end());
+
+    m_RecentProjects.insert(m_RecentProjects.begin(), { project.name, path });
+    if (m_RecentProjects.size() > 12)
+        m_RecentProjects.resize(12);
+
+    SaveRecentProjects();
+}
+
+void Application::RemoveRecentProject(std::size_t index)
+{
+    if (index >= m_RecentProjects.size())
+        return;
+
+    m_RecentProjects.erase(m_RecentProjects.begin() + static_cast<std::ptrdiff_t>(index));
+    SaveRecentProjects();
+}
+
+void Application::RenderProjectHub()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(io.DisplaySize);
+
+    const ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+    // Hub-specific palette. Keep this local so opening a project restores the
+    // editor's normal theme without any global style mutation.
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.055f, 0.060f, 0.070f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.075f, 0.082f, 0.095f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.145f, 0.155f, 0.180f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.115f, 0.125f, 0.145f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.165f, 0.180f, 0.210f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.095f, 0.105f, 0.125f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.060f, 0.066f, 0.078f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.085f, 0.094f, 0.110f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.105f, 0.115f, 0.135f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.145f, 0.160f, 0.190f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.90f, 0.92f, 0.95f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImVec4(0.48f, 0.52f, 0.59f, 1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 9.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));
+
+    ImGui::Begin("Project Hub", nullptr, flags);
+
+    const float sidebarWidth = 238.0f;
+    const float footerHeight = 42.0f;
+
+    // Left rail: identity and primary actions.
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.040f, 0.044f, 0.052f, 1.0f));
+    ImGui::BeginChild("HubSidebar", ImVec2(sidebarWidth, 0), ImGuiChildFlags_None);
+    ImGui::PopStyleColor();
+
+    ImGui::SetCursorPos(ImVec2(24, 28));
+    ImGui::SetWindowFontScale(1.42f);
+    ImGui::TextUnformatted("3D ENGINE");
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::SetCursorPosX(24);
+    ImGui::TextDisabled("PROJECT WORKSPACE");
+
+    ImGui::SetCursorPosY(100);
+    ImGui::SetCursorPosX(16);
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.28f, 0.52f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.34f, 0.62f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.13f, 0.23f, 0.44f, 1.0f));
+    if (ImGui::Button("+  New Project", ImVec2(sidebarWidth - 32.0f, 42.0f)))
+        ImGui::SetKeyboardFocusHere();
+    ImGui::PopStyleColor(3);
+
+    ImGui::SetCursorPosX(16);
+    if (ImGui::Button("Open Project...", ImVec2(sidebarWidth - 32.0f, 42.0f)))
+    {
+        std::string path;
+        if (FileDialog::OpenProject(path))
+            ActivateProject(path);
+    }
+
+    ImGui::SetCursorPosX(16);
+    if (ImGui::Button("Refresh Projects", ImVec2(sidebarWidth - 32.0f, 38.0f)))
+        LoadRecentProjects();
+
+    ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 104.0f);
+    ImGui::SetCursorPosX(24);
+    ImGui::TextDisabled("WORKSPACE");
+    ImGui::SetCursorPosX(16);
+    if (ImGui::Button("Continue Legacy Workspace", ImVec2(sidebarWidth - 32.0f, 38.0f)))
+    {
+        m_ShowProjectHub = false;
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Editor - Legacy Workspace");
+    }
+
+    ImGui::EndChild();
+    ImGui::SameLine(0, 0);
+
+    // Main workspace.
+    ImGui::BeginChild("HubMain", ImVec2(0, 0), ImGuiChildFlags_None);
+    ImGui::SetCursorPos(ImVec2(34, 28));
+    ImGui::SetWindowFontScale(1.62f);
+    ImGui::TextUnformatted("Your Projects");
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::SetCursorPosX(34);
+    ImGui::TextDisabled("Pick up where you left off, or create a clean workspace.");
+
+    const float contentTop = 94.0f;
+    const float padding = 34.0f;
+    const float mainWidth = ImGui::GetWindowWidth();
+    const float createWidth = std::min(360.0f, std::max(300.0f, mainWidth * 0.32f));
+    const float recentWidth = std::max(320.0f, mainWidth - createWidth - padding * 3.0f);
+    const float panelHeight = std::max(320.0f, ImGui::GetWindowHeight() - contentTop - footerHeight - 22.0f);
+
+    // Recent projects panel.
+    ImGui::SetCursorPos(ImVec2(padding, contentTop));
+    ImGui::BeginChild("RecentPanel", ImVec2(recentWidth, panelHeight), ImGuiChildFlags_Borders);
+    ImGui::SetCursorPos(ImVec2(20, 18));
+    ImGui::TextUnformatted("RECENT PROJECTS");
+    ImGui::SameLine();
+    ImGui::TextDisabled("  %d", static_cast<int>(m_RecentProjects.size()));
+    ImGui::SetCursorPosX(20);
+    ImGui::Separator();
+
+    if (m_RecentProjects.empty())
+    {
+        const float centerY = std::max(90.0f, panelHeight * 0.36f);
+        ImGui::SetCursorPosY(centerY);
+        const char* emptyTitle = "No recent projects";
+        const float titleWidth = ImGui::CalcTextSize(emptyTitle).x;
+        ImGui::SetCursorPosX(std::max(20.0f, (recentWidth - titleWidth) * 0.5f));
+        ImGui::TextUnformatted(emptyTitle);
+        const char* emptyText = "Open an existing project or create a new one.";
+        const float textWidth = ImGui::CalcTextSize(emptyText).x;
+        ImGui::SetCursorPosX(std::max(20.0f, (recentWidth - textWidth) * 0.5f));
+        ImGui::TextDisabled("%s", emptyText);
     }
     else
     {
-        m_Renderer.SetDirectionalLight(
-            Vec3(-0.5f, -1.0f, -0.5f),
-            Vec3(1.0f, 1.0f, 1.0f),
-            1.0f
-        );
+        std::size_t removeIndex = static_cast<std::size_t>(-1);
+
+        for (std::size_t i = 0; i < m_RecentProjects.size(); ++i)
+        {
+            const RecentProject& recent = m_RecentProjects[i];
+            const bool exists = std::filesystem::is_regular_file(recent.descriptorPath);
+
+            ImGui::PushID(static_cast<int>(i));
+            ImGui::PushStyleColor(
+                ImGuiCol_ChildBg,
+                exists ? ImVec4(0.090f, 0.098f, 0.114f, 1.0f)
+                       : ImVec4(0.070f, 0.074f, 0.084f, 1.0f));
+            ImGui::BeginChild("ProjectCard", ImVec2(-1, 76), ImGuiChildFlags_Borders);
+            ImGui::PopStyleColor();
+
+            ImGui::SetCursorPos(ImVec2(16, 12));
+            ImGui::SetWindowFontScale(1.08f);
+            ImGui::TextUnformatted(recent.name.c_str());
+            ImGui::SetWindowFontScale(1.0f);
+
+            ImGui::SetCursorPos(ImVec2(16, 40));
+            if (exists)
+                ImGui::TextDisabled("%s", recent.descriptorPath.c_str());
+            else
+                ImGui::TextDisabled("Project file is missing");
+
+            const float actionX = std::max(180.0f, ImGui::GetWindowWidth() - 174.0f);
+            ImGui::SetCursorPos(ImVec2(actionX, 19));
+            ImGui::BeginDisabled(!exists);
+            if (ImGui::Button("Open", ImVec2(72, 34)))
+                ActivateProject(recent.descriptorPath);
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (ImGui::Button("Remove", ImVec2(76, 34)))
+                removeIndex = i;
+
+            ImGui::EndChild();
+            ImGui::PopID();
+        }
+
+        if (removeIndex != static_cast<std::size_t>(-1))
+            RemoveRecentProject(removeIndex);
     }
+    ImGui::EndChild();
+
+    // New project panel.
+    ImGui::SetCursorPos(ImVec2(padding * 2.0f + recentWidth, contentTop));
+    ImGui::BeginChild("CreatePanel", ImVec2(createWidth, panelHeight), ImGuiChildFlags_Borders);
+    ImGui::SetCursorPos(ImVec2(22, 20));
+    ImGui::SetWindowFontScale(1.18f);
+    ImGui::TextUnformatted("Create Project");
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::SetCursorPosX(22);
+    ImGui::TextDisabled("Start with an isolated project workspace.");
+
+    ImGui::SetCursorPos(ImVec2(22, 78));
+    ImGui::TextDisabled("PROJECT NAME");
+    ImGui::SetCursorPosX(22);
+    ImGui::SetNextItemWidth(createWidth - 44.0f);
+    ImGui::InputText("##ProjectName", m_NewProjectName, sizeof(m_NewProjectName));
+
+    ImGui::SetCursorPosX(22);
+    ImGui::TextDisabled("LOCATION");
+    ImGui::SetCursorPosX(22);
+    ImGui::SetNextItemWidth(createWidth - 116.0f);
+    ImGui::InputText("##ProjectLocation", m_NewProjectLocation, sizeof(m_NewProjectLocation));
+    ImGui::SameLine();
+    if (ImGui::Button("Browse", ImVec2(66, 0)))
+    {
+        std::string folder;
+        if (FileDialog::SelectFolder(folder))
+            std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", folder.c_str());
+    }
+
+    const std::filesystem::path preview =
+        (std::filesystem::path(m_NewProjectLocation) / m_NewProjectName).lexically_normal();
+
+    ImGui::SetCursorPosX(22);
+    ImGui::TextDisabled("PROJECT FOLDER");
+    ImGui::SetCursorPosX(22);
+    ImGui::PushTextWrapPos(createWidth - 22.0f);
+    ImGui::TextWrapped("%s", preview.string().c_str());
+    ImGui::PopTextWrapPos();
+
+    ImGui::SetCursorPosY(panelHeight - 72.0f);
+    ImGui::SetCursorPosX(22);
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.28f, 0.52f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.34f, 0.62f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.13f, 0.23f, 0.44f, 1.0f));
+    if (ImGui::Button("Create Project", ImVec2(createWidth - 44.0f, 44.0f)))
+        CreateProject(m_NewProjectLocation, m_NewProjectName);
+    ImGui::PopStyleColor(3);
+
+    ImGui::EndChild();
+
+    // Bottom status strip.
+    ImGui::SetCursorPos(ImVec2(padding, ImGui::GetWindowHeight() - 34.0f));
+    if (!m_ProjectHubError.empty())
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.48f, 0.46f, 1.0f));
+        ImGui::TextUnformatted(m_ProjectHubError.c_str());
+        ImGui::PopStyleColor();
+    }
+    else
+    {
+        ImGui::TextDisabled("Projects keep game assets, settings, scenes, scripts, and UI isolated from the engine.");
+    }
+
+    ImGui::EndChild();
+    ImGui::End();
+
+    ImGui::PopStyleVar(5);
+    ImGui::PopStyleColor(12);
 }
+

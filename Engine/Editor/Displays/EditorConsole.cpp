@@ -3,6 +3,8 @@
 #include "../../Core/Logger.h"
 
 #include <string>
+#include <algorithm>
+#include <cctype>
 
 namespace
 {
@@ -89,6 +91,16 @@ namespace
 void Editor::RenderConsole()
 {
     ImGui::Begin("Console");
+
+    const auto& messages = Logger::GetMessages();
+    int infoCount=0, warningCount=0, errorCount=0, debugCount=0;
+    for (const LogMessage& message : messages)
+    {
+        if (message.level==LogLevel::Info) ++infoCount;
+        else if (message.level==LogLevel::Warning) ++warningCount;
+        else if (message.level==LogLevel::Error) ++errorCount;
+        else if (message.level==LogLevel::Debug) ++debugCount;
+    }
 
     /*
      * Controls
@@ -182,6 +194,11 @@ void Editor::RenderConsole()
     );
 
     ImGui::Separator();
+    ImGui::SetNextItemWidth(260.0f);
+    ImGui::InputTextWithHint("##ConsoleSearch", "Filter console...", m_ConsoleSearchBuffer, sizeof(m_ConsoleSearchBuffer));
+    ImGui::SameLine();
+    ImGui::TextDisabled("Info %d   Warnings %d   Errors %d   Debug %d", infoCount, warningCount, errorCount, debugCount);
+    ImGui::Separator();
 
     /*
      * Console output
@@ -231,6 +248,19 @@ void Editor::RenderConsole()
 
         const std::string logText =
             MakeLogText(message);
+
+        if (m_ConsoleSearchBuffer[0] != '\0')
+        {
+            std::string haystack = logText;
+            std::string needle = m_ConsoleSearchBuffer;
+            std::transform(haystack.begin(), haystack.end(), haystack.begin(), [](unsigned char ch){ return static_cast<char>(std::tolower(ch)); });
+            std::transform(needle.begin(), needle.end(), needle.begin(), [](unsigned char ch){ return static_cast<char>(std::tolower(ch)); });
+            if (haystack.find(needle) == std::string::npos)
+            {
+                ++logIndex;
+                continue;
+            }
+        }
 
         const ImVec4 logColor =
             GetLogColor(message.level);

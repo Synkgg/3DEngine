@@ -10,6 +10,7 @@
 
 #include "../Scene/Entity.h"
 #include "../Graphics/PrimitiveType.h"
+#include "../Core/ProjectSettings.h"
 
 #include "HierarchyFolder.h"
 
@@ -24,10 +25,13 @@ public:
     void Render(
         Renderer& renderer,
         Scene& scene,
-        ImFont* iconFont
+        ImFont* iconFont,
+        bool renderSceneDocument = true
     );
 
     bool IsViewportHovered() const;
+    bool IsGridVisible() const { return m_ShowGrid; }
+    float GetEditorCameraSpeed() const { return m_EditorCameraSpeed; }
 
     ImVec2 GetViewportPosition() const;
     ImVec2 GetViewportSize() const;
@@ -36,8 +40,16 @@ public:
 
     bool IsPlaying() const;
     void StopPlaying();
+    bool ConsumeProjectHubRequest();
+
+    void ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath);
+    bool OpenScene(Scene& scene, const std::filesystem::path& path);
 
     std::string ConsumeOpenedUIAsset();
+    const std::string& GetSceneFilePath() const { return m_SceneFilePath; }
+
+    ProjectSettings& GetProjectSettings() { return m_ProjectSettings; }
+    const ProjectSettings& GetProjectSettings() const { return m_ProjectSettings; }
 
 private:
     Entity CreatePrimitiveEntity(
@@ -47,6 +59,7 @@ private:
     );
 
     void ApplyEditorStyle();
+
 
     void RenderHierarchy(
         Scene& scene,
@@ -59,6 +72,7 @@ private:
     );
 
     void RenderInspector(
+        Renderer& renderer,
         Scene& scene
     );
 
@@ -85,6 +99,7 @@ private:
     bool m_StyleInitialized;
 
     bool m_Playing;
+    bool m_ProjectHubRequested = false;
 
     Entity m_SelectedEntity;
 
@@ -103,8 +118,21 @@ private:
     std::string m_SceneFilePath;
 
     std::string m_ContentBrowserPath;
+    std::filesystem::path m_AssetRoot;
     std::string m_SelectedAssetPath;
     std::string m_PendingUIAssetPath;
+    std::string m_MeshPreviewPath;
+    unsigned int m_MeshPreviewFramebuffer = 0;
+    unsigned int m_MeshPreviewTexture = 0;
+    unsigned int m_MeshPreviewDepth = 0;
+    int m_MeshPreviewWidth = 0;
+    int m_MeshPreviewHeight = 0;
+    bool m_ShowRenderSettings = false;
+    ProjectSettings m_ProjectSettings;
+    char m_HierarchySearchBuffer[128]{};
+    char m_ConsoleSearchBuffer[128]{};
+    float m_EditorCameraSpeed = 5.0f;
+    bool m_ShowGrid = true;
 
     char m_ContentBrowserSearchBuffer[256]{};
 

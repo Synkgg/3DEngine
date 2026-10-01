@@ -11,27 +11,46 @@
 #include "../UI/UICanvas.h"
 
 #include "Time.h"
+#include "ProjectSettings.h"
+#include "ProjectManager.h"
+#include "../Audio/AudioEngine.h"
 
 #include "../Scene/Scene.h"
 
 #include "../Scene/Runtime/Runtime.h"
+#include <vector>
+#include <memory>
 
 
 class Application
 {
 public:
-    Application();
+    explicit Application(const std::string& projectPath = {});
 
     bool Initialize();
     void Run();
     void Shutdown();
 
     void StartRuntime();
+    bool ActivateProject(const std::string& descriptorPath);
+    bool CreateProject(const std::string& parentDirectory, const std::string& name);
+    void RenderProjectHub();
+    void ReturnToProjectHub();
     void StopRuntime();
 
 private:
+    struct RecentProject
+    {
+        std::string name;
+        std::string descriptorPath;
+    };
 
     void UpdateLighting();
+    void LoadRecentProjects();
+    void SaveRecentProjects() const;
+    void AddRecentProject(const Project& project);
+    void RemoveRecentProject(std::size_t index);
+    std::string GetHubStatePath() const;
 
     bool m_Running;
     Window m_Window;
@@ -42,6 +61,16 @@ private:
     Editor m_Editor;
 
     Time m_Time;
+    AudioEngine m_Audio;
+    ProjectManager m_ProjectManager;
+    ProjectSettings m_ProjectSettings;
+
+    std::string m_ProjectPath;
+    bool m_ShowProjectHub = false;
+    char m_NewProjectName[128]{ "New Project" };
+    char m_NewProjectLocation[512]{};
+    std::string m_ProjectHubError;
+    std::vector<RecentProject> m_RecentProjects;
 
     bool m_CameraControlActive;
     bool m_RuntimeMouseCaptured;
@@ -50,5 +79,14 @@ private:
     Runtime m_Runtime;
 
     UICanvas m_UICanvas;
-    UIEditor m_UIEditor;
+
+    struct UIDocument
+    {
+        std::string path;
+        std::unique_ptr<UICanvas> canvas;
+        std::unique_ptr<UIEditor> editor;
+    };
+
+    std::vector<UIDocument> m_UIDocuments;
+    int m_ActiveUIDocument = -1;
 };
