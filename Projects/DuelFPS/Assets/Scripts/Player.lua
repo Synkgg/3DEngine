@@ -1,3 +1,6 @@
+local WeaponSystem = require("Scripts.Weapons.WeaponSystem")
+local Pistol = require("Scripts.Weapons.Pistol")
+
 local walkSpeed, sprintSpeed = 5.0, 8.0
 local sensitivity = 0.01
 local paused, sendTimer, stateBroadcastTimer = false, 0.0, 0.0
@@ -14,15 +17,12 @@ local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
 local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
 
-local fireCooldown = 0.0
-local ammo, reserveAmmo = MAG_SIZE, START_RESERVE
-local reloadTimer, hitmarkerTimer, muzzleTimer, viewKick = 0.0, 0.0, 0.0, 0.0
-local aiming = false
+local hitmarkerTimer, muzzleTimer = 0.0, 0.0
+local weapons = nil
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
 local roundWinner, matchWinner = 0, 0
 local activeIntroTimer = 0.0
-local rifleViewmodel = 0
 local playerCamera = 0
 local practiceMode = false
 local practiceHits = 0
@@ -90,8 +90,8 @@ local function beginWarmup()
     matchState=WARMUP
     stateTimer=WARMUP_DURATION
     activeIntroTimer=0.0
-    ammo,reserveAmmo=MAG_SIZE,START_RESERVE
-    reloadTimer,hitmarkerTimer,muzzleTimer,viewKick=0.0,0.0,0.0,0.0
+    if weapons then weapons:ResetAmmo(false) end
+    hitmarkerTimer,muzzleTimer=0.0,0.0
     spawnRoundPlayers()
     broadcastState()
 end
@@ -125,10 +125,10 @@ local function finishRound(winnerID)
     broadcastState()
 end
 
-local function applyHostShot(shooterID,targetID)
+local function applyHostShot(shooterID,targetID,damage)
     if not Network.IsHost() or matchState~=ROUND_ACTIVE or shooterID==targetID or
        not health[targetID] or health[targetID]<=0 then return end
-    health[targetID]=math.max(0,health[targetID]-SHOT_DAMAGE)
+    health[targetID]=math.max(0,health[targetID]-(damage or 25))
     if health[targetID]==0 then finishRound(shooterID)
     else broadcastState() end
 end
@@ -145,9 +145,9 @@ end
 local function processCombatMessages()
     for _,message in ipairs(Network.ConsumeMessages()) do
         if message.channel==CHANNEL_COMBAT then
-            local target=string.match(message.payload,"^SHOT:(%d+)$")
+            local target,damage=string.match(message.payload,"^SHOT:(%d+):(%d+)$")
             if target and Network.IsHost() then
-                applyHostShot(message.senderID,tonumber(target))
+                applyHostShot(message.senderID,tonumber(target),tonumber(damage))
             else
                 local st,timer,rnd,h1,h2,s1,s2,rw,mw=string.match(
                     message.payload,
@@ -245,63 +245,17 @@ local function updateHostMatch(dt)
     end
 end
 
-local function updateViewmodel(dt)
-    if rifleViewmodel==0 then return end
-    aiming=Input.IsMouseButtonDown(3) and reloadTimer<=0
-    if playerCamera~=0 then Camera.SetEntityFOV(playerCamera,aiming and ADS_FOV or HIP_FOV) end
-
-    viewKick=math.max(0.0,viewKick-dt*7.5)
-    local c,f,r=Camera.GetPosition(),Camera.GetForward(),Camera.GetRight()
-    local side=aiming and 0.055 or 0.34
-    local forwardOffset=aiming and 0.70 or 0.62
-    local down=aiming and -0.18 or -0.24
-    local x=c.x+r.x*side+f.x*(forwardOffset-viewKick)
-    local y=c.y+r.y*side+f.y*(forwardOffset-viewKick)+down+viewKick*1.15
-    local z=c.z+r.z*side+f.z*(forwardOffset-viewKick)
-    Scene.SetPosition(rifleViewmodel,x,y,z)
-    local yaw=math.deg(math.atan(-f.x,-f.z))
-    local horizontal=math.sqrt(f.x*f.x+f.z*f.z)
-    local pitch=math.deg(math.atan(f.y,horizontal))
-    Scene.SetRotation(rifleViewmodel,-pitch-viewKick*55.0,yaw,0.0)
-end
-
-local function startReload()
-    if reloadTimer>0 or ammo>=MAG_SIZE or reserveAmmo<=0 then return end
-    reloadTimer=RELOAD_TIME
-    Audio.PlaySFX("Assets/Audio/UI/click.wav",0.45)
-end
-
-local function finishReload()
-    local needed=MAG_SIZE-ammo
-    local loaded=math.min(needed,reserveAmmo)
-    ammo=ammo+loaded
-    reserveAmmo=reserveAmmo-loaded
-end
-
-local function fire()
-    local localID=Controller.GetLocalID()
-    if not practiceMode and matchState~=ROUND_ACTIVE or fireCooldown>0 or reloadTimer>0 or (health[localID] or 0)<=0 then return end
-    if ammo<=0 then return end
-
-    ammo=ammo-1
-    fireCooldown=FIRE_INTERVAL
+local function handleWeaponShot(result)
+    if not result then return end
     muzzleTimer=0.055
-    viewKick=0.065
-    Audio.PlaySFX("Assets/Audio/Weapons/rifle.wav",0.8)
-
-    viewKick=RECOIL_KICK
-
-    local c,f=Camera.GetPosition(),Camera.GetForward()
-    local range=100.0
-    local hit=Physics.Raycast(c.x,c.y,c.z,f.x,f.y,f.z,range,self.id)
-    if hit.hit then
-        Debug.DrawLine(c.x,c.y,c.z,hit.x,hit.y,hit.z,0.2,1.0,0.2,0.08)
-        local targetID=remotePlayersByEntity[hit.entityID]
+    if result.hit then
+        Debug.DrawLine(result.originX,result.originY,result.originZ,result.x,result.y,result.z,0.2,1.0,0.2,0.08)
+        local targetID=remotePlayersByEntity[result.entityID]
         if practiceMode then
             local target=false
             for _,name in ipairs({"Target_10m","Target_15m","Target_20m","Target_25m_Left","Target_25m_Right","Target_35m"}) do
                 local e=Scene.FindEntity(name)
-                if e:IsValid() and e.id==hit.entityID then target=true break end
+                if e:IsValid() and e.id==result.entityID then target=true break end
             end
             if target then
                 practiceHits=practiceHits+1
@@ -311,13 +265,25 @@ local function fire()
         elseif targetID then
             hitmarkerTimer=0.12
             Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
-            if Network.IsHost() then applyHostShot(localID,targetID)
-            else Network.SendMessage(CHANNEL_COMBAT,"SHOT:"..targetID) end
+            local localID=Controller.GetLocalID()
+            if Network.IsHost() then applyHostShot(localID,targetID,result.damage)
+            else Network.SendMessage(CHANNEL_COMBAT,"SHOT:"..targetID..":"..math.floor(result.damage)) end
         end
     else
-        Debug.DrawLine(c.x,c.y,c.z,c.x+f.x*range,c.y+f.y*range,c.z+f.z*range,1.0,0.2,0.2,0.08)
+        Debug.DrawLine(result.originX,result.originY,result.originZ,
+            result.originX+result.forwardX*result.range,
+            result.originY+result.forwardY*result.range,
+            result.originZ+result.forwardZ*result.range,1.0,0.2,0.2,0.08)
     end
+end
 
+local function consumeWeaponPickup()
+    local request=math.floor(State.GetNumber("duelfps_weapon_pickup",0))
+    if request==0 or not weapons then return end
+    State.SetNumber("duelfps_weapon_pickup",0)
+    if request==1 then
+        weapons:Give("pistol",practiceMode and Pistol.practiceReserve or Pistol.startingReserve)
+    end
 end
 
 local function returnToMenu()
@@ -342,9 +308,11 @@ local function updateHUD()
     UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
     UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
     UI.SetText("ScoreText",scoreLine)
-    UI.SetText("AmmoText",tostring(ammo).." / "..tostring(reserveAmmo))
-    UI.SetVisible("ReloadText",reloadTimer>0)
-    if reloadTimer>0 then UI.SetText("ReloadText","RELOADING  "..string.format("%.1f",reloadTimer)) end
+    local ammo,reserve=weapons and weapons:GetAmmo() or 0,0
+    local weaponDef=weapons and weapons:GetDefinition() or nil
+    UI.SetText("AmmoText",weaponDef and (tostring(ammo).." / "..tostring(reserve)) or "UNARMED")
+    UI.SetVisible("ReloadText",weapons and weapons:IsReloading() or false)
+    if weapons and weapons:IsReloading() then UI.SetText("ReloadText","RELOADING") end
     UI.SetVisible("Hitmarker",hitmarkerTimer>0)
     UI.SetVisible("MuzzleFlash",muzzleTimer>0)
 
@@ -410,16 +378,20 @@ function OnCreate()
     UI.SetVisible("MuzzleFlash",false)
     playerCamera=Scene.FindEntity("FirstPersonCamera").id
     if playerCamera~=0 then Camera.SetActive(playerCamera) end
-    rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
+    weapons=WeaponSystem.new({
+        Scene=Scene, Camera=Camera, Physics=Physics, Audio=Audio, Input=Input
+    })
+    weapons:Register(Pistol)
+    State.SetNumber("duelfps_weapon_pickup",0)
     Input.SetCursorVisible(false)
     if practiceMode then
         possessedControllerID=1
         matchState=ROUND_ACTIVE
         health[1]=MAX_HEALTH
-        ammo,reserveAmmo=MAG_SIZE,999
         UI.SetText("MatchStatus","PRACTICE RANGE // TARGET DRILL")
         UI.SetText("CenterMessage","")
     else
+        weapons:Give("pistol",Pistol.startingReserve)
         updatePossessionAndSpawn()
         if Network.IsHost() then beginMatch() end
     end
@@ -458,18 +430,14 @@ function OnUpdate(dt)
         processCombatMessages()
         updateHostMatch(dt)
     end
-    fireCooldown=math.max(0,fireCooldown-dt)
     activeIntroTimer=math.max(0,activeIntroTimer-dt)
     hitmarkerTimer=math.max(0,hitmarkerTimer-dt)
     muzzleTimer=math.max(0,muzzleTimer-dt)
-    if reloadTimer>0 then
-        reloadTimer=math.max(0,reloadTimer-dt)
-        if reloadTimer==0 then finishReload() end
-    end
 
     if not practiceMode and not Controller.IsLocallyControlled(self.id) then return end
 
-    updateViewmodel(dt)
+    consumeWeaponPickup()
+    if weapons then weapons:Update(dt,playerCamera) end
     updateHUD()
     if practiceMode then
         UI.SetText("MatchStatus","PRACTICE RANGE // HITS "..practiceHits)
@@ -525,6 +493,8 @@ function OnUpdate(dt)
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
-    if Input.IsKeyPressed("R") then startReload() end
-    if Input.IsMouseButtonDown(1) then fire() end
+    if Input.IsKeyPressed("R") and weapons then weapons:Reload() end
+    if Input.IsMouseButtonDown(1) and weapons then
+        handleWeaponShot(weapons:Fire(self.id,playerCamera))
+    end
 end
