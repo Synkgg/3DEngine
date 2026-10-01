@@ -1,7 +1,7 @@
 MyEngineScene
 Entities 2
 Entity 1
-Name Rifle Viewmodel
+Name Pistol Viewmodel
 Position 0 0 0
 Rotation 0 0 0
 Scale 1 1 1
@@ -19,16 +19,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 2
-Name Rifle Model
-Position -0.32 -0.18 0
+Name Pistol Model
+Position -0.16 -0.20 0
 Rotation 0 1.5708 0
-Scale 0.28 0.28 0.28
+Scale 0.25 0.25 0.25
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Weapons/Rifle.obj" 0
-Color 1 0.09 0.10 0.105 1
+Mesh 1 0 "Assets/Models/Weapons/Pistol.obj" 0
+Color 1 0.10 0.11 0.12 1
 Texture 0
-Material 1 0.78 0.28 1 0 "" "" "" "" ""
+Material 1 0.72 0.3 1 0 "" "" "" "" ""
 Interactable 0
 Player 0
 PlayerStart 0

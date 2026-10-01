@@ -225,6 +225,37 @@ function OnCreate()
     end
 end
 
+function OnReturnMatchClicked() setPaused(false) end
+function OnOpenSettingsClicked() settingsOpen=true; UI.SetVisible("PauseMain",false); UI.SetVisible("PauseSettings",true); refreshPauseSettings() end
+function OnSettingsBackClicked() settingsOpen=false; UI.SetVisible("PauseSettings",false); UI.SetVisible("PauseMain",true) end
+function OnPauseAAClicked() aaIndex=aaIndex%#aaSamples+1; savePauseSettings(); refreshPauseSettings() end
+function OnPauseFogClicked() pauseFog=not pauseFog; savePauseSettings(); refreshPauseSettings() end
+function OnPauseBloomClicked() pauseBloom=not pauseBloom; savePauseSettings(); refreshPauseSettings() end
+function OnPauseViewClicked() viewIndex=viewIndex%#viewDistances+1; savePauseSettings(); refreshPauseSettings() end
+function OnShadowClicked() shadowIndex=shadowIndex%#shadowValues+1; applyExtraSettings(); saveExtraSettings(); refreshExtraSettings() end
+function OnFOVClicked() fovIndex=fovIndex%#fovValues+1; applyExtraSettings(); saveExtraSettings(); refreshExtraSettings() end
+function OnSensitivityClicked() sensitivityIndex=sensitivityIndex%#sensitivityValues+1; applyExtraSettings(); saveExtraSettings(); refreshExtraSettings() end
+function OnInvertClicked() invertY=not invertY; applyExtraSettings(); saveExtraSettings(); refreshExtraSettings() end
+function OnSprintModeClicked() sprintToggle=not sprintToggle; applyExtraSettings(); saveExtraSettings(); refreshExtraSettings() end
+function OnCameraBobClicked() cameraBob=not cameraBob; applyExtraSettings(); saveExtraSettings(); refreshExtraSettings() end
+function OnShowFPSClicked() showFPS=not showFPS; applyExtraSettings(); saveExtraSettings(); refreshExtraSettings() end
+function OnPauseMenuClicked() Scene.SetPaused(false); Network.Disconnect(); Scene.Load("Assets/Scenes/MainMenu.scene") end
+
+function OnStartMatchClicked()
+    if Network.IsHost() and matchStarted==0 then
+        resetRound()
+        moveLocalPlayerToBase()
+        Input.SetCursorVisible(false)
+    end
+end
+
+function OnRestartMatchClicked()
+    if Network.IsHost() then
+        resetRound()
+        moveLocalPlayerToBase()
+    end
+end
+
 function OnUpdate(dt)
     if Network.WasKickedByHost() then
         Scene.SetPaused(false)
@@ -245,26 +276,26 @@ function OnUpdate(dt)
     end
 
     if paused then
-        if UI.WasClicked("ReturnMatchButton") then setPaused(false); return end
-        if UI.WasClicked("OpenSettingsButton") then settingsOpen=true;UI.SetVisible("PauseMain",false);UI.SetVisible("PauseSettings",true);refreshPauseSettings() end
-        if UI.WasClicked("SettingsBackButton") then settingsOpen=false;UI.SetVisible("PauseSettings",false);UI.SetVisible("PauseMain",true) end
-        if UI.WasClicked("PauseAAButton") then aaIndex=aaIndex%#aaSamples+1;savePauseSettings();refreshPauseSettings() end
-        if UI.WasClicked("PauseFogButton") then pauseFog=not pauseFog;savePauseSettings();refreshPauseSettings() end
-        if UI.WasClicked("PauseBloomButton") then pauseBloom=not pauseBloom;savePauseSettings();refreshPauseSettings() end
-        if UI.WasClicked("PauseViewButton") then viewIndex=viewIndex%#viewDistances+1;savePauseSettings();refreshPauseSettings() end
-        if UI.WasClicked("ShadowButton") then shadowIndex=shadowIndex%#shadowValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("FOVButton") then fovIndex=fovIndex%#fovValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("SensitivityButton") then sensitivityIndex=sensitivityIndex%#sensitivityValues+1;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("InvertButton") then invertY=not invertY;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("SprintModeButton") then sprintToggle=not sprintToggle;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("CameraBobButton") then cameraBob=not cameraBob;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
+
+
+
+
+
+
+
+
+
+
+
+
+
         local master=UI.GetValue("MasterVolumeSlider"); local sfx=UI.GetValue("SFXVolumeSlider"); local uiVol=UI.GetValue("UIVolumeSlider")
         masterIndex=nearestIndex(volumeValues,master); sfxIndex=nearestIndex(volumeValues,sfx); uiVolumeIndex=nearestIndex(volumeValues,uiVol)
         Audio.SetMasterVolume(master); Audio.SetSFXVolume(sfx); Audio.SetUIVolume(uiVol)
         UI.SetText("MasterVolumeValue","MASTER: "..math.floor(master*100+0.5).."%")
         UI.SetText("SFXVolumeValue","SFX: "..math.floor(sfx*100+0.5).."%"); UI.SetText("UIVolumeValue","UI VOLUME: "..math.floor(uiVol*100+0.5).."%")
-        if UI.WasClicked("ShowFPSButton") then showFPS=not showFPS;applyExtraSettings();saveExtraSettings();refreshExtraSettings() end
-        if UI.WasClicked("PauseMenuButton") then Scene.SetPaused(false);Network.Disconnect();Scene.Load("Assets/Scenes/MainMenu.scene");return end
+
+
         return
     end
 
@@ -277,16 +308,12 @@ function OnUpdate(dt)
 
     -- The host can click START MATCH, or press Enter as a keyboard fallback.
     if Network.IsHost() and matchStarted==0 and
-       (UI.WasClicked("StartMatchButton") or Input.IsKeyPressed("Enter") or Input.IsKeyPressed("Return")) then
+       (Input.IsKeyPressed("Enter") or Input.IsKeyPressed("Return")) then
         resetRound()
         moveLocalPlayerToBase()
         Input.SetCursorVisible(false)
     end
 
-    if Network.IsHost() and UI.WasClicked("RestartMatchButton") then
-        resetRound()
-        moveLocalPlayerToBase()
-    end
 
     if matchStarted==1 and Input.IsKeyPressed("E") and actionCooldown<=0 then
         actionCooldown=0.25

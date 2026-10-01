@@ -9,6 +9,8 @@
 #include "../Entity.h"
 #include "../Components/ScriptComponent.h"
 #include <unordered_map>
+#include <vector>
+#include <functional>
 
 class Scene;
 class Input;
@@ -47,11 +49,14 @@ public:
     bool Update(float deltaTime);
 
     void Interact();
+    bool Invoke(const std::string& functionName);
 
     bool Destroy();
 
 private:
     void BindEngineAPI();
+    struct TweenJob { std::string id; float elapsed=0.0f,duration=0.0f; std::string easing; std::function<void(float)> apply; };
+    void UpdateTweens(float deltaTime);
 
     sol::state* m_Lua = nullptr;
 
@@ -73,4 +78,5 @@ private:
     ProjectSettings* m_ProjectSettings = nullptr;
 
     float m_DeltaTime = 0.0f;
+    std::vector<TweenJob> m_Tweens;
 };

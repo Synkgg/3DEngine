@@ -187,6 +187,12 @@ void UIRenderer::DrawCanvasWidget(
     m_Shader.SetInt("u_UseGradient", widget.HasGradient() ? 1 : 0);
     m_Shader.SetInt("u_GradientDirection", widget.GetGradientDirection() == UIGradientDirection::Horizontal ? 1 : 0);
 
+    const float radius = widget.GetCornerRadius() <= 0.0f
+        ? 0.0f
+        : std::min(widget.GetCornerRadius(), std::min(rect.width, rect.height) * 0.5f);
+    m_Shader.SetVec2("u_RectSize", std::max(0.0f, rect.width), std::max(0.0f, rect.height));
+    m_Shader.SetFloat("u_CornerRadius", radius);
+
     Texture2D* texture = nullptr;
 
     if (renderer != nullptr)
@@ -195,6 +201,12 @@ void UIRenderer::DrawCanvasWidget(
         {
             if (!image->GetTexturePath().empty())
                 texture = renderer->LoadTexture(image->GetTexturePath());
+        }
+        else if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
+        {
+            const std::string& imagePath = button->GetCurrentImage();
+            if (!imagePath.empty())
+                texture = renderer->LoadTexture(imagePath);
         }
     }
 
@@ -250,6 +262,7 @@ void UIRenderer::DrawCanvasText(
 
     const float requestedSize = std::max(1.0f, text.GetFontSize());
     const float scale = requestedSize / FontBakeSize;
+    const float lineHeight = requestedSize * 1.2f;
     Vec4 color = text.GetColor();
     for (const UIWidget* parent = text.GetParent(); parent; parent = parent->GetParent())
     {
@@ -261,39 +274,46 @@ void UIRenderer::DrawCanvasText(
         }
     }
 
-    float penX = rect.x;
-    float penY = rect.y + requestedSize;
-
-    for (unsigned char character : text.GetText())
+    std::vector<std::string> lines;
+    std::string current;
+    for (char ch : text.GetText())
     {
-        if (character == '\n')
+        if (ch == '\n') { lines.push_back(current); current.clear(); }
+        else current += ch;
+    }
+    lines.push_back(current);
+
+    const float blockHeight = requestedSize + (lines.size() > 1 ? (lines.size() - 1) * lineHeight : 0.0f);
+    float top = rect.y;
+    if (text.GetVerticalAlignment() == UITextVerticalAlignment::Center) top += (rect.height - blockHeight) * 0.5f;
+    else if (text.GetVerticalAlignment() == UITextVerticalAlignment::Bottom) top += rect.height - blockHeight;
+
+    for (std::size_t lineIndex = 0; lineIndex < lines.size(); ++lineIndex)
+    {
+        float lineWidth = 0.0f;
+        for (unsigned char character : lines[lineIndex])
         {
-            penX = rect.x;
-            penY += requestedSize * 1.2f;
-            continue;
+            if (character < 32 || character > 126) character = '?';
+            lineWidth += m_FontGlyphs[character - 32].xadvance * scale;
         }
 
-        if (character < 32 || character > 126)
-            character = '?';
+        float penX = rect.x;
+        if (text.GetHorizontalAlignment() == UITextHorizontalAlignment::Center) penX += (rect.width - lineWidth) * 0.5f;
+        else if (text.GetHorizontalAlignment() == UITextHorizontalAlignment::Right) penX += rect.width - lineWidth;
+        float penY = top + requestedSize + lineIndex * lineHeight;
 
-        const FontGlyph& glyph = m_FontGlyphs[character - 32];
-        const float width = (glyph.x1 - glyph.x0) * scale;
-        const float height = (glyph.y1 - glyph.y0) * scale;
-
-        if (width > 0.0f && height > 0.0f)
+        for (unsigned char character : lines[lineIndex])
         {
-            DrawFontGlyph(
-                penX + glyph.xoff * scale,
-                penY + glyph.yoff * scale,
-                width, height,
-                glyph.x0 / FontAtlasWidth,
-                glyph.y0 / FontAtlasHeight,
-                glyph.x1 / FontAtlasWidth,
-                glyph.y1 / FontAtlasHeight,
-                color);
+            if (character < 32 || character > 126) character = '?';
+            const FontGlyph& glyph = m_FontGlyphs[character - 32];
+            const float width = (glyph.x1 - glyph.x0) * scale;
+            const float height = (glyph.y1 - glyph.y0) * scale;
+            if (width > 0.0f && height > 0.0f)
+                DrawFontGlyph(penX + glyph.xoff * scale, penY + glyph.yoff * scale,
+                    width, height, glyph.x0 / FontAtlasWidth, glyph.y0 / FontAtlasHeight,
+                    glyph.x1 / FontAtlasWidth, glyph.y1 / FontAtlasHeight, color);
+            penX += glyph.xadvance * scale;
         }
-
-        penX += glyph.xadvance * scale;
     }
 }
 
@@ -317,6 +337,8 @@ void UIRenderer::DrawFontGlyph(
 
     m_Shader.SetVec4(
         "u_Color", color.x, color.y, color.z, color.w);
+    m_Shader.SetVec2("u_RectSize", width, height);
+    m_Shader.SetFloat("u_CornerRadius", 0.0f);
     m_Shader.SetInt("u_UseGradient", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_FontTexture);

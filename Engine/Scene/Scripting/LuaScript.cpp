@@ -17,6 +17,8 @@
 
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
+#include <cmath>
 
 #include "../Scene.h"
 #include "../PrefabSerializer.h"
@@ -235,11 +237,27 @@ bool LuaScript::Create()
     return true;
 }
 
+void LuaScript::UpdateTweens(float deltaTime)
+{
+    auto ease=[](float t,const std::string& name)
+    {
+        t=std::clamp(t,0.0f,1.0f);
+        if(name=="EaseInQuad") return t*t;
+        if(name=="EaseOutQuad") return 1.0f-(1.0f-t)*(1.0f-t);
+        if(name=="EaseInOutQuad") return t<0.5f ? 2.0f*t*t : 1.0f-std::pow(-2.0f*t+2.0f,2.0f)*0.5f;
+        if(name=="EaseOutCubic") return 1.0f-std::pow(1.0f-t,3.0f);
+        return t;
+    };
+    for(auto& tween:m_Tweens){tween.elapsed+=deltaTime;const float raw=tween.duration<=0.0f?1.0f:std::min(1.0f,tween.elapsed/tween.duration);if(tween.apply)tween.apply(ease(raw,tween.easing));}
+    m_Tweens.erase(std::remove_if(m_Tweens.begin(),m_Tweens.end(),[](const TweenJob& t){return t.duration<=0.0f||t.elapsed>=t.duration;}),m_Tweens.end());
+}
+
 bool LuaScript::Update(
     float deltaTime)
 {
     m_DeltaTime =
         deltaTime;
+    UpdateTweens(deltaTime);
 
     if (!m_OnUpdate.valid())
     {
@@ -289,6 +307,22 @@ void LuaScript::Interact()
             error.what()
         );
     }
+}
+
+bool LuaScript::Invoke(const std::string& functionName)
+{
+    if (functionName.empty() || m_Environment == nullptr) return false;
+    sol::object object = (*m_Environment)[functionName];
+    if (!object.is<sol::protected_function>()) return false;
+    sol::protected_function callback = object.as<sol::protected_function>();
+    sol::protected_function_result result = callback();
+    if (!result.valid())
+    {
+        sol::error error = result;
+        Logger::Error("Lua UI event error in " + functionName + ": " + error.what());
+        return false;
+    }
+    return true;
 }
 
 bool LuaScript::Destroy()

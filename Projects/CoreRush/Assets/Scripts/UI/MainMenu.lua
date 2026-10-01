@@ -58,62 +58,56 @@ function OnCreate()
     UI.SetText("AddressField", joinAddress)
 end
 
-function OnUpdate(deltaTime)
-    if UI.WasClicked("PlayButton") then
-        if Network.IsConnected() then Network.Disconnect() end
-        Input.SetCursorVisible(false)
-        Scene.Load("Assets/Scenes/Graveyard.scene")
-        return
-    end
+function OnPlayClicked()
+    if Network.IsConnected() then Network.Disconnect() end
+    Input.SetCursorVisible(false)
+    Scene.Load("Assets/Scenes/Graveyard.scene")
+end
 
-    -- The native TextInput owns typing, cursor movement, selection and clipboard.
-    -- Mirror its value into the saved multiplayer address while it is focused.
+function OnHostClicked()
+    joinAddress = sanitizeAddress(UI.GetText("AddressField"))
+    saveAddress()
+    if Network.Host(7777) then
+        Input.SetCursorVisible(false)
+        Scene.Load("Assets/Scenes/MultiplayerPlayground.scene")
+    else
+        UI.SetText("NetworkStatus", "HOST FAILED / " .. Network.GetLastError())
+    end
+end
+
+function OnJoinClicked()
+    joinAddress = sanitizeAddress(UI.GetText("AddressField"))
+    saveAddress()
+    if joinAddress == "" then
+        UI.SetText("NetworkStatus", "ENTER A HOST IP ADDRESS")
+    elseif Network.Join(joinAddress, 7777) then
+        saveAddress()
+        Input.SetCursorVisible(false)
+        Scene.Load("Assets/Scenes/MultiplayerPlayground.scene")
+    else
+        UI.SetText("NetworkStatus", "JOIN FAILED / " .. Network.GetLastError())
+    end
+end
+
+function OnSettingsClicked()
+    loadPending()
+    UI.SetText("ApplyLabel", "APPLY & SAVE")
+    UI.SetVisible("MainMenu", false)
+    UI.SetVisible("SettingsPanel", true)
+end
+
+function OnAAToggleClicked() aaIndex = aaIndex % #aaSamples + 1; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
+function OnFogToggleClicked() pendingFog = not pendingFog; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
+function OnBloomToggleClicked() pendingBloom = not pendingBloom; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
+function OnViewToggleClicked() viewIndex = viewIndex % #viewDistances + 1; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
+function OnApplyClicked() applyPending() end
+function OnBackClicked() loadPending(); UI.SetVisible("SettingsPanel", false); UI.SetVisible("MainMenu", true) end
+
+function OnUpdate(deltaTime)
+    -- Text input is stateful, so only its live value needs per-frame synchronization.
     if UI.IsFocused("AddressField") then
         local editedAddress = sanitizeAddress(UI.GetText("AddressField"))
-        if editedAddress ~= UI.GetText("AddressField") then
-            UI.SetText("AddressField", editedAddress)
-        end
-        if editedAddress ~= joinAddress then
-            joinAddress = editedAddress
-            saveAddress()
-        end
+        if editedAddress ~= UI.GetText("AddressField") then UI.SetText("AddressField", editedAddress) end
+        if editedAddress ~= joinAddress then joinAddress = editedAddress; saveAddress() end
     end
-
-    if UI.WasClicked("HostButton") then
-        joinAddress = sanitizeAddress(UI.GetText("AddressField"))
-        saveAddress()
-        if Network.Host(7777) then
-            Input.SetCursorVisible(false)
-            Scene.Load("Assets/Scenes/MultiplayerPlayground.scene")
-            return
-        else
-            UI.SetText("NetworkStatus", "HOST FAILED / " .. Network.GetLastError())
-        end
-    end
-
-    if UI.WasClicked("JoinButton") then
-        joinAddress = sanitizeAddress(UI.GetText("AddressField"))
-        saveAddress()
-        if joinAddress == "" then
-            UI.SetText("NetworkStatus", "ENTER A HOST IP ADDRESS")
-        elseif Network.Join(joinAddress, 7777) then
-            saveAddress()
-            Input.SetCursorVisible(false)
-            Scene.Load("Assets/Scenes/MultiplayerPlayground.scene")
-            return
-        else
-            UI.SetText("NetworkStatus", "JOIN FAILED / " .. Network.GetLastError())
-        end
-    end
-    if UI.WasClicked("SettingsButton") then
-        loadPending()
-        UI.SetText("ApplyLabel", "APPLY & SAVE")
-        UI.SetVisible("MainMenu", false); UI.SetVisible("SettingsPanel", true)
-    end
-    if UI.WasClicked("AAToggle") then aaIndex = aaIndex % #aaSamples + 1; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
-    if UI.WasClicked("FogToggle") then pendingFog = not pendingFog; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
-    if UI.WasClicked("BloomToggle") then pendingBloom = not pendingBloom; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
-    if UI.WasClicked("ViewToggle") then viewIndex = viewIndex % #viewDistances + 1; refreshPendingUI(); UI.SetText("ApplyLabel","APPLY & SAVE") end
-    if UI.WasClicked("ApplyButton") then applyPending() end
-    if UI.WasClicked("BackButton") then loadPending(); UI.SetVisible("SettingsPanel", false); UI.SetVisible("MainMenu", true) end
 end

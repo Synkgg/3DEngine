@@ -74,11 +74,25 @@ namespace
         uniform int u_GradientDirection;
         uniform sampler2D u_Texture;
         uniform int u_UseTexture;
+        uniform vec2 u_RectSize;
+        uniform float u_CornerRadius;
 
         out vec4 FragColor;
 
         void main()
         {
+            // UI quads use a flipped V for texture sampling, but rounding only
+            // needs a stable 0..1 local coordinate inside the rectangle.
+            if (u_CornerRadius > 0.001)
+            {
+                vec2 localUV = vec2(v_UV.x, 1.0 - v_UV.y);
+                vec2 p = localUV * u_RectSize;
+                vec2 halfSize = u_RectSize * 0.5;
+                float radius = min(u_CornerRadius, min(halfSize.x, halfSize.y));
+                vec2 q = abs(p - halfSize) - (halfSize - vec2(radius));
+                float sd = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - radius;
+                if (sd > 0.0) discard;
+            }
             float gradientT = u_GradientDirection == 1 ? v_UV.x : v_UV.y;
             vec4 baseColor = u_UseGradient != 0 ? mix(u_Color, u_GradientColor, gradientT) : u_Color;
             if (u_UseTexture != 0)

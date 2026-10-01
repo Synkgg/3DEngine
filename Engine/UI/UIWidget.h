@@ -86,6 +86,8 @@ public:
     const Vec4& GetGradientColor() const { return m_GradientColor; }
     void SetGradientColor(const Vec4& color) { m_GradientColor = color; }
     UIGradientDirection GetGradientDirection() const { return m_GradientDirection; }
+    float GetCornerRadius() const { return m_CornerRadius; }
+    void SetCornerRadius(float radius) { m_CornerRadius = radius < 0.0f ? 0.0f : radius; }
     void SetGradientDirection(UIGradientDirection direction) { m_GradientDirection = direction; }
 
     bool IsVisible() const;
@@ -121,6 +123,7 @@ private:
     bool m_GradientEnabled = false;
     Vec4 m_GradientColor;
     UIGradientDirection m_GradientDirection = UIGradientDirection::Vertical;
+    float m_CornerRadius = 0.0f;
 
     bool m_Visible = true;
     bool m_Enabled = true;

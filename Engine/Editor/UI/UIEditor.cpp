@@ -25,6 +25,7 @@
 #include <functional>
 #include <cctype>
 #include <cstdint>
+#include <cfloat>
 #include <fstream>
 #include <sstream>
 #include <chrono>
@@ -546,6 +547,14 @@ void UIEditor::DrawInspector(
         );
     }
 
+    ImGui::TextDisabled("Shape");
+    float cornerRadius=widget.GetCornerRadius();
+    if(ImGui::DragFloat("Corner Radius (px)",&cornerRadius,0.5f,0.0f,512.0f,"%.1f"))
+        widget.SetCornerRadius(cornerRadius);
+    ImGui::SameLine();
+    if(ImGui::SmallButton("0##CornerRadius")) widget.SetCornerRadius(0.0f);
+    if(ImGui::IsItemHovered()) ImGui::SetTooltip("Reset corner rounding.");
+
     bool gradient = widget.HasGradient();
     if (ImGui::Checkbox("Gradient", &gradient)) widget.SetGradientEnabled(gradient);
     if (gradient)
@@ -589,9 +598,8 @@ void UIEditor::DrawInspector(
         dynamic_cast<UIText*>(
             &widget))
     {
-        ImGui::TextUnformatted(
-            "Text"
-        );
+        ImGui::Spacing();
+        ImGui::SeparatorText("Text");
 
         char textBuffer[1024];
 
@@ -628,6 +636,18 @@ void UIEditor::DrawInspector(
                 fontSize
             );
         }
+
+        ImGui::TextDisabled("Alignment");
+        int horizontal=static_cast<int>(text->GetHorizontalAlignment());
+        const char* horizontalOptions[]={"Left","Center","Right"};
+        ImGui::SetNextItemWidth(-1.0f);
+        if(ImGui::Combo("Horizontal##TextAlignment",&horizontal,horizontalOptions,3))
+            text->SetHorizontalAlignment(static_cast<UITextHorizontalAlignment>(horizontal));
+        int vertical=static_cast<int>(text->GetVerticalAlignment());
+        const char* verticalOptions[]={"Top","Center","Bottom"};
+        ImGui::SetNextItemWidth(-1.0f);
+        if(ImGui::Combo("Vertical##TextAlignment",&vertical,verticalOptions,3))
+            text->SetVerticalAlignment(static_cast<UITextVerticalAlignment>(vertical));
     }
 
     if (UIImage* image =
@@ -759,6 +779,69 @@ void UIEditor::DrawInspector(
         if (ImGui::ColorEdit4("Disabled", &disabledColor.x))
             button->SetDisabledColor(disabledColor);
 
+        ImGui::Spacing();
+        ImGui::TextDisabled("State Brushes");
+        auto editButtonBrush=[&](const char* label,const std::string& current,const std::function<void(const std::string&)>& setter)
+        {
+            const std::string preview=current.empty() ? "None" : std::filesystem::path(current).filename().string();
+            if(ImGui::BeginCombo(label,preview.c_str()))
+            {
+                static char brushSearch[128] = {};
+                ImGui::SetNextItemWidth(-1.0f);
+                ImGui::InputTextWithHint("##ButtonBrushSearch","Search textures...",brushSearch,sizeof(brushSearch));
+                ImGui::Separator();
+                if(ImGui::Selectable("None",current.empty())) { setter(""); ImGui::CloseCurrentPopup(); }
+                std::string brushQuery=brushSearch;
+                std::transform(brushQuery.begin(),brushQuery.end(),brushQuery.begin(),
+                    [](unsigned char c){return static_cast<char>(std::tolower(c));});
+                std::error_code ec; std::filesystem::path assetRoot("Assets");
+                const std::filesystem::path uiPath(m_UIAssetPath);
+                for(std::filesystem::path parent=uiPath.parent_path();!parent.empty();parent=parent.parent_path())
+                {
+                    if(parent.filename()=="Assets"){assetRoot=parent;break;}
+                    if(parent==parent.root_path()) break;
+                }
+                if(std::filesystem::exists(assetRoot,ec))
+                {
+                    for(const auto& entry:std::filesystem::recursive_directory_iterator(assetRoot,ec))
+                    {
+                        if(ec||!entry.is_regular_file()) continue;
+                        std::string ext=entry.path().extension().string();
+                        std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});
+                        if(ext!=".png"&&ext!=".jpg"&&ext!=".jpeg"&&ext!=".bmp"&&ext!=".tga") continue;
+                        const std::filesystem::path rel=std::filesystem::path("Assets")/std::filesystem::relative(entry.path(),assetRoot,ec);
+                        if(ec) continue;
+                        const std::string assetPath=rel.lexically_normal().generic_string();
+                        std::string searchable=assetPath;
+                        std::transform(searchable.begin(),searchable.end(),searchable.begin(),
+                            [](unsigned char c){return static_cast<char>(std::tolower(c));});
+                        if(!brushQuery.empty()&&searchable.find(brushQuery)==std::string::npos) continue;
+                        Texture2D* texture=m_Renderer?m_Renderer->LoadTexture(assetPath):nullptr;
+                        ImGui::PushID((std::string(label)+assetPath).c_str());
+                        if(texture&&texture->IsLoaded()){ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),ImVec2(28,28),ImVec2(0,1),ImVec2(1,0));ImGui::SameLine();}
+                        if(ImGui::Selectable(entry.path().filename().string().c_str(),current==assetPath,ImGuiSelectableFlags_None,ImVec2(0,28)))
+                        { setter(assetPath); ImGui::CloseCurrentPopup(); }
+                        ImGui::PopID();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if(!current.empty()&&m_Renderer)
+            {
+                Texture2D* texture=m_Renderer->LoadTexture(current);
+                if(texture&&texture->IsLoaded())
+                {
+                    ImGui::Indent();
+                    ImGui::Image((ImTextureID)(intptr_t)texture->GetID(),ImVec2(72,40),ImVec2(0,1),ImVec2(1,0));
+                    ImGui::Unindent();
+                }
+            }
+        };
+        editButtonBrush("Normal Image",button->GetNormalImage(),[&](const std::string& v){button->SetNormalImage(v);});
+        editButtonBrush("Hovered Image",button->GetHoveredImage(),[&](const std::string& v){button->SetHoveredImage(v);});
+        editButtonBrush("Pressed Image",button->GetPressedImage(),[&](const std::string& v){button->SetPressedImage(v);});
+        editButtonBrush("Disabled Image",button->GetDisabledImage(),[&](const std::string& v){button->SetDisabledImage(v);});
+
         const std::string clickSoundPath = button->GetClickSoundPath();
         const std::string clickSoundPreview = clickSoundPath.empty()
             ? "None"
@@ -833,6 +916,19 @@ void UIEditor::DrawInspector(
         }
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Select a WAV asset from the current project's Assets folder.");
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Events");
+        ImGui::TextDisabled("On Click");
+        char onClickScript[256] = {};
+        std::snprintf(onClickScript, sizeof(onClickScript), "%s", button->GetOnClickScript().c_str());
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::InputTextWithHint("##OnClickScript", "Assets/Scripts/MainMenu.lua", onClickScript, sizeof(onClickScript))) button->SetOnClickScript(onClickScript);
+        char onClickFunction[128] = {};
+        std::snprintf(onClickFunction, sizeof(onClickFunction), "%s", button->GetOnClickFunction().c_str());
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::InputTextWithHint("##OnClickFunction", "OnPlayClicked", onClickFunction, sizeof(onClickFunction))) button->SetOnClickFunction(onClickFunction);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Called once when this exact button instance is clicked.");
 
         bool textHighlight = button->GetAffectChildText();
         if (ImGui::Checkbox("Highlight Child Text", &textHighlight)) button->SetAffectChildText(textHighlight);
@@ -1417,30 +1513,31 @@ void UIEditor::DrawWidget(
                 : ImGui::GetIO().Fonts->Fonts.front();
             const float previewSize = std::max(1.0f, fontSize);
 
-            // ImDrawList::AddText does not lay out embedded newlines for
-            // our designer preview, so render each saved line explicitly.
-            float lineY = min.y;
-            const float lineHeight = previewSize * 1.2f;
+            std::vector<std::string> lines;
             std::string line;
             const std::string& previewText = text->GetText();
             for (std::size_t i = 0; i <= previewText.size(); ++i)
             {
                 if (i == previewText.size() || previewText[i] == '\n')
                 {
-                    drawList->AddText(
-                        previewFont,
-                        previewSize,
-                        ImVec2(min.x, lineY),
-                        fillColor,
-                        line.c_str()
-                    );
+                    lines.push_back(line);
                     line.clear();
-                    lineY += lineHeight;
                 }
-                else if (previewText[i] != '\r')
-                {
-                    line += previewText[i];
-                }
+                else if (previewText[i] != '\r') line += previewText[i];
+            }
+            const float lineHeight = previewSize * 1.2f;
+            const float blockHeight = previewSize + (lines.size() > 1 ? (lines.size()-1)*lineHeight : 0.0f);
+            float lineY=min.y;
+            if(text->GetVerticalAlignment()==UITextVerticalAlignment::Center) lineY += ((max.y-min.y)-blockHeight)*0.5f;
+            else if(text->GetVerticalAlignment()==UITextVerticalAlignment::Bottom) lineY += (max.y-min.y)-blockHeight;
+            for(const std::string& value:lines)
+            {
+                const ImVec2 measured=previewFont->CalcTextSizeA(previewSize,FLT_MAX,0.0f,value.c_str());
+                float lineX=min.x;
+                if(text->GetHorizontalAlignment()==UITextHorizontalAlignment::Center) lineX += ((max.x-min.x)-measured.x)*0.5f;
+                else if(text->GetHorizontalAlignment()==UITextHorizontalAlignment::Right) lineX += (max.x-min.x)-measured.x;
+                drawList->AddText(previewFont,previewSize,ImVec2(lineX,lineY),fillColor,value.c_str());
+                lineY += lineHeight;
             }
         }
     }
@@ -1453,13 +1550,13 @@ void UIEditor::DrawWidget(
 
         if (texture && texture->IsLoaded())
         {
-            drawList->AddImage(
-                (ImTextureID)(intptr_t)texture->GetID(),
-                min,
-                max,
-                ImVec2(0.0f, 1.0f),
-                ImVec2(1.0f, 0.0f),
-                fillColor);
+            const float previewRadius=std::max(0.0f,widget.GetCornerRadius()*scale);
+            if(previewRadius>0.0f)
+                drawList->AddImageRounded((ImTextureID)(intptr_t)texture->GetID(),min,max,
+                    ImVec2(0.0f,1.0f),ImVec2(1.0f,0.0f),fillColor,previewRadius);
+            else
+                drawList->AddImage((ImTextureID)(intptr_t)texture->GetID(),min,max,
+                    ImVec2(0.0f,1.0f),ImVec2(1.0f,0.0f),fillColor);
         }
         else
         {
@@ -1481,19 +1578,13 @@ void UIEditor::DrawWidget(
                 drawList->AddRectFilledMultiColor(min,max,fillColor,fillColor,endColor,endColor);
         }
         else
-            drawList->AddRectFilled(min,max,fillColor,4.0f);
+        {
+            const float previewRadius=std::max(0.0f,widget.GetCornerRadius()*scale);
+            drawList->AddRectFilled(min,max,fillColor,previewRadius);
+        }
 
-        drawList->AddRect(
-            min,
-            max,
-            IM_COL32(
-                255,
-                255,
-                255,
-                70
-            ),
-            4.0f
-        );
+        const float previewRadius=std::max(0.0f,widget.GetCornerRadius()*scale);
+        drawList->AddRect(min,max,IM_COL32(255,255,255,70),previewRadius);
 
         // Buttons are visual containers. Their widget name is editor metadata,
         // not visible UI text. Add a UIText child when the button needs a label.
@@ -2062,7 +2153,9 @@ std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
     copy->SetAnchors(source.GetAnchorMinimum(),source.GetAnchorMaximum()); copy->SetPivot(source.GetPivot());
     copy->SetColor(source.GetColor()); copy->SetVisible(source.IsVisible()); copy->SetEnabled(source.IsEnabled());
     copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder());
-    if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); }
+    copy->SetCornerRadius(source.GetCornerRadius()); copy->SetGradientEnabled(source.HasGradient());
+    copy->SetGradientColor(source.GetGradientColor()); copy->SetGradientDirection(source.GetGradientDirection());
+    if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); b->SetHorizontalAlignment(a->GetHorizontalAlignment()); b->SetVerticalAlignment(a->GetVerticalAlignment()); }
     if(auto* a=dynamic_cast<const UISlider*>(&source)) if(auto* b=dynamic_cast<UISlider*>(copy.get())) { b->SetValue(a->GetValue()); b->SetFillColor(a->GetFillColor()); b->SetHandleColor(a->GetHandleColor()); }
     if(auto* a=dynamic_cast<const UIImage*>(&source)) if(auto* b=dynamic_cast<UIImage*>(copy.get())) b->SetTexturePath(a->GetTexturePath());
     if(auto* a=dynamic_cast<const UIButton*>(&source)) if(auto* b=dynamic_cast<UIButton*>(copy.get())) {

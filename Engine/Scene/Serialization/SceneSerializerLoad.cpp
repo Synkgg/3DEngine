@@ -19,6 +19,7 @@
 #include "../Components/MaterialComponent.h"
 #include "../Components/ScriptComponent.h"
 #include "../Components/InteractableComponent.h"
+#include "../Components/HierarchyGroupComponent.h"
 
 #include "../../Core/Logger.h"
 
@@ -580,8 +581,19 @@ bool SceneSerializer::Load(
             std::string source;
             prefabLine >> token >> std::quoted(source);
             if (!source.empty()) m_Scene.SetPrefabSource(entity, source);
-            if (!ReadLine(file, line, "Mesh", entityID))
+            if (!ReadLine(file, line, "Mesh or HierarchyGroup", entityID))
                 return false;
+        }
+
+        // Explicit hierarchy grouping is optional for backward compatibility.
+        if (line.rfind("HierarchyGroup ", 0) == 0)
+        {
+            std::istringstream groupLine(line);
+            std::string token;
+            int isGroup = 0;
+            groupLine >> token >> isGroup;
+            if (isGroup != 0) m_Scene.AddComponent<HierarchyGroupComponent>(entity);
+            if (!ReadLine(file, line, "Mesh", entityID)) return false;
         }
 
         /*

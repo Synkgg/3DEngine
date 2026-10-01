@@ -14,6 +14,7 @@ class Scene;
 class Input;
 class Renderer;
 class UICanvas;
+class UIWidget;
 class Runtime;
 class ProjectSettings;
 class ProjectManager;
@@ -50,6 +51,8 @@ private:
     };
 
     void ProcessPendingDestructions();
+    void DispatchUIEvents(UICanvas& uiCanvas);
+    void DispatchButtonEvents(UIWidget& widget);
 
     bool LoadGlobalScript(
         const std::string& filepath
@@ -62,4 +65,5 @@ private:
 
     std::unique_ptr<sol::state> m_Lua;
     Scene* m_Scene = nullptr;
+    UICanvas* m_UICanvas = nullptr;
 };

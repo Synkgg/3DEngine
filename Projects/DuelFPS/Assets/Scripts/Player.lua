@@ -1,3 +1,7 @@
+local WeaponSystem = require("Scripts.Weapons.WeaponSystem")
+local Pistol = require("Scripts.Weapons.Pistol")
+local Rifle = require("Scripts.Weapons.Rifle")
+
 local walkSpeed, sprintSpeed = 5.0, 8.0
 local sensitivity = 0.01
 local paused, sendTimer, stateBroadcastTimer = false, 0.0, 0.0
@@ -5,19 +9,21 @@ local possessedControllerID = 0
 local remotePawns, remotePlayersByEntity, remoteTargets = {}, {}, {}
 local REMOTE_INTERPOLATION_SPEED = 20.0
 
-local MAX_HEALTH, SHOT_DAMAGE = 100, 25
-local FIRE_INTERVAL, ROUNDS_TO_WIN = 0.25, 5
+local MAX_HEALTH = 100
+local ROUNDS_TO_WIN = 5
 local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
 local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
 
-local fireCooldown = 0.0
+local hitmarkerTimer, muzzleTimer = 0.0, 0.0
+local weapons = nil
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
 local roundWinner, matchWinner = 0, 0
 local activeIntroTimer = 0.0
-local rifleViewmodel = 0
 local playerCamera = 0
+local practiceMode = false
+local practiceHits = 0
 
 local function setPaused(value)
     paused=value
@@ -82,6 +88,8 @@ local function beginWarmup()
     matchState=WARMUP
     stateTimer=WARMUP_DURATION
     activeIntroTimer=0.0
+    if weapons then weapons:ResetAmmo(false) end
+    hitmarkerTimer,muzzleTimer=0.0,0.0
     spawnRoundPlayers()
     broadcastState()
 end
@@ -115,10 +123,10 @@ local function finishRound(winnerID)
     broadcastState()
 end
 
-local function applyHostShot(shooterID,targetID)
+local function applyHostShot(shooterID,targetID,damage)
     if not Network.IsHost() or matchState~=ROUND_ACTIVE or shooterID==targetID or
        not health[targetID] or health[targetID]<=0 then return end
-    health[targetID]=math.max(0,health[targetID]-SHOT_DAMAGE)
+    health[targetID]=math.max(0,health[targetID]-(damage or 25))
     if health[targetID]==0 then finishRound(shooterID)
     else broadcastState() end
 end
@@ -135,9 +143,9 @@ end
 local function processCombatMessages()
     for _,message in ipairs(Network.ConsumeMessages()) do
         if message.channel==CHANNEL_COMBAT then
-            local target=string.match(message.payload,"^SHOT:(%d+)$")
+            local target,damage=string.match(message.payload,"^SHOT:(%d+):(%d+)$")
             if target and Network.IsHost() then
-                applyHostShot(message.senderID,tonumber(target))
+                applyHostShot(message.senderID,tonumber(target),tonumber(damage))
             else
                 local st,timer,rnd,h1,h2,s1,s2,rw,mw=string.match(
                     message.payload,
@@ -235,35 +243,46 @@ local function updateHostMatch(dt)
     end
 end
 
-local function updateViewmodel()
-    if rifleViewmodel==0 then return end
-    local c,f,r=Camera.GetPosition(),Camera.GetForward(),Camera.GetRight()
-    local x=c.x+r.x*0.34+f.x*0.62
-    local y=c.y+r.y*0.34+f.y*0.62-0.24
-    local z=c.z+r.z*0.34+f.z*0.62
-    Scene.SetPosition(rifleViewmodel,x,y,z)
-    local yaw=math.deg(math.atan(-f.x,-f.z))
-    local horizontal=math.sqrt(f.x*f.x+f.z*f.z)
-    local pitch=math.deg(math.atan(f.y,horizontal))
-    Scene.SetRotation(rifleViewmodel,-pitch,yaw,0.0)
-end
-
-local function fire()
-    local localID=Controller.GetLocalID()
-    if matchState~=ROUND_ACTIVE or fireCooldown>0 or (health[localID] or 0)<=0 then return end
-    fireCooldown=FIRE_INTERVAL
-    local c,f=Camera.GetPosition(),Camera.GetForward()
-    local range=100.0
-    local hit=Physics.Raycast(c.x,c.y,c.z,f.x,f.y,f.z,range,self.id)
-    if hit.hit then
-        Debug.DrawLine(c.x,c.y,c.z,hit.x,hit.y,hit.z,0.2,1.0,0.2,5.0)
-        local targetID=remotePlayersByEntity[hit.entityID]
-        if targetID then
-            if Network.IsHost() then applyHostShot(localID,targetID)
-            else Network.SendMessage(CHANNEL_COMBAT,"SHOT:"..targetID) end
+local function handleWeaponShot(result)
+    if not result then return end
+    muzzleTimer=0.055
+    if result.hit then
+        Debug.DrawLine(result.originX,result.originY,result.originZ,result.x,result.y,result.z,0.2,1.0,0.2,0.08)
+        local targetID=remotePlayersByEntity[result.entityID]
+        if practiceMode then
+            local target=false
+            for _,name in ipairs({"Target_10m","Target_15m","Target_20m","Target_25m_Left","Target_25m_Right","Target_35m"}) do
+                local e=Scene.FindEntity(name)
+                if e:IsValid() and e.id==result.entityID then target=true break end
+            end
+            if target then
+                practiceHits=practiceHits+1
+                hitmarkerTimer=0.12
+                Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
+            end
+        elseif targetID then
+            hitmarkerTimer=0.12
+            Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
+            local localID=Controller.GetLocalID()
+            if Network.IsHost() then applyHostShot(localID,targetID,result.damage)
+            else Network.SendMessage(CHANNEL_COMBAT,"SHOT:"..targetID..":"..math.floor(result.damage)) end
         end
     else
-        Debug.DrawLine(c.x,c.y,c.z,c.x+f.x*range,c.y+f.y*range,c.z+f.z*range,1.0,0.2,0.2,5.0)
+        Debug.DrawLine(result.originX,result.originY,result.originZ,
+            result.originX+result.forwardX*result.range,
+            result.originY+result.forwardY*result.range,
+            result.originZ+result.forwardZ*result.range,1.0,0.2,0.2,0.08)
+    end
+end
+
+local function consumeWeaponPickup()
+    local request=math.floor(State.GetNumber("duelfps_weapon_pickup",0))
+    if request==0 or not weapons then return end
+    State.SetNumber("duelfps_weapon_pickup",0)
+    if request==1 then
+        weapons:Give("pistol",practiceMode and Pistol.practiceReserve or Pistol.startingReserve)
+    elseif request==2 then
+        weapons:Give("rifle",practiceMode and Rifle.practiceReserve or Rifle.startingReserve)
     end
 end
 
@@ -275,7 +294,7 @@ local function returnToMenu()
 end
 
 local function updateHUD()
-    local localID=Controller.GetLocalID()
+    local localID=practiceMode and 1 or Controller.GetLocalID()
     local opponentID=localID==1 and 2 or 1
     local localHealth=health[localID] or MAX_HEALTH
     local dead=localHealth<=0
@@ -289,6 +308,23 @@ local function updateHUD()
     UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
     UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
     UI.SetText("ScoreText",scoreLine)
+    local ammo,reserve=weapons and weapons:GetAmmo() or 0,0
+    local weaponDef=weapons and weapons:GetDefinition() or nil
+    local equipped=weaponDef and weaponDef.id or ""
+    local hasPistol=weapons and weapons:Has("pistol")
+    local hasRifle=weapons and weapons:Has("rifle")
+    UI.SetText("AmmoLabel",weaponDef and weaponDef.displayName or "UNARMED")
+    UI.SetText("AmmoText",weaponDef and (tostring(ammo).."  /  "..tostring(reserve)) or "--  /  --")
+    UI.SetText("Slot1Text",(equipped=="pistol" and "> " or "").."1  PISTOL")
+    UI.SetText("Slot2Text",(equipped=="rifle" and "> " or "").."2  RIFLE")
+    UI.SetColor("Slot1Plate",equipped=="pistol" and 0.30 or 0.08,equipped=="pistol" and 0.11 or 0.08,equipped=="pistol" and 0.025 or 0.09,0.96)
+    UI.SetColor("Slot2Plate",equipped=="rifle" and 0.30 or 0.08,equipped=="rifle" and 0.11 or 0.08,equipped=="rifle" and 0.025 or 0.09,0.96)
+    UI.SetColor("Slot1Text",hasPistol and 1.0 or 0.35,hasPistol and 0.86 or 0.35,hasPistol and 0.68 or 0.35,1.0)
+    UI.SetColor("Slot2Text",hasRifle and 1.0 or 0.35,hasRifle and 0.86 or 0.35,hasRifle and 0.68 or 0.35,1.0)
+    UI.SetVisible("ReloadText",weapons and weapons:IsReloading() or false)
+    if weapons and weapons:IsReloading() then UI.SetText("ReloadText","RELOADING") end
+    UI.SetVisible("Hitmarker",hitmarkerTimer>0)
+    UI.SetVisible("MuzzleFlash",muzzleTimer>0)
 
     local showWarmup=matchState==WARMUP
     local showRoundResult=matchState==ROUND_END
@@ -296,7 +332,7 @@ local function updateHUD()
     UI.SetVisible("RoundIntro",showWarmup or (matchState==ROUND_ACTIVE and activeIntroTimer>0))
     UI.SetVisible("RoundResult",showRoundResult)
     UI.SetVisible("MatchResult",showMatchResult)
-    UI.SetVisible("DeathOverlay",false)
+    UI.SetVisible("DeathOverlay",dead and (matchState==ROUND_END or matchState==MATCH_END))
     UI.SetVisible("CrosshairH",matchState==ROUND_ACTIVE and not dead)
     UI.SetVisible("CrosshairV",matchState==ROUND_ACTIVE and not dead)
     UI.SetVisible("MatchActions",showMatchResult)
@@ -336,6 +372,7 @@ local function updateHUD()
 end
 
 function OnCreate()
+    practiceMode=Scene.FindEntity("PracticeMode"):IsValid()
     State.SetNumber("mouse_sensitivity",tonumber(Preferences.LoadString("mouse_sensitivity","0.01")) or 0.01)
     State.SetBool("invert_y",Preferences.LoadString("invert_y","0")=="1")
     UI.Load("Assets/UI/Duel.ui")
@@ -346,33 +383,85 @@ function OnCreate()
     UI.SetVisible("RoundResult",false)
     UI.SetVisible("MatchResult",false)
     UI.SetVisible("MatchActions",false)
+    UI.SetVisible("ReloadText",false)
+    UI.SetVisible("Hitmarker",false)
+    UI.SetVisible("MuzzleFlash",false)
     playerCamera=Scene.FindEntity("FirstPersonCamera").id
     if playerCamera~=0 then Camera.SetActive(playerCamera) end
-    rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
+    weapons=WeaponSystem.new({
+        Scene=Scene, Camera=Camera, Physics=Physics, Audio=Audio, Input=Input
+    })
+    weapons:Register(Pistol)
+    weapons:Register(Rifle)
+    State.SetNumber("duelfps_weapon_pickup",0)
     Input.SetCursorVisible(false)
-    updatePossessionAndSpawn()
-    if Network.IsHost() then beginMatch() end
+    if practiceMode then
+        possessedControllerID=1
+        matchState=ROUND_ACTIVE
+        health[1]=MAX_HEALTH
+        UI.SetText("MatchStatus","PRACTICE RANGE // TARGET DRILL")
+        UI.SetText("CenterMessage","")
+    else
+        weapons:Give("pistol",Pistol.startingReserve)
+        updatePossessionAndSpawn()
+        if Network.IsHost() then beginMatch() end
+    end
+end
+
+function OnResumeClicked()
+    if paused then setPaused(false) end
+end
+
+function OnDisconnectClicked()
+    if paused then returnToMenu() end
+end
+
+function OnRematchClicked()
+    if matchState==MATCH_END and Network.IsHost() then
+        Input.SetCursorVisible(false)
+        beginMatch()
+    end
+end
+
+function OnReturnToMenuClicked()
+    if matchState==MATCH_END then returnToMenu() end
 end
 
 function OnUpdate(dt)
-    if not Network.IsConnected() then
+    if not practiceMode and not Network.IsConnected() then
         Input.SetCursorVisible(true)
         Scene.Load("Assets/Scenes/MainMenu.scene")
         return
     end
 
-    updatePossessionAndSpawn()
-    updateNetworking(dt)
-    updateRemoteInterpolation(dt)
-    processCombatMessages()
-    updateHostMatch(dt)
-    fireCooldown=math.max(0,fireCooldown-dt)
+    if not practiceMode then
+        updatePossessionAndSpawn()
+        updateNetworking(dt)
+        updateRemoteInterpolation(dt)
+        processCombatMessages()
+        updateHostMatch(dt)
+    end
     activeIntroTimer=math.max(0,activeIntroTimer-dt)
+    hitmarkerTimer=math.max(0,hitmarkerTimer-dt)
+    muzzleTimer=math.max(0,muzzleTimer-dt)
 
-    if not Controller.IsLocallyControlled(self.id) then return end
+    if not practiceMode and not Controller.IsLocallyControlled(self.id) then return end
 
-    updateViewmodel()
+    consumeWeaponPickup()
+    if weapons then weapons:Update(dt,playerCamera) end
     updateHUD()
+    if practiceMode then
+        UI.SetText("MatchStatus","PRACTICE RANGE // HITS "..practiceHits)
+        UI.SetText("ScoreText","TARGET HITS  "..practiceHits)
+        local prompt=Scene.GetInteractionPrompt()
+        UI.SetText("CenterMessage",prompt~="" and ("[E]  "..string.upper(prompt)) or "")
+        UI.SetVisible("RoundIntro",false)
+        UI.SetVisible("RoundResult",false)
+        UI.SetVisible("MatchResult",false)
+        UI.SetVisible("DeathOverlay",false)
+        UI.SetVisible("CrosshairH",true)
+        UI.SetVisible("CrosshairV",true)
+    end
 
     if Input.IsKeyPressed("Escape") and matchState~=MATCH_END then
         setPaused(not paused)
@@ -382,24 +471,16 @@ function OnUpdate(dt)
 
     if paused then
         CharacterController.Move(0.0,0.0)
-        if UI.WasClicked("ResumeButton") then setPaused(false)
-        elseif UI.WasClicked("DisconnectButton") then returnToMenu() end
         return
     end
 
     if matchState==MATCH_END then
         CharacterController.Move(0.0,0.0)
         Input.SetCursorVisible(true)
-        if UI.WasClicked("RematchButton") and Network.IsHost() then
-            Input.SetCursorVisible(false)
-            beginMatch()
-        elseif UI.WasClicked("ReturnToMenuButton") then
-            returnToMenu()
-        end
         return
     end
 
-    if matchState~=ROUND_ACTIVE or (health[Controller.GetLocalID()] or 0)<=0 then
+    if not practiceMode and (matchState~=ROUND_ACTIVE or (health[Controller.GetLocalID()] or 0)<=0) then
         CharacterController.Move(0.0,0.0)
         return
     end
@@ -425,5 +506,10 @@ function OnUpdate(dt)
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
-    if Input.IsMouseButtonDown(1) then fire() end
+    if Input.IsKeyPressed("1") and weapons then weapons:Equip("pistol") end
+    if Input.IsKeyPressed("2") and weapons then weapons:Equip("rifle") end
+    if Input.IsKeyPressed("R") and weapons then weapons:Reload() end
+    if Input.IsMouseButtonDown(1) and weapons then
+        handleWeaponShot(weapons:Fire(self.id,playerCamera))
+    end
 end
