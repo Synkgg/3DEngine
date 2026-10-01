@@ -310,7 +310,17 @@ local function updateHUD()
     UI.SetText("ScoreText",scoreLine)
     local ammo,reserve=weapons and weapons:GetAmmo() or 0,0
     local weaponDef=weapons and weapons:GetDefinition() or nil
-    UI.SetText("AmmoText",weaponDef and (tostring(ammo).." / "..tostring(reserve)) or "UNARMED")
+    local equipped=weaponDef and weaponDef.id or ""
+    local hasPistol=weapons and weapons:Has("pistol")
+    local hasRifle=weapons and weapons:Has("rifle")
+    UI.SetText("AmmoLabel",weaponDef and weaponDef.displayName or "UNARMED")
+    UI.SetText("AmmoText",weaponDef and (tostring(ammo).."  /  "..tostring(reserve)) or "--  /  --")
+    UI.SetText("Slot1Text",(equipped=="pistol" and "> " or "").."1  PISTOL")
+    UI.SetText("Slot2Text",(equipped=="rifle" and "> " or "").."2  RIFLE")
+    UI.SetColor("Slot1Plate",equipped=="pistol" and 0.30 or 0.08,equipped=="pistol" and 0.11 or 0.08,equipped=="pistol" and 0.025 or 0.09,0.96)
+    UI.SetColor("Slot2Plate",equipped=="rifle" and 0.30 or 0.08,equipped=="rifle" and 0.11 or 0.08,equipped=="rifle" and 0.025 or 0.09,0.96)
+    UI.SetColor("Slot1Text",hasPistol and 1.0 or 0.35,hasPistol and 0.86 or 0.35,hasPistol and 0.68 or 0.35,1.0)
+    UI.SetColor("Slot2Text",hasRifle and 1.0 or 0.35,hasRifle and 0.86 or 0.35,hasRifle and 0.68 or 0.35,1.0)
     UI.SetVisible("ReloadText",weapons and weapons:IsReloading() or false)
     if weapons and weapons:IsReloading() then UI.SetText("ReloadText","RELOADING") end
     UI.SetVisible("Hitmarker",hitmarkerTimer>0)
