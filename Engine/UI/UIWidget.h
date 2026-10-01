@@ -48,7 +48,8 @@ enum class UIWidgetType
     Image,
     Button,
     TextInput,
-    Slider
+    Slider,
+    ProgressBar
 };
 
 class UIWidget
@@ -102,6 +103,9 @@ public:
     int GetZOrder() const;
     void SetZOrder(int zOrder);
 
+    float GetRenderOpacity() const;
+    void SetRenderOpacity(float opacity);
+
     UIWidget* GetParent() const;
     const std::vector<std::unique_ptr<UIWidget>>& GetChildren() const;
 
@@ -129,6 +133,7 @@ private:
     bool m_Enabled = true;
     bool m_HitTestVisible = true;
     int m_ZOrder = 0;
+    float m_RenderOpacity = 1.0f;
 
     UIWidget* m_Parent = nullptr;
     std::vector<std::unique_ptr<UIWidget>> m_Children;

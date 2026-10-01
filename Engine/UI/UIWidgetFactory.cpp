@@ -6,6 +6,7 @@
 #include "UIButton.h"
 #include "UITextInput.h"
 #include "UISlider.h"
+#include "UIProgressBar.h"
 
 std::unique_ptr<UIWidget>
 UIWidgetFactory::Create(UIWidgetType type)
@@ -29,6 +30,9 @@ UIWidgetFactory::Create(UIWidgetType type)
 
     case UIWidgetType::Slider:
         return std::make_unique<UISlider>();
+
+    case UIWidgetType::ProgressBar:
+        return std::make_unique<UIProgressBar>();
     }
 
     return nullptr;

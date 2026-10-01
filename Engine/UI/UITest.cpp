@@ -7,6 +7,7 @@
 #include "UIPanel.h"
 #include "UIText.h"
 #include "UIButton.h"
+#include "UIProgressBar.h"
 
 #include <cmath>
 #include <iostream>
@@ -363,6 +364,34 @@ bool UITest::Run()
                     ++failed;
                 }
             }
+        }
+    }
+
+    // --------------------------------------------------
+    // Test 6: Progress bar + render opacity
+    // --------------------------------------------------
+
+    {
+        std::unique_ptr<UIWidget> widget = UIWidgetFactory::Create(UIWidgetType::ProgressBar);
+        UIProgressBar* progress = dynamic_cast<UIProgressBar*>(widget.get());
+        bool success = progress != nullptr;
+        if (progress)
+        {
+            progress->SetPercent(1.5f);
+            progress->SetRenderOpacity(-0.5f);
+            success = NearlyEqual(progress->GetPercent(), 1.0f) &&
+                NearlyEqual(progress->GetRenderOpacity(), 0.0f);
+        }
+
+        if (success)
+        {
+            std::cout << "[PASS] Progress bar properties\n";
+            ++passed;
+        }
+        else
+        {
+            std::cout << "[FAIL] Progress bar properties\n";
+            ++failed;
         }
     }
 

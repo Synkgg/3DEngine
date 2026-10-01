@@ -4,6 +4,7 @@
 #include "../UIButton.h"
 #include "../UITextInput.h"
 #include "../UISlider.h"
+#include "../UIProgressBar.h"
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
@@ -53,6 +54,17 @@ void UIRenderer::RenderCanvas(
     }
 }
 
+namespace
+{
+    float InheritedOpacity(const UIWidget& widget)
+    {
+        float opacity = 1.0f;
+        for (const UIWidget* current = &widget; current; current = current->GetParent())
+            opacity *= current->GetRenderOpacity();
+        return std::clamp(opacity, 0.0f, 1.0f);
+    }
+}
+
 void UIRenderer::RenderCanvasWidget(
     const UIWidget& widget,
     const UIRect& parentRect,
@@ -69,7 +81,11 @@ void UIRenderer::RenderCanvasWidget(
             parentRect
         );
 
-    if (widget.GetType() == UIWidgetType::Slider)
+    if (widget.GetType() == UIWidgetType::ProgressBar)
+    {
+        if(const UIProgressBar* progress=dynamic_cast<const UIProgressBar*>(&widget)) DrawProgressBar(*progress,rect);
+    }
+    else if (widget.GetType() == UIWidgetType::Slider)
     {
         if(const UISlider* slider=dynamic_cast<const UISlider*>(&widget)) DrawSlider(*slider,rect);
     }
@@ -173,6 +189,7 @@ void UIRenderer::DrawCanvasWidget(
 
     if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
         color = button->GetCurrentColor();
+    color.w *= InheritedOpacity(widget);
 
     m_Shader.SetVec4(
         "u_Color",
@@ -182,7 +199,8 @@ void UIRenderer::DrawCanvasWidget(
         color.w
     );
 
-    const Vec4 gradientColor = widget.GetGradientColor();
+    Vec4 gradientColor = widget.GetGradientColor();
+    gradientColor.w *= InheritedOpacity(widget);
     m_Shader.SetVec4("u_GradientColor", gradientColor.x, gradientColor.y, gradientColor.z, gradientColor.w);
     m_Shader.SetInt("u_UseGradient", widget.HasGradient() ? 1 : 0);
     m_Shader.SetInt("u_GradientDirection", widget.GetGradientDirection() == UIGradientDirection::Horizontal ? 1 : 0);
@@ -233,10 +251,27 @@ void UIRenderer::DrawCanvasWidget(
 void UIRenderer::DrawSlider(const UISlider& slider,const UIRect& rect)
 {
     DrawCanvasWidget(slider,rect,nullptr);
-    UIWidget fill(UIWidgetType::Panel); fill.SetColor(slider.GetFillColor());
+    const float opacity=InheritedOpacity(slider);
+    UIWidget fill(UIWidgetType::Panel); fill.SetColor(slider.GetFillColor()); fill.SetRenderOpacity(opacity);
     DrawCanvasWidget(fill,UIRect{rect.x,rect.y,rect.width*slider.GetValue(),rect.height},nullptr);
-    UIWidget handle(UIWidgetType::Panel); handle.SetColor(slider.GetHandleColor());
+    UIWidget handle(UIWidgetType::Panel); handle.SetColor(slider.GetHandleColor()); handle.SetRenderOpacity(opacity);
     const float w=10.0f; DrawCanvasWidget(handle,UIRect{rect.x+rect.width*slider.GetValue()-w*0.5f,rect.y-3.0f,w,rect.height+6.0f},nullptr);
+}
+
+void UIRenderer::DrawProgressBar(const UIProgressBar& progress,const UIRect& rect)
+{
+    DrawCanvasWidget(progress,rect,nullptr);
+    const float value=std::clamp(progress.GetPercent(),0.0f,1.0f);
+    UIRect fillRect=rect;
+    switch(progress.GetFillDirection())
+    {
+    case UIProgressBarFillDirection::LeftToRight: fillRect.width*=value; break;
+    case UIProgressBarFillDirection::RightToLeft: fillRect.x+=fillRect.width*(1.0f-value); fillRect.width*=value; break;
+    case UIProgressBarFillDirection::TopToBottom: fillRect.height*=value; break;
+    case UIProgressBarFillDirection::BottomToTop: fillRect.y+=fillRect.height*(1.0f-value); fillRect.height*=value; break;
+    }
+    UIWidget fill(UIWidgetType::Panel); fill.SetColor(progress.GetFillColor()); fill.SetCornerRadius(progress.GetCornerRadius()); fill.SetRenderOpacity(InheritedOpacity(progress));
+    DrawCanvasWidget(fill,fillRect,nullptr);
 }
 
 void UIRenderer::DrawTextInput(const UITextInput& input, const UIRect& rect)
@@ -251,6 +286,7 @@ void UIRenderer::DrawTextInput(const UITextInput& input, const UIRect& rect)
     std::string display = input.GetDisplayText();
     if (input.IsFocused()) display += "|";
     text.SetText(display);
+    text.SetRenderOpacity(InheritedOpacity(input));
     DrawCanvasText(text, UIRect{rect.x + 12.0f, rect.y + 8.0f, std::max(0.0f, rect.width - 24.0f), rect.height - 16.0f});
 }
 
@@ -273,6 +309,7 @@ void UIRenderer::DrawCanvasText(
             break;
         }
     }
+    color.w *= InheritedOpacity(text);
 
     std::vector<std::string> lines;
     std::string current;

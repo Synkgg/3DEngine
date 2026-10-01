@@ -5,6 +5,7 @@
 #include "UIText.h"
 #include "UITextInput.h"
 #include "UISlider.h"
+#include "UIProgressBar.h"
 #include "UIWidgetFactory.h"
 
 #include <filesystem>
@@ -62,7 +63,8 @@ namespace
             << color.x << ' ' << color.y << ' ' << color.z << ' ' << color.w << ' '
             << widget.IsVisible() << ' ' << widget.IsEnabled() << ' '
             << widget.IsHitTestVisible() << ' ' << widget.GetZOrder()
-            << ' ' << widget.HasGradient() << ' ' << widget.GetGradientColor().x << ' ' << widget.GetGradientColor().y << ' ' << widget.GetGradientColor().z << ' ' << widget.GetGradientColor().w << ' ' << static_cast<int>(widget.GetGradientDirection()) << ' ' << widget.GetCornerRadius();
+            << ' ' << widget.HasGradient() << ' ' << widget.GetGradientColor().x << ' ' << widget.GetGradientColor().y << ' ' << widget.GetGradientColor().z << ' ' << widget.GetGradientColor().w << ' ' << static_cast<int>(widget.GetGradientDirection()) << ' ' << widget.GetCornerRadius()
+            << ' ' << widget.GetRenderOpacity();
 
         if (const UIText* text = dynamic_cast<const UIText*>(&widget))
             out << ' ' << std::quoted(EncodeText(text->GetText())) << ' ' << text->GetFontSize() << ' ' << static_cast<int>(text->GetHorizontalAlignment()) << ' ' << static_cast<int>(text->GetVerticalAlignment());
@@ -75,6 +77,13 @@ namespace
             out << ' ' << slider->GetValue()
                 << ' ' << fill.x << ' ' << fill.y << ' ' << fill.z << ' ' << fill.w
                 << ' ' << handle.x << ' ' << handle.y << ' ' << handle.z << ' ' << handle.w;
+        }
+        else if (const UIProgressBar* progress = dynamic_cast<const UIProgressBar*>(&widget))
+        {
+            const Vec4 fill=progress->GetFillColor();
+            out << ' ' << progress->GetPercent()
+                << ' ' << fill.x << ' ' << fill.y << ' ' << fill.z << ' ' << fill.w
+                << ' ' << static_cast<int>(progress->GetFillDirection());
         }
         else if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
             out << ' ' << std::quoted(image->GetTexturePath());
@@ -122,7 +131,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 9\n";
+    out << "ENGINE_UI 10\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -143,7 +152,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     in >> magic >> version;
     // Read the old marker for existing assets, but all newly saved UI files use
     // the engine-neutral marker.
-    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 9) return false;
+    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 10) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -178,8 +187,10 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             >> visible >> enabled >> hitTest >> zOrder;
         if(version>=3) row >> gradient >> gradientColor.x >> gradientColor.y >> gradientColor.z >> gradientColor.w >> gradientDirection;
         float cornerRadius=0.0f; if(version>=9) row >> cornerRadius;
+        float renderOpacity=1.0f; if(version>=10) row >> renderOpacity;
 
-        if (!row || typeValue < 0 || typeValue > static_cast<int>(UIWidgetType::Slider))
+        const int maxType = version >= 10 ? static_cast<int>(UIWidgetType::ProgressBar) : static_cast<int>(UIWidgetType::Slider);
+        if (!row || typeValue < 0 || typeValue > maxType)
             return false;
 
         std::unique_ptr<UIWidget> widget =
@@ -198,6 +209,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         widget->SetZOrder(zOrder);
         if(version>=3){widget->SetGradientEnabled(gradient);widget->SetGradientColor(gradientColor);widget->SetGradientDirection(static_cast<UIGradientDirection>(gradientDirection));}
         widget->SetCornerRadius(cornerRadius);
+        widget->SetRenderOpacity(renderOpacity);
 
         if (UIText* text = dynamic_cast<UIText*>(widget.get()))
         {
@@ -233,6 +245,15 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
                 >> handle.x >> handle.y >> handle.z >> handle.w;
             if (!row) return false;
             slider->SetValue(value); slider->SetFillColor(fill); slider->SetHandleColor(handle);
+        }
+        else if (UIProgressBar* progress = dynamic_cast<UIProgressBar*>(widget.get()))
+        {
+            if (version < 10) return false;
+            float percent=0.5f; Vec4 fill; int direction=0;
+            row >> percent >> fill.x >> fill.y >> fill.z >> fill.w >> direction;
+            if (!row || direction < 0 || direction > 3) return false;
+            progress->SetPercent(percent); progress->SetFillColor(fill);
+            progress->SetFillDirection(static_cast<UIProgressBarFillDirection>(direction));
         }
         else if (UIImage* image = dynamic_cast<UIImage*>(widget.get()))
         {

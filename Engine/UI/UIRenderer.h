@@ -14,6 +14,7 @@ class UIText;
 class UIButton;
 class UITextInput;
 class UISlider;
+class UIProgressBar;
 class Renderer;
 class Input;
 class AudioEngine;
@@ -160,6 +161,7 @@ private:
     );
     void DrawTextInput(const UITextInput& input, const UIRect& rect);
     void DrawSlider(const UISlider& slider, const UIRect& rect);
+    void DrawProgressBar(const UIProgressBar& progress, const UIRect& rect);
 
     bool InitializeFontAtlas();
     void DrawFontGlyph(

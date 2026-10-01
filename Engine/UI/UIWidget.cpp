@@ -75,6 +75,9 @@ void UIWidget::SetHitTestVisible(bool enabled) { m_HitTestVisible = enabled; }
 int UIWidget::GetZOrder() const { return m_ZOrder; }
 void UIWidget::SetZOrder(int zOrder) { m_ZOrder = zOrder; }
 
+float UIWidget::GetRenderOpacity() const { return m_RenderOpacity; }
+void UIWidget::SetRenderOpacity(float opacity) { m_RenderOpacity = std::clamp(opacity, 0.0f, 1.0f); }
+
 UIWidget* UIWidget::GetParent() const { return m_Parent; }
 
 const std::vector<std::unique_ptr<UIWidget>>& UIWidget::GetChildren() const
