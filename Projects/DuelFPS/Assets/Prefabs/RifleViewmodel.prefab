@@ -21,7 +21,7 @@ Scripts 0
 Entity 2
 Name Rifle Model
 Position -0.32 -0.18 0
-Rotation 0 1.5708 0
+Rotation 0 1.5708 -0.025
 Scale 0.28 0.28 0.28
 Parent 1
 PrefabSource ""

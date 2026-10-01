@@ -227,16 +227,19 @@ struct SectionBuilder
 
 float ImportedMaterial::Roughness() const
 {
-    // Wavefront Ns is [0,1000]. Convert its specular exponent to a practical
-    // PBR roughness approximation while keeping old matte assets sensible.
-    const float ns=std::max(0.0f,shininess);
-    return std::clamp(std::sqrt(2.0f/(ns+2.0f)),0.04f,1.0f);
+    // Legacy MTL Ns describes specular highlight size, not PBR metalness.
+    // Keep the conversion deliberately broad so old Blender materials retain
+    // their diffuse colour instead of collapsing into chrome-like surfaces.
+    const float ns=std::clamp(shininess,0.0f,1000.0f);
+    return std::clamp(0.92f-0.55f*std::sqrt(ns/1000.0f),0.28f,0.92f);
 }
 
 float ImportedMaterial::Metallic() const
 {
-    const float maxSpec=std::max(specular[0],std::max(specular[1],specular[2]));
-    return std::clamp((maxSpec-0.04f)/0.96f,0.0f,1.0f);
+    // Wavefront Ks is specular reflectance and cannot reliably identify
+    // whether a surface is a metal. Treat legacy OBJ/MTL materials as
+    // dielectric by default; explicit PBR assets/maps can provide metalness.
+    return 0.0f;
 }
 
 std::unique_ptr<ModelAsset> ModelLoader::LoadModel(const std::string& filepath,const ModelImportSettings& settings)
