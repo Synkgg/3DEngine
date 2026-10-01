@@ -290,12 +290,12 @@ void Editor::Render(
         ImGui::EndMainMenuBar();
     }
 
-    // Use the full main viewport for docking.
-    // the Scene viewport, not to a second application-wide toolbar.
-    ImGui::DockSpaceOverViewport();
-
     if (renderSceneDocument)
     {
+        // The scene document owns the application's root dockspace only while
+        // the scene page is active. Asset documents provide their own
+        // workspace/dockspace instead of competing with this one.
+        ImGui::DockSpaceOverViewport();
         RenderHierarchy(
             scene,
             iconFont
