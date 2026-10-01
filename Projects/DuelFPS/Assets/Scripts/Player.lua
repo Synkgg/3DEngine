@@ -24,6 +24,8 @@ local roundWinner, matchWinner = 0, 0
 local activeIntroTimer = 0.0
 local rifleViewmodel = 0
 local playerCamera = 0
+local practiceMode = false
+local practiceHits = 0
 
 local function setPaused(value)
     paused=value
@@ -278,7 +280,7 @@ end
 
 local function fire()
     local localID=Controller.GetLocalID()
-    if matchState~=ROUND_ACTIVE or fireCooldown>0 or reloadTimer>0 or (health[localID] or 0)<=0 then return end
+    if not practiceMode and matchState~=ROUND_ACTIVE or fireCooldown>0 or reloadTimer>0 or (health[localID] or 0)<=0 then return end
     if ammo<=0 then startReload(); return end
 
     ammo=ammo-1
@@ -298,7 +300,18 @@ local function fire()
     if hit.hit then
         Debug.DrawLine(c.x,c.y,c.z,hit.x,hit.y,hit.z,0.2,1.0,0.2,0.08)
         local targetID=remotePlayersByEntity[hit.entityID]
-        if targetID then
+        if practiceMode then
+            local target=false
+            for _,name in ipairs({"Target_10m","Target_15m","Target_20m","Target_25m_Left","Target_25m_Right","Target_35m"}) do
+                local e=Scene.FindEntity(name)
+                if e.valid and e.id==hit.entityID then target=true break end
+            end
+            if target then
+                practiceHits=practiceHits+1
+                hitmarkerTimer=0.12
+                Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
+            end
+        elseif targetID then
             hitmarkerTimer=0.12
             Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
             if Network.IsHost() then applyHostShot(localID,targetID)
@@ -385,6 +398,7 @@ local function updateHUD()
 end
 
 function OnCreate()
+    practiceMode=Scene.FindEntity("PracticeMode").valid
     State.SetNumber("mouse_sensitivity",tonumber(Preferences.LoadString("mouse_sensitivity","0.01")) or 0.01)
     State.SetBool("invert_y",Preferences.LoadString("invert_y","0")=="1")
     UI.Load("Assets/UI/Duel.ui")
@@ -402,8 +416,17 @@ function OnCreate()
     if playerCamera~=0 then Camera.SetActive(playerCamera) end
     rifleViewmodel=Scene.InstantiatePrefab("Assets/Prefabs/RifleViewmodel.prefab",0)
     Input.SetCursorVisible(false)
-    updatePossessionAndSpawn()
-    if Network.IsHost() then beginMatch() end
+    if practiceMode then
+        possessedControllerID=1
+        matchState=ROUND_ACTIVE
+        health[1]=MAX_HEALTH
+        ammo,reserveAmmo=MAG_SIZE,999
+        UI.SetText("MatchStatus","PRACTICE RANGE // TARGET DRILL")
+        UI.SetText("CenterMessage","")
+    else
+        updatePossessionAndSpawn()
+        if Network.IsHost() then beginMatch() end
+    end
 end
 
 function OnResumeClicked()
@@ -426,17 +449,19 @@ function OnReturnToMenuClicked()
 end
 
 function OnUpdate(dt)
-    if not Network.IsConnected() then
+    if not practiceMode and not Network.IsConnected() then
         Input.SetCursorVisible(true)
         Scene.Load("Assets/Scenes/MainMenu.scene")
         return
     end
 
-    updatePossessionAndSpawn()
-    updateNetworking(dt)
-    updateRemoteInterpolation(dt)
-    processCombatMessages()
-    updateHostMatch(dt)
+    if not practiceMode then
+        updatePossessionAndSpawn()
+        updateNetworking(dt)
+        updateRemoteInterpolation(dt)
+        processCombatMessages()
+        updateHostMatch(dt)
+    end
     fireCooldown=math.max(0,fireCooldown-dt)
     activeIntroTimer=math.max(0,activeIntroTimer-dt)
     hitmarkerTimer=math.max(0,hitmarkerTimer-dt)
@@ -446,10 +471,20 @@ function OnUpdate(dt)
         if reloadTimer==0 then finishReload() end
     end
 
-    if not Controller.IsLocallyControlled(self.id) then return end
+    if not practiceMode and not Controller.IsLocallyControlled(self.id) then return end
 
     updateViewmodel(dt)
     updateHUD()
+    if practiceMode then
+        UI.SetText("MatchStatus","PRACTICE RANGE // HITS "..practiceHits)
+        UI.SetText("ScoreText","TARGET HITS  "..practiceHits)
+        UI.SetVisible("RoundIntro",false)
+        UI.SetVisible("RoundResult",false)
+        UI.SetVisible("MatchResult",false)
+        UI.SetVisible("DeathOverlay",false)
+        UI.SetVisible("CrosshairH",true)
+        UI.SetVisible("CrosshairV",true)
+    end
 
     if Input.IsKeyPressed("Escape") and matchState~=MATCH_END then
         setPaused(not paused)
@@ -468,7 +503,7 @@ function OnUpdate(dt)
         return
     end
 
-    if matchState~=ROUND_ACTIVE or (health[Controller.GetLocalID()] or 0)<=0 then
+    if not practiceMode and (matchState~=ROUND_ACTIVE or (health[Controller.GetLocalID()] or 0)<=0) then
         CharacterController.Move(0.0,0.0)
         return
     end
