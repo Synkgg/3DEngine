@@ -1,5 +1,0 @@
-Version 1
-Name "Duel FPS"
-AssetDirectory "Assets"
-StartupScene "Assets/Scenes/MainMenu.scene"
-Settings "ProjectSettings.cfg"
