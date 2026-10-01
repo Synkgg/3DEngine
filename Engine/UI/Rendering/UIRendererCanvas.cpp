@@ -187,8 +187,11 @@ void UIRenderer::DrawCanvasWidget(
     m_Shader.SetInt("u_UseGradient", widget.HasGradient() ? 1 : 0);
     m_Shader.SetInt("u_GradientDirection", widget.GetGradientDirection() == UIGradientDirection::Horizontal ? 1 : 0);
 
-    m_Shader.SetVec2("u_RectSize", rect.width, rect.height);
-    m_Shader.SetFloat("u_CornerRadius", std::min(widget.GetCornerRadius(), std::min(rect.width, rect.height) * 0.5f));
+    const float radius = widget.GetCornerRadius() <= 0.0f
+        ? 0.0f
+        : std::min(widget.GetCornerRadius(), std::min(rect.width, rect.height) * 0.5f);
+    m_Shader.SetVec2("u_RectSize", std::max(0.0f, rect.width), std::max(0.0f, rect.height));
+    m_Shader.SetFloat("u_CornerRadius", radius);
 
     Texture2D* texture = nullptr;
 
