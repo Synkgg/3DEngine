@@ -46,6 +46,16 @@ public:
     void SetNormalTextColor(const Vec4& v){m_NormalTextColor=v;} void SetHoveredTextColor(const Vec4& v){m_HoveredTextColor=v;} void SetPressedTextColor(const Vec4& v){m_PressedTextColor=v;} void SetDisabledTextColor(const Vec4& v){m_DisabledTextColor=v;}
     Vec4 GetCurrentTextColor() const;
 
+    const std::string& GetNormalImage() const { return m_NormalImage; }
+    const std::string& GetHoveredImage() const { return m_HoveredImage; }
+    const std::string& GetPressedImage() const { return m_PressedImage; }
+    const std::string& GetDisabledImage() const { return m_DisabledImage; }
+    void SetNormalImage(const std::string& v) { m_NormalImage=v; }
+    void SetHoveredImage(const std::string& v) { m_HoveredImage=v; }
+    void SetPressedImage(const std::string& v) { m_PressedImage=v; }
+    void SetDisabledImage(const std::string& v) { m_DisabledImage=v; }
+    const std::string& GetCurrentImage() const { if(!IsEnabled()) return m_DisabledImage; if(m_Pressed) return m_PressedImage; if(m_Hovered) return m_HoveredImage; return m_NormalImage; }
+
     const std::string& GetClickSoundPath() const { return m_ClickSoundPath; }
     void SetClickSoundPath(const std::string& path) { m_ClickSoundPath = path; }
 
@@ -63,5 +73,6 @@ private:
     Vec4 m_DisabledColor = Vec4(0.16f, 0.17f, 0.19f, 0.55f);
     bool m_AffectChildText = false;
     std::string m_ClickSoundPath;
+    std::string m_NormalImage, m_HoveredImage, m_PressedImage, m_DisabledImage;
     Vec4 m_NormalTextColor = Vec4(0.8f,0.8f,0.8f,1.0f), m_HoveredTextColor = Vec4(1,1,1,1), m_PressedTextColor = Vec4(1,1,1,1), m_DisabledTextColor = Vec4(0.5f,0.5f,0.5f,0.6f);
 };
