@@ -1,4 +1,4 @@
-VORTEK_UI 7
+VORTEK_UI 8
 1920 1080
 0 0 "DuelHUD" 0 0 1920 1080 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0
 1 0 "TopPlate" 700 28 520 82 0 0 0 0 0 0 0.018 0.018 0.02 0.94 1 1 0 3 1 0.34 0.12 0.025 0.96 1
@@ -34,13 +34,13 @@ VORTEK_UI 7
 1 0 "PausePanel" 660 300 600 430 0 0 0 0 0 0 0.025 0.034 0.042 0.98 1 1 1 51 1 0.08 0.22 0.3 1 0
 2 1 "PauseTitle" 50 48 500 50 0 0 0 0 0 0 0.92 0.96 1 1 1 1 0 52 0 0 0 0 0 0 "DUEL // MENU" 32
 2 1 "PauseHint" 50 112 500 70 0 0 0 0 0 0 0.65 0.72 0.78 1 1 1 0 52 0 0 0 0 0 0 "ONLINE MATCHES KEEP RUNNING WHILE THIS MENU IS OPEN." 15
-2 3 "ResumeButton" 50 210 500 58 0 0 0 0 0 0 0.06 0.2 0.19 1 1 1 1 53 1 0.08 0.42 0.38 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav"
+2 3 "ResumeButton" 50 210 500 58 0 0 0 0 0 0 0.06 0.2 0.19 1 1 1 1 53 1 0.08 0.42 0.38 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav" "Assets/Scripts/Player.lua" "OnResumeClicked"
 3 1 "ResumeLabel" 20 15 460 26 0 0 0 0 0 0 0.94 0.96 0.92 1 1 1 0 54 0 0 0 0 0 0 "RETURN TO MATCH" 18
-2 3 "DisconnectButton" 50 288 500 58 0 0 0 0 0 0 0.16 0.05 0.045 1 1 1 1 53 1 0.42 0.08 0.06 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav"
+2 3 "DisconnectButton" 50 288 500 58 0 0 0 0 0 0 0.16 0.05 0.045 1 1 1 1 53 1 0.42 0.08 0.06 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav" "Assets/Scripts/Player.lua" "OnDisconnectClicked"
 3 1 "DisconnectLabel" 20 15 460 26 0 0 0 0 0 0 0.94 0.9 0.88 1 1 1 0 54 0 0 0 0 0 0 "DISCONNECT" 18
 0 0 "MatchActions" 0 0 1920 1080 0 0 0 0 0 0 0 0 0 0 0 1 1 58 0 0 0 0 0 0
 1 0 "MatchActionsPanel" 650 530 620 190 0 0 0 0 0 0 0.025 0.034 0.042 0.98 1 1 1 59 1 0.34 0.12 0.025 0.96 1
-2 3 "RematchButton" 40 28 540 58 0 0 0 0 0 0 0.18 0.12 0.03 0.96 1 1 1 60 1 0.62 0.38 0.08 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav"
+2 3 "RematchButton" 40 28 540 58 0 0 0 0 0 0 0.18 0.12 0.03 0.96 1 1 1 60 1 0.62 0.38 0.08 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav" "Assets/Scripts/Player.lua" "OnRematchClicked"
 3 1 "RematchLabel" 20 17 500 28 0 0 0 0 0 0 1 0.95 0.8 1 1 1 0 61 0 0 0 0 0 0 "HOST // REMATCH" 20
-2 3 "ReturnToMenuButton" 40 104 540 58 0 0 0 0 0 0 0.16 0.05 0.045 1 1 1 1 60 1 0.42 0.08 0.06 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav"
+2 3 "ReturnToMenuButton" 40 104 540 58 0 0 0 0 0 0 0.16 0.05 0.045 1 1 1 1 60 1 0.42 0.08 0.06 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0.76 0.82 0.78 1 1 1 1 1 0.82 0.16 0.09 1 0.2 0.21 0.2 0.5 "Assets/Audio/UI/click.wav" "Assets/Scripts/Player.lua" "OnReturnToMenuClicked"
 3 1 "ReturnToMenuLabel" 20 17 500 28 0 0 0 0 0 0 0.94 0.9 0.88 1 1 1 0 61 0 0 0 0 0 0 "RETURN TO MENU" 20
