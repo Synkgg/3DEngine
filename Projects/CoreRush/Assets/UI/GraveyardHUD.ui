@@ -1,4 +1,4 @@
-VORTEK_UI 4
+VORTEK_UI 8
 1920 1080
 0 0 "HUD" 0 0 1920 1080 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0
 1 0 "ObjectivePlate" 640 34 640 104 0 0 0 0 0 0 0.006 0.010 0.012 0.72 1 1 0 3 1 0.02 0.07 0.07 0.28 1
@@ -26,15 +26,15 @@ VORTEK_UI 4
 3 1 "PauseEyebrow" 76 250 540 20 0 0 0 0 0 0 0.25 0.63 0.59 1 1 1 0 42 0 0 0 0 0 0 "RITUAL INTERRUPTED" 12
 3 1 "PauseTitle" 72 292 560 64 0 0 0 0 0 0 0.94 0.93 0.89 1 1 1 0 42 0 0 0 0 0 0 "SUSPENDED" 42
 3 1 "PauseText" 76 370 500 32 0 0 0 0 0 0 0.42 0.45 0.44 1 1 1 0 42 0 0 0 0 0 0 "The cemetery waits." 15
-3 3 "ResumeButton" 72 470 500 60 0 0 0 0 0 0 0 0 0 0 1 1 1 43 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5
+3 3 "ResumeButton" 72 470 500 60 0 0 0 0 0 0 0 0 0 0 1 1 1 43 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5 "Assets/Scripts/GraveyardController.lua" "OnResumeClicked"
 4 1 "ResumeLabel" 20 15 400 28 0 0 0 0 0 0 0.72 0.74 0.72 1 1 1 0 44 0 0 0 0 0 0 "RESUME RITUAL" 18
-3 3 "PauseMainMenuButton" 72 548 500 60 0 0 0 0 0 0 0 0 0 0 1 1 1 43 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5
+3 3 "PauseMainMenuButton" 72 548 500 60 0 0 0 0 0 0 0 0 0 0 1 1 1 43 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5 "Assets/Scripts/GraveyardController.lua" "OnPauseMainMenuClicked"
 4 1 "PauseMainMenuLabel" 20 15 400 28 0 0 0 0 0 0 0.50 0.52 0.51 1 1 1 0 44 0 0 0 0 0 0 "ABANDON TO MENU" 18
 1 0 "WinScreen" 0 0 1920 1080 0 0 0 0 0 0 0.006 0.002 0.002 0.94 0 1 1 60 1 0.035 0.006 0.006 0.98 0
 2 1 "WinEyebrow" 150 270 800 22 0 0 0 0 0 0 0.25 0.62 0.58 1 1 1 0 61 0 0 0 0 0 0 "WARD STATUS // BREACHED" 13
 2 1 "WinTitle" 142 318 1100 74 0 0 0 0 0 0 0.95 0.91 0.85 1 1 1 0 61 0 0 0 0 0 0 "THE TOMB ANSWERS" 48
 2 1 "WinText" 150 420 760 70 0 0 0 0 0 0 0.50 0.52 0.49 1 1 1 0 61 0 0 0 0 0 0 "The mausoleum opens. Cold air rises from below.\nFor tonight, your work is finished." 18
-2 3 "PlayAgainButton" 150 560 420 58 0 0 0 0 0 0 0 0 0 0 1 1 1 62 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5
+2 3 "PlayAgainButton" 150 560 420 58 0 0 0 0 0 0 0 0 0 0 1 1 1 62 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5 "Assets/Scripts/GraveyardController.lua" "OnPlayAgainClicked"
 3 1 "PlayAgainLabel" 20 14 350 28 0 0 0 0 0 0 0.72 0.74 0.72 1 1 1 0 63 0 0 0 0 0 0 "RETURN TO NIGHT" 18
-2 3 "MainMenuButton" 150 634 420 58 0 0 0 0 0 0 0 0 0 0 1 1 1 62 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5
+2 3 "MainMenuButton" 150 634 420 58 0 0 0 0 0 0 0 0 0 0 1 1 1 62 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.42 0.44 0.43 1 0.92 0.94 0.91 1 0.70 0.10 0.07 1 0.25 0.26 0.25 0.5 "Assets/Scripts/GraveyardController.lua" "OnMainMenuClicked"
 3 1 "MainMenuLabel" 20 14 350 28 0 0 0 0 0 0 0.50 0.52 0.51 1 1 1 0 63 0 0 0 0 0 0 "MAIN MENU" 18
