@@ -138,6 +138,9 @@ private:
     bool m_ShowRenderSettings = false;
     ProjectSettings m_ProjectSettings;
     char m_HierarchySearchBuffer[128]{};
+    char m_InspectorSearchBuffer[128]{};
+    bool m_InspectorShowAdvanced = false;
+    int m_InspectorExpandRequest = 0;
     char m_ConsoleSearchBuffer[128]{};
     float m_EditorCameraSpeed = 5.0f;
     bool m_ShowGrid = true;
