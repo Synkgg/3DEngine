@@ -81,14 +81,18 @@ namespace
 
         void main()
         {
-            if (u_CornerRadius > 0.0)
+            // UI quads use a flipped V for texture sampling, but rounding only
+            // needs a stable 0..1 local coordinate inside the rectangle.
+            if (u_CornerRadius > 0.001)
             {
-                vec2 p = v_UV * u_RectSize;
+                vec2 localUV = vec2(v_UV.x, 1.0 - v_UV.y);
+                vec2 p = localUV * u_RectSize;
                 vec2 halfSize = u_RectSize * 0.5;
-                vec2 q = abs(p - halfSize) - (halfSize - vec2(u_CornerRadius));
-                float distanceToRoundRect = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - u_CornerRadius;
-                float aa = max(fwidth(distanceToRoundRect), 0.75);
-                if (distanceToRoundRect > aa) discard;
+                float radius = min(u_CornerRadius, min(halfSize.x, halfSize.y));
+                vec2 q = abs(p - halfSize) - (halfSize - vec2(radius));
+                float sd = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - radius;
+                float coverage = 1.0 - smoothstep(-0.75, 0.75, sd);
+                if (coverage <= 0.001) discard;
             }
             float gradientT = u_GradientDirection == 1 ? v_UV.x : v_UV.y;
             vec4 baseColor = u_UseGradient != 0 ? mix(u_Color, u_GradientColor, gradientT) : u_Color;
