@@ -58,6 +58,14 @@ ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
         if (needsImport)
         {
             ModelImportSettings settings;
+            if (importedExists)
+            {
+                ModelImportSettings storedSettings;
+                if (ModelLoader::ReadImportedAssetSettings(importedPath.string(), storedSettings))
+                    settings = storedSettings;
+                else
+                    Logger::Warning("Could not read import settings from " + importedPath.filename().string() + "; using defaults.");
+            }
             std::unique_ptr<ModelAsset> imported = ModelLoader::LoadModel(sourcePath.string(), settings);
             if (imported && ModelLoader::SaveImportedAsset(importedPath.string(), *imported, settings))
             {

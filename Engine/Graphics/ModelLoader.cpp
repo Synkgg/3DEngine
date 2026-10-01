@@ -388,6 +388,12 @@ bool ModelLoader::SaveImportedAsset(const std::string& filepath,const ModelAsset
     std::uint32_t ac=(std::uint32_t)asset.animations.size();WritePod(out,ac);for(const auto& clip:asset.animations){WriteString(out,clip.name);WritePod(out,clip.duration);std::uint32_t cc=(std::uint32_t)clip.channels.size();WritePod(out,cc);for(const auto& ch:clip.channels){WritePod(out,ch.bone);auto w3=[&](const auto& keys){std::uint32_t n=(std::uint32_t)keys.size();WritePod(out,n);for(const auto& k:keys){WritePod(out,k.time);out.write((const char*)k.value.data(),sizeof(k.value));}};w3(ch.translations);w3(ch.rotations);w3(ch.scales);}}
     if(!out){Logger::Error("Failed writing imported model asset: "+filepath);return false;}Logger::Info("Saved imported model asset: "+filepath);return true;
 }
+bool ModelLoader::ReadImportedAssetSettings(const std::string& filepath,ModelImportSettings& settings,std::string* sourcePath)
+{
+    std::ifstream in(filepath,std::ios::binary);if(!in)return false;char magic[8]{};in.read(magic,8);std::uint32_t version=0;if(std::string(magic,7)!="S3DMDL1"||!ReadPod(in,version)||version!=1)return false;
+    std::string storedSource;if(!ReadString(in,storedSource))return false;std::uint8_t flags=0;if(!ReadPod(in,flags))return false;
+    settings.generateNormals=(flags&1)!=0;settings.importMaterials=(flags&2)!=0;settings.importTextures=(flags&4)!=0;settings.mergeMaterialSections=(flags&8)!=0;if(sourcePath)*sourcePath=std::move(storedSource);return true;
+}
 std::unique_ptr<ModelAsset> ModelLoader::LoadImportedAsset(const std::string& filepath)
 {
     std::ifstream in(filepath,std::ios::binary);if(!in)return nullptr;char magic[8]{};in.read(magic,8);std::uint32_t version=0;if(std::string(magic,7)!="S3DMDL1"||!ReadPod(in,version)||version!=1){Logger::Error("Invalid imported model asset: "+filepath);return nullptr;}
