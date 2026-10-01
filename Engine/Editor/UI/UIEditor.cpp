@@ -25,6 +25,7 @@
 #include <functional>
 #include <cctype>
 #include <cstdint>
+#include <cfloat>
 #include <fstream>
 #include <sstream>
 #include <chrono>
