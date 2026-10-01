@@ -304,7 +304,7 @@ local function fire()
             local target=false
             for _,name in ipairs({"Target_10m","Target_15m","Target_20m","Target_25m_Left","Target_25m_Right","Target_35m"}) do
                 local e=Scene.FindEntity(name)
-                if e.valid and e.id==hit.entityID then target=true break end
+                if e:IsValid() and e.id==hit.entityID then target=true break end
             end
             if target then
                 practiceHits=practiceHits+1
@@ -398,7 +398,7 @@ local function updateHUD()
 end
 
 function OnCreate()
-    practiceMode=Scene.FindEntity("PracticeMode").valid
+    practiceMode=Scene.FindEntity("PracticeMode"):IsValid()
     State.SetNumber("mouse_sensitivity",tonumber(Preferences.LoadString("mouse_sensitivity","0.01")) or 0.01)
     State.SetBool("invert_y",Preferences.LoadString("invert_y","0")=="1")
     UI.Load("Assets/UI/Duel.ui")
