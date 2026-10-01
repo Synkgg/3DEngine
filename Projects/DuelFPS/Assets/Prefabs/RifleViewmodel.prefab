@@ -25,8 +25,8 @@ Rotation 0 1.5708 0
 Scale 0.28 0.28 0.28
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Weapons/Rifle.obj" 0
-Color 1 0.09 0.10 0.105 1
+Mesh 1 0 "Assets/Models/Weapons/AssaultRifle_1.obj" 0
+Color 1 1 1 1 1
 Texture 0
 Material 1 0.78 0.28 1 0 "" "" "" "" ""
 Interactable 0
