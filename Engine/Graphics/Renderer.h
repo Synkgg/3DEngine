@@ -102,6 +102,8 @@ public:
     );
     void DrawShadowModel(const Transform& transform, const std::string& modelPath);
     unsigned int RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
+    unsigned int RenderAnimatedModelPreview(const std::string& modelPath, std::size_t clipIndex, float animationTime, unsigned int width = 256, unsigned int height = 256);
+    ModelAsset* GetModelAsset(const std::string& modelPath);
 
     SDL_GLContext GetContext() const;
     unsigned int GetViewportTexture() const;
@@ -251,7 +253,6 @@ private:
     UIRenderer m_UIRenderer;
 
     Mesh* GetPrimitiveMesh(PrimitiveType primitive);
-    ModelAsset* GetModelAsset(const std::string& modelPath);
     Mesh* GetModelMesh(const std::string& modelPath);
     void DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha, const Texture2D* texture, float metallic, float roughness, float ambientOcclusion, float emissive, const Texture2D* normalMap, const Texture2D* metallicMap, const Texture2D* roughnessMap, const Texture2D* aoMap, const Texture2D* emissiveMap, const std::vector<Mat4>* bones = nullptr);
     void UploadFrameShaderState();

@@ -323,9 +323,13 @@ static const char* modelPreviewVertexShaderSource = R"(
 #version 450 core
 layout(location=0) in vec3 a_Position;
 layout(location=1) in vec3 a_Normal;
+layout(location=3) in uvec4 a_Joints;
+layout(location=4) in vec4 a_Weights;
 uniform mat4 u_MVP;
+uniform int u_Skinned;
+uniform mat4 u_Bones[128];
 out vec3 v_Normal;
-void main(){ v_Normal=a_Normal; gl_Position=u_MVP*vec4(a_Position,1.0); }
+void main(){ mat4 skin=mat4(1.0); if(u_Skinned!=0) skin=a_Weights.x*u_Bones[a_Joints.x]+a_Weights.y*u_Bones[a_Joints.y]+a_Weights.z*u_Bones[a_Joints.z]+a_Weights.w*u_Bones[a_Joints.w]; v_Normal=mat3(skin)*a_Normal; gl_Position=u_MVP*skin*vec4(a_Position,1.0); }
 )";
 static const char* modelPreviewFragmentShaderSource = R"(
 #version 450 core

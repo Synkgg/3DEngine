@@ -122,6 +122,10 @@ private:
     std::string m_SelectedAssetPath;
     std::string m_PendingUIAssetPath;
     std::string m_MeshPreviewPath;
+    int m_MeshPreviewClip = 0;
+    float m_MeshPreviewTime = 0.0f;
+    double m_MeshPreviewLastTick = 0.0;
+    bool m_MeshPreviewPlaying = true;
     unsigned int m_MeshPreviewFramebuffer = 0;
     unsigned int m_MeshPreviewTexture = 0;
     unsigned int m_MeshPreviewDepth = 0;

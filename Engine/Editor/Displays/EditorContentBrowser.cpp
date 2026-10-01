@@ -2,6 +2,7 @@
 #include "../HierarchyFolder.h"
 
 #include "../../Graphics/Renderer.h"
+#include "../../Graphics/ModelAsset.h"
 #include "../../Graphics/Texture2D.h"
 #include "../../Core/Logger.h"
 #include "../../Scene/Scene.h"
@@ -16,6 +17,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -659,6 +661,7 @@ void Editor::RenderContentBrowser(
                 ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
                 m_MeshPreviewPath = entry.path.lexically_normal().string();
+                m_MeshPreviewClip = 0; m_MeshPreviewTime = 0.0f; m_MeshPreviewLastTick = ImGui::GetTime(); m_MeshPreviewPlaying = true;
             }
 
             /*
@@ -1012,17 +1015,22 @@ void Editor::RenderContentBrowser(
         bool previewOpen = true;
         if (ImGui::Begin("Mesh Preview", &previewOpen))
         {
-            ImGui::TextDisabled("STATIC MESH");
-            ImGui::SameLine();
-            ImGui::Text("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
+            ModelAsset* previewAsset = renderer.GetModelAsset(m_MeshPreviewPath);
+            const bool skeletal = previewAsset && previewAsset->IsSkeletal();
+            ImGui::TextDisabled(skeletal ? "SKELETAL MESH" : "STATIC MESH");
+            ImGui::SameLine(); ImGui::Text("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
+            if (previewAsset) { ImGui::SameLine(); ImGui::TextDisabled("  %zu sections  %zu bones  %zu animations", previewAsset->sections.size(), previewAsset->skeleton.bones.size(), previewAsset->animations.size()); }
             ImGui::Separator();
-
+            if (skeletal && !previewAsset->animations.empty()) {
+                m_MeshPreviewClip = std::clamp(m_MeshPreviewClip, 0, (int)previewAsset->animations.size()-1);
+                const char* currentClip = previewAsset->animations[m_MeshPreviewClip].name.c_str();
+                ImGui::SetNextItemWidth(220.0f); if(ImGui::BeginCombo("Animation", currentClip)){for(int i=0;i<(int)previewAsset->animations.size();++i){bool selected=i==m_MeshPreviewClip;if(ImGui::Selectable(previewAsset->animations[i].name.c_str(),selected)){m_MeshPreviewClip=i;m_MeshPreviewTime=0.0f;}if(selected)ImGui::SetItemDefaultFocus();}ImGui::EndCombo();}
+                ImGui::SameLine(); if(ImGui::Button(m_MeshPreviewPlaying ? "Pause" : "Play"))m_MeshPreviewPlaying=!m_MeshPreviewPlaying; ImGui::SameLine(); if(ImGui::Button("Restart"))m_MeshPreviewTime=0.0f;
+                const float duration=previewAsset->animations[m_MeshPreviewClip].duration; const double now=ImGui::GetTime(); if(m_MeshPreviewPlaying)m_MeshPreviewTime+=(float)(now-m_MeshPreviewLastTick);m_MeshPreviewLastTick=now;if(duration>0.0f&&m_MeshPreviewTime>duration)m_MeshPreviewTime=std::fmod(m_MeshPreviewTime,duration);ImGui::SetNextItemWidth(-1.0f);ImGui::SliderFloat("##AnimationTime",&m_MeshPreviewTime,0.0f,std::max(duration,0.001f),"%.2f s");
+            }
             const ImVec2 available = ImGui::GetContentRegionAvail();
             const float side = std::max(180.0f, std::min(available.x, available.y - 70.0f));
-            const unsigned int texture = renderer.RenderModelPreview(
-                m_MeshPreviewPath,
-                (unsigned int)std::max(1.0f, side * 2.0f),
-                (unsigned int)std::max(1.0f, side * 2.0f));
+            const unsigned int texture = skeletal && previewAsset && !previewAsset->animations.empty() ? renderer.RenderAnimatedModelPreview(m_MeshPreviewPath,(std::size_t)m_MeshPreviewClip,m_MeshPreviewTime,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f)) : renderer.RenderModelPreview(m_MeshPreviewPath,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f));
 
             if (texture != 0)
             {

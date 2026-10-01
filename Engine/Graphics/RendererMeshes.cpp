@@ -134,7 +134,7 @@ unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int w
     GLint oldFbo=0,oldVp[4]{};glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&oldFbo);glGetIntegerv(GL_VIEWPORT,oldVp);
     glBindFramebuffer(GL_FRAMEBUFFER,target.framebuffer);glViewport(0,0,(GLsizei)width,(GLsizei)height);glEnable(GL_DEPTH_TEST);
     glClearColor(.075f,.082f,.095f,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    m_ModelPreviewShader.Bind();m_ModelPreviewShader.SetMat4("u_MVP",mvp);
+    m_ModelPreviewShader.Bind();m_ModelPreviewShader.SetMat4("u_MVP",mvp);m_ModelPreviewShader.SetInt("u_Skinned",0);
     for(const auto& section:model->sections)
     {
         if(!section.mesh) continue;
@@ -148,6 +148,18 @@ unsigned int Renderer::RenderModelPreview(const std::string& path,unsigned int w
     const unsigned int texture=target.texture;
     m_ModelPreviewCache.emplace(cacheKey,target);
     return texture;
+}
+
+unsigned int Renderer::RenderAnimatedModelPreview(const std::string& path,std::size_t clipIndex,float animationTime,unsigned int width,unsigned int height)
+{
+    ModelAsset* model=GetModelAsset(path);if(!model||model->sections.empty())return 0;
+    if(!model->IsSkeletal()||model->animations.empty())return RenderModelPreview(path,width,height);
+    if(!EnsureModelPreviewTarget(width,height))return 0;
+    const Vertex* first=nullptr;for(const auto& s:model->sections)if(s.mesh&&!s.mesh->GetVertices().empty()){first=&s.mesh->GetVertices().front();break;}if(!first)return 0;
+    Vec3 mn(first->position[0],first->position[1],first->position[2]),mx=mn;for(const auto& s:model->sections)if(s.mesh)for(const Vertex& v:s.mesh->GetVertices()){mn.x=std::min(mn.x,v.position[0]);mn.y=std::min(mn.y,v.position[1]);mn.z=std::min(mn.z,v.position[2]);mx.x=std::max(mx.x,v.position[0]);mx.y=std::max(mx.y,v.position[1]);mx.z=std::max(mx.z,v.position[2]);}
+    Vec3 center((mn.x+mx.x)*.5f,(mn.y+mx.y)*.5f,(mn.z+mx.z)*.5f);float radius=std::max(.1f,std::max(mx.x-mn.x,std::max(mx.y-mn.y,mx.z-mn.z))*.5f),dist=radius*3.1f;Mat4 mvp=Mat4::Perspective(45.f*.0174532925f,(float)width/(float)height,.01f,dist+radius*4.f)*Mat4::LookAt(Vec3(center.x+dist*.78f,center.y+dist*.58f,center.z+dist),center,Vec3(0,1,0));
+    const std::vector<Mat4> bones=model->EvaluateAnimation(clipIndex,animationTime,true);GLint oldFbo=0,oldVp[4]{};glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&oldFbo);glGetIntegerv(GL_VIEWPORT,oldVp);glBindFramebuffer(GL_FRAMEBUFFER,m_ModelPreviewFramebuffer);glViewport(0,0,(GLsizei)width,(GLsizei)height);glEnable(GL_DEPTH_TEST);glClearColor(.075f,.082f,.095f,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    m_ModelPreviewShader.Bind();m_ModelPreviewShader.SetMat4("u_MVP",mvp);m_ModelPreviewShader.SetInt("u_Skinned",1);for(std::size_t i=0;i<std::min<std::size_t>(bones.size(),128);++i){const std::string n="u_Bones["+std::to_string(i)+"]";m_ModelPreviewShader.SetMat4(n.c_str(),bones[i]);}for(const auto& s:model->sections){if(!s.mesh)continue;s.mesh->Bind();glDrawElements(GL_TRIANGLES,(GLsizei)s.mesh->GetIndexCount(),GL_UNSIGNED_INT,nullptr);s.mesh->Unbind();}m_ModelPreviewShader.Unbind();glBindFramebuffer(GL_FRAMEBUFFER,(GLuint)oldFbo);glViewport(oldVp[0],oldVp[1],oldVp[2],oldVp[3]);return m_ModelPreviewTexture;
 }
 
 void Renderer::DestroyModelPreviewCache()
