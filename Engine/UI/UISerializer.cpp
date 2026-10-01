@@ -94,7 +94,9 @@ namespace
                 << ' ' << th.x << ' ' << th.y << ' ' << th.z << ' ' << th.w
                 << ' ' << tp.x << ' ' << tp.y << ' ' << tp.z << ' ' << tp.w
                 << ' ' << td.x << ' ' << td.y << ' ' << td.z << ' ' << td.w
-                << ' ' << std::quoted(button->GetClickSoundPath());
+                << ' ' << std::quoted(button->GetClickSoundPath())
+                << ' ' << std::quoted(button->GetOnClickScript())
+                << ' ' << std::quoted(button->GetOnClickFunction());
         }
 
         out << '\n';
@@ -118,7 +120,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 7\n";
+    out << "VORTEK_UI 8\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -139,7 +141,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     in >> magic >> version;
     // Read the old marker for existing assets, but all newly saved UI files use
     // the engine-neutral marker.
-    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 7) return false;
+    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 8) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -257,6 +259,14 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
                         row >> std::quoted(clickSoundPath);
                         if (!row) return false;
                         button->SetClickSoundPath(clickSoundPath);
+                        if (version >= 8)
+                        {
+                            std::string onClickScript, onClickFunction;
+                            row >> std::quoted(onClickScript) >> std::quoted(onClickFunction);
+                            if (!row) return false;
+                            button->SetOnClickScript(onClickScript);
+                            button->SetOnClickFunction(onClickFunction);
+                        }
                     }
                 }
             }
