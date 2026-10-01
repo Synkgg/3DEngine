@@ -830,7 +830,9 @@ void Editor::RenderHierarchy(Scene& scene, ImFont* iconFont)
 
         ImGui::PushID(static_cast<int>(entity.GetID()));
 
-        // Groups are explicit. A normal entity stays a normal entity even when\n        // Transform + Name are its only components.\n        const bool isGroup = scene.HasComponent<HierarchyGroupComponent>(entity);
+        // Groups are explicit. A normal entity stays a normal entity even when
+        // Transform + Name are its only components.
+        const bool isGroup = scene.HasComponent<HierarchyGroupComponent>(entity);
 
         // Entity type is communicated by its icon; the tree arrow only means
         // that the entity has children. Empty entities remain folder/group nodes.
