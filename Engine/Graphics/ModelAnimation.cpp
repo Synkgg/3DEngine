@@ -24,7 +24,10 @@ std::vector<Mat4> ModelAsset::BindPose() const{
 }
 std::vector<Mat4> ModelAsset::EvaluateAnimation(std::size_t clipIndex,float time,bool loop) const{
  if(clipIndex>=animations.size())return BindPose();const AnimationClip& clip=animations[clipIndex];if(loop&&clip.duration>0)time=std::fmod(std::max(time,0.0f),clip.duration);else time=std::clamp(time,0.0f,clip.duration);
- std::vector<Mat4> local(skeleton.bones.size());for(std::size_t i=0;i<skeleton.bones.size();++i)local[i]=FromArray(skeleton.bones[i].bindLocalMatrix);
- for(const AnimationChannel& c:clip.channels){if(c.bone<0||c.bone>=static_cast<int>(skeleton.bones.size()))continue;const Bone& b=skeleton.bones[c.bone];auto t=Sample3(c.translations,time,b.bindTranslation);auto r=SampleQ(c.rotations,time,b.bindRotation);auto s=Sample3(c.scales,time,b.bindScale);local[c.bone]=TRS(t,r,s);}
+ struct Pose{std::array<float,3> t;std::array<float,4> r;std::array<float,3> s;bool animated=false;};
+ std::vector<Pose> pose(skeleton.bones.size());std::vector<Mat4> local(skeleton.bones.size());
+ for(std::size_t i=0;i<skeleton.bones.size();++i){const Bone& b=skeleton.bones[i];pose[i]={b.bindTranslation,b.bindRotation,b.bindScale,false};local[i]=FromArray(b.bindLocalMatrix);}
+ for(const AnimationChannel& c:clip.channels){if(c.bone<0||c.bone>=static_cast<int>(skeleton.bones.size()))continue;Pose& p=pose[c.bone];if(!c.translations.empty())p.t=Sample3(c.translations,time,p.t);if(!c.rotations.empty())p.r=SampleQ(c.rotations,time,p.r);if(!c.scales.empty())p.s=Sample3(c.scales,time,p.s);p.animated=true;}
+ for(std::size_t i=0;i<pose.size();++i)if(pose[i].animated)local[i]=TRS(pose[i].t,pose[i].r,pose[i].s);
  std::vector<Mat4> global(local.size()),out(local.size());for(std::size_t i=0;i<local.size();++i){const Bone& b=skeleton.bones[i];global[i]=b.parent>=0?global[b.parent]*local[i]:local[i];out[i]=global[i]*FromArray(b.inverseBindMatrix);}return out;
 }
