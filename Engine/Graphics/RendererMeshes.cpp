@@ -35,7 +35,17 @@ std::string Renderer::ResolveAssetPath(const std::string& path) const
 ModelAsset* Renderer::GetModelAsset(const std::string& modelPath)
 {
     if (modelPath.empty()) return nullptr;
-    const std::string resolvedPath = ResolveAssetPath(modelPath);
+    std::string resolvedPath = ResolveAssetPath(modelPath);
+    const std::filesystem::path sourcePath(resolvedPath);
+    const std::string extension = sourcePath.extension().string();
+    if (extension == ".obj" || extension == ".gltf" || extension == ".glb")
+    {
+        std::filesystem::path importedPath = sourcePath;
+        importedPath.replace_extension(".modelasset");
+        std::error_code ec;
+        if (std::filesystem::exists(importedPath, ec) && !ec)
+            resolvedPath = importedPath.lexically_normal().string();
+    }
     auto it = m_ModelCache.find(resolvedPath);
     if (it != m_ModelCache.end()) return it->second.get();
 

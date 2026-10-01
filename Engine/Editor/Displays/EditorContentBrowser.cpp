@@ -1075,6 +1075,7 @@ void Editor::RenderContentBrowser(
                         if (ModelLoader::SaveImportedAsset(output.string(), *imported, settings))
                         {
                             renderer.InvalidateModelAsset(output.string());
+                            renderer.InvalidateModelAsset(m_MeshPreviewPath);
                             Logger::Info("Imported " + fs::path(m_MeshPreviewPath).filename().string() + " -> " + output.filename().string() + ": " + std::to_string(imported->sections.size()) + " sections, " + std::to_string(imported->materials.size()) + " materials, " + std::to_string(imported->skeleton.bones.size()) + " bones, " + std::to_string(imported->animations.size()) + " animations");
                         }
                     }
