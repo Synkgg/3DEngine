@@ -6,12 +6,18 @@ local remotePawns, remotePlayersByEntity, remoteTargets = {}, {}, {}
 local REMOTE_INTERPOLATION_SPEED = 20.0
 
 local MAX_HEALTH, SHOT_DAMAGE = 100, 25
-local FIRE_INTERVAL, ROUNDS_TO_WIN = 0.25, 5
+local FIRE_INTERVAL, ROUNDS_TO_WIN = 0.18, 5
+local MAG_SIZE, START_RESERVE, RELOAD_TIME = 12, 48, 1.35
+local HIP_FOV, ADS_FOV = 90.0, 68.0
+local RECOIL_PITCH, RECOIL_YAW = 0.012, 0.004
 local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
 local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
 
 local fireCooldown = 0.0
+local ammo, reserveAmmo = MAG_SIZE, START_RESERVE
+local reloadTimer, hitmarkerTimer, muzzleTimer, viewKick = 0.0, 0.0, 0.0, 0.0
+local aiming = false
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
 local roundWinner, matchWinner = 0, 0
@@ -82,6 +88,8 @@ local function beginWarmup()
     matchState=WARMUP
     stateTimer=WARMUP_DURATION
     activeIntroTimer=0.0
+    ammo,reserveAmmo=MAG_SIZE,START_RESERVE
+    reloadTimer,hitmarkerTimer,muzzleTimer,viewKick=0.0,0.0,0.0,0.0
     spawnRoundPlayers()
     broadcastState()
 end
@@ -235,12 +243,19 @@ local function updateHostMatch(dt)
     end
 end
 
-local function updateViewmodel()
+local function updateViewmodel(dt)
     if rifleViewmodel==0 then return end
+    aiming=Input.IsMouseButtonDown(3) and reloadTimer<=0
+    if playerCamera~=0 then Camera.SetEntityFOV(playerCamera,aiming and ADS_FOV or HIP_FOV) end
+
+    viewKick=math.max(0.0,viewKick-dt*5.5)
     local c,f,r=Camera.GetPosition(),Camera.GetForward(),Camera.GetRight()
-    local x=c.x+r.x*0.34+f.x*0.62
-    local y=c.y+r.y*0.34+f.y*0.62-0.24
-    local z=c.z+r.z*0.34+f.z*0.62
+    local side=aiming and 0.055 or 0.34
+    local forwardOffset=aiming and 0.70 or 0.62
+    local down=aiming and -0.18 or -0.24
+    local x=c.x+r.x*side+f.x*(forwardOffset-viewKick)
+    local y=c.y+r.y*side+f.y*(forwardOffset-viewKick)+down
+    local z=c.z+r.z*side+f.z*(forwardOffset-viewKick)
     Scene.SetPosition(rifleViewmodel,x,y,z)
     local yaw=math.deg(math.atan(-f.x,-f.z))
     local horizontal=math.sqrt(f.x*f.x+f.z*f.z)
@@ -248,23 +263,52 @@ local function updateViewmodel()
     Scene.SetRotation(rifleViewmodel,-pitch,yaw,0.0)
 end
 
+local function startReload()
+    if reloadTimer>0 or ammo>=MAG_SIZE or reserveAmmo<=0 then return end
+    reloadTimer=RELOAD_TIME
+    Audio.PlaySFX("Assets/Audio/Weapons/reload.wav",0.65)
+end
+
+local function finishReload()
+    local needed=MAG_SIZE-ammo
+    local loaded=math.min(needed,reserveAmmo)
+    ammo=ammo+loaded
+    reserveAmmo=reserveAmmo-loaded
+end
+
 local function fire()
     local localID=Controller.GetLocalID()
-    if matchState~=ROUND_ACTIVE or fireCooldown>0 or (health[localID] or 0)<=0 then return end
+    if matchState~=ROUND_ACTIVE or fireCooldown>0 or reloadTimer>0 or (health[localID] or 0)<=0 then return end
+    if ammo<=0 then startReload(); return end
+
+    ammo=ammo-1
     fireCooldown=FIRE_INTERVAL
+    muzzleTimer=0.055
+    viewKick=0.065
+    Audio.PlaySFX("Assets/Audio/Weapons/rifle.wav",0.8)
+
+    if playerCamera~=0 then
+        local horizontalRecoil=(math.random()*2.0-1.0)*RECOIL_YAW
+        Camera.RotateEntity(playerCamera,horizontalRecoil,-RECOIL_PITCH)
+    end
+
     local c,f=Camera.GetPosition(),Camera.GetForward()
     local range=100.0
     local hit=Physics.Raycast(c.x,c.y,c.z,f.x,f.y,f.z,range,self.id)
     if hit.hit then
-        Debug.DrawLine(c.x,c.y,c.z,hit.x,hit.y,hit.z,0.2,1.0,0.2,5.0)
+        Debug.DrawLine(c.x,c.y,c.z,hit.x,hit.y,hit.z,0.2,1.0,0.2,0.08)
         local targetID=remotePlayersByEntity[hit.entityID]
         if targetID then
+            hitmarkerTimer=0.12
+            Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
             if Network.IsHost() then applyHostShot(localID,targetID)
             else Network.SendMessage(CHANNEL_COMBAT,"SHOT:"..targetID) end
         end
     else
-        Debug.DrawLine(c.x,c.y,c.z,c.x+f.x*range,c.y+f.y*range,c.z+f.z*range,1.0,0.2,0.2,5.0)
+        Debug.DrawLine(c.x,c.y,c.z,c.x+f.x*range,c.y+f.y*range,c.z+f.z*range,1.0,0.2,0.2,0.08)
     end
+
+    if ammo==0 and reserveAmmo>0 then startReload() end
 end
 
 local function returnToMenu()
@@ -289,6 +333,11 @@ local function updateHUD()
     UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
     UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
     UI.SetText("ScoreText",scoreLine)
+    UI.SetText("AmmoText",tostring(ammo).." / "..tostring(reserveAmmo))
+    UI.SetVisible("ReloadText",reloadTimer>0)
+    if reloadTimer>0 then UI.SetText("ReloadText","RELOADING  "..string.format("%.1f",reloadTimer)) end
+    UI.SetVisible("Hitmarker",hitmarkerTimer>0)
+    UI.SetVisible("MuzzleFlash",muzzleTimer>0)
 
     local showWarmup=matchState==WARMUP
     local showRoundResult=matchState==ROUND_END
@@ -296,7 +345,7 @@ local function updateHUD()
     UI.SetVisible("RoundIntro",showWarmup or (matchState==ROUND_ACTIVE and activeIntroTimer>0))
     UI.SetVisible("RoundResult",showRoundResult)
     UI.SetVisible("MatchResult",showMatchResult)
-    UI.SetVisible("DeathOverlay",false)
+    UI.SetVisible("DeathOverlay",dead and (matchState==ROUND_END or matchState==MATCH_END))
     UI.SetVisible("CrosshairH",matchState==ROUND_ACTIVE and not dead)
     UI.SetVisible("CrosshairV",matchState==ROUND_ACTIVE and not dead)
     UI.SetVisible("MatchActions",showMatchResult)
@@ -387,10 +436,16 @@ function OnUpdate(dt)
     updateHostMatch(dt)
     fireCooldown=math.max(0,fireCooldown-dt)
     activeIntroTimer=math.max(0,activeIntroTimer-dt)
+    hitmarkerTimer=math.max(0,hitmarkerTimer-dt)
+    muzzleTimer=math.max(0,muzzleTimer-dt)
+    if reloadTimer>0 then
+        reloadTimer=math.max(0,reloadTimer-dt)
+        if reloadTimer==0 then finishReload() end
+    end
 
     if not Controller.IsLocallyControlled(self.id) then return end
 
-    updateViewmodel()
+    updateViewmodel(dt)
     updateHUD()
 
     if Input.IsKeyPressed("Escape") and matchState~=MATCH_END then
@@ -436,5 +491,6 @@ function OnUpdate(dt)
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
+    if Input.IsKeyPressed("R") then startReload() end
     if Input.IsMouseButtonDown(1) then fire() end
 end
