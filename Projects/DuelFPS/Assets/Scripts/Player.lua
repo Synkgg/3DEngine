@@ -1,5 +1,6 @@
 local WeaponSystem = require("Scripts.Weapons.WeaponSystem")
 local Pistol = require("Scripts.Weapons.Pistol")
+local Rifle = require("Scripts.Weapons.Rifle")
 
 local walkSpeed, sprintSpeed = 5.0, 8.0
 local sensitivity = 0.01
@@ -280,6 +281,8 @@ local function consumeWeaponPickup()
     State.SetNumber("duelfps_weapon_pickup",0)
     if request==1 then
         weapons:Give("pistol",practiceMode and Pistol.practiceReserve or Pistol.startingReserve)
+    elseif request==2 then
+        weapons:Give("rifle",practiceMode and Rifle.practiceReserve or Rifle.startingReserve)
     end
 end
 
@@ -379,6 +382,7 @@ function OnCreate()
         Scene=Scene, Camera=Camera, Physics=Physics, Audio=Audio, Input=Input
     })
     weapons:Register(Pistol)
+    weapons:Register(Rifle)
     State.SetNumber("duelfps_weapon_pickup",0)
     Input.SetCursorVisible(false)
     if practiceMode then
@@ -492,6 +496,8 @@ function OnUpdate(dt)
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
+    if Input.IsKeyPressed("1") and weapons then weapons:Equip("pistol") end
+    if Input.IsKeyPressed("2") and weapons then weapons:Equip("rifle") end
     if Input.IsKeyPressed("R") and weapons then weapons:Reload() end
     if Input.IsMouseButtonDown(1) and weapons then
         handleWeaponShot(weapons:Fire(self.id,playerCamera))
