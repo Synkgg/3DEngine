@@ -153,6 +153,8 @@ void UIEditor::Draw(
                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
             if (!paletteQuery.empty() && lower.find(paletteQuery) == std::string::npos)
                 return;
+
+            ImGui::PushID(static_cast<int>(type));
             if (ImGui::Selectable(label))
                 AddWidget(canvas, type);
             if (ImGui::BeginDragDropSource())
@@ -162,20 +164,21 @@ void UIEditor::Draw(
                 ImGui::Text("Add %s", label);
                 ImGui::EndDragDropSource();
             }
+            ImGui::PopID();
         };
-        if (ImGui::CollapsingHeader("Common", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Common##PaletteCommon", ImGuiTreeNodeFlags_DefaultOpen))
         {
             paletteItem("Text", UIWidgetType::Text);
             paletteItem("Image", UIWidgetType::Image);
             paletteItem("Button", UIWidgetType::Button);
             paletteItem("Progress Bar", UIWidgetType::ProgressBar);
         }
-        if (ImGui::CollapsingHeader("Input", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Input##PaletteInput", ImGuiTreeNodeFlags_DefaultOpen))
         {
             paletteItem("Text Input", UIWidgetType::TextInput);
             paletteItem("Slider", UIWidgetType::Slider);
         }
-        if (ImGui::CollapsingHeader("Panel", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Panel##PalettePanel", ImGuiTreeNodeFlags_DefaultOpen))
             paletteItem("Panel", UIWidgetType::Panel);
         ImGui::Spacing();
         ImGui::TextDisabled("Click to add, or drag into the Designer");
@@ -421,7 +424,7 @@ void UIEditor::DrawInspector(
         return "Widget";
     };
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5.0f, 4.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 3.0f));
 
     ImGui::TextColored(ImVec4(0.55f,0.72f,0.95f,1.0f), "%s", typeName(widget.GetType()));
@@ -481,7 +484,7 @@ void UIEditor::DrawInspector(
         ImGuiTreeNodeFlags flags=defaultOpen?ImGuiTreeNodeFlags_DefaultOpen:ImGuiTreeNodeFlags_None;
         if(ImGui::CollapsingHeader(name,flags))
         {
-            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding,ImVec2(4.0f,2.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding,ImVec2(5.0f,4.0f));
             if(ImGui::BeginTable("##Properties",2,ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerH))
             {
                 ImGui::TableSetupColumn("Property",ImGuiTableColumnFlags_WidthFixed,std::clamp(ImGui::GetContentRegionAvail().x*0.42f,86.0f,150.0f));
@@ -871,10 +874,35 @@ void UIEditor::DrawToolbar(
 void UIEditor::DrawDesigner(
     UICanvas& canvas)
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 4.0f));
+    ImGui::BeginChild("##DesignerViewportToolbar", ImVec2(0.0f, 30.0f), false,
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
     ImGui::TextDisabled("%.0f x %.0f", canvas.GetSize().x, canvas.GetSize().y);
+    if (m_SelectedWidget)
+    {
+        ImGui::SameLine();
+        ImGui::TextDisabled(" | ");
+        ImGui::SameLine(0.0f, 2.0f);
+        ImGui::TextUnformatted(m_SelectedWidget->GetName().c_str());
+    }
+
+    const float rightControls = 238.0f;
+    if (ImGui::GetContentRegionAvail().x > rightControls)
+        ImGui::SameLine(ImGui::GetWindowWidth() - rightControls);
+
+    if (ImGui::SmallButton(m_ShowGrid ? "Grid" : "Grid Off"))
+        m_ShowGrid = !m_ShowGrid;
     ImGui::SameLine();
-    ImGui::TextDisabled("  %.0f%%", m_DesignerScale * 100.0f);
-    ImGui::Separator();
+    if (ImGui::SmallButton(m_SnapToGrid ? "Snap" : "Snap Off"))
+        m_SnapToGrid = !m_SnapToGrid;
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(90.0f);
+    ImGui::SliderFloat("##DesignerZoom", &m_Zoom, 0.20f, 5.0f, "%.0fx");
+
+    ImGui::EndChild();
+    ImGui::PopStyleVar(2);
 
     const ImVec2 contentMin =
         ImGui::GetCursorScreenPos();
@@ -953,23 +981,24 @@ void UIEditor::DrawDesigner(
         ImGui::GetWindowDrawList();
 
     /*
-     * Canvas background.
+     * Canvas background. Layered outer strokes give the design surface a
+     * little depth without stealing useful viewport space.
      */
+    const ImVec2 canvasMax(
+        canvasPosition.x + canvasPixelSize.x,
+        canvasPosition.y + canvasPixelSize.y);
+    drawList->AddRectFilled(
+        ImVec2(canvasPosition.x - 10.0f, canvasPosition.y - 10.0f),
+        ImVec2(canvasMax.x + 10.0f, canvasMax.y + 10.0f),
+        IM_COL32(0, 0, 0, 22), 3.0f);
+    drawList->AddRectFilled(
+        ImVec2(canvasPosition.x - 5.0f, canvasPosition.y - 5.0f),
+        ImVec2(canvasMax.x + 5.0f, canvasMax.y + 5.0f),
+        IM_COL32(0, 0, 0, 35), 2.0f);
     drawList->AddRectFilled(
         canvasPosition,
-        ImVec2(
-            canvasPosition.x +
-            canvasPixelSize.x,
-
-            canvasPosition.y +
-            canvasPixelSize.y
-        ),
-        IM_COL32(
-            35,
-            38,
-            45,
-            255
-        )
+        canvasMax,
+        IM_COL32(37, 40, 47, 255)
     );
 
     /*
@@ -1005,12 +1034,9 @@ void UIEditor::DrawDesigner(
                         x,
                         bottom
                     ),
-                    IM_COL32(
-                        255,
-                        255,
-                        255,
-                        20
-                    )
+                    (static_cast<int>(std::round((x - canvasPosition.x) / gridSpacing)) % 5 == 0)
+                        ? IM_COL32(255,255,255,34)
+                        : IM_COL32(255,255,255,16)
                 );
             }
 
@@ -1029,12 +1055,9 @@ void UIEditor::DrawDesigner(
                         right,
                         y
                     ),
-                    IM_COL32(
-                        255,
-                        255,
-                        255,
-                        20
-                    )
+                    (static_cast<int>(std::round((y - canvasPosition.y) / gridSpacing)) % 5 == 0)
+                        ? IM_COL32(255,255,255,34)
+                        : IM_COL32(255,255,255,16)
                 );
             }
         }
@@ -1158,6 +1181,18 @@ void UIEditor::DrawDesigner(
 
     if (mouseInsideCanvas && !m_Panning)
     {
+        if (m_SelectedWidget && !m_Dragging && !m_Resizing)
+        {
+            const UIRect selectedRect = GetAbsoluteRect(
+                *m_SelectedWidget,
+                UIRect{0.0f,0.0f,canvasSize.x,canvasSize.y});
+            const int hoveredHandle = GetResizeHandle(selectedRect, mouse, canvasPosition, scale);
+            if (hoveredHandle == 0 || hoveredHandle == 7) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
+            else if (hoveredHandle == 2 || hoveredHandle == 5) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNESW);
+            else if (hoveredHandle == 1 || hoveredHandle == 6) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+            else if (hoveredHandle == 3 || hoveredHandle == 4) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        }
+
         if (m_SelectedWidget && !m_Dragging && !m_Resizing &&
             ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
@@ -1444,60 +1479,42 @@ void UIEditor::DrawWidget(
             2.0f
         );
 
-        constexpr float handleSize =
-            6.0f;
-
+        constexpr float handleSize = 4.0f;
+        const float midX=(min.x+max.x)*0.5f;
+        const float midY=(min.y+max.y)*0.5f;
         const ImVec2 handles[] =
         {
-            ImVec2(
-                min.x,
-                min.y
-            ),
-
-            ImVec2(
-                max.x,
-                min.y
-            ),
-
-            ImVec2(
-                min.x,
-                max.y
-            ),
-
-            ImVec2(
-                max.x,
-                max.y
-            )
+            ImVec2(min.x,min.y),
+            ImVec2(midX,min.y),
+            ImVec2(max.x,min.y),
+            ImVec2(min.x,midY),
+            ImVec2(max.x,midY),
+            ImVec2(min.x,max.y),
+            ImVec2(midX,max.y),
+            ImVec2(max.x,max.y)
         };
 
-        for (const ImVec2& handle :
-            handles)
+        for (const ImVec2& handle : handles)
         {
             drawList->AddRectFilled(
-                ImVec2(
-                    handle.x -
-                    handleSize,
-
-                    handle.y -
-                    handleSize
-                ),
-
-                ImVec2(
-                    handle.x +
-                    handleSize,
-
-                    handle.y +
-                    handleSize
-                ),
-
-                IM_COL32(
-                    77,
-                    163,
-                    255,
-                    255
-                )
-            );
+                ImVec2(handle.x-handleSize,handle.y-handleSize),
+                ImVec2(handle.x+handleSize,handle.y+handleSize),
+                IM_COL32(230, 241, 255, 255));
+            drawList->AddRect(
+                ImVec2(handle.x-handleSize,handle.y-handleSize),
+                ImVec2(handle.x+handleSize,handle.y+handleSize),
+                IM_COL32(45, 119, 205, 255));
         }
+
+        char selectionLabel[320]{};
+        std::snprintf(selectionLabel,sizeof(selectionLabel),"%s   %.0f x %.0f",
+            widget.GetName().c_str(),rect.width,rect.height);
+        const ImVec2 labelSize=ImGui::CalcTextSize(selectionLabel);
+        const float labelY=std::max(canvasPosition.y,min.y-labelSize.y-9.0f);
+        const ImVec2 labelMin(min.x,labelY);
+        const ImVec2 labelMax(min.x+labelSize.x+12.0f,labelY+labelSize.y+6.0f);
+        drawList->AddRectFilled(labelMin,labelMax,IM_COL32(31,88,150,235),3.0f);
+        drawList->AddText(ImVec2(labelMin.x+6.0f,labelMin.y+3.0f),IM_COL32(240,247,255,255),selectionLabel);
     }
 
     for (const auto& child :
@@ -1645,47 +1662,28 @@ void UIEditor::UpdateResize(
 
     switch (m_ResizeHandle)
     {
-    case 0:
-        position.x += deltaX;
-        position.y += deltaY;
-
-        size.x -= deltaX;
-        size.y -= deltaY;
-        break;
-
-    case 1:
-        position.y += deltaY;
-
-        size.x += deltaX;
-        size.y -= deltaY;
-        break;
-
-    case 2:
-        position.x += deltaX;
-
-        size.x -= deltaX;
-        size.y += deltaY;
-        break;
-
-    case 3:
-        size.x += deltaX;
-        size.y += deltaY;
-        break;
+    case 0: position.x+=deltaX; position.y+=deltaY; size.x-=deltaX; size.y-=deltaY; break; // top-left
+    case 1: position.y+=deltaY; size.y-=deltaY; break;                                     // top
+    case 2: position.y+=deltaY; size.x+=deltaX; size.y-=deltaY; break;                     // top-right
+    case 3: position.x+=deltaX; size.x-=deltaX; break;                                     // left
+    case 4: size.x+=deltaX; break;                                                          // right
+    case 5: position.x+=deltaX; size.x-=deltaX; size.y+=deltaY; break;                     // bottom-left
+    case 6: size.y+=deltaY; break;                                                          // bottom
+    case 7: size.x+=deltaX; size.y+=deltaY; break;                                          // bottom-right
     }
 
-    constexpr float minimumSize =
-        1.0f;
-
+    constexpr float minimumSize = 1.0f;
     if (size.x < minimumSize)
     {
-        size.x =
-            minimumSize;
+        if (m_ResizeHandle==0 || m_ResizeHandle==3 || m_ResizeHandle==5)
+            position.x=m_DragStartPosition.x+m_DragStartSize.x-minimumSize;
+        size.x=minimumSize;
     }
-
     if (size.y < minimumSize)
     {
-        size.y =
-            minimumSize;
+        if (m_ResizeHandle==0 || m_ResizeHandle==1 || m_ResizeHandle==2)
+            position.y=m_DragStartPosition.y+m_DragStartSize.y-minimumSize;
+        size.y=minimumSize;
     }
 
     if (m_SnapToGrid)
@@ -1742,33 +1740,22 @@ int UIEditor::GetResizeHandle(
         rect.height * scale
     );
 
-    constexpr float handleRadius =
-        10.0f;
-
+    constexpr float handleRadius = 9.0f;
+    const float midX=(min.x+max.x)*0.5f;
+    const float midY=(min.y+max.y)*0.5f;
     const ImVec2 handles[] =
     {
-        ImVec2(
-            min.x,
-            min.y
-        ),
-
-        ImVec2(
-            max.x,
-            min.y
-        ),
-
-        ImVec2(
-            min.x,
-            max.y
-        ),
-
-        ImVec2(
-            max.x,
-            max.y
-        )
+        ImVec2(min.x,min.y),
+        ImVec2(midX,min.y),
+        ImVec2(max.x,min.y),
+        ImVec2(min.x,midY),
+        ImVec2(max.x,midY),
+        ImVec2(min.x,max.y),
+        ImVec2(midX,max.y),
+        ImVec2(max.x,max.y)
     };
 
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 8; ++i)
     {
         const float dx =
             mouse.x -
