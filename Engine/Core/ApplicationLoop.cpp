@@ -243,11 +243,13 @@ void Application::Run()
             if (m_ImGuiLayer.GetIconFont())
             {
                 ImGui::PushFont(m_ImGuiLayer.GetIconFont());
-                drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-                    ImVec2(x, pos.y + 5.0f),
+                const float iconSize = ImGui::GetFontSize() * 0.72f;
+                drawList->AddText(ImGui::GetFont(), iconSize,
+                    ImVec2(x, pos.y + (size.y - iconSize) * 0.5f),
                     selected ? IM_COL32(205, 221, 242, 255) : IM_COL32(145, 151, 160, 255),
                     icon);
-                const float iconWidth = ImGui::CalcTextSize(icon).x;
+                const float iconWidth =
+                    ImGui::GetFont()->CalcTextSizeA(iconSize, FLT_MAX, 0.0f, icon).x;
                 ImGui::PopFont();
                 x += iconWidth + 7.0f;
             }
