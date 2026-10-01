@@ -74,11 +74,22 @@ namespace
         uniform int u_GradientDirection;
         uniform sampler2D u_Texture;
         uniform int u_UseTexture;
+        uniform vec2 u_RectSize;
+        uniform float u_CornerRadius;
 
         out vec4 FragColor;
 
         void main()
         {
+            if (u_CornerRadius > 0.0)
+            {
+                vec2 p = v_UV * u_RectSize;
+                vec2 halfSize = u_RectSize * 0.5;
+                vec2 q = abs(p - halfSize) - (halfSize - vec2(u_CornerRadius));
+                float distanceToRoundRect = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - u_CornerRadius;
+                float aa = max(fwidth(distanceToRoundRect), 0.75);
+                if (distanceToRoundRect > aa) discard;
+            }
             float gradientT = u_GradientDirection == 1 ? v_UV.x : v_UV.y;
             vec4 baseColor = u_UseGradient != 0 ? mix(u_Color, u_GradientColor, gradientT) : u_Color;
             if (u_UseTexture != 0)
