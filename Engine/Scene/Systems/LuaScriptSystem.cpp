@@ -9,6 +9,8 @@
 #include "../../Core/ProjectManager.h"
 #include "../../Graphics/Renderer.h"
 #include "../../UI/UICanvas.h"
+#include "../../UI/UIWidget.h"
+#include "../../UI/UIButton.h"
 
 #include <filesystem>
 
@@ -25,6 +27,7 @@ void LuaScriptSystem::Start(
 {
     m_Instances.clear();
     m_Scene = &scene;
+    m_UICanvas = &uiCanvas;
 
     m_Lua =
         std::make_unique<
@@ -160,6 +163,8 @@ void LuaScriptSystem::Update(
 {
     (void)scene;
 
+    if (m_UICanvas) DispatchUIEvents(*m_UICanvas);
+
     for (auto& entityPair :
         m_Instances)
     {
@@ -237,6 +242,38 @@ void LuaScriptSystem::ProcessPendingDestructions()
     }
 }
 
+void LuaScriptSystem::DispatchUIEvents(UICanvas& uiCanvas)
+{
+    UIWidget* root = uiCanvas.GetRoot();
+    if (!root) return;
+    for (const auto& child : root->GetChildren()) if (child) DispatchButtonEvents(*child);
+}
+
+void LuaScriptSystem::DispatchButtonEvents(UIWidget& widget)
+{
+    if (UIButton* button = dynamic_cast<UIButton*>(&widget))
+    {
+        if (button->ConsumeClickEvent())
+        {
+            const std::string& targetScript = button->GetOnClickScript();
+            const std::string& functionName = button->GetOnClickFunction();
+            bool dispatched = false;
+            for (auto& entityPair : m_Instances)
+            {
+                for (ScriptInstance& instance : entityPair.second)
+                {
+                    if (!instance.script) continue;
+                    if (!targetScript.empty() && instance.path != targetScript) continue;
+                    if (instance.script->Invoke(functionName)) { dispatched = true; break; }
+                }
+                if (dispatched) break;
+            }
+            if (!dispatched) Logger::Warning("UI On Click target not found: " + targetScript + "::" + functionName);
+        }
+    }
+    for (const auto& child : widget.GetChildren()) if (child) DispatchButtonEvents(*child);
+}
+
 void LuaScriptSystem::Stop()
 {
     for (auto& entityPair :
@@ -259,6 +296,7 @@ void LuaScriptSystem::Stop()
 
     m_Lua.reset();
     m_Scene = nullptr;
+    m_UICanvas = nullptr;
 }
 
 bool LuaScriptSystem::LoadGlobalScript(
