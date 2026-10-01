@@ -1512,30 +1512,31 @@ void UIEditor::DrawWidget(
                 : ImGui::GetIO().Fonts->Fonts.front();
             const float previewSize = std::max(1.0f, fontSize);
 
-            // ImDrawList::AddText does not lay out embedded newlines for
-            // our designer preview, so render each saved line explicitly.
-            float lineY = min.y;
-            const float lineHeight = previewSize * 1.2f;
+            std::vector<std::string> lines;
             std::string line;
             const std::string& previewText = text->GetText();
             for (std::size_t i = 0; i <= previewText.size(); ++i)
             {
                 if (i == previewText.size() || previewText[i] == '\n')
                 {
-                    drawList->AddText(
-                        previewFont,
-                        previewSize,
-                        ImVec2(min.x, lineY),
-                        fillColor,
-                        line.c_str()
-                    );
+                    lines.push_back(line);
                     line.clear();
-                    lineY += lineHeight;
                 }
-                else if (previewText[i] != '\r')
-                {
-                    line += previewText[i];
-                }
+                else if (previewText[i] != '\r') line += previewText[i];
+            }
+            const float lineHeight = previewSize * 1.2f;
+            const float blockHeight = previewSize + (lines.size() > 1 ? (lines.size()-1)*lineHeight : 0.0f);
+            float lineY=min.y;
+            if(text->GetVerticalAlignment()==UITextVerticalAlignment::Center) lineY += ((max.y-min.y)-blockHeight)*0.5f;
+            else if(text->GetVerticalAlignment()==UITextVerticalAlignment::Bottom) lineY += (max.y-min.y)-blockHeight;
+            for(const std::string& value:lines)
+            {
+                const ImVec2 measured=previewFont->CalcTextSizeA(previewSize,FLT_MAX,0.0f,value.c_str());
+                float lineX=min.x;
+                if(text->GetHorizontalAlignment()==UITextHorizontalAlignment::Center) lineX += ((max.x-min.x)-measured.x)*0.5f;
+                else if(text->GetHorizontalAlignment()==UITextHorizontalAlignment::Right) lineX += (max.x-min.x)-measured.x;
+                drawList->AddText(previewFont,previewSize,ImVec2(lineX,lineY),fillColor,value.c_str());
+                lineY += lineHeight;
             }
         }
     }
@@ -1548,13 +1549,13 @@ void UIEditor::DrawWidget(
 
         if (texture && texture->IsLoaded())
         {
-            drawList->AddImage(
-                (ImTextureID)(intptr_t)texture->GetID(),
-                min,
-                max,
-                ImVec2(0.0f, 1.0f),
-                ImVec2(1.0f, 0.0f),
-                fillColor);
+            const float previewRadius=std::max(0.0f,widget.GetCornerRadius()*scale);
+            if(previewRadius>0.0f)
+                drawList->AddImageRounded((ImTextureID)(intptr_t)texture->GetID(),min,max,
+                    ImVec2(0.0f,1.0f),ImVec2(1.0f,0.0f),fillColor,previewRadius);
+            else
+                drawList->AddImage((ImTextureID)(intptr_t)texture->GetID(),min,max,
+                    ImVec2(0.0f,1.0f),ImVec2(1.0f,0.0f),fillColor);
         }
         else
         {
@@ -1576,19 +1577,13 @@ void UIEditor::DrawWidget(
                 drawList->AddRectFilledMultiColor(min,max,fillColor,fillColor,endColor,endColor);
         }
         else
-            drawList->AddRectFilled(min,max,fillColor,4.0f);
+        {
+            const float previewRadius=std::max(0.0f,widget.GetCornerRadius()*scale);
+            drawList->AddRectFilled(min,max,fillColor,previewRadius);
+        }
 
-        drawList->AddRect(
-            min,
-            max,
-            IM_COL32(
-                255,
-                255,
-                255,
-                70
-            ),
-            4.0f
-        );
+        const float previewRadius=std::max(0.0f,widget.GetCornerRadius()*scale);
+        drawList->AddRect(min,max,IM_COL32(255,255,255,70),previewRadius);
 
         // Buttons are visual containers. Their widget name is editor metadata,
         // not visible UI text. Add a UIText child when the button needs a label.
@@ -2157,7 +2152,9 @@ std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
     copy->SetAnchors(source.GetAnchorMinimum(),source.GetAnchorMaximum()); copy->SetPivot(source.GetPivot());
     copy->SetColor(source.GetColor()); copy->SetVisible(source.IsVisible()); copy->SetEnabled(source.IsEnabled());
     copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder());
-    if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); }
+    copy->SetCornerRadius(source.GetCornerRadius()); copy->SetGradientEnabled(source.HasGradient());
+    copy->SetGradientColor(source.GetGradientColor()); copy->SetGradientDirection(source.GetGradientDirection());
+    if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); b->SetHorizontalAlignment(a->GetHorizontalAlignment()); b->SetVerticalAlignment(a->GetVerticalAlignment()); }
     if(auto* a=dynamic_cast<const UISlider*>(&source)) if(auto* b=dynamic_cast<UISlider*>(copy.get())) { b->SetValue(a->GetValue()); b->SetFillColor(a->GetFillColor()); b->SetHandleColor(a->GetHandleColor()); }
     if(auto* a=dynamic_cast<const UIImage*>(&source)) if(auto* b=dynamic_cast<UIImage*>(copy.get())) b->SetTexturePath(a->GetTexturePath());
     if(auto* a=dynamic_cast<const UIButton*>(&source)) if(auto* b=dynamic_cast<UIButton*>(copy.get())) {
