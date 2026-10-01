@@ -44,6 +44,13 @@ end
 function WeaponSystem:Equip(weaponID)
     local def = self.definitions[weaponID]
     if not def or not self.inventory[weaponID] then return false end
+
+    -- Pressing the slot for the weapon already in our hands is a no-op.
+    -- Do not respawn its viewmodel or reset reload/recoil state.
+    if self.equipped == weaponID and self.viewmodel ~= 0 then
+        return false
+    end
+
     if self.viewmodel ~= 0 then
         self.api.Scene.DestroyEntity(self.viewmodel)
         self.viewmodel = 0
