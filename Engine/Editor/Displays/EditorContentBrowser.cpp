@@ -448,9 +448,9 @@ void Editor::RenderContentBrowser(
             {
                 std::error_code previewError;
                 const std::string modelPath =
-                    fs::relative(entry.path, fs::current_path(), previewError).generic_string();
+                    entry.path.lexically_normal().string();
                 const unsigned int previewTexture =
-                    previewError ? 0 : renderer.RenderModelPreview(modelPath, 144, 144);
+                    renderer.RenderModelPreview(modelPath, 144, 144);
 
                 if (previewTexture != 0)
                 {
@@ -656,7 +656,7 @@ void Editor::RenderContentBrowser(
                 ImGui::IsItemHovered() &&
                 ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
-                m_MeshPreviewPath = fs::relative(entry.path, fs::current_path(), error).generic_string();
+                m_MeshPreviewPath = entry.path.lexically_normal().string();
             }
 
             /*
