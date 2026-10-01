@@ -25,7 +25,8 @@ public:
     void Render(
         Renderer& renderer,
         Scene& scene,
-        ImFont* iconFont
+        ImFont* iconFont,
+        bool renderSceneDocument = true
     );
 
     bool IsViewportHovered() const;
