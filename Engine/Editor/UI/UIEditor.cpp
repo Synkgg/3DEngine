@@ -64,10 +64,15 @@ void UIEditor::Draw(
     m_Renderer = &renderer;
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    // ApplicationLoop reserves the menu/document bars in the viewport's
-    // work rectangle, so the UI document consumes exactly the remaining area.
-    const ImVec2 workspacePos = viewport->WorkPos;
-    const ImVec2 workspaceSize = viewport->WorkSize;
+    // The main menu is already excluded from WorkPos/WorkSize. Reserve the
+    // document strip locally without mutating ImGui's global viewport state.
+    const float documentBarHeight = 34.0f;
+    const ImVec2 workspacePos(
+        viewport->WorkPos.x,
+        viewport->WorkPos.y + documentBarHeight);
+    const ImVec2 workspaceSize(
+        viewport->WorkSize.x,
+        std::max(1.0f, viewport->WorkSize.y - documentBarHeight));
 
     const std::string hostName =
         std::string("##UIWorkspace_") + m_UIAssetPath;
