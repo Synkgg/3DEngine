@@ -1,53 +1,24 @@
 #include "VertexBuffer.h"
+#include "../RHI/RHI.h"
 
-#include <glad/gl.h>
-
-VertexBuffer::VertexBuffer()
-    : m_RendererID(0)
-{
-}
-
-VertexBuffer::~VertexBuffer()
-{
-    Shutdown();
-}
+VertexBuffer::~VertexBuffer() { Shutdown(); }
 
 bool VertexBuffer::Initialize(const void* data, unsigned int size)
 {
-    glGenBuffers(1, &m_RendererID);
-
-    if (m_RendererID == 0)
-    {
-        return false;
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        size,
-        data,
-        GL_STATIC_DRAW
-    );
-
-    return true;
-}
-
-void VertexBuffer::Bind()
-{
-    glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-}
-
-void VertexBuffer::Unbind()
-{
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    Shutdown();
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device || !data || !size) return false;
+    Velcryn::RHI::BufferDesc desc{};
+    desc.size = size;
+    desc.usage = Velcryn::RHI::BufferUsage::Vertex;
+    desc.debugName = "VertexBuffer";
+    m_Handle = device->CreateBuffer(desc, data);
+    return static_cast<bool>(m_Handle);
 }
 
 void VertexBuffer::Shutdown()
 {
-    if (m_RendererID != 0)
-    {
-        glDeleteBuffers(1, &m_RendererID);
-        m_RendererID = 0;
-    }
+    if (m_Handle && Velcryn::RHI::GetDevice())
+        Velcryn::RHI::GetDevice()->DestroyBuffer(m_Handle);
+    m_Handle = {};
 }
