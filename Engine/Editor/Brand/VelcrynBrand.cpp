@@ -2,31 +2,52 @@
 
 namespace Velcryn::Editor::Brand
 {
-    void DrawLogoMark(ImDrawList* dl, ImVec2 p, float s)
+    void DrawLogoMark(ImDrawList* drawList, ImVec2 position, float size)
     {
-        // Source silhouette follows the approved Velcryn brand board: broad
-        // outward shoulders, a deep split crown, crossed inner blades and a
-        // long tapered lower point. Facets intentionally overlap like folded metal.
-        auto P=[&](float x,float y){return ImVec2(p.x+x*s,p.y+y*s);};
-        const ImU32 silver0=IM_COL32(239,243,247,255), silver1=IM_COL32(174,190,205,255);
-        const ImU32 steel=IM_COL32(92,112,132,255), dark=IM_COL32(38,55,72,255);
-        const ImU32 blue=IM_COL32(48,164,238,255), glow=IM_COL32(91,211,255,255);
+        const ImU32 white = IM_COL32(255, 255, 255, 255);
 
-        // Left blade: wide shoulder -> inner crossing -> lower point.
-        dl->AddQuadFilled(P(.03,.08),P(.31,.17),P(.53,.60),P(.38,.45),silver0);
-        dl->AddTriangleFilled(P(.03,.08),P(.38,.45),P(.24,.30),silver1);
-        dl->AddTriangleFilled(P(.31,.17),P(.53,.60),P(.42,.28),steel);
-        // Right blade is higher and sharper, matching the reference asymmetry.
-        dl->AddQuadFilled(P(.97,.03),P(.69,.15),P(.47,.60),P(.61,.43),silver0);
-        dl->AddTriangleFilled(P(.97,.03),P(.61,.43),P(.78,.27),silver1);
-        dl->AddTriangleFilled(P(.69,.15),P(.47,.60),P(.59,.27),dark);
-        // Central folded spear / long lower point.
-        dl->AddTriangleFilled(P(.38,.45),P(.53,.60),P(.47,.96),steel);
-        dl->AddTriangleFilled(P(.61,.43),P(.47,.96),P(.53,.60),IM_COL32(29,72,108,255));
-        dl->AddTriangleFilled(P(.42,.28),P(.59,.27),P(.53,.60),blue);
-        // Illuminated inner seams from the board, not an outline around the mark.
-        dl->AddLine(P(.31,.17),P(.53,.60),glow,1.6f);
-        dl->AddLine(P(.69,.15),P(.47,.60),glow,1.4f);
-        dl->AddLine(P(.53,.60),P(.47,.96),blue,1.2f);
+        const auto point = [position, size](float x, float y)
+        {
+            return ImVec2(position.x + x * size, position.y + y * size);
+        };
+
+        // Monochrome Velcryn mark. These pieces follow the supplied white
+        // V-wing emblem rather than the earlier metallic/cyan brand-board mark.
+        const ImVec2 leftBlade[] =
+        {
+            point(0.03f, 0.08f),
+            point(0.36f, 0.29f),
+            point(0.51f, 0.64f),
+            point(0.51f, 0.96f)
+        };
+
+        const ImVec2 rightBlade[] =
+        {
+            point(0.97f, 0.06f),
+            point(0.68f, 0.27f),
+            point(0.51f, 0.64f),
+            point(0.55f, 0.78f),
+            point(0.73f, 0.57f)
+        };
+
+        const ImVec2 lowerFacet[] =
+        {
+            point(0.55f, 0.69f),
+            point(0.72f, 0.59f),
+            point(0.62f, 0.80f),
+            point(0.56f, 0.75f)
+        };
+
+        const ImVec2 lowerTip[] =
+        {
+            point(0.52f, 0.67f),
+            point(0.59f, 0.82f),
+            point(0.52f, 0.94f)
+        };
+
+        drawList->AddConvexPolyFilled(leftBlade, 4, white);
+        drawList->AddConvexPolyFilled(rightBlade, 5, white);
+        drawList->AddConvexPolyFilled(lowerFacet, 4, white);
+        drawList->AddTriangleFilled(lowerTip[0], lowerTip[1], lowerTip[2], white);
     }
 }
