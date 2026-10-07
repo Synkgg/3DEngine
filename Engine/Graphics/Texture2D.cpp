@@ -88,7 +88,7 @@ void Texture2D::Unbind() const
 }
 
 bool Texture2D::IsLoaded() const { return m_Loaded; }
-unsigned int Texture2D::GetID() const { return 0; }
+std::uint64_t Texture2D::GetID() const { if (auto* device = Velcryn::RHI::GetDevice()) return device->GetImGuiTextureID(m_Handle); return 0; }
 int Texture2D::GetWidth() const { return m_Width; }
 int Texture2D::GetHeight() const { return m_Height; }
 int Texture2D::GetChannels() const { return m_Channels; }

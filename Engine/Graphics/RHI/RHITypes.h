@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
+#include <span>
 
 namespace Velcryn::RHI
 {
@@ -45,6 +47,19 @@ namespace Velcryn::RHI
     using SamplerHandle = Handle<SamplerTag>;
     using PipelineHandle = Handle<PipelineTag>;
     using CommandListHandle = Handle<CommandListTag>;
+
+    enum class VertexFormat : std::uint8_t { Float2, Float3, Float4 };
+    struct VertexAttribute { std::uint32_t location, offset; VertexFormat format; };
+    struct GraphicsPipelineDesc
+    {
+        std::span<const std::uint32_t> vertexShader, fragmentShader;
+        std::span<const VertexAttribute> attributes;
+        std::uint32_t vertexStride = 0, constantSize = 0;
+        TextureFormat colorFormat = TextureFormat::RGBA16_Float;
+        TextureFormat depthFormat = TextureFormat::D32_Float;
+        bool depthTest = true, depthWrite = true, cullBackFaces = true;
+        const char* debugName = nullptr;
+    };
 
     struct BufferDesc
     {

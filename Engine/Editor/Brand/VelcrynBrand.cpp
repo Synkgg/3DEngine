@@ -58,8 +58,8 @@ namespace Velcryn::Editor::Brand
             texture,
             position,
             ImVec2(position.x + size, position.y + size),
-            ImVec2(0.0f, 0.0f),
-            ImVec2(1.0f, 1.0f)
+            ImVec2(0.0f, 1.0f),
+            ImVec2(1.0f, 0.0f)
         );
     }
 }

@@ -10,6 +10,7 @@
 #include <Extensions/NRIImgui.h>
 
 #include <vector>
+#include <functional>
 
 namespace Velcryn::RHI
 {
@@ -27,9 +28,18 @@ namespace Velcryn::RHI
 
         BufferHandle CreateBuffer(const BufferDesc& desc, const void* initialData) override;
         void DestroyBuffer(BufferHandle buffer) override;
+        bool UpdateBuffer(BufferHandle buffer, const void* data, std::size_t size) override;
         TextureHandle CreateTexture(const TextureDesc& desc, const void* initialData, std::size_t initialDataSize) override;
         void DestroyTexture(TextureHandle texture) override;
         std::uint64_t GetImGuiTextureID(TextureHandle texture) const override;
+        bool ReadTexture(TextureHandle texture, std::vector<std::uint8_t>& bytes) override;
+        PipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
+        void DestroyPipeline(PipelineHandle pipeline) override;
+        bool BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4]) override;
+        void EndRendering() override;
+        bool DrawIndexed(PipelineHandle pipeline, BufferHandle vertices, BufferHandle indices,
+            std::uint32_t indexCount, const void* constants, std::uint32_t constantSize,
+            std::uint32_t instanceCount = 1) override;
 
         CommandListHandle BeginCommandList(QueueType queue) override;
         void EndCommandList(CommandListHandle commandList) override;
@@ -47,6 +57,7 @@ namespace Velcryn::RHI
             nri::Buffer* resource = nullptr;
             std::vector<nri::Memory*> allocations;
             std::uint32_t generation = 1;
+            BufferDesc desc{};
         };
 
         struct TextureSlot
@@ -54,6 +65,10 @@ namespace Velcryn::RHI
             nri::Texture* resource = nullptr;
             std::vector<nri::Memory*> allocations;
             nri::Descriptor* shaderResource = nullptr;
+            nri::Descriptor* imguiResource = nullptr;
+            nri::Descriptor* attachment = nullptr;
+            nri::AccessLayoutStage state{};
+            TextureDesc desc{};
             std::uint32_t generation = 1;
         };
 
@@ -63,7 +78,28 @@ namespace Velcryn::RHI
             nri::CommandBuffer* commandBuffer = nullptr;
             std::uint32_t generation = 1;
             bool recording = false;
+            nri::Queue* queue = nullptr;
+            bool submitted = false;
         };
+
+        struct PipelineSlot
+        {
+            nri::Pipeline* resource = nullptr;
+            nri::PipelineLayout* layout = nullptr;
+            std::uint32_t generation = 1, stride = 0, constantSize = 0;
+        };
+        void TransitionTexture(TextureSlot& texture, nri::AccessLayoutStage after);
+        void CollectGarbage();
+        bool CreateSwapChain(Window& window);
+        void DestroySwapChain();
+        Window* m_Window = nullptr;
+        std::uint32_t m_SwapChainWidth = 0, m_SwapChainHeight = 0;
+        bool m_RebuildSwapChain = false, m_DeviceFailed = false;
+        std::vector<bool> m_Presented;
+        std::vector<PipelineSlot> m_Pipelines;
+        std::vector<std::function<void()>> m_Garbage;
+        TextureHandle m_RenderColor{}, m_RenderDepth{};
+        bool m_Rendering = false;
 
         nri::Queue* ResolveQueue(QueueType queue) const;
         static nri::Format ToNRIFormat(TextureFormat format);

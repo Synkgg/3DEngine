@@ -10,6 +10,8 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <Mesh.vert.h>
+#include <Mesh.frag.h>
 
 
 
@@ -64,6 +66,23 @@ bool Renderer::Initialize(Window& window)
         return false;
     }
 
+    const Velcryn::RHI::VertexAttribute attributes[] = {
+        {0, offsetof(Vertex, position), Velcryn::RHI::VertexFormat::Float3},
+        {1, offsetof(Vertex, normal), Velcryn::RHI::VertexFormat::Float3},
+        {2, offsetof(Vertex, uv), Velcryn::RHI::VertexFormat::Float2}
+    };
+    Velcryn::RHI::GraphicsPipelineDesc pipeline{};
+    pipeline.vertexShader = Mesh_vert; pipeline.fragmentShader = Mesh_frag;
+    pipeline.attributes = attributes; pipeline.vertexStride = sizeof(Vertex);
+    pipeline.constantSize = sizeof(Mat4) + sizeof(float) * 16;
+    pipeline.debugName = "BasicMesh";
+    m_MeshPipeline = Velcryn::RHI::GetDevice()->CreateGraphicsPipeline(pipeline);
+    if (!m_MeshPipeline) { Shutdown(); return false; }
+    m_CubeMesh = PrimitiveMesh::CreateCube();
+    m_PlaneMesh = PrimitiveMesh::CreatePlane();
+    m_SphereMesh = PrimitiveMesh::CreateSphere();
+    m_CylinderMesh = PrimitiveMesh::CreateCylinder();
+
     m_Camera.SetAspectRatio(
         static_cast<float>(window.GetWidth()) /
         static_cast<float>(window.GetHeight())
@@ -75,6 +94,8 @@ bool Renderer::Initialize(Window& window)
 
 void Renderer::Shutdown()
 {
+    if (auto* device = Velcryn::RHI::GetDevice()) device->DestroyPipeline(m_MeshPipeline);
+    m_MeshPipeline = {};
     // The active renderer is Vulkan/NRI. Do not touch legacy GL objects here:
     // no OpenGL context exists on an SDL_WINDOW_VULKAN window.
     m_CubeMesh.reset();
@@ -94,11 +115,15 @@ void Renderer::BeginFrame()
 {
     m_FrameViewProjection = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix();
     if (auto* device = Velcryn::RHI::GetDevice())
+    {
         device->BeginFrame();
+        device->BeginRendering(m_Framebuffer.GetColorTexture(), m_Framebuffer.GetDepthTexture(), m_ClearColor);
+    }
 }
 
 void Renderer::EndScene()
 {
+    if (auto* device = Velcryn::RHI::GetDevice()) device->EndRendering();
 }
 
 void Renderer::BeginOverlay()
@@ -137,7 +162,7 @@ void Renderer::SetClearColor(float red, float green, float blue, float alpha)
 
 
 
-std::uint64_t Renderer::GetViewportTexture() const { if(auto*d=Velcryn::RHI::GetDevice()) return d->GetImGuiTextureID(m_PostColorTexture?m_PostColorTexture:m_Framebuffer.GetColorTexture()); return 0; }
+std::uint64_t Renderer::GetViewportTexture() const { if(auto*d=Velcryn::RHI::GetDevice()) return d->GetImGuiTextureID(m_Framebuffer.GetColorTexture()); return 0; }
 
 void Renderer::ResizeViewport(
 	unsigned int width,

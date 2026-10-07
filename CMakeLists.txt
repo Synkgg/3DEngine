@@ -1,6 +1,41 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.30)
 
 project(VelcrynEngine)
+
+# Compile engine-owned HLSL to Vulkan SPIR-V and embed it in the executable.
+# VELCRYN_DXC can be set explicitly on hosts without dxc in PATH or a Windows SDK.
+file(GLOB DXC_SDK_DIRS "C:/Program Files (x86)/Windows Kits/10/bin/*/x64")
+list(SORT DXC_SDK_DIRS ORDER DESCENDING)
+find_program(VELCRYN_DXC NAMES dxc HINTS "${CMAKE_CURRENT_SOURCE_DIR}/out/tools/dxc/bin/x64" "$ENV{VULKAN_SDK}/Bin" ${DXC_SDK_DIRS} REQUIRED)
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Generated")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/Generated/CompilerProbe.hlsl" "float4 main() : SV_Target { return 1; }\n")
+execute_process(COMMAND "${VELCRYN_DXC}" -spirv -T ps_6_0 -E main
+    -Fo "${CMAKE_CURRENT_BINARY_DIR}/Generated/CompilerProbe.spv"
+    "${CMAKE_CURRENT_BINARY_DIR}/Generated/CompilerProbe.hlsl"
+    RESULT_VARIABLE DXC_PROBE_RESULT ERROR_VARIABLE DXC_PROBE_ERROR)
+if(NOT DXC_PROBE_RESULT EQUAL 0)
+    message(FATAL_ERROR "DXC must support SPIR-V. Set VELCRYN_DXC to the standalone DXC or Vulkan SDK compiler. ${DXC_PROBE_ERROR}")
+endif()
+set(VELCRYN_SHADER_HEADERS)
+foreach(STAGE vert frag)
+    if(STAGE STREQUAL "vert")
+        set(PROFILE vs_6_0)
+    else()
+        set(PROFILE ps_6_0)
+    endif()
+    set(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/Mesh.${STAGE}.hlsl")
+    set(SPIRV "${CMAKE_CURRENT_BINARY_DIR}/Generated/Mesh.${STAGE}.spv")
+    set(HEADER "${CMAKE_CURRENT_BINARY_DIR}/Generated/Mesh.${STAGE}.h")
+    add_custom_command(OUTPUT "${HEADER}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Generated"
+        COMMAND "${VELCRYN_DXC}" -spirv -fspv-target-env=vulkan1.2 -T ${PROFILE} -E main
+            "$<IF:$<CONFIG:Debug>,-Od,-O3>" -Fo "${SPIRV}" "${SOURCE}"
+        COMMAND ${CMAKE_COMMAND} "-DINPUT=${SPIRV}" "-DOUTPUT=${HEADER}" "-DSYMBOL=Mesh_${STAGE}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
+        DEPENDS "${SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
+        VERBATIM)
+    list(APPEND VELCRYN_SHADER_HEADERS "${HEADER}")
+endforeach()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -49,6 +84,8 @@ FetchContent_Declare(
 # SDL's CMake project exposes SDL3::SDL3-static when SDL_STATIC is enabled.
 set(SDL_SHARED OFF CACHE BOOL "Build SDL shared library" FORCE)
 set(SDL_STATIC ON CACHE BOOL "Build SDL static library" FORCE)
+set(SDL_OPENGL OFF CACHE BOOL "Vulkan renderer does not use SDL OpenGL" FORCE)
+set(SDL_OPENGLES OFF CACHE BOOL "Vulkan renderer does not use SDL OpenGL ES" FORCE)
 FetchContent_MakeAvailable(SDL3)
 
 #
@@ -154,7 +191,11 @@ FetchContent_Declare(
 # ABI. Without this, NRI reads Width/Height at the old offsets and sees width=0.
 FetchContent_GetProperties(NRI)
 if (NOT nri_POPULATED)
+    # Populate before add_subdirectory so the ImGui ABI patch is applied first.
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0169 OLD)
     FetchContent_Populate(NRI)
+    cmake_policy(POP)
 endif()
 
 set(NRI_IMGUI_IMPL "${nri_SOURCE_DIR}/Source/Shared/ImguiInterface.hpp")
@@ -259,6 +300,7 @@ add_executable(
 
     ${ENGINE_SOURCES}
     ${INTER_FONT_CPP}
+    ${VELCRYN_SHADER_HEADERS}
 
     $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/Engine/Branding/Velcryn.rc>
 
@@ -290,6 +332,7 @@ target_include_directories(
     PRIVATE
 
     vendor/imgui
+    "${CMAKE_CURRENT_BINARY_DIR}/Generated"
     vendor/imgui/backends
 
     vendor/ImGuizmo/src
@@ -389,6 +432,14 @@ add_custom_command(
 
 # Make the engine executable the startup target for Visual Studio generators.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VelcrynEditor)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_test(NAME RHI.Smoke COMMAND ${CMAKE_COMMAND}
+        "-DEDITOR=$<TARGET_FILE:VelcrynEditor>" "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+        "-DLOG_DIR=${CMAKE_CURRENT_BINARY_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunRHISmokeTest.cmake")
+    set_tests_properties(RHI.Smoke PROPERTIES TIMEOUT 45 LABELS "gpu;vulkan")
+endif()
 
 #
 # Portable distribution

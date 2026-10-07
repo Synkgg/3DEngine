@@ -34,6 +34,8 @@ Initial migration order:
 5. Introduce RenderGraph resource/pass scheduling.
 6. Add the NRI-backed Vulkan device, then D3D12 without changing renderer-facing APIs.
 
-The existing OpenGL path remains operational while this migration is underway.
+The active path is Vulkan/NRI. Basic indexed scene rendering is implemented;
+advanced passes still require restoration. See `Docs/VulkanParityStatus.md` for
+the implementation and validation scope.
 Backend-specific capabilities are queried through `RHICapabilities`; higher
 layers must not branch on Vulkan/D3D12 unless the behavior is truly API-specific.

@@ -104,6 +104,7 @@ public:
     void InvalidateModelAsset(const std::string& modelPath);
 
     std::uint64_t GetViewportTexture() const;
+    Velcryn::RHI::TextureHandle GetSceneColorTexture() const { return m_Framebuffer.GetColorTexture(); }
 
     void ResizeViewport(unsigned int width, unsigned int height);
 
@@ -158,6 +159,7 @@ public:
     }
 
 private:
+    Velcryn::RHI::PipelineHandle m_MeshPipeline{};
     Window* m_Window;
 
     float m_ClearColor[4];

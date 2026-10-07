@@ -18,8 +18,8 @@ public:
 
     bool IsLoaded() const;
 
-    // Legacy compatibility only. OpenGL texture IDs no longer exist.
-    unsigned int GetID() const;
+    // Opaque descriptor for editor images; never truncate to a 32-bit texture name.
+    std::uint64_t GetID() const;
     Velcryn::RHI::TextureHandle GetHandle() const { return m_Handle; }
     int GetWidth() const;
     int GetHeight() const;

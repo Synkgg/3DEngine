@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "RHI/RHI.h"
 #include "../Platform/SDL/Window.h"
 #include "PrimitiveMesh.h"
 #include "ModelLoader.h"
@@ -128,11 +129,27 @@ void Renderer::UploadFrameShaderState()
     m_FrameShaderStateReady = true;
 }
 
-void Renderer::DrawMeshInternal(Mesh*, const Transform&, float, float, float, float,
+void Renderer::DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha,
     const Texture2D*, float, float, float, float, const Texture2D*, const Texture2D*,
     const Texture2D*, const Texture2D*, const Texture2D*, const std::vector<Mat4>*)
 {
-    // Vulkan mesh command recording is owned by the RHI scene pass.
+    if (!mesh) return;
+    struct Constants { Mat4 mvp; float color[4]; float normalColumns[3][4]; };
+    const Mat4 model = transform.GetMatrix();
+    Constants constants{m_FrameViewProjection * model, {red, green, blue, alpha}, {}};
+    // Transform consists of rotation and scale: divide each basis column by
+    // its squared length to obtain the inverse transpose for surface normals.
+    for (int column = 0; column < 3; ++column)
+    {
+        float squaredLength = 0;
+        for (int row = 0; row < 3; ++row) squaredLength += model.elements[column * 4 + row] * model.elements[column * 4 + row];
+        if (squaredLength > 1e-12f)
+            for (int row = 0; row < 3; ++row) constants.normalColumns[column][row] = model.elements[column * 4 + row] / squaredLength;
+    }
+    static_assert(sizeof(Constants) == 128);
+    if (auto* device = Velcryn::RHI::GetDevice())
+        device->DrawIndexed(m_MeshPipeline, mesh->GetVertexBuffer(), mesh->GetIndexBuffer(),
+            mesh->GetIndexCount(), &constants, sizeof(constants));
 }
 
 void Renderer::DrawMesh(

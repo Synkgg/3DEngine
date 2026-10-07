@@ -1,0 +1,8 @@
+file(READ "${INPUT}" HEX_DATA HEX)
+string(LENGTH "${HEX_DATA}" HEX_LENGTH)
+math(EXPR REMAINDER "${HEX_LENGTH} % 8")
+if(NOT REMAINDER EQUAL 0)
+    message(FATAL_ERROR "SPIR-V byte count must be a multiple of four: ${INPUT}")
+endif()
+string(REGEX REPLACE "(..)(..)(..)(..)" "0x\\4\\3\\2\\1u," WORDS "${HEX_DATA}")
+file(WRITE "${OUTPUT}" "#pragma once\n#include <cstdint>\ninline constexpr std::uint32_t ${SYMBOL}[] = {${WORDS}};\n")
