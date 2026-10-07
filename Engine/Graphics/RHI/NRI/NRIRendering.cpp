@@ -60,11 +60,31 @@ namespace Velcryn::RHI
         PipelineSlot slot{};
         slot.stride = desc.vertexStride;
         slot.constantSize = desc.constantSize;
+        slot.sampledTexture = desc.sampledTexture;
         nri::RootConstantDesc constants{0, desc.constantSize, nri::StageBits::VERTEX_SHADER | nri::StageBits::FRAGMENT_SHADER};
+        nri::DescriptorRangeDesc textureRange{};
+        textureRange.baseRegisterIndex = 0;
+        textureRange.descriptorNum = 1;
+        textureRange.descriptorType = nri::DescriptorType::TEXTURE;
+        textureRange.shaderStages = nri::StageBits::FRAGMENT_SHADER;
+        nri::DescriptorSetDesc textureSet{};
+        textureSet.registerSpace = 0;
+        textureSet.ranges = &textureRange;
+        textureSet.rangeNum = 1;
+        nri::RootSamplerDesc sampler{};
+        sampler.registerIndex = 0;
+        sampler.shaderStages = nri::StageBits::FRAGMENT_SHADER;
+        sampler.desc.filters = {nri::Filter::LINEAR, nri::Filter::LINEAR, nri::Filter::LINEAR, nri::FilterOp::AVERAGE};
+        sampler.desc.addressModes = {nri::AddressMode::REPEAT, nri::AddressMode::REPEAT, nri::AddressMode::REPEAT};
+        sampler.desc.mipMax = 16.0f;
         nri::PipelineLayoutDesc layout{};
         layout.shaderStages = constants.shaderStages;
         layout.rootConstants = desc.constantSize ? &constants : nullptr;
         layout.rootConstantNum = desc.constantSize ? 1 : 0;
+        layout.rootSamplers = desc.sampledTexture ? &sampler : nullptr;
+        layout.rootSamplerNum = desc.sampledTexture ? 1 : 0;
+        layout.descriptorSets = desc.sampledTexture ? &textureSet : nullptr;
+        layout.descriptorSetNum = desc.sampledTexture ? 1 : 0;
         if (m_Core.CreatePipelineLayout(*m_Device, layout, slot.layout) != nri::Result::SUCCESS)
             return {};
         std::vector<nri::VertexAttributeDesc> attributes;
@@ -88,6 +108,12 @@ namespace Velcryn::RHI
         nri::ColorAttachmentDesc color{};
         color.format = ToNRIFormat(desc.colorFormat);
         color.colorWriteMask = nri::ColorWriteBits::RGBA;
+        color.blendEnabled = desc.alphaBlend;
+        if (desc.alphaBlend)
+        {
+            color.colorBlend = {nri::BlendFactor::SRC_ALPHA, nri::BlendFactor::ONE_MINUS_SRC_ALPHA, nri::BlendOp::ADD};
+            color.alphaBlend = {nri::BlendFactor::ONE, nri::BlendFactor::ONE_MINUS_SRC_ALPHA, nri::BlendOp::ADD};
+        }
         nri::GraphicsPipelineDesc pipeline{};
         pipeline.pipelineLayout = slot.layout;
         pipeline.vertexInput = &input;
@@ -147,7 +173,7 @@ namespace Velcryn::RHI
         slot.state = after;
     }
 
-    bool NRIDevice::BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4])
+    bool NRIDevice::BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear)
     {
         if (!m_FrameOpen || m_Rendering || !color || !depth || !clearColor ||
             color.index > m_Textures.size() || depth.index > m_Textures.size()) return false;
@@ -157,9 +183,9 @@ namespace Velcryn::RHI
         TransitionTexture(c, {nri::AccessBits::COLOR_ATTACHMENT, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT});
         TransitionTexture(d, {nri::AccessBits::DEPTH_STENCIL_ATTACHMENT, nri::Layout::DEPTH_STENCIL_ATTACHMENT, nri::StageBits::DEPTH_STENCIL_ATTACHMENT});
         nri::AttachmentDesc ca{}, da{};
-        ca.descriptor = c.attachment; ca.loadOp = nri::LoadOp::CLEAR; ca.storeOp = nri::StoreOp::STORE;
+        ca.descriptor = c.attachment; ca.loadOp = clear ? nri::LoadOp::CLEAR : nri::LoadOp::LOAD; ca.storeOp = nri::StoreOp::STORE;
         std::memcpy(&ca.clearValue.color.f, clearColor, sizeof(float) * 4);
-        da.descriptor = d.attachment; da.loadOp = nri::LoadOp::CLEAR; da.storeOp = nri::StoreOp::STORE;
+        da.descriptor = d.attachment; da.loadOp = clear ? nri::LoadOp::CLEAR : nri::LoadOp::LOAD; da.storeOp = nri::StoreOp::STORE;
         da.clearValue.depthStencil.depth = 1.0f;
         nri::RenderingDesc rendering{};
         rendering.colors = &ca; rendering.colorNum = 1; rendering.depth = da;
@@ -182,7 +208,7 @@ namespace Velcryn::RHI
     }
 
     bool NRIDevice::DrawIndexed(PipelineHandle pipeline, BufferHandle vertices, BufferHandle indices,
-        uint32_t count, const void* constants, uint32_t constantSize, uint32_t instances)
+        uint32_t count, const void* constants, uint32_t constantSize, uint32_t instances, TextureHandle texture)
     {
         if (!m_Rendering || !pipeline || !vertices || !indices || !count || !instances ||
             pipeline.index > m_Pipelines.size() || vertices.index > m_Buffers.size() || indices.index > m_Buffers.size()) return false;
@@ -201,6 +227,22 @@ namespace Velcryn::RHI
         {
             nri::SetRootConstantsDesc root{}; root.data = constants; root.size = constantSize;
             m_Core.CmdSetRootConstants(*m_FrameCommandBuffer, root);
+        }
+        if (p.sampledTexture)
+        {
+            if (!m_DescriptorPool || !texture || texture.index > m_Textures.size()) return false;
+            const auto& t = m_Textures[texture.index - 1];
+            if (t.generation != texture.generation || !t.shaderResource) return false;
+            nri::DescriptorSet* set = nullptr;
+            if (m_Core.AllocateDescriptorSets(*m_DescriptorPool, *p.layout, 0, &set, 1, 0) != nri::Result::SUCCESS || !set)
+                return false;
+            nri::Descriptor* descriptor = t.shaderResource;
+            nri::UpdateDescriptorRangeDesc update{};
+            update.descriptorSet = set; update.rangeIndex = 0; update.baseDescriptor = 0;
+            update.descriptors = &descriptor; update.descriptorNum = 1;
+            m_Core.UpdateDescriptorRanges(&update, 1);
+            nri::SetDescriptorSetDesc bind{}; bind.setIndex = 0; bind.descriptorSet = set; bind.bindPoint = nri::BindPoint::GRAPHICS;
+            m_Core.CmdSetDescriptorSet(*m_FrameCommandBuffer, bind);
         }
         nri::DrawIndexedDesc draw{}; draw.indexNum = count; draw.instanceNum = instances;
         m_Core.CmdDrawIndexed(*m_FrameCommandBuffer, draw);
