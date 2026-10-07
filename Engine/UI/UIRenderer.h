@@ -171,7 +171,9 @@ private:
     );
     void DrawQuad(float x, float y, float width, float height,
         float u0, float v0, float u1, float v1,
-        const Vec4& color, Velcryn::RHI::TextureHandle texture);
+        const Vec4& color, Velcryn::RHI::TextureHandle texture,
+        const Vec4& gradientColor = Vec4(), bool useGradient = false,
+        bool horizontalGradient = false, float cornerRadius = 0.0f);
 
     struct FontGlyph
     {
