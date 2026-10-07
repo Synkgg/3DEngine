@@ -567,6 +567,10 @@ void Application::Run()
 
         UpdateLighting();
 
+        // Acquire/reset the Vulkan frame before any scene, shadow, overlay, or
+        // ImGui GPU work is recorded for this frame.
+        m_Renderer.BeginFrame();
+
         // Directional shadow depth pass. Keep this separate from the color pass
         // so the material shader can sample a stable light-space depth map.
         for (int shadowCascade = 0; shadowCascade < Renderer::ShadowCascadeCount; ++shadowCascade)
@@ -605,8 +609,6 @@ void Application::Run()
         }
             m_Renderer.EndShadowPass();
         }
-
-        m_Renderer.BeginFrame();
 
         m_Renderer.DrawSky();
 
