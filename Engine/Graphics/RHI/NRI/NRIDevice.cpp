@@ -194,6 +194,8 @@ namespace Velcryn::RHI
 
         for (TextureSlot& slot : m_Textures)
         {
+            if (slot.shaderResource)
+                m_Core.DestroyDescriptor(slot.shaderResource);
             if (slot.resource)
                 m_Core.DestroyTexture(slot.resource);
             for (nri::Memory* memory : slot.allocations)
@@ -288,6 +290,7 @@ namespace Velcryn::RHI
         for (nri::Memory* memory : slot.allocations)
             m_Core.FreeMemory(memory);
 
+        slot.shaderResource = nullptr;
         slot.resource = nullptr;
         slot.allocations.clear();
         ++slot.generation;
