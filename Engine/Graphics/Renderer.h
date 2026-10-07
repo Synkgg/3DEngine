@@ -172,6 +172,8 @@ private:
     Velcryn::RHI::TextureHandle m_PostColorTexture{};
     Velcryn::RHI::TextureHandle m_BloomTexture[2]{};
     Velcryn::RHI::TextureHandle m_HistoryTexture[2]{};
+    int m_HistoryReadIndex = 0;
+    bool m_HistoryValid = false;
     unsigned int m_ModelPreviewWidth = 0;
     unsigned int m_ModelPreviewHeight = 0;
 
