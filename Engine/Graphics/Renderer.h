@@ -160,6 +160,7 @@ public:
 
 private:
     Velcryn::RHI::PipelineHandle m_MeshPipeline{};
+    Velcryn::RHI::TextureHandle m_WhiteTexture{};
     Window* m_Window;
 
     float m_ClearColor[4];
