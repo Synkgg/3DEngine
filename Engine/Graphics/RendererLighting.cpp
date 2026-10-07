@@ -5,7 +5,7 @@
 #include "Texture2D.h"
 #include "../Scene/Components/TextureComponent.h"
 #include "../Core/Logger.h"
-#include <glad/gl.h>
+#include "RHI/RHI.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -98,8 +98,6 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
         m_RenderSettings.antiAliasingSamples = static_cast<int>(m_Framebuffer.GetSamples());
     }
 
-    if (samples > 1) glEnable(GL_MULTISAMPLE);
-    else glDisable(GL_MULTISAMPLE);
 }
 
 const RenderSettings& Renderer::GetRenderSettings() const
@@ -136,99 +134,68 @@ void Renderer::UpdateLightSpaceMatrices()
 bool Renderer::CreateShadowTarget()
 {
     DestroyShadowTarget();
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device)
+        return false;
+
     for (int i = 0; i < ShadowCascadeCount; ++i)
     {
-        glGenFramebuffers(1, &m_ShadowFramebuffers[i]);
-        glGenTextures(1, &m_ShadowDepthTextures[i]);
-        glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTextures[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_ShadowMapSizes[i], m_ShadowMapSizes[i], 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        const float border[] = { 1,1,1,1 }; glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffers[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowDepthTextures[i], 0);
-        glDrawBuffer(GL_NONE); glReadBuffer(GL_NONE);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) { glBindFramebuffer(GL_FRAMEBUFFER, 0); DestroyShadowTarget(); return false; }
+        Velcryn::RHI::TextureDesc desc{};
+        desc.width = m_ShadowMapSizes[i];
+        desc.height = m_ShadowMapSizes[i];
+        desc.format = Velcryn::RHI::TextureFormat::D32_Float;
+        desc.usage = Velcryn::RHI::TextureUsage::DepthStencil |
+                     Velcryn::RHI::TextureUsage::Sampled;
+        desc.debugName = "CascadedShadowDepth";
+        m_ShadowDepthTextures[i] = device->CreateTexture(desc);
+        if (!m_ShadowDepthTextures[i])
+        {
+            DestroyShadowTarget();
+            return false;
+        }
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0); return true;
+    return true;
 }
 
 void Renderer::DestroyShadowTarget()
 {
-    for (int i = 0; i < ShadowCascadeCount; ++i) {
-        if (m_ShadowDepthTextures[i]) glDeleteTextures(1, &m_ShadowDepthTextures[i]);
-        if (m_ShadowFramebuffers[i]) glDeleteFramebuffers(1, &m_ShadowFramebuffers[i]);
-        m_ShadowDepthTextures[i] = 0; m_ShadowFramebuffers[i] = 0;
-    }
+    if (auto* device = Velcryn::RHI::GetDevice())
+        for (auto& texture : m_ShadowDepthTextures)
+        {
+            if (texture) device->DestroyTexture(texture);
+            texture = {};
+        }
     m_ShadowMapReady = false;
 }
 
 void Renderer::BeginShadowPass(int cascadeIndex)
 {
     if (cascadeIndex == 0) { m_ShadowMapReady = false; UpdateLightSpaceMatrices(); }
-    if (!m_RenderSettings.shadows || cascadeIndex < 0 || cascadeIndex >= ShadowCascadeCount || !m_ShadowFramebuffers[cascadeIndex]) return;
+    if (!m_RenderSettings.shadows || cascadeIndex < 0 || cascadeIndex >= ShadowCascadeCount ||
+        !m_ShadowDepthTextures[cascadeIndex]) return;
     m_ActiveShadowCascade = cascadeIndex;
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffers[cascadeIndex]);
-    glViewport(0, 0, static_cast<int>(m_ShadowMapSizes[cascadeIndex]), static_cast<int>(m_ShadowMapSizes[cascadeIndex]));
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-    m_ShadowShader.Bind();
-    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrices[cascadeIndex]);
+    // Depth rendering is recorded by the Vulkan scene pass. Legacy GL state is intentionally gone.
 }
 
-void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitive)
+void Renderer::DrawShadowMesh(const Transform&, PrimitiveType)
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade])
-        return;
-
-    Mesh* mesh = GetPrimitiveMesh(primitive);
-    if (!mesh) return;
-
-    mesh->Bind();
-    m_ShadowShader.SetInt("u_Skinned",0);
-    m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
-    mesh->Unbind();
+    // Mesh shadow draws are queued by the Vulkan scene renderer.
 }
 
-void Renderer::DrawShadowModel(const Transform& transform, const std::string& modelPath)
+void Renderer::DrawShadowModel(const Transform&, const std::string&)
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade]) return;
-    ModelAsset* model = GetModelAsset(modelPath);
-    if (!model) return;
-    m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    const std::vector<Mat4> bones=model->IsSkeletal()?model->BindPose():std::vector<Mat4>{};
-    m_ShadowShader.SetInt("u_Skinned",bones.empty()?0:1);
-    for(std::size_t i=0;i<std::min<std::size_t>(bones.size(),128);++i){const std::string n="u_Bones["+std::to_string(i)+"]";m_ShadowShader.SetMat4(n.c_str(),bones[i]);}
-    for (const MeshSection& section : model->sections)
-    {
-        if (!section.mesh) continue;
-        section.mesh->Bind();
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(section.mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
-        section.mesh->Unbind();
-    }
+    // Model shadow draws are queued by the Vulkan scene renderer.
 }
 
-void Renderer::DrawAnimatedShadowModel(const Transform& transform,const std::string& modelPath,std::size_t clipIndex,float animationTime,bool loop)
+void Renderer::DrawAnimatedShadowModel(const Transform&, const std::string&, std::size_t, float, bool)
 {
-    if(!m_RenderSettings.shadows||!m_ShadowFramebuffers[m_ActiveShadowCascade])return;ModelAsset* model=GetModelAsset(modelPath);if(!model)return;
-    const std::vector<Mat4> bones=model->EvaluateAnimation(clipIndex,animationTime,loop);m_ShadowShader.SetMat4("u_Model",transform.GetMatrix());m_ShadowShader.SetInt("u_Skinned",bones.empty()?0:1);
-    for(std::size_t i=0;i<std::min<std::size_t>(bones.size(),128);++i){const std::string n="u_Bones["+std::to_string(i)+"]";m_ShadowShader.SetMat4(n.c_str(),bones[i]);}
-    for(const MeshSection& section:model->sections){if(!section.mesh)continue;section.mesh->Bind();glDrawElements(GL_TRIANGLES,(GLsizei)section.mesh->GetIndexCount(),GL_UNSIGNED_INT,nullptr);section.mesh->Unbind();}
+    // Animated shadow draws are queued by the Vulkan scene renderer.
 }
 
 void Renderer::EndShadowPass()
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade]) return;
-    m_ShadowShader.Unbind();
-    glCullFace(GL_BACK);
-    glDisable(GL_CULL_FACE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (m_ActiveShadowCascade == ShadowCascadeCount - 1) m_ShadowMapReady = true;
+    if (m_ActiveShadowCascade == ShadowCascadeCount - 1)
+        m_ShadowMapReady = true;
 }
 
 void Renderer::AddDebugLine(const Vec3& start,const Vec3& end,const Vec3& color,float duration){m_DebugLines.push_back({start,end,color,duration});}
