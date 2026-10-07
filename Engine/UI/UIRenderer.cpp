@@ -125,12 +125,16 @@ bool UIRenderer::Initialize()
     if (m_VertexBuffer) return true;
     auto* device = Velcryn::RHI::GetDevice();
     if (!device) return false;
+    struct UIVertex { float x, y, u, v; };
+    const UIVertex unitQuad[4] = {
+        {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 1.0f, 0.0f},
+        {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}
+    };
     Velcryn::RHI::BufferDesc desc{};
-    desc.size = sizeof(float) * 16;
+    desc.size = sizeof(unitQuad);
     desc.usage = Velcryn::RHI::BufferUsage::Vertex;
-    desc.cpuVisible = true;
-    desc.debugName = "UIQuadVertices";
-    m_VertexBuffer = device->CreateBuffer(desc);
+    desc.debugName = "UIUnitQuadVertices";
+    m_VertexBuffer = device->CreateBuffer(desc, unitQuad);
     if (!m_VertexBuffer) return false;
 
     const std::uint32_t indices[6] = {0, 1, 2, 2, 3, 0};
@@ -147,7 +151,7 @@ bool UIRenderer::Initialize()
     Velcryn::RHI::GraphicsPipelineDesc pipeline{};
     pipeline.vertexShader = UI_vert; pipeline.fragmentShader = UI_frag;
     pipeline.attributes = attributes; pipeline.vertexStride = sizeof(float) * 4;
-    pipeline.constantSize = sizeof(float) * 20;
+    pipeline.constantSize = sizeof(float) * 24;
     pipeline.colorFormat = Velcryn::RHI::TextureFormat::RGBA16_Float;
     pipeline.depthFormat = Velcryn::RHI::TextureFormat::D32_Float;
     pipeline.depthTest = false; pipeline.depthWrite = false; pipeline.cullBackFaces = false;
@@ -241,21 +245,19 @@ void UIRenderer::DrawQuad(float x, float y, float width, float height,
 {
     if (!m_Pipeline || !m_VertexBuffer || !m_IndexBuffer || width <= 0.0f || height <= 0.0f)
         return;
-    struct Vertex { float x, y, u, v; };
-    const Vertex vertices[4] = {
-        {x, y, u0, v0}, {x + width, y, u1, v0},
-        {x + width, y + height, u1, v1}, {x, y + height, u0, v1}
+    struct Constants {
+        float color[4]; float viewport[4]; float offset[4];
+        float gradient[4]; float style[4]; float rect[4];
     };
-    struct Constants { float color[4]; float viewport[4]; float offset[4]; float gradient[4]; float style[4]; };
     Constants constants{{color.x,color.y,color.z,color.w},
         {static_cast<float>(m_Width),static_cast<float>(m_Height),m_UIScale,0.0f},
         {m_UIOffsetX,m_UIOffsetY,0.0f,0.0f},
         {gradientColor.x,gradientColor.y,gradientColor.z,gradientColor.w},
         {useGradient ? 1.0f : 0.0f, horizontalGradient ? 1.0f : 0.0f,
-         width * m_UIScale, cornerRadius * m_UIScale}};
+         width * m_UIScale, cornerRadius * m_UIScale},
+        {x, y, width, height}};
     if (auto* device = Velcryn::RHI::GetDevice())
     {
-        if (!device->UpdateBuffer(m_VertexBuffer, vertices, sizeof(vertices))) return;
         device->DrawIndexed(m_Pipeline, m_VertexBuffer, m_IndexBuffer, 6,
             &constants, sizeof(constants), 1, texture ? texture : m_WhiteTexture);
     }
