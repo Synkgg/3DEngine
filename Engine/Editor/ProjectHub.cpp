@@ -1,4 +1,5 @@
-#include "../Core/Application.h"
+#include "ProjectHub.h"
+#include "../Core/Project.h"
 
 #include <SDL3/SDL.h>
 #include <imgui.h>
@@ -37,7 +38,27 @@ namespace
     }
 }
 
-std::string Application::GetHubStatePath() const
+ProjectHub::ProjectHub() = default;
+
+void ProjectHub::Initialize()
+{
+    LoadRecentProjects();
+    const std::string defaultLocation = (std::filesystem::current_path() / "Projects").string();
+    std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", defaultLocation.c_str());
+}
+
+void ProjectHub::SetError(std::string error)
+{
+    m_Error = std::move(error);
+}
+
+void ProjectHub::ClearError()
+{
+    m_Error.clear();
+}
+
+
+std::string ProjectHub::GetStatePath() const
 {
     char* prefPath = SDL_GetPrefPath("Velcryn", "Editor");
     if (prefPath == nullptr)
@@ -46,11 +67,13 @@ std::string Application::GetHubStatePath() const
     std::filesystem::path path(prefPath);
     SDL_free(prefPath);
     return (path / "RecentProjects.txt").string();
-}\n\nvoid Application::LoadRecentProjects()
+}
+
+void ProjectHub::LoadRecentProjects()
 {
     m_RecentProjects.clear();
 
-    std::ifstream in(GetHubStatePath());
+    std::ifstream in(GetStatePath());
     if (!in)
         return;
 
@@ -61,9 +84,11 @@ std::string Application::GetHubStatePath() const
         if (!path.empty())
             m_RecentProjects.push_back({ name, path });
     }
-}\n\nvoid Application::SaveRecentProjects() const
+}
+
+void ProjectHub::SaveRecentProjects() const
 {
-    const std::filesystem::path statePath(GetHubStatePath());
+    const std::filesystem::path statePath(GetStatePath());
     std::error_code error;
     std::filesystem::create_directories(statePath.parent_path(), error);
     if (error)
@@ -74,8 +99,11 @@ std::string Application::GetHubStatePath() const
         return;
 
     for (const RecentProject& recent : m_RecentProjects)
-        out << std::quoted(recent.name) << ' ' << std::quoted(recent.descriptorPath) << '\n';
-}\n\nvoid Application::AddRecentProject(const Project& project)
+        out << std::quoted(recent.name) << ' ' << std::quoted(recent.descriptorPath) << '
+';
+}
+
+void ProjectHub::AddRecentProject(const Project& project)
 {
     if (project.descriptorPath.empty())
         return;
@@ -99,14 +127,20 @@ std::string Application::GetHubStatePath() const
         m_RecentProjects.resize(12);
 
     SaveRecentProjects();
-}\n\nvoid Application::RemoveRecentProject(std::size_t index)
+}
+
+void ProjectHub::RemoveRecentProject(std::size_t index)
 {
     if (index >= m_RecentProjects.size())
         return;
 
     m_RecentProjects.erase(m_RecentProjects.begin() + static_cast<std::ptrdiff_t>(index));
     SaveRecentProjects();
-}\n\nvoid Application::RenderProjectHub()
+}
+
+void ProjectHub::Render(const OpenProjectCallback& openProject,
+                        const CreateProjectCallback& createProject,
+                        const ContinueCallback& continueLegacyWorkspace)
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -171,7 +205,7 @@ std::string Application::GetHubStatePath() const
     {
         std::string path;
         if (FileDialog::OpenProject(path))
-            ActivateProject(path);
+            openProject(path);
     }
 
     ImGui::SetCursorPosX(16);
@@ -184,8 +218,7 @@ std::string Application::GetHubStatePath() const
     ImGui::SetCursorPosX(16);
     if (ImGui::Button("Continue Legacy Workspace", ImVec2(sidebarWidth - 32.0f, 38.0f)))
     {
-        m_ShowProjectHub = false;
-        SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Velcryn Editor - Legacy Workspace");
+        continueLegacyWorkspace();
     }
 
     ImGui::EndChild();
@@ -262,7 +295,7 @@ std::string Application::GetHubStatePath() const
             ImGui::SetCursorPos(ImVec2(actionX, 19));
             ImGui::BeginDisabled(!exists);
             if (ImGui::Button("Open", ImVec2(72, 34)))
-                ActivateProject(recent.descriptorPath);
+                openProject(recent.descriptorPath);
             ImGui::EndDisabled();
             ImGui::SameLine();
             if (ImGui::Button("Remove", ImVec2(76, 34)))
@@ -322,17 +355,17 @@ std::string Application::GetHubStatePath() const
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.075f, 0.55f, 0.86f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.035f, 0.32f, 0.54f, 1.0f));
     if (ImGui::Button("Create Project", ImVec2(createWidth - 44.0f, 44.0f)))
-        CreateProject(m_NewProjectLocation, m_NewProjectName);
+        createProject(m_NewProjectLocation, m_NewProjectName);
     ImGui::PopStyleColor(3);
 
     ImGui::EndChild();
 
     // Bottom status strip.
     ImGui::SetCursorPos(ImVec2(padding, ImGui::GetWindowHeight() - 34.0f));
-    if (!m_ProjectHubError.empty())
+    if (!m_Error.empty())
     {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.48f, 0.46f, 1.0f));
-        ImGui::TextUnformatted(m_ProjectHubError.c_str());
+        ImGui::TextUnformatted(m_Error.c_str());
         ImGui::PopStyleColor();
     }
     else
@@ -345,4 +378,4 @@ std::string Application::GetHubStatePath() const
 
     ImGui::PopStyleVar(5);
     ImGui::PopStyleColor(12);
-}\n
+}
