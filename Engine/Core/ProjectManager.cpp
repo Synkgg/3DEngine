@@ -25,10 +25,21 @@ bool ProjectManager::Load(const std::string& descriptorPath)
     {
         if (key == "Version") file >> version;
         else if (key == "Name") file >> std::quoted(project.name);
-        else if (key == "AssetDirectory") { std::string value; file >> std::quoted(value); project.assetDirectory = value; }
-        else if (key == "StartupScene") { std::string value; file >> std::quoted(value); project.startupScene = value; }
-        else if (key == "Settings") { std::string value; file >> std::quoted(value); project.settingsFile = value; }
-        else { std::string ignored; std::getline(file, ignored); }
+        else if (key == "AssetDirectory") { std::string value;
+        file >> std::quoted(value);
+        project.assetDirectory = value;
+        }
+        else if (key == "StartupScene") { std::string value;
+        file >> std::quoted(value);
+        project.startupScene = value;
+        }
+        else if (key == "Settings") { std::string value;
+        file >> std::quoted(value);
+        project.settingsFile = value;
+        }
+        else { std::string ignored;
+        std::getline(file, ignored);
+        }
     }
 
     if (version != 1)
