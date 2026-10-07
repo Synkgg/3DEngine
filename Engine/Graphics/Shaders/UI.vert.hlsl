@@ -1,8 +1,11 @@
 struct Constants
 {
     float4 color;
-    float4 viewport; // width, height, scale, unused
-    float4 offset;   // x, y, unused, unused
+    float4 viewport;
+    float4 offset;
+    float4 gradient;
+    float4 style;
+    float4 rect;
 };
 [[vk::push_constant]] Constants draw;
 struct Input
@@ -18,7 +21,8 @@ struct Output
 Output main(Input input)
 {
     Output output;
-    float2 pixel = input.position * draw.viewport.z + draw.offset.xy;
+    float2 logical = draw.rect.xy + input.position * draw.rect.zw;
+    float2 pixel = logical * draw.viewport.z + draw.offset.xy;
     output.position = float4(pixel.x / draw.viewport.x * 2.0 - 1.0,
                              1.0 - pixel.y / draw.viewport.y * 2.0, 0.0, 1.0);
     output.uv = input.uv;
