@@ -91,6 +91,14 @@ namespace Velcryn::RHI
         streamerDesc.dynamicBufferDesc.usage = nri::BufferUsageBits::VERTEX_BUFFER | nri::BufferUsageBits::INDEX_BUFFER;
         streamerDesc.queuedFrameNum = 2;
         if (m_StreamerInterface.CreateStreamer(*m_Device, streamerDesc, m_Streamer) != nri::Result::SUCCESS) { Logger::Error("RHI: failed to create NRI streamer."); Shutdown(); return false; }
+        nri::DescriptorPoolDesc descriptorPoolDesc{};
+        descriptorPoolDesc.descriptorSetMaxNum = 4096;
+        descriptorPoolDesc.textureMaxNum = 4096;
+        if (m_Core.CreateDescriptorPool(*m_Device, descriptorPoolDesc, m_DescriptorPool) != nri::Result::SUCCESS)
+        {
+            Logger::Error("RHI: failed to create the graphics descriptor pool.");
+            Shutdown(); return false;
+        }
         nri::ImguiDesc imguiDesc{}; imguiDesc.descriptorPoolSize = 2048;
         if (m_ImguiInterface.CreateImgui(*m_Device, imguiDesc, m_Imgui) != nri::Result::SUCCESS) { Logger::Error("RHI: failed to create NRI ImGui renderer."); Shutdown(); return false; }
         Logger::Info(std::string("RHI: NRI Vulkan device + swapchain + ImGui initialized on ") + deviceDesc.adapterDesc.name);
@@ -198,7 +206,8 @@ namespace Velcryn::RHI
 
         if (m_Imgui) m_ImguiInterface.DestroyImgui(m_Imgui);
         if (m_Streamer) m_StreamerInterface.DestroyStreamer(m_Streamer);
-        m_Imgui=nullptr; m_Streamer=nullptr;
+        if (m_DescriptorPool) m_Core.DestroyDescriptorPool(m_DescriptorPool);
+        m_Imgui=nullptr; m_Streamer=nullptr; m_DescriptorPool=nullptr;
         if (m_FrameCommandBuffer) m_Core.DestroyCommandBuffer(m_FrameCommandBuffer);
         if (m_FrameAllocator) m_Core.DestroyCommandAllocator(m_FrameAllocator);
         if (m_FrameFence) m_Core.DestroyFence(m_FrameFence);
@@ -574,7 +583,7 @@ namespace Velcryn::RHI
             return;
         }
         m_Core.ResetCommandAllocator(*m_FrameAllocator);
-        if (m_Core.BeginCommandBuffer(*m_FrameCommandBuffer, nullptr) != nri::Result::SUCCESS)
+        if (m_Core.BeginCommandBuffer(*m_FrameCommandBuffer, m_DescriptorPool) != nri::Result::SUCCESS)
         {
             m_DeviceFailed = true;
             return;
