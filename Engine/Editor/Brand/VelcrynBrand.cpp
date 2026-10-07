@@ -1,6 +1,7 @@
 #include "VelcrynBrand.h"
 
 #include "../../Graphics/Texture2D.h"
+#include "../../Graphics/RHI/RHI.h"
 
 #include <cstdint>
 #include <memory>
@@ -43,18 +44,22 @@ namespace Velcryn::Editor::Brand
         if (!HasLogoTexture())
             return;
 
-        const ImTextureID texture = static_cast<ImTextureID>(
-            static_cast<std::uintptr_t>(s_LogoTexture->GetID())
-        );
+        auto* device = Velcryn::RHI::GetDevice();
+        if (!device)
+            return;
 
-        // Texture2D flips source images for OpenGL material UVs. Flip the
-        // ImGui UVs back so branding assets retain their authored orientation.
+        const std::uint64_t descriptor =
+            device->GetImGuiTextureID(s_LogoTexture->GetHandle());
+        if (descriptor == 0)
+            return;
+
+        const ImTextureID texture = static_cast<ImTextureID>(descriptor);
         drawList->AddImage(
             texture,
             position,
             ImVec2(position.x + size, position.y + size),
-            ImVec2(0.0f, 1.0f),
-            ImVec2(1.0f, 0.0f)
+            ImVec2(0.0f, 0.0f),
+            ImVec2(1.0f, 1.0f)
         );
     }
 }
