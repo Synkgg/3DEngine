@@ -43,10 +43,14 @@ namespace Velcryn::RHI
 
         const nri::DeviceDesc& deviceDesc = m_Core.GetDeviceDesc(*m_Device);
         m_Capabilities.api = GraphicsAPI::Vulkan;
-        m_Capabilities.bindlessResources = true;
+        m_Capabilities.bindlessResources = deviceDesc.tiers.bindless > 0;
+        m_Capabilities.asyncCompute = deviceDesc.adapterDesc.queueNum[static_cast<uint32_t>(nri::QueueType::COMPUTE)] > 0;
+        m_Capabilities.rayTracing = deviceDesc.tiers.rayTracing > 0;
+        m_Capabilities.meshShaders = deviceDesc.features.meshShader;
+        m_Capabilities.variableRateShading = deviceDesc.tiers.shadingRate > 0;
         m_Capabilities.timelineSemaphores = true;
-        m_Capabilities.maxTextureDimension2D = deviceDesc.textureMaxDim;
-        m_Capabilities.maxColorAttachments = deviceDesc.colorAttachmentMaxNum;
+        m_Capabilities.maxTextureDimension2D = deviceDesc.dimensions.texture2DMaxDim;
+        m_Capabilities.maxColorAttachments = deviceDesc.shaderStage.fragment.attachmentMaxNum;
 
         Logger::Info("RHI: NRI Vulkan device initialized.");
         return true;
