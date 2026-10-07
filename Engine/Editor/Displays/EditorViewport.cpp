@@ -798,14 +798,21 @@ void Editor::RenderViewport(
 	m_ViewportPosition = viewportPosition;
 	m_ViewportSize = viewportSize;
 
-	ImTextureID textureID = static_cast<ImTextureID>(renderer.GetViewportTexture());
-
-	ImGui::Image(
-		textureID,
-		viewportSize,
-		ImVec2(0.0f, 1.0f),
-		ImVec2(1.0f, 0.0f)
-	);
+	const std::uint64_t viewportDescriptor = renderer.GetViewportTexture();
+	if (viewportDescriptor != 0)
+	{
+		const ImTextureID textureID = static_cast<ImTextureID>(viewportDescriptor);
+		ImGui::Image(
+			textureID,
+			viewportSize,
+			ImVec2(0.0f, 0.0f),
+			ImVec2(1.0f, 1.0f)
+		);
+	}
+	else
+	{
+		ImGui::Dummy(viewportSize);
+	}
 
 	bool viewportImageHovered =
 		ImGui::IsItemHovered();
