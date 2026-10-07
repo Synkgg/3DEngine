@@ -26,19 +26,27 @@ namespace
 
     void DrawVelcrynMark(ImDrawList* dl, ImVec2 p, float s)
     {
-        // Faceted, split-metal V matching the Velcryn identity board.
-        const ImVec2 l0(p.x, p.y + s * .04f), l1(p.x + s * .27f, p.y + s * .12f);
-        const ImVec2 lc(p.x + s * .50f, p.y + s * .82f), lb(p.x + s * .50f, p.y + s);
-        const ImVec2 r0(p.x + s, p.y), r1(p.x + s * .73f, p.y + s * .12f);
-        const ImVec2 notch(p.x + s * .50f, p.y + s * .43f);
-        dl->AddTriangleFilled(l0, l1, lc, IM_COL32(202, 216, 230, 255));
-        dl->AddTriangleFilled(l1, notch, lc, IM_COL32(94, 125, 154, 255));
-        dl->AddTriangleFilled(r0, r1, notch, IM_COL32(235, 242, 248, 255));
-        dl->AddTriangleFilled(r1, lc, notch, IM_COL32(91, 132, 170, 255));
-        dl->AddTriangleFilled(notch, lc, lb, IM_COL32(21, 93, 148, 255));
-        dl->AddLine(l0, lc, kBlue, 1.5f);
-        dl->AddLine(r0, notch, kCyan, 1.2f);
-        dl->AddLine(notch, lb, kBlue, 1.3f);
+        // Broad split/faceted V from the Velcryn identity: two metallic blades
+        // fold inward around a luminous blue central spine.
+        const ImVec2 A(p.x, p.y + s * .02f);
+        const ImVec2 B(p.x + s * .24f, p.y + s * .10f);
+        const ImVec2 C(p.x + s * .50f, p.y + s * .72f);
+        const ImVec2 D(p.x + s * .50f, p.y + s);
+        const ImVec2 E(p.x + s * .76f, p.y + s * .10f);
+        const ImVec2 F(p.x + s, p.y);
+        const ImVec2 IL(p.x + s * .40f, p.y + s * .22f);
+        const ImVec2 IR(p.x + s * .60f, p.y + s * .22f);
+
+        dl->AddQuadFilled(A, B, C, IL, IM_COL32(222, 230, 238, 255));
+        dl->AddTriangleFilled(B, IL, C, IM_COL32(112, 130, 148, 255));
+        dl->AddQuadFilled(F, E, C, IR, IM_COL32(235, 240, 245, 255));
+        dl->AddTriangleFilled(E, IR, C, IM_COL32(91, 116, 139, 255));
+        dl->AddTriangleFilled(IL, IR, C, IM_COL32(38, 132, 190, 255));
+        dl->AddTriangleFilled(C, D, IR, IM_COL32(24, 91, 139, 255));
+
+        dl->AddLine(A, C, IM_COL32(69, 183, 239, 235), 1.4f);
+        dl->AddLine(F, C, IM_COL32(92, 205, 249, 245), 1.4f);
+        dl->AddLine(C, D, IM_COL32(42, 171, 235, 220), 1.2f);
     }
 
     bool NavItem(const char* id, const char* label, bool active, ImVec2 size)
