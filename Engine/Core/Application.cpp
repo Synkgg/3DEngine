@@ -28,6 +28,32 @@
 #include <algorithm>
 #include <cstdio>
 
+namespace
+{
+    // Compact Velcryn "V" mark inspired by the faceted identity concept.
+    // Drawn natively so the Hub stays sharp at any DPI and does not depend on
+    // an external branding texture.
+    void DrawVelcrynMark(ImDrawList* drawList, const ImVec2 origin, const float size)
+    {
+        const ImU32 steel = IM_COL32(214, 225, 235, 255);
+        const ImU32 ice = IM_COL32(32, 184, 255, 255);
+        const ImU32 deep = IM_COL32(15, 84, 128, 255);
+
+        const ImVec2 a(origin.x, origin.y);
+        const ImVec2 b(origin.x + size * 0.28f, origin.y + size * 0.08f);
+        const ImVec2 c(origin.x + size * 0.50f, origin.y + size * 0.76f);
+        const ImVec2 d(origin.x + size * 0.72f, origin.y + size * 0.08f);
+        const ImVec2 e(origin.x + size, origin.y);
+        const ImVec2 f(origin.x + size * 0.50f, origin.y + size);
+
+        drawList->AddTriangleFilled(a, b, c, steel);
+        drawList->AddTriangleFilled(d, e, c, ice);
+        drawList->AddTriangleFilled(c, d, f, deep);
+        drawList->AddLine(a, c, IM_COL32(72, 202, 255, 210), 1.25f);
+        drawList->AddLine(e, c, IM_COL32(110, 220, 255, 230), 1.25f);
+    }
+}
+
 Application::Application(const std::string& projectPath)
     : m_Running(false),
     m_Window("Velcryn Hub", 1280, 720),
@@ -393,11 +419,12 @@ void Application::RenderProjectHub()
     ImGui::BeginChild("HubSidebar", ImVec2(sidebarWidth, 0), ImGuiChildFlags_None);
     ImGui::PopStyleColor();
 
-    ImGui::SetCursorPos(ImVec2(24, 28));
+    DrawVelcrynMark(ImGui::GetWindowDrawList(), ImVec2(ImGui::GetWindowPos().x + 22.0f, ImGui::GetWindowPos().y + 22.0f), 46.0f);
+    ImGui::SetCursorPos(ImVec2(82, 24));
     ImGui::SetWindowFontScale(1.42f);
     ImGui::TextUnformatted("VELCRYN");
     ImGui::SetWindowFontScale(1.0f);
-    ImGui::SetCursorPosX(24);
+    ImGui::SetCursorPosX(82);
     ImGui::TextDisabled("ENGINE  /  PROJECT HUB");
 
     ImGui::SetCursorPosY(100);
