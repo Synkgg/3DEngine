@@ -99,8 +99,7 @@ void ProjectHub::SaveRecentProjects() const
         return;
 
     for (const RecentProject& recent : m_RecentProjects)
-        out << std::quoted(recent.name) << ' ' << std::quoted(recent.descriptorPath) << '
-';
+        out << std::quoted(recent.name) << ' ' << std::quoted(recent.descriptorPath) << '\n';
 }
 
 void ProjectHub::AddRecentProject(const Project& project)
