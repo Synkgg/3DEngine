@@ -180,7 +180,7 @@ void UIRenderer::DrawCanvasText(
     const UIText& text,
     const UIRect& rect)
 {
-    if (m_FontTexture == 0 || text.GetText().empty()) return;
+    if (!m_FontTexture || text.GetText().empty()) return;
 
     const float requestedSize = std::max(1.0f, text.GetFontSize());
     const float scale = requestedSize / FontBakeSize;
