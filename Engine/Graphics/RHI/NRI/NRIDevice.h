@@ -4,6 +4,9 @@
 
 #include <NRI.h>
 #include <Extensions/NRIDeviceCreation.h>
+#include <Extensions/NRIHelper.h>
+
+#include <vector>
 
 namespace Velcryn::RHI
 {
@@ -33,9 +36,43 @@ namespace Velcryn::RHI
         void WaitIdle() override;
 
     private:
+        struct BufferSlot
+        {
+            nri::Buffer* resource = nullptr;
+            std::vector<nri::Memory*> allocations;
+            std::uint32_t generation = 1;
+        };
+
+        struct TextureSlot
+        {
+            nri::Texture* resource = nullptr;
+            std::vector<nri::Memory*> allocations;
+            std::uint32_t generation = 1;
+        };
+
+        struct CommandSlot
+        {
+            nri::CommandAllocator* allocator = nullptr;
+            nri::CommandBuffer* commandBuffer = nullptr;
+            std::uint32_t generation = 1;
+            bool recording = false;
+        };
+
+        nri::Queue* ResolveQueue(QueueType queue) const;
+        static nri::Format ToNRIFormat(TextureFormat format);
+        static nri::BufferUsageBits ToNRIBufferUsage(BufferUsage usage);
+        static nri::TextureUsageBits ToNRITextureUsage(TextureUsage usage);
+
         nri::Device* m_Device = nullptr;
         nri::Queue* m_GraphicsQueue = nullptr;
+        nri::Queue* m_ComputeQueue = nullptr;
+        nri::Queue* m_CopyQueue = nullptr;
         nri::CoreInterface m_Core{};
+        nri::HelperInterface m_Helper{};
         RHICapabilities m_Capabilities{};
+
+        std::vector<BufferSlot> m_Buffers;
+        std::vector<TextureSlot> m_Textures;
+        std::vector<CommandSlot> m_CommandLists;
     };
 }
