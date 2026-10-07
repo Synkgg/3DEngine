@@ -5,6 +5,7 @@
 #include <NRI.h>
 #include <Extensions/NRIDeviceCreation.h>
 #include <Extensions/NRIHelper.h>
+#include <Extensions/NRISwapChain.h>
 
 #include <vector>
 
@@ -34,6 +35,8 @@ namespace Velcryn::RHI
         void BeginFrame() override;
         void EndFrame() override;
         void WaitIdle() override;
+
+        bool IsPresentReady() const { return m_SwapChain != nullptr; }
 
     private:
         struct BufferSlot
@@ -69,6 +72,19 @@ namespace Velcryn::RHI
         nri::Queue* m_CopyQueue = nullptr;
         nri::CoreInterface m_Core{};
         nri::HelperInterface m_Helper{};
+        nri::SwapChainInterface m_SwapChainInterface{};
+        nri::SwapChain* m_SwapChain = nullptr;
+        std::vector<nri::Texture*> m_SwapChainTextures;
+        std::vector<nri::Descriptor*> m_SwapChainViews;
+        std::vector<nri::Fence*> m_AcquireSemaphores;
+        std::vector<nri::Fence*> m_ReleaseSemaphores;
+        nri::Fence* m_FrameFence = nullptr;
+        nri::CommandAllocator* m_FrameAllocator = nullptr;
+        nri::CommandBuffer* m_FrameCommandBuffer = nullptr;
+        uint64_t m_FrameIndex = 0;
+        uint32_t m_BackBufferIndex = 0;
+        uint32_t m_AcquireIndex = 0;
+        nri::Format m_SwapChainFormat = nri::Format::UNKNOWN;
         RHICapabilities m_Capabilities{};
 
         std::vector<BufferSlot> m_Buffers;
