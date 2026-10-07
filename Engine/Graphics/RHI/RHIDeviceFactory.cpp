@@ -1,11 +1,17 @@
 #include "RHIDeviceFactory.h"
+#include "NRI/NRIDevice.h"
 
 namespace Velcryn::RHI
 {
-    std::unique_ptr<IRHIDevice> CreateDevice(GraphicsAPI)
+    std::unique_ptr<IRHIDevice> CreateDevice(GraphicsAPI api)
     {
-        // Backend wiring follows after the interface is established. Returning
-        // null keeps the existing OpenGL renderer operational during migration.
-        return nullptr;
+        switch (api)
+        {
+            case GraphicsAPI::Vulkan:
+                return std::make_unique<NRIDevice>();
+
+            default:
+                return nullptr;
+        }
     }
 }
