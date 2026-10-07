@@ -122,7 +122,7 @@ namespace Velcryn::RHI
             viewDesc.sliceNum = 1;
             viewDesc.planes = nri::PlaneBits::COLOR;
 
-            if (m_Core.CreateDescriptor(viewDesc, m_SwapChainViews[i]) != nri::Result::SUCCESS ||
+            if (m_Core.CreateTextureView(viewDesc, m_SwapChainViews[i]) != nri::Result::SUCCESS ||
                 m_Core.CreateFence(*m_Device, nri::SWAPCHAIN_SEMAPHORE, m_AcquireSemaphores[i]) != nri::Result::SUCCESS ||
                 m_Core.CreateFence(*m_Device, nri::SWAPCHAIN_SEMAPHORE, m_ReleaseSemaphores[i]) != nri::Result::SUCCESS)
             {
