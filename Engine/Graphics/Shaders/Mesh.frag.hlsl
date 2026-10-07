@@ -7,7 +7,7 @@ struct Constants
     float4 normalZ;
 };
 [[vk::push_constant]] Constants draw;
-Texture2D<float4> baseTexture : register(t0, space0);
+Texture2D<float4> baseTexture : register(t0, space1);
 SamplerState baseSampler : register(s0, space0);
 
 float4 main(
