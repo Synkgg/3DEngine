@@ -93,7 +93,7 @@ bool Application::Initialize()
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
     m_Runtime.SetAudioEngine(&m_Audio);
     m_Runtime.SetProjectManager(&m_ProjectManager);
-    LoadRecentProjects();
+    m_ProjectHub.Initialize();
     if (!m_ProjectPath.empty())
     {
         if (!m_ProjectManager.Load(m_ProjectPath)) return false;
@@ -105,8 +105,6 @@ bool Application::Initialize()
         m_ProjectManager.UseLegacyWorkspace();
         m_ProjectSettings.EnsureLoaded();
         m_ShowProjectHub = true;
-        const std::string defaultLocation = (std::filesystem::current_path() / "Projects").string();
-        std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", defaultLocation.c_str());
     }
     const Project& activeProject = m_ProjectManager.GetActiveProject();
 
@@ -131,7 +129,7 @@ bool Application::Initialize()
 
     if (m_ProjectManager.HasProject())
     {
-        AddRecentProject(activeProject);
+        m_ProjectHub.AddRecentProject(activeProject);
         SDL_SetWindowTitle(m_Window.GetNativeWindow(), (activeProject.name + " - Velcryn Editor").c_str());
     }
 
@@ -213,7 +211,7 @@ void Application::ReturnToProjectHub()
     m_Runtime.SetProjectManager(&m_ProjectManager);
 
     m_ShowProjectHub = true;
-    m_ProjectHubError.clear();
+    m_ProjectHub.ClearError();
     SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Velcryn Hub");
     Logger::Info("Returned to Velcryn Hub.");
 }
@@ -222,7 +220,7 @@ bool Application::ActivateProject(const std::string& descriptorPath)
 {
     if (!m_ProjectManager.Load(descriptorPath))
     {
-        m_ProjectHubError = "Could not open that project.";
+        m_ProjectHub.SetError("Could not open that project.");
         return false;
     }
 
@@ -239,14 +237,14 @@ bool Application::ActivateProject(const std::string& descriptorPath)
     if (!project.startupScene.empty() &&
         !m_Editor.OpenScene(m_Scene, project.GetStartupScenePath()))
     {
-        m_ProjectHubError = "Project opened, but its startup scene could not be loaded.";
+        m_ProjectHub.SetError("Project opened, but its startup scene could not be loaded.");
         return false;
     }
 
     m_ProjectPath = project.descriptorPath.string();
-    AddRecentProject(project);
+    m_ProjectHub.AddRecentProject(project);
     m_ShowProjectHub = false;
-    m_ProjectHubError.clear();
+    m_ProjectHub.ClearError();
     SDL_SetWindowTitle(m_Window.GetNativeWindow(), (project.name + " - Velcryn Editor").c_str());
     return true;
 }
@@ -255,7 +253,7 @@ bool Application::CreateProject(const std::string& parentDirectory, const std::s
 {
     if (name.empty() || parentDirectory.empty())
     {
-        m_ProjectHubError = "Project name and location are required.";
+        m_ProjectHub.SetError("Project name and location are required.");
         return false;
     }
 
@@ -264,7 +262,7 @@ bool Application::CreateProject(const std::string& parentDirectory, const std::s
 
     if (!m_ProjectManager.Create(root.string(), name))
     {
-        m_ProjectHubError = "Could not create the project workspace.";
+        m_ProjectHub.SetError("Could not create the project workspace.");
         return false;
     }
 
