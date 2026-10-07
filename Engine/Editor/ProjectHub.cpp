@@ -14,15 +14,15 @@
 
 namespace
 {
-    constexpr ImU32 kBg = IM_COL32(8, 13, 20, 255);
-    constexpr ImU32 kRail = IM_COL32(10, 17, 26, 255);
-    constexpr ImU32 kPanel = IM_COL32(14, 23, 35, 255);
-    constexpr ImU32 kPanelHover = IM_COL32(19, 32, 47, 255);
-    constexpr ImU32 kLine = IM_COL32(37, 54, 72, 255);
-    constexpr ImU32 kText = IM_COL32(232, 238, 245, 255);
-    constexpr ImU32 kMuted = IM_COL32(116, 134, 153, 255);
-    constexpr ImU32 kBlue = IM_COL32(61, 166, 255, 255);
-    constexpr ImU32 kCyan = IM_COL32(0, 225, 255, 255);
+    constexpr ImU32 kBg = IM_COL32(25, 26, 28, 255);
+    constexpr ImU32 kRail = IM_COL32(31, 32, 35, 255);
+    constexpr ImU32 kPanel = IM_COL32(38, 39, 43, 255);
+    constexpr ImU32 kPanelHover = IM_COL32(45, 47, 52, 255);
+    constexpr ImU32 kLine = IM_COL32(58, 60, 65, 255);
+    constexpr ImU32 kText = IM_COL32(226, 228, 232, 255);
+    constexpr ImU32 kMuted = IM_COL32(145, 148, 155, 255);
+    constexpr ImU32 kBlue = IM_COL32(55, 156, 220, 255);
+    constexpr ImU32 kCyan = IM_COL32(65, 190, 235, 255);
 
     void DrawVelcrynMark(ImDrawList* dl, ImVec2 p, float s)
     {
@@ -61,7 +61,7 @@ namespace
         ImGui::InvisibleButton(id, size);
         const bool hovered = ImGui::IsItemHovered();
         ImDrawList* dl = ImGui::GetWindowDrawList();
-        dl->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? IM_COL32(20, 117, 178, 255) : IM_COL32(14, 82, 130, 255), 5.0f);
+        dl->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? IM_COL32(62, 132, 174, 255) : IM_COL32(48, 104, 140, 255), 5.0f);
         dl->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? kCyan : kBlue, 5.0f, ImDrawFlags_None, 1.0f);
         const ImVec2 ts = ImGui::CalcTextSize(label);
         dl->AddText(ImVec2(p.x + (size.x-ts.x)*.5f, p.y + (size.y-ts.y)*.5f), kText, label);
@@ -186,7 +186,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
     const float topH = 72.0f, sideW = 224.0f, bottomH = 74.0f;
 
     // UE-style project browser shell: title bar, category rail, content browser, action footer.
-    dl->AddRectFilled(wp, ImVec2(wp.x + ws.x, wp.y + topH), IM_COL32(11,17,25,255));
+    dl->AddRectFilled(wp, ImVec2(wp.x + ws.x, wp.y + topH), IM_COL32(29,30,33,255));
     dl->AddLine(ImVec2(wp.x,wp.y+topH),ImVec2(wp.x+ws.x,wp.y+topH),kLine);
     DrawVelcrynMark(dl, ImVec2(wp.x+24,wp.y+14), 42.0f);
     dl->AddText(ImVec2(wp.x+82,wp.y+19),kText,"VELCRYN PROJECT BROWSER");
@@ -238,7 +238,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
             const bool hover=ImGui::IsItemHovered();
             dl->AddRectFilled(p,ImVec2(p.x+cardW,p.y+cardH),hover?kPanelHover:kPanel,5.0f);
             dl->AddRect(p,ImVec2(p.x+cardW,p.y+cardH),hover?kBlue:kLine,5.0f,ImDrawFlags_None,1.0f);
-            dl->AddRectFilled(p,ImVec2(p.x+cardW,p.y+70),IM_COL32(18,29,42,255),5.0f);
+            dl->AddRectFilled(p,ImVec2(p.x+cardW,p.y+70),IM_COL32(32,33,36,255),5.0f);
             // Simple scene/project thumbnail motif.
             dl->AddRectFilled(ImVec2(p.x+18,p.y+17),ImVec2(p.x+62,p.y+55),IM_COL32(20,55,78,255),4.0f);
             DrawVelcrynMark(dl,ImVec2(p.x+28,p.y+23),24.0f);
@@ -257,7 +257,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
 
     // Bottom action strip mirrors an editor/project-browser workflow.
     const float footerY=ws.y-bottomH;
-    dl->AddRectFilled(ImVec2(wp.x,wp.y+footerY),ImVec2(wp.x+ws.x,wp.y+ws.y),IM_COL32(11,17,25,255));
+    dl->AddRectFilled(ImVec2(wp.x,wp.y+footerY),ImVec2(wp.x+ws.x,wp.y+ws.y),IM_COL32(29,30,33,255));
     dl->AddLine(ImVec2(wp.x,wp.y+footerY),ImVec2(wp.x+ws.x,wp.y+footerY),kLine);
     dl->AddText(ImVec2(wp.x+24,wp.y+footerY+29),kMuted,"Select a project to open it");
     if(!m_Error.empty()) dl->AddText(ImVec2(wp.x+250,wp.y+footerY+29),IM_COL32(245,112,108,255),m_Error.c_str());
@@ -273,7 +273,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
     ImGui::SetNextWindowSize(ImVec2(600,390),ImGuiCond_Always);
     ImGui::SetNextWindowPos(ImVec2(wp.x+ws.x*.5f,wp.y+ws.y*.5f),ImGuiCond_Always,ImVec2(.5f,.5f));
     ImGui::PushStyleColor(ImGuiCol_PopupBg,ImGui::ColorConvertU32ToFloat4(kPanel));
-    ImGui::PushStyleColor(ImGuiCol_FrameBg,ImVec4(.035f,.055f,.078f,1));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg,ImVec4(.115f,.118f,.125f,1));
     ImGui::PushStyleColor(ImGuiCol_Border,ImGui::ColorConvertU32ToFloat4(kLine));
     ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding,6.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,3.0f);
