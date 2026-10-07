@@ -147,7 +147,7 @@ bool UIRenderer::Initialize()
     Velcryn::RHI::GraphicsPipelineDesc pipeline{};
     pipeline.vertexShader = UI_vert; pipeline.fragmentShader = UI_frag;
     pipeline.attributes = attributes; pipeline.vertexStride = sizeof(float) * 4;
-    pipeline.constantSize = sizeof(float) * 12;
+    pipeline.constantSize = sizeof(float) * 20;
     pipeline.colorFormat = Velcryn::RHI::TextureFormat::RGBA16_Float;
     pipeline.depthFormat = Velcryn::RHI::TextureFormat::D32_Float;
     pipeline.depthTest = false; pipeline.depthWrite = false; pipeline.cullBackFaces = false;
@@ -236,7 +236,8 @@ void UIRenderer::End()
 
 void UIRenderer::DrawQuad(float x, float y, float width, float height,
     float u0, float v0, float u1, float v1, const Vec4& color,
-    Velcryn::RHI::TextureHandle texture)
+    Velcryn::RHI::TextureHandle texture, const Vec4& gradientColor,
+    bool useGradient, bool horizontalGradient, float cornerRadius)
 {
     if (!m_Pipeline || !m_VertexBuffer || !m_IndexBuffer || width <= 0.0f || height <= 0.0f)
         return;
@@ -245,10 +246,13 @@ void UIRenderer::DrawQuad(float x, float y, float width, float height,
         {x, y, u0, v0}, {x + width, y, u1, v0},
         {x + width, y + height, u1, v1}, {x, y + height, u0, v1}
     };
-    struct Constants { float color[4]; float viewport[4]; float offset[4]; };
+    struct Constants { float color[4]; float viewport[4]; float offset[4]; float gradient[4]; float style[4]; };
     Constants constants{{color.x,color.y,color.z,color.w},
         {static_cast<float>(m_Width),static_cast<float>(m_Height),m_UIScale,0.0f},
-        {m_UIOffsetX,m_UIOffsetY,0.0f,0.0f}};
+        {m_UIOffsetX,m_UIOffsetY,0.0f,0.0f},
+        {gradientColor.x,gradientColor.y,gradientColor.z,gradientColor.w},
+        {useGradient ? 1.0f : 0.0f, horizontalGradient ? 1.0f : 0.0f,
+         width * m_UIScale, cornerRadius * m_UIScale}};
     if (auto* device = Velcryn::RHI::GetDevice())
     {
         if (!device->UpdateBuffer(m_VertexBuffer, vertices, sizeof(vertices))) return;
