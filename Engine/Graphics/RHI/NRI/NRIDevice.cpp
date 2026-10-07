@@ -290,7 +290,6 @@ namespace Velcryn::RHI
         for (nri::Memory* memory : slot.allocations)
             m_Core.FreeMemory(memory);
 
-        slot.shaderResource = nullptr;
         slot.resource = nullptr;
         slot.allocations.clear();
         ++slot.generation;
@@ -361,6 +360,7 @@ namespace Velcryn::RHI
         for (nri::Memory* memory : slot.allocations)
             m_Core.FreeMemory(memory);
 
+        slot.shaderResource = nullptr;
         slot.resource = nullptr;
         slot.allocations.clear();
         ++slot.generation;
