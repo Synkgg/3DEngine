@@ -150,6 +150,10 @@ namespace Velcryn::RHI
 #endif
 
         nri::StreamerDesc streamerDesc{};
+        // NRI validates this optional field even when the static constant ring is unused.
+        // Zero-initialization maps to DEVICE here, which is invalid for Streamer constants.
+        streamerDesc.constantBufferMemoryLocation = nri::MemoryLocation::HOST_UPLOAD;
+        streamerDesc.constantBufferSize = 0;
         streamerDesc.dynamicBufferMemoryLocation = nri::MemoryLocation::HOST_UPLOAD;
         streamerDesc.dynamicBufferDesc.usage = nri::BufferUsageBits::VERTEX_BUFFER | nri::BufferUsageBits::INDEX_BUFFER;
         streamerDesc.queuedFrameNum = 2;
