@@ -150,7 +150,9 @@ void UIRenderer::DrawCanvasWidget(const UIWidget& widget, const UIRect& rect, Re
         if (Texture2D* loaded = renderer->LoadTexture(texturePath); loaded && loaded->IsLoaded())
             texture = loaded->GetHandle();
 
-    DrawQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, color, texture);
+    DrawQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f,
+        color, texture, widget.GetGradientColor(), widget.HasGradient(),
+        widget.GetGradientDirection() == UIGradientDirection::Horizontal, widget.GetCornerRadius());
 }
 
 void UIRenderer::DrawSlider(const UISlider& slider,const UIRect& rect)
