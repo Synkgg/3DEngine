@@ -32,14 +32,17 @@ bool ProjectSettings::Load(const std::string& path)
         else if(key=="ScreenSpaceReflections") file>>m_RenderSettings.screenSpaceReflections;
         else if(key=="ScreenSpaceReflectionStrength") file>>m_RenderSettings.screenSpaceReflectionStrength;
         else if(key=="GIStrength") file>>m_RenderSettings.giStrength;
-        else { std::string ignored; std::getline(file,ignored); }
+        else { std::string ignored;
+        std::getline(file,ignored);
+        }
     }
     return true;
 }
 
 bool ProjectSettings::Save(const std::string& path) const
 {
-    std::ofstream file(path,std::ios::trunc); if(!file) return false;
+    std::ofstream file(path,std::ios::trunc);
+    if(!file) return false;
     file << "Version 1\n"
          << "AntiAliasing " << m_RenderSettings.antiAliasing << '\n'
          << "AntiAliasingSamples " << m_RenderSettings.antiAliasingSamples << '\n'
@@ -69,5 +72,7 @@ bool ProjectSettings::Save(const std::string& path) const
 void ProjectSettings::EnsureLoaded()
 {
     if(m_Loaded) return;
-    if(!Load()) { m_Loaded=true; Save(); }
+    if(!Load()) { m_Loaded=true;
+    Save();
+    }
 }
