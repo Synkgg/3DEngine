@@ -136,7 +136,7 @@ set(NRI_ENABLE_D3D12_SUPPORT OFF CACHE BOOL "" FORCE)
 set(NRI_ENABLE_NONE_SUPPORT OFF CACHE BOOL "" FORCE)
 set(NRI_ENABLE_VALIDATION_SUPPORT ON CACHE BOOL "" FORCE)
 set(NRI_ENABLE_NVTX_SUPPORT OFF CACHE BOOL "" FORCE)
-set(NRI_ENABLE_IMGUI_EXTENSION OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_IMGUI_EXTENSION ON CACHE BOOL "" FORCE)
 set(NRI_ENABLE_NIS_SDK OFF CACHE BOOL "" FORCE)
 set(NRI_ENABLE_NGX_SDK OFF CACHE BOOL "" FORCE)
 set(NRI_ENABLE_FFX_SDK OFF CACHE BOOL "" FORCE)
@@ -230,10 +230,9 @@ add_executable(
     vendor/imgui/imgui_demo.cpp
 
     #
-    # Dear ImGui SDL3/OpenGL backends
+    # Dear ImGui SDL3 platform backend. Rendering is owned by NRI/Vulkan.
     #
     vendor/imgui/backends/imgui_impl_sdl3.cpp
-    vendor/imgui/backends/imgui_impl_opengl3.cpp
 )
 
 #
@@ -274,7 +273,6 @@ target_compile_definitions(
     VelcrynEditor
     PRIVATE
 
-    IMGUI_IMPL_OPENGL_LOADER_GLAD2
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<CONFIG:Release>:ENGINE_RELEASE=1>
     $<$<CONFIG:RelWithDebInfo>:ENGINE_RELEASE=1>
