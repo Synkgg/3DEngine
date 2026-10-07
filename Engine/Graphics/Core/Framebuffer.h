@@ -1,2 +1,29 @@
 #pragma once
-class Framebuffer { public: Framebuffer(); ~Framebuffer(); bool Initialize(unsigned int,unsigned int,unsigned int samples=1,bool hdr=true); void Bind(); void Unbind(); void Resolve(); bool Resize(unsigned int,unsigned int); bool SetSamples(unsigned int); void Shutdown(); unsigned int GetColorTexture() const; unsigned int GetDepthTexture() const; unsigned int GetNormalTexture() const; unsigned int GetSamples() const; private: bool CreateTargets(); unsigned int m_FramebufferID=0,m_ColorTextureID=0,m_DepthStencilID=0,m_ResolveFramebufferID=0,m_ResolveColorTextureID=0,m_NormalTextureID=0,m_ResolveNormalTextureID=0,m_DepthTextureID=0,m_ResolveDepthTextureID=0; unsigned int m_Width=0,m_Height=0,m_Samples=1; bool m_HDR=true; };
+#include "../RHI/RHITypes.h"
+
+class Framebuffer
+{
+public:
+    Framebuffer();
+    ~Framebuffer();
+    bool Initialize(unsigned int width, unsigned int height, unsigned int samples=1, bool hdr=true);
+    void Bind();
+    void Unbind();
+    void Resolve();
+    bool Resize(unsigned int width, unsigned int height);
+    bool SetSamples(unsigned int samples);
+    void Shutdown();
+
+    Velcryn::RHI::TextureHandle GetColorTexture() const { return m_Color; }
+    Velcryn::RHI::TextureHandle GetDepthTexture() const { return m_Depth; }
+    Velcryn::RHI::TextureHandle GetNormalTexture() const { return m_Normal; }
+    unsigned int GetSamples() const { return m_Samples; }
+
+private:
+    bool CreateTargets();
+    Velcryn::RHI::TextureHandle m_Color{};
+    Velcryn::RHI::TextureHandle m_Normal{};
+    Velcryn::RHI::TextureHandle m_Depth{};
+    unsigned int m_Width=0, m_Height=0, m_Samples=1;
+    bool m_HDR=true;
+};
