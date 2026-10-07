@@ -17,6 +17,7 @@ struct Output
 {
     float4 position : SV_Position;
     [[vk::location(0)]] float3 normal : NORMAL;
+    [[vk::location(1)]] float2 uv : TEXCOORD0;
 };
 Output main(Input input)
 {
@@ -26,5 +27,6 @@ Output main(Input input)
     // NRI applies the top-left viewport convention, including Vulkan's Y flip.
     output.position.z = (output.position.z + output.position.w) * 0.5;
     output.normal = input.normal.x * draw.normalX.xyz + input.normal.y * draw.normalY.xyz + input.normal.z * draw.normalZ.xyz;
+    output.uv = input.uv;
     return output;
 }
