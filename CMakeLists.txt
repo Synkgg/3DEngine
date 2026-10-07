@@ -159,13 +159,33 @@ endif()
 
 set(NRI_IMGUI_IMPL "${nri_SOURCE_DIR}/Source/Shared/ImguiInterface.hpp")
 file(READ "${NRI_IMGUI_IMPL}" NRI_IMGUI_IMPL_CONTENT)
-set(NRI_IMGUI_OLD "    void* BackendUserData;\\n    ImTextureID TexID;")
-set(NRI_IMGUI_NEW "    void* BackendUserData;\\n    void* QueueUserData;\\n    ImTextureID TexID;")
+
+# Use real newlines here. The previous patch searched for the two-character
+# sequence "\\n", so it never matched NRI's source and silently wrote it back
+# unchanged.
+set(NRI_IMGUI_OLD [=[    void* BackendUserData;
+    ImTextureID TexID;]=])
+set(NRI_IMGUI_NEW [=[    void* BackendUserData;
+    void* QueueUserData;
+    ImTextureID TexID;]=])
+
 string(FIND "${NRI_IMGUI_IMPL_CONTENT}" "${NRI_IMGUI_NEW}" NRI_IMGUI_ALREADY_PATCHED)
 if (NRI_IMGUI_ALREADY_PATCHED EQUAL -1)
+    string(FIND "${NRI_IMGUI_IMPL_CONTENT}" "${NRI_IMGUI_OLD}" NRI_IMGUI_PATCH_POINT)
+    if (NRI_IMGUI_PATCH_POINT EQUAL -1)
+        message(FATAL_ERROR "NRI v180 ImGui ABI patch point was not found; refusing to build an ABI-mismatched NRIImgui extension.")
+    endif()
     string(REPLACE "${NRI_IMGUI_OLD}" "${NRI_IMGUI_NEW}" NRI_IMGUI_IMPL_CONTENT "${NRI_IMGUI_IMPL_CONTENT}")
     file(WRITE "${NRI_IMGUI_IMPL}" "${NRI_IMGUI_IMPL_CONTENT}")
 endif()
+
+# Verify the fetched source actually contains the ABI field before NRI compiles.
+file(READ "${NRI_IMGUI_IMPL}" NRI_IMGUI_IMPL_VERIFIED)
+string(FIND "${NRI_IMGUI_IMPL_VERIFIED}" "void* QueueUserData;" NRI_IMGUI_QUEUE_USER_DATA)
+if (NRI_IMGUI_QUEUE_USER_DATA EQUAL -1)
+    message(FATAL_ERROR "NRI v180 ImGui ABI patch failed: QueueUserData is missing.")
+endif()
+
 add_subdirectory("${nri_SOURCE_DIR}" "${nri_BINARY_DIR}")
 
 add_library(
