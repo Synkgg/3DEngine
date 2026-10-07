@@ -36,12 +36,12 @@
     {
       "name": "x64-Debug",
       "configurePreset": "x64-Debug",
-      "targets": ["3DEngine"]
+      "targets": ["VelcrynEditor"]
     },
     {
       "name": "x64-Release",
       "configurePreset": "x64-Release",
-      "targets": ["3DEngine"]
+      "targets": ["VelcrynEditor"]
     }
   ]
 }
