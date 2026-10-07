@@ -132,7 +132,26 @@ void UIRenderer::RenderCanvasWidget(
     }
 }
 
-void UIRenderer::DrawCanvasWidget(const UIWidget&, const UIRect&, Renderer*) {}
+void UIRenderer::DrawCanvasWidget(const UIWidget& widget, const UIRect& rect, Renderer* renderer)
+{
+    Vec4 color = widget.GetColor();
+    std::string texturePath;
+    if (const auto* button = dynamic_cast<const UIButton*>(&widget))
+    {
+        color = button->GetCurrentColor();
+        texturePath = button->GetCurrentImage();
+    }
+    else if (const auto* image = dynamic_cast<const UIImage*>(&widget))
+        texturePath = image->GetTexturePath();
+
+    color.w *= InheritedOpacity(widget);
+    Velcryn::RHI::TextureHandle texture = m_WhiteTexture;
+    if (renderer && !texturePath.empty())
+        if (Texture2D* loaded = renderer->LoadTexture(texturePath); loaded && loaded->IsLoaded())
+            texture = loaded->GetHandle();
+
+    DrawQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f, color, texture);
+}
 
 void UIRenderer::DrawSlider(const UISlider& slider,const UIRect& rect)
 {
@@ -240,4 +259,7 @@ void UIRenderer::DrawCanvasText(
     }
 }
 
-void UIRenderer::DrawFontGlyph(float,float,float,float,float,float,float,float,const Vec4&) {}
+void UIRenderer::DrawFontGlyph(float x,float y,float width,float height,float u0,float v0,float u1,float v1,const Vec4& color)
+{
+    DrawQuad(x, y, width, height, u0, v0, u1, v1, color, m_FontTexture);
+}
