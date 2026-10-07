@@ -9,9 +9,6 @@
 #include <vector>
 
 #include <glad/gl.h>
-#include <SDL3/SDL.h>
-
-#include "Shader.h"
 #include "Mesh.h"
 #include "ModelAsset.h"
 
@@ -107,8 +104,7 @@ public:
     ModelAsset* GetModelAsset(const std::string& modelPath);
     void InvalidateModelAsset(const std::string& modelPath);
 
-    SDL_GLContext GetContext() const;
-    unsigned int GetViewportTexture() const;
+    std::uint64_t GetViewportTexture() const;
 
     void ResizeViewport(unsigned int width, unsigned int height);
 
@@ -163,23 +159,10 @@ public:
     }
 
 private:
-    SDL_GLContext m_Context;
     Window* m_Window;
 
     float m_ClearColor[4];
 
-    Shader m_Shader;
-    Shader m_GridShader;
-    Shader m_ShadowShader;
-    Shader m_SkyShader;
-    Shader m_PostShader;
-    Shader m_BloomExtractShader;
-    Shader m_BloomBlurShader;
-    Shader m_TAAShader;
-    unsigned int m_SkyVAO = 0;
-    unsigned int m_SkyVBO = 0;
-    unsigned int m_PostVAO = 0;
-    unsigned int m_PostVBO = 0;
     std::array<Velcryn::RHI::TextureHandle, ShadowCascadeCount> m_ShadowDepthTextures{};
     std::array<unsigned int, ShadowCascadeCount> m_ShadowMapSizes{ 2048u, 2048u, 1024u };
     std::array<Mat4, ShadowCascadeCount> m_LightSpaceMatrices{ Mat4::Identity(), Mat4::Identity(), Mat4::Identity() };
@@ -187,32 +170,16 @@ private:
     int m_ActiveShadowCascade = 0;
     bool m_ShadowMapReady = false;
 
-    unsigned int m_PostFramebuffer = 0;
-    unsigned int m_PostColorTexture = 0;
-    unsigned int m_HistoryFramebuffer[2]{ 0, 0 };
-    unsigned int m_HistoryTexture[2]{ 0, 0 };
-    int m_HistoryReadIndex = 0;
-    bool m_HistoryValid = false;
-    Vec3 m_PreviousCameraPosition{};
-    Vec3 m_PreviousCameraForward{};
-    Vec3 m_PreviousCameraRight{};
-    Vec3 m_PreviousCameraUp{};
-    float m_PreviousTanHalfFov = 0.0f;
-    float m_PreviousAspect = 1.0f;
-    unsigned int m_BloomFramebuffer[2]{ 0, 0 };
-    unsigned int m_BloomTexture[2]{ 0, 0 };
-    unsigned int m_ModelPreviewFramebuffer = 0;
-    unsigned int m_ModelPreviewTexture = 0;
-    unsigned int m_ModelPreviewDepth = 0;
+    Velcryn::RHI::TextureHandle m_PostColorTexture{};
+    Velcryn::RHI::TextureHandle m_BloomTexture[2]{};
+    Velcryn::RHI::TextureHandle m_HistoryTexture[2]{};
     unsigned int m_ModelPreviewWidth = 0;
     unsigned int m_ModelPreviewHeight = 0;
-    Shader m_ModelPreviewShader;
 
     struct ModelPreviewTexture
     {
-        unsigned int framebuffer = 0;
-        unsigned int texture = 0;
-        unsigned int depth = 0;
+        Velcryn::RHI::TextureHandle color{};
+        Velcryn::RHI::TextureHandle depth{};
         unsigned int width = 0;
         unsigned int height = 0;
     };
@@ -265,7 +232,7 @@ private:
     bool CreatePostProcessTarget();
     void DestroyPostProcessTarget();
     void RenderPostProcess();
-    unsigned int RenderBloom();
+    Velcryn::RHI::TextureHandle RenderBloom();
     void ResolveTAA();
     bool EnsureModelPreviewTarget(unsigned int width, unsigned int height);
     void DestroyModelPreviewTarget();

@@ -211,11 +211,6 @@ add_executable(
     $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/Engine/Branding/Velcryn.rc>
 
     #
-    # GLAD
-    #
-    vendor/glad/src/gl.c
-
-    #
     # ImGuizmo
     #
     vendor/ImGuizmo/src/ImGuizmo.cpp
@@ -241,8 +236,6 @@ add_executable(
 target_include_directories(
     VelcrynEditor
     PRIVATE
-
-    vendor/glad/include
 
     vendor/imgui
     vendor/imgui/backends
@@ -339,7 +332,7 @@ add_custom_command(
             "$<TARGET_FILE_DIR:VelcrynEditor>/Engine/Branding/VelcrynLogo.png"
 )
 
-# SDL3, Lua, GLAD, ImGui and ImGuizmo are statically linked, so no
+# SDL3, Lua, NRI, ImGui and ImGuizmo are statically linked, so no
 # project-owned runtime DLL needs to be copied beside the executable.
 
 # Make the engine executable the startup target for Visual Studio generators.

@@ -798,12 +798,7 @@ void Editor::RenderViewport(
 	m_ViewportPosition = viewportPosition;
 	m_ViewportSize = viewportSize;
 
-	ImTextureID textureID =
-		(ImTextureID)(
-			intptr_t(
-				renderer.GetViewportTexture()
-			)
-			);
+	ImTextureID textureID = static_cast<ImTextureID>(renderer.GetViewportTexture());
 
 	ImGui::Image(
 		textureID,

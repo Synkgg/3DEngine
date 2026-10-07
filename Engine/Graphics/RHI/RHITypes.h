@@ -4,7 +4,7 @@
 
 namespace Velcryn::RHI
 {
-    enum class GraphicsAPI : std::uint8_t { Unknown, OpenGL, Vulkan, D3D12, Metal };
+    enum class GraphicsAPI : std::uint8_t { Unknown, Vulkan, D3D12, Metal };
     enum class QueueType : std::uint8_t { Graphics, Compute, Copy };
     enum class BufferUsage : std::uint8_t { Vertex, Index, Constant, Storage, Upload, Readback };
     enum class TextureFormat : std::uint8_t { Unknown, RGBA8_UNorm, RGBA8_sRGB, RGBA16_Float, D24S8, D32_Float };

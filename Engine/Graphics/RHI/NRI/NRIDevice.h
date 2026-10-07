@@ -6,6 +6,8 @@
 #include <Extensions/NRIDeviceCreation.h>
 #include <Extensions/NRIHelper.h>
 #include <Extensions/NRISwapChain.h>
+#include <Extensions/NRIStreamer.h>
+#include <Extensions/NRIImgui.h>
 
 #include <vector>
 
@@ -27,6 +29,7 @@ namespace Velcryn::RHI
         void DestroyBuffer(BufferHandle buffer) override;
         TextureHandle CreateTexture(const TextureDesc& desc, const void* initialData, std::size_t initialDataSize) override;
         void DestroyTexture(TextureHandle texture) override;
+        std::uint64_t GetImGuiTextureID(TextureHandle texture) const override;
 
         CommandListHandle BeginCommandList(QueueType queue) override;
         void EndCommandList(CommandListHandle commandList) override;
@@ -43,6 +46,7 @@ namespace Velcryn::RHI
         {
             nri::Buffer* resource = nullptr;
             std::vector<nri::Memory*> allocations;
+            nri::Descriptor* shaderResource = nullptr;
             std::uint32_t generation = 1;
         };
 
@@ -73,6 +77,10 @@ namespace Velcryn::RHI
         nri::CoreInterface m_Core{};
         nri::HelperInterface m_Helper{};
         nri::SwapChainInterface m_SwapChainInterface{};
+        nri::StreamerInterface m_StreamerInterface{};
+        nri::ImguiInterface m_ImguiInterface{};
+        nri::Streamer* m_Streamer = nullptr;
+        nri::Imgui* m_Imgui = nullptr;
         nri::SwapChain* m_SwapChain = nullptr;
         std::vector<nri::Texture*> m_SwapChainTextures;
         std::vector<nri::Descriptor*> m_SwapChainViews;

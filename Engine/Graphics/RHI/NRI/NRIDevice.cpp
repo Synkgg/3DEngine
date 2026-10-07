@@ -9,6 +9,7 @@
 #endif
 
 #include <cstring>
+#include <imgui.h>
 
 namespace Velcryn::RHI
 {
@@ -37,7 +38,9 @@ namespace Velcryn::RHI
 
         if (nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::CoreInterface), &m_Core) != nri::Result::SUCCESS ||
             nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::HelperInterface), &m_Helper) != nri::Result::SUCCESS ||
-            nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::SwapChainInterface), &m_SwapChainInterface) != nri::Result::SUCCESS)
+            nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::SwapChainInterface), &m_SwapChainInterface) != nri::Result::SUCCESS ||
+            nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::StreamerInterface), &m_StreamerInterface) != nri::Result::SUCCESS ||
+            nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::ImguiInterface), &m_ImguiInterface) != nri::Result::SUCCESS)
         {
             Logger::Error("RHI: failed to acquire required NRI interfaces.");
             Shutdown();
@@ -146,7 +149,14 @@ namespace Velcryn::RHI
         return false;
 #endif
 
-        Logger::Info(std::string("RHI: NRI Vulkan device + swapchain initialized on ") + deviceDesc.adapterDesc.name);
+        nri::StreamerDesc streamerDesc{};
+        streamerDesc.dynamicBufferMemoryLocation = nri::MemoryLocation::HOST_UPLOAD;
+        streamerDesc.dynamicBufferDesc.usage = nri::BufferUsageBits::VERTEX_BUFFER | nri::BufferUsageBits::INDEX_BUFFER;
+        streamerDesc.queuedFrameNum = 2;
+        if (m_StreamerInterface.CreateStreamer(*m_Device, streamerDesc, m_Streamer) != nri::Result::SUCCESS) { Logger::Error("RHI: failed to create NRI streamer."); Shutdown(); return false; }
+        nri::ImguiDesc imguiDesc{}; imguiDesc.descriptorPoolSize = 2048;
+        if (m_ImguiInterface.CreateImgui(*m_Device, imguiDesc, m_Imgui) != nri::Result::SUCCESS) { Logger::Error("RHI: failed to create NRI ImGui renderer."); Shutdown(); return false; }
+        Logger::Info(std::string("RHI: NRI Vulkan device + swapchain + ImGui initialized on ") + deviceDesc.adapterDesc.name);
         return true;
     }
 
@@ -157,6 +167,9 @@ namespace Velcryn::RHI
 
         WaitIdle();
 
+        if (m_Imgui) m_ImguiInterface.DestroyImgui(m_Imgui);
+        if (m_Streamer) m_StreamerInterface.DestroyStreamer(m_Streamer);
+        m_Imgui=nullptr; m_Streamer=nullptr;
         if (m_FrameCommandBuffer) m_Core.DestroyCommandBuffer(m_FrameCommandBuffer);
         if (m_FrameAllocator) m_Core.DestroyCommandAllocator(m_FrameAllocator);
         if (m_FrameFence) m_Core.DestroyFence(m_FrameFence);
@@ -276,7 +289,7 @@ namespace Velcryn::RHI
         ++slot.generation;
     }
 
-    TextureHandle NRIDevice::CreateTexture(const TextureDesc& desc, const void*, std::size_t)
+    TextureHandle NRIDevice::CreateTexture(const TextureDesc& desc, const void* initialData, std::size_t initialDataSize)
     {
         if (!m_Device || desc.width == 0 || desc.height == 0)
             return {};
@@ -311,6 +324,18 @@ namespace Velcryn::RHI
             return {};
         }
 
+        if ((static_cast<std::uint32_t>(desc.usage) & static_cast<std::uint32_t>(TextureUsage::Sampled)) != 0) {
+            nri::TextureViewDesc view{}; view.texture=slot.resource; view.type=desc.arrayLayers==6?nri::TextureView::TEXTURE_CUBE:nri::TextureView::TEXTURE;
+            view.format=nriDesc.format; view.mipNum=static_cast<nri::Dim_t>(desc.mipLevels); view.layerNum=static_cast<nri::Dim_t>(desc.arrayLayers); view.sliceNum=1;
+            view.planes=(desc.format==TextureFormat::D24S8||desc.format==TextureFormat::D32_Float)?nri::PlaneBits::DEPTH:nri::PlaneBits::COLOR;
+            if(m_Core.CreateTextureView(view,slot.shaderResource)!=nri::Result::SUCCESS){for(auto* m:slot.allocations)m_Core.FreeMemory(m);m_Core.DestroyTexture(slot.resource);return{};}
+        }
+        if(initialData&&initialDataSize){
+            const nri::FormatProps& props=*nri::nriGetFormatProps(nriDesc.format);
+            nri::TextureSubresourceUploadDesc sub{};sub.slices=initialData;sub.sliceNum=1;sub.rowPitch=desc.width*props.stride;sub.slicePitch=sub.rowPitch*desc.height;
+            nri::TextureUploadDesc upload{};upload.subresources=&sub;upload.texture=slot.resource;upload.after={nri::AccessBits::SHADER_RESOURCE,nri::Layout::SHADER_RESOURCE,nri::StageBits::ALL};upload.planes=props.isDepth?nri::PlaneBits::DEPTH:nri::PlaneBits::COLOR;
+            if(m_Helper.UploadData(*m_GraphicsQueue,&upload,1,nullptr,0)!=nri::Result::SUCCESS){if(slot.shaderResource)m_Core.DestroyDescriptor(slot.shaderResource);for(auto* m:slot.allocations)m_Core.FreeMemory(m);m_Core.DestroyTexture(slot.resource);return{};}
+        }
         m_Textures.push_back(std::move(slot));
         return {static_cast<uint32_t>(m_Textures.size()), m_Textures.back().generation};
     }
@@ -324,6 +349,7 @@ namespace Velcryn::RHI
         if (slot.generation != handle.generation || !slot.resource)
             return;
 
+        if (slot.shaderResource) m_Core.DestroyDescriptor(slot.shaderResource);
         m_Core.DestroyTexture(slot.resource);
         for (nri::Memory* memory : slot.allocations)
             m_Core.FreeMemory(memory);
@@ -331,6 +357,11 @@ namespace Velcryn::RHI
         slot.resource = nullptr;
         slot.allocations.clear();
         ++slot.generation;
+    }
+
+    std::uint64_t NRIDevice::GetImGuiTextureID(TextureHandle handle) const {
+        if(!handle||handle.index>m_Textures.size())return 0;const TextureSlot& s=m_Textures[handle.index-1];
+        return (s.generation==handle.generation&&s.shaderResource)?reinterpret_cast<std::uint64_t>(s.shaderResource):0;
     }
 
     CommandListHandle NRIDevice::BeginCommandList(QueueType queueType)
@@ -439,6 +470,18 @@ namespace Velcryn::RHI
         if (!m_SwapChain || !m_FrameCommandBuffer || !m_FrameOpen)
             return;
 
+        if(m_Imgui&&m_Streamer){
+            ImDrawData* dd=ImGui::GetDrawData();
+            if(dd&&dd->Valid&&dd->CmdListsCount>0){
+                ImGuiPlatformIO& pio=ImGui::GetPlatformIO();
+                nri::CopyImguiDataDesc cp{};cp.drawLists=dd->CmdLists.Data;cp.drawListNum=(uint32_t)dd->CmdLists.Size;cp.textures=pio.Textures.Data;cp.textureNum=(uint32_t)pio.Textures.Size;
+                m_ImguiInterface.CmdCopyImguiData(*m_FrameCommandBuffer,*m_Streamer,*m_Imgui,cp);m_StreamerInterface.CmdCopyStreamedData(*m_FrameCommandBuffer,*m_Streamer);
+                nri::AttachmentDesc a{};a.descriptor=m_SwapChainViews[m_BackBufferIndex];a.loadOp=nri::LoadOp::LOAD;a.storeOp=nri::StoreOp::STORE;
+                nri::RenderingDesc rd{};rd.colors=&a;rd.colorNum=1;m_Core.CmdBeginRendering(*m_FrameCommandBuffer,rd);
+                nri::DrawImguiDesc draw{};draw.drawLists=dd->CmdLists.Data;draw.drawListNum=(uint32_t)dd->CmdLists.Size;draw.displaySize={(nri::Dim_t)dd->DisplaySize.x,(nri::Dim_t)dd->DisplaySize.y};draw.hdrScale=1.0f;draw.attachmentFormat=m_SwapChainFormat;draw.linearColor=true;
+                m_ImguiInterface.CmdDrawImgui(*m_FrameCommandBuffer,*m_Imgui,draw);m_Core.CmdEndRendering(*m_FrameCommandBuffer);
+            }
+        }
         nri::TextureBarrierDesc toPresent{};
         toPresent.texture = m_SwapChainTextures[m_BackBufferIndex];
         toPresent.before = {nri::AccessBits::COLOR_ATTACHMENT, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT};
@@ -477,6 +520,7 @@ namespace Velcryn::RHI
         if (m_Core.QueueSubmit(*m_GraphicsQueue, submit) == nri::Result::SUCCESS)
             m_SwapChainInterface.QueuePresent(*m_SwapChain, *m_ReleaseSemaphores[m_BackBufferIndex]);
 
+        if(m_Streamer)m_StreamerInterface.EndStreamerFrame(*m_Streamer);
         ++m_FrameIndex;
         m_FrameOpen = false;
     }

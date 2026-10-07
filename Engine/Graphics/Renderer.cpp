@@ -1,8 +1,5 @@
 #include "Renderer.h"
 #include "RHI/RHI.h"
-#include "OpenGL/OpenGLShaderSources.h"
-
-using namespace Velcryn::Graphics::OpenGLShaders;
 #include "../Platform/SDL/Window.h"
 #include "PrimitiveMesh.h"
 #include "ModelLoader.h"
@@ -28,8 +25,7 @@ using namespace Velcryn::Graphics::OpenGLShaders;
 
 
 Renderer::Renderer()
-	: m_Context(nullptr),
-	m_Window(nullptr),
+	: m_Window(nullptr),
 	m_ClearColor{ 0.1f, 0.1f, 0.15f, 1.0f },
 	m_ViewportWidth(0),
 	m_ViewportHeight(0)
@@ -74,7 +70,6 @@ void Renderer::Shutdown()
     m_TextureManager.Clear();
 
     Velcryn::RHI::Shutdown();
-    m_Context = nullptr;
     m_Window = nullptr;
 }
 
@@ -125,15 +120,7 @@ void Renderer::SetClearColor(float red, float green, float blue, float alpha)
 
 
 
-SDL_GLContext Renderer::GetContext() const
-{
-	return m_Context;
-}
-
-unsigned int Renderer::GetViewportTexture() const
-{
-	return m_PostColorTexture ? m_PostColorTexture : m_Framebuffer.GetColorTexture();
-}
+std::uint64_t Renderer::GetViewportTexture() const { if(auto*d=Velcryn::RHI::GetDevice()) return d->GetImGuiTextureID(m_PostColorTexture?m_PostColorTexture:m_Framebuffer.GetColorTexture()); return 0; }
 
 void Renderer::ResizeViewport(
 	unsigned int width,

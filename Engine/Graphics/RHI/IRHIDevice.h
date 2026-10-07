@@ -22,6 +22,7 @@ namespace Velcryn::RHI
         virtual void DestroyBuffer(BufferHandle buffer) = 0;
         virtual TextureHandle CreateTexture(const TextureDesc& desc, const void* initialData = nullptr, std::size_t initialDataSize = 0) = 0;
         virtual void DestroyTexture(TextureHandle texture) = 0;
+        virtual std::uint64_t GetImGuiTextureID(TextureHandle texture) const = 0;
 
         virtual CommandListHandle BeginCommandList(QueueType queue = QueueType::Graphics) = 0;
         virtual void EndCommandList(CommandListHandle commandList) = 0;
