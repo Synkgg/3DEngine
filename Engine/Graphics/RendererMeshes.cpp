@@ -130,13 +130,16 @@ void Renderer::UploadFrameShaderState()
 }
 
 void Renderer::DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha,
-    const Texture2D*, float, float, float, float, const Texture2D*, const Texture2D*,
+    const Texture2D* texture, float, float, float, float, const Texture2D*, const Texture2D*,
     const Texture2D*, const Texture2D*, const Texture2D*, const std::vector<Mat4>*)
 {
     if (!mesh) return;
     struct Constants { Mat4 mvp; float color[4]; float normalColumns[3][4]; };
     const Mat4 model = transform.GetMatrix();
-    Constants constants{m_FrameViewProjection * model, {red, green, blue, alpha}, {}};
+    Constants constants{m_FrameViewProjection * model,
+        {red * m_LightColor.x * std::max(m_LightIntensity, 0.0f),
+         green * m_LightColor.y * std::max(m_LightIntensity, 0.0f),
+         blue * m_LightColor.z * std::max(m_LightIntensity, 0.0f), alpha}, {}};
     // Transform consists of rotation and scale: divide each basis column by
     // its squared length to obtain the inverse transpose for surface normals.
     for (int column = 0; column < 3; ++column)
@@ -146,10 +149,16 @@ void Renderer::DrawMeshInternal(Mesh* mesh, const Transform& transform, float re
         if (squaredLength > 1e-12f)
             for (int row = 0; row < 3; ++row) constants.normalColumns[column][row] = model.elements[column * 4 + row] / squaredLength;
     }
+    Vec3 lightDirection = m_LightDirection.Length() > 0.001f
+        ? m_LightDirection.Normalized() : Vec3(-0.4f, -0.8f, -0.6f).Normalized();
+    constants.normalColumns[0][3] = lightDirection.x;
+    constants.normalColumns[1][3] = lightDirection.y;
+    constants.normalColumns[2][3] = lightDirection.z;
     static_assert(sizeof(Constants) == 128);
+    const auto sampledTexture = texture && texture->IsLoaded() ? texture->GetHandle() : m_WhiteTexture;
     if (auto* device = Velcryn::RHI::GetDevice())
         device->DrawIndexed(m_MeshPipeline, mesh->GetVertexBuffer(), mesh->GetIndexBuffer(),
-            mesh->GetIndexCount(), &constants, sizeof(constants));
+            mesh->GetIndexCount(), &constants, sizeof(constants), 1, sampledTexture);
 }
 
 void Renderer::DrawMesh(
