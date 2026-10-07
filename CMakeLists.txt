@@ -17,24 +17,26 @@ if(NOT DXC_PROBE_RESULT EQUAL 0)
     message(FATAL_ERROR "DXC must support SPIR-V. Set VELCRYN_DXC to the standalone DXC or Vulkan SDK compiler. ${DXC_PROBE_ERROR}")
 endif()
 set(VELCRYN_SHADER_HEADERS)
-foreach(STAGE vert frag)
-    if(STAGE STREQUAL "vert")
-        set(PROFILE vs_6_0)
-    else()
-        set(PROFILE ps_6_0)
-    endif()
-    set(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/Mesh.${STAGE}.hlsl")
-    set(SPIRV "${CMAKE_CURRENT_BINARY_DIR}/Generated/Mesh.${STAGE}.spv")
-    set(HEADER "${CMAKE_CURRENT_BINARY_DIR}/Generated/Mesh.${STAGE}.h")
-    add_custom_command(OUTPUT "${HEADER}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Generated"
-        COMMAND "${VELCRYN_DXC}" -spirv -fspv-target-env=vulkan1.2 -T ${PROFILE} -E main
-            "$<IF:$<CONFIG:Debug>,-Od,-O3>" -Fo "${SPIRV}" "${SOURCE}"
-        COMMAND ${CMAKE_COMMAND} "-DINPUT=${SPIRV}" "-DOUTPUT=${HEADER}" "-DSYMBOL=Mesh_${STAGE}"
-            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
-        DEPENDS "${SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
-        VERBATIM)
-    list(APPEND VELCRYN_SHADER_HEADERS "${HEADER}")
+foreach(SHADER_NAME Mesh UI)
+    foreach(STAGE vert frag)
+        if(STAGE STREQUAL "vert")
+            set(PROFILE vs_6_0)
+        else()
+            set(PROFILE ps_6_0)
+        endif()
+        set(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/${SHADER_NAME}.${STAGE}.hlsl")
+        set(SPIRV "${CMAKE_CURRENT_BINARY_DIR}/Generated/${SHADER_NAME}.${STAGE}.spv")
+        set(HEADER "${CMAKE_CURRENT_BINARY_DIR}/Generated/${SHADER_NAME}.${STAGE}.h")
+        add_custom_command(OUTPUT "${HEADER}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Generated"
+            COMMAND "${VELCRYN_DXC}" -spirv -fspv-target-env=vulkan1.2 -T ${PROFILE} -E main
+                "$<IF:$<CONFIG:Debug>,-Od,-O3>" -Fo "${SPIRV}" "${SOURCE}"
+            COMMAND ${CMAKE_COMMAND} "-DINPUT=${SPIRV}" "-DOUTPUT=${HEADER}" "-DSYMBOL=${SHADER_NAME}_${STAGE}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
+            DEPENDS "${SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
+            VERBATIM)
+        list(APPEND VELCRYN_SHADER_HEADERS "${HEADER}")
+    endforeach()
 endforeach()
 
 set(CMAKE_CXX_STANDARD 20)
