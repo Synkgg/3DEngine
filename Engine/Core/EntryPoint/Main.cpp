@@ -4,13 +4,13 @@
 
 int main(int argc, char** argv)
 {
-    Logger::Info("Engine starting...");
+    Logger::Info("Velcryn Engine starting...");
 
     const std::string projectPath = argc > 1 ? argv[1] : std::string{};
     Application app(projectPath);
     if (!app.Initialize())
     {
-        Logger::Error("Engine initialization failed. Run loop was not started.");
+        Logger::Error("Velcryn Engine initialization failed. Run loop was not started.");
         return 1;
     }
 
