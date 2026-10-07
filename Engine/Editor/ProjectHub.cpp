@@ -1,4 +1,5 @@
 #include "ProjectHub.h"
+#include "Brand/VelcrynBrand.h"
 #include "../Core/Project.h"
 
 #include <SDL3/SDL.h>
@@ -24,30 +25,6 @@ namespace
     constexpr ImU32 kBlue = IM_COL32(55, 156, 220, 255);
     constexpr ImU32 kCyan = IM_COL32(65, 190, 235, 255);
 
-    void DrawVelcrynMark(ImDrawList* dl, ImVec2 p, float s)
-    {
-        // Broad split/faceted V from the Velcryn identity: two metallic blades
-        // fold inward around a luminous blue central spine.
-        const ImVec2 A(p.x, p.y + s * .02f);
-        const ImVec2 B(p.x + s * .24f, p.y + s * .10f);
-        const ImVec2 C(p.x + s * .50f, p.y + s * .72f);
-        const ImVec2 D(p.x + s * .50f, p.y + s);
-        const ImVec2 E(p.x + s * .76f, p.y + s * .10f);
-        const ImVec2 F(p.x + s, p.y);
-        const ImVec2 IL(p.x + s * .40f, p.y + s * .22f);
-        const ImVec2 IR(p.x + s * .60f, p.y + s * .22f);
-
-        dl->AddQuadFilled(A, B, C, IL, IM_COL32(222, 230, 238, 255));
-        dl->AddTriangleFilled(B, IL, C, IM_COL32(112, 130, 148, 255));
-        dl->AddQuadFilled(F, E, C, IR, IM_COL32(235, 240, 245, 255));
-        dl->AddTriangleFilled(E, IR, C, IM_COL32(91, 116, 139, 255));
-        dl->AddTriangleFilled(IL, IR, C, IM_COL32(38, 132, 190, 255));
-        dl->AddTriangleFilled(C, D, IR, IM_COL32(24, 91, 139, 255));
-
-        dl->AddLine(A, C, IM_COL32(69, 183, 239, 235), 1.4f);
-        dl->AddLine(F, C, IM_COL32(92, 205, 249, 245), 1.4f);
-        dl->AddLine(C, D, IM_COL32(42, 171, 235, 220), 1.2f);
-    }
 
     bool NavItem(const char* id, const char* label, bool active, ImVec2 size)
     {
@@ -196,7 +173,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
     // UE-style project browser shell: title bar, category rail, content browser, action footer.
     dl->AddRectFilled(wp, ImVec2(wp.x + ws.x, wp.y + topH), IM_COL32(29,30,33,255));
     dl->AddLine(ImVec2(wp.x,wp.y+topH),ImVec2(wp.x+ws.x,wp.y+topH),kLine);
-    DrawVelcrynMark(dl, ImVec2(wp.x+24,wp.y+14), 42.0f);
+    Velcryn::Editor::Brand::DrawLogoMark(dl, ImVec2(wp.x+24,wp.y+14), 42.0f);
     dl->AddText(ImVec2(wp.x+82,wp.y+19),kText,"VELCRYN PROJECT BROWSER");
     dl->AddText(ImVec2(wp.x+82,wp.y+41),kMuted,"Select an existing project or create a new one");
     dl->AddText(ImVec2(wp.x+ws.x-178,wp.y+29),kMuted,"VELCRYN ENGINE  0.1");
@@ -249,7 +226,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
             dl->AddRectFilled(p,ImVec2(p.x+cardW,p.y+70),IM_COL32(32,33,36,255),5.0f);
             // Simple scene/project thumbnail motif.
             dl->AddRectFilled(ImVec2(p.x+18,p.y+17),ImVec2(p.x+62,p.y+55),IM_COL32(20,55,78,255),4.0f);
-            DrawVelcrynMark(dl,ImVec2(p.x+28,p.y+23),24.0f);
+            Velcryn::Editor::Brand::DrawLogoMark(dl,ImVec2(p.x+28,p.y+23),24.0f);
             dl->AddText(ImVec2(p.x+18,p.y+86),exists?kText:kMuted,recent.name.c_str());
             std::string path=recent.descriptorPath;
             if(path.size()>46) path="..."+path.substr(path.size()-43);
