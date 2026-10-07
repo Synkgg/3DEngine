@@ -180,8 +180,7 @@ private:
     unsigned int m_SkyVBO = 0;
     unsigned int m_PostVAO = 0;
     unsigned int m_PostVBO = 0;
-    std::array<unsigned int, ShadowCascadeCount> m_ShadowFramebuffers{};
-    std::array<unsigned int, ShadowCascadeCount> m_ShadowDepthTextures{};
+    std::array<Velcryn::RHI::TextureHandle, ShadowCascadeCount> m_ShadowDepthTextures{};
     std::array<unsigned int, ShadowCascadeCount> m_ShadowMapSizes{ 2048u, 2048u, 1024u };
     std::array<Mat4, ShadowCascadeCount> m_LightSpaceMatrices{ Mat4::Identity(), Mat4::Identity(), Mat4::Identity() };
     std::array<float, ShadowCascadeCount> m_ShadowCascadeSplits{ 12.0f, 32.0f, 80.0f };
