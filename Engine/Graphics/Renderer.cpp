@@ -28,7 +28,7 @@
 
 Renderer::Renderer()
 	: m_Window(nullptr),
-	m_ClearColor{ 0.1f, 0.1f, 0.15f, 1.0f },
+	m_ClearColor{ 0.16f, 0.23f, 0.36f, 1.0f },
 	m_ViewportWidth(0),
 	m_ViewportHeight(0),
     m_LightDirection(Vec3(-0.4f, -0.8f, -0.6f).Normalized()),
