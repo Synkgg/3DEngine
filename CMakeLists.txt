@@ -329,6 +329,18 @@ set_target_properties(
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+# Keep runtime branding available when launching the executable outside the
+# repository working directory. The native .ico remains compiled into the EXE.
+add_custom_command(
+    TARGET VelcrynEditor
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:VelcrynEditor>/Engine/Branding"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Branding/VelcrynLogo.png"
+            "$<TARGET_FILE_DIR:VelcrynEditor>/Engine/Branding/VelcrynLogo.png"
+)
+
 # SDL3, Lua, GLAD, ImGui and ImGuizmo are statically linked, so no
 # project-owned runtime DLL needs to be copied beside the executable.
 
