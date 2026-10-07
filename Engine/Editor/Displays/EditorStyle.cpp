@@ -4,8 +4,8 @@ void Editor::ApplyEditorStyle()
 {
     ImGuiStyle& s = ImGui::GetStyle();
 
-    // Neutral professional editor palette: layered medium-dark graphite surfaces,
-    // cool gray controls, crisp separators and restrained UE-style blue selection.
+    // Velcryn editor palette: deep graphite surfaces, steel-blue structure,
+    // crisp separators and restrained electric-cyan interaction accents.
     s.WindowRounding = 4.0f;
     s.ChildRounding = 4.0f;
     s.FrameRounding = 4.0f;
@@ -33,9 +33,9 @@ void Editor::ApplyEditorStyle()
     ImVec4* c = s.Colors;
     c[ImGuiCol_Text]                 = ImVec4(0.90f, 0.91f, 0.92f, 1.00f);
     c[ImGuiCol_TextDisabled]         = ImVec4(0.52f, 0.54f, 0.57f, 1.00f);
-    c[ImGuiCol_WindowBg]             = ImVec4(0.105f, 0.110f, 0.118f, 1.00f);
-    c[ImGuiCol_ChildBg]              = ImVec4(0.125f, 0.130f, 0.138f, 1.00f);
-    c[ImGuiCol_PopupBg]              = ImVec4(0.115f, 0.120f, 0.128f, 0.99f);
+    c[ImGuiCol_WindowBg]             = ImVec4(0.055f, 0.065f, 0.078f, 1.00f);
+    c[ImGuiCol_ChildBg]              = ImVec4(0.070f, 0.082f, 0.096f, 1.00f);
+    c[ImGuiCol_PopupBg]              = ImVec4(0.060f, 0.073f, 0.088f, 0.99f);
     c[ImGuiCol_Border]               = ImVec4(0.205f, 0.215f, 0.228f, 1.00f);
     c[ImGuiCol_BorderShadow]         = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -46,7 +46,7 @@ void Editor::ApplyEditorStyle()
     c[ImGuiCol_TitleBg]              = ImVec4(0.085f, 0.090f, 0.097f, 1.00f);
     c[ImGuiCol_TitleBgActive]        = ImVec4(0.120f, 0.126f, 0.135f, 1.00f);
     c[ImGuiCol_TitleBgCollapsed]     = c[ImGuiCol_TitleBg];
-    c[ImGuiCol_MenuBarBg]            = ImVec4(0.075f, 0.080f, 0.087f, 1.00f);
+    c[ImGuiCol_MenuBarBg]            = ImVec4(0.032f, 0.043f, 0.055f, 1.00f);
 
     c[ImGuiCol_Button]               = ImVec4(0.160f, 0.168f, 0.178f, 1.00f);
     c[ImGuiCol_ButtonHovered]        = ImVec4(0.205f, 0.215f, 0.228f, 1.00f);
@@ -62,23 +62,23 @@ void Editor::ApplyEditorStyle()
     c[ImGuiCol_TabUnfocused]         = ImVec4(0.023f, 0.028f, 0.034f, 1.00f);
     c[ImGuiCol_TabUnfocusedActive]   = ImVec4(0.035f, 0.060f, 0.075f, 1.00f);
 
-    c[ImGuiCol_CheckMark]            = ImVec4(0.120f, 0.570f, 0.850f, 1.00f);
+    c[ImGuiCol_CheckMark]            = ImVec4(0.090f, 0.670f, 0.950f, 1.00f);
     c[ImGuiCol_SliderGrab]           = ImVec4(0.140f, 0.455f, 0.675f, 1.00f);
     c[ImGuiCol_SliderGrabActive]     = ImVec4(0.180f, 0.650f, 0.950f, 1.00f);
 
     c[ImGuiCol_Separator]            = ImVec4(0.10f, 0.12f, 0.14f, 1.00f);
     c[ImGuiCol_SeparatorHovered]     = ImVec4(0.12f, 0.46f, 0.66f, 1.00f);
-    c[ImGuiCol_SeparatorActive]      = ImVec4(0.120f, 0.570f, 0.850f, 1.00f);
+    c[ImGuiCol_SeparatorActive]      = ImVec4(0.090f, 0.670f, 0.950f, 1.00f);
 
-    c[ImGuiCol_ResizeGrip]           = ImVec4(0.18f, 0.65f, 0.92f, 0.16f);
-    c[ImGuiCol_ResizeGripHovered]    = ImVec4(0.18f, 0.65f, 0.92f, 0.55f);
-    c[ImGuiCol_ResizeGripActive]     = ImVec4(0.18f, 0.65f, 0.92f, 0.90f);
+    c[ImGuiCol_ResizeGrip]           = ImVec4(0.10f, 0.72f, 0.98f, 0.16f);
+    c[ImGuiCol_ResizeGripHovered]    = ImVec4(0.10f, 0.72f, 0.98f, 0.55f);
+    c[ImGuiCol_ResizeGripActive]     = ImVec4(0.10f, 0.72f, 0.98f, 0.90f);
 
     c[ImGuiCol_TableHeaderBg]        = ImVec4(0.035f, 0.043f, 0.052f, 1.00f);
     c[ImGuiCol_TableBorderStrong]    = ImVec4(0.10f, 0.12f, 0.14f, 1.00f);
     c[ImGuiCol_TableBorderLight]     = ImVec4(0.065f, 0.078f, 0.090f, 1.00f);
 
-    c[ImGuiCol_DockingPreview]       = ImVec4(0.18f, 0.65f, 0.92f, 0.45f);
+    c[ImGuiCol_DockingPreview]       = ImVec4(0.10f, 0.72f, 0.98f, 0.45f);
     c[ImGuiCol_DockingEmptyBg]       = ImVec4(0.075f, 0.080f, 0.087f, 1.00f);
-    c[ImGuiCol_NavHighlight]         = ImVec4(0.18f, 0.65f, 0.92f, 0.75f);
+    c[ImGuiCol_NavHighlight]         = ImVec4(0.10f, 0.72f, 0.98f, 0.75f);
 }
