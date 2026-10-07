@@ -6,6 +6,7 @@ struct Constants
     float4 gradient;
     float4 style;
     float4 rect;
+    float4 uvRect;
 };
 [[vk::push_constant]] Constants draw;
 struct Input
@@ -25,6 +26,6 @@ Output main(Input input)
     float2 pixel = logical * draw.viewport.z + draw.offset.xy;
     output.position = float4(pixel.x / draw.viewport.x * 2.0 - 1.0,
                              1.0 - pixel.y / draw.viewport.y * 2.0, 0.0, 1.0);
-    output.uv = input.uv;
+    output.uv = lerp(draw.uvRect.xy, draw.uvRect.zw, input.uv);
     return output;
 }
