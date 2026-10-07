@@ -13,7 +13,6 @@
 #include "../Audio/AudioEngine.h"
 #include "../Editor/Fonts/InterFont.h"
 
-#include <glad/gl.h>
 
 #include <algorithm>
 #include <string>
