@@ -175,96 +175,150 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
     ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(io.DisplaySize);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImGui::ColorConvertU32ToFloat4(kBg));
-    ImGui::Begin("Velcryn Hub", nullptr, ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings);
+    ImGui::Begin("Velcryn Hub", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
     const ImVec2 wp = ImGui::GetWindowPos();
     const ImVec2 ws = ImGui::GetWindowSize();
-    const float rail = 264.0f;
-    dl->AddRectFilled(wp, ImVec2(wp.x+rail, wp.y+ws.y), kRail);
-    dl->AddLine(ImVec2(wp.x+rail,wp.y), ImVec2(wp.x+rail,wp.y+ws.y), kLine);
-    dl->AddLine(ImVec2(wp.x+rail+30,wp.y+86), ImVec2(wp.x+ws.x-30,wp.y+86), kLine);
+    const float margin = 44.0f;
 
-    DrawVelcrynMark(dl, ImVec2(wp.x+28,wp.y+22), 64);
-    dl->AddText(ImVec2(wp.x+110,wp.y+31), kText, "V E L C R Y N");
-    dl->AddText(ImVec2(wp.x+110,wp.y+55), kBlue, "E N G I N E");
+    // Product header: no permanent sidebar. The Hub opens as a dashboard.
+    DrawVelcrynMark(dl, ImVec2(wp.x + margin, wp.y + 28.0f), 58.0f);
+    dl->AddText(ImVec2(wp.x + margin + 78.0f, wp.y + 35.0f), kText, "V E L C R Y N");
+    dl->AddText(ImVec2(wp.x + margin + 78.0f, wp.y + 58.0f), kBlue, "E N G I N E");
+    dl->AddText(ImVec2(wp.x + ws.x - 255.0f, wp.y + 48.0f), kMuted, "H U B   //   PROJECTS");
+    dl->AddLine(ImVec2(wp.x + margin, wp.y + 108.0f), ImVec2(wp.x + ws.x - margin, wp.y + 108.0f), kLine);
 
-    ImGui::SetCursorPos(ImVec2(18,126));
-    NavItem("##projects","PROJECTS",true,ImVec2(228,44));
-    ImGui::SetCursorPosX(18);
-    if (NavItem("##open","OPEN PROJECT",false,ImVec2(228,44))) {
+    // Hero copy.
+    dl->AddText(ImVec2(wp.x + margin, wp.y + 142.0f), kMuted, "WELCOME BACK");
+    ImGui::SetCursorPos(ImVec2(margin, 170.0f));
+    ImGui::SetWindowFontScale(1.75f);
+    ImGui::TextUnformatted("Build something remarkable.");
+    ImGui::SetWindowFontScale(1.0f);
+    dl->AddText(ImVec2(wp.x + margin, wp.y + 210.0f), kMuted,
+        "Open a world, continue where you left off, or create a new Velcryn project.");
+
+    // Quick actions are product tiles, not a navigation rail.
+    const float actionY = 250.0f;
+    const float tileGap = 16.0f;
+    const float tileW = 190.0f;
+    auto actionTile = [&](const char* id, const char* eyebrow, const char* title, float x, bool accent)
+    {
+        ImGui::SetCursorPos(ImVec2(x, actionY));
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        ImGui::InvisibleButton(id, ImVec2(tileW, 78.0f));
+        const bool hover = ImGui::IsItemHovered();
+        dl->AddRectFilled(p, ImVec2(p.x + tileW, p.y + 78.0f), hover ? kPanelHover : kPanel, 7.0f);
+        dl->AddRect(p, ImVec2(p.x + tileW, p.y + 78.0f), accent ? (hover ? kCyan : kBlue) : kLine,
+            7.0f, ImDrawFlags_None, 1.0f);
+        if (accent) dl->AddRectFilled(ImVec2(p.x, p.y + 14.0f), ImVec2(p.x + 3.0f, p.y + 64.0f), kCyan);
+        dl->AddText(ImVec2(p.x + 18.0f, p.y + 15.0f), kMuted, eyebrow);
+        dl->AddText(ImVec2(p.x + 18.0f, p.y + 42.0f), kText, title);
+        return ImGui::IsItemClicked();
+    };
+
+    float ax = margin;
+    if (actionTile("##new", "START", "NEW PROJECT", ax, true)) m_CreateProjectOpen = true;
+    ax += tileW + tileGap;
+    if (actionTile("##open", "FROM DISK", "OPEN PROJECT", ax, false)) {
         std::string path; if (FileDialog::OpenProject(path)) openProject(path);
     }
-    ImGui::SetCursorPosX(18);
-    if (NavItem("##refresh","REFRESH",false,ImVec2(228,44))) LoadRecentProjects();
+    ax += tileW + tileGap;
+    if (actionTile("##refresh", "LIBRARY", "REFRESH", ax, false)) LoadRecentProjects();
+    ax += tileW + tileGap;
+    if (actionTile("##legacy", "TOOLS", "LEGACY WORKSPACE", ax, false)) continueLegacyWorkspace();
 
-    ImGui::SetCursorPos(ImVec2(18,ws.y-74));
-    if (NavItem("##legacy","LEGACY WORKSPACE",false,ImVec2(228,44))) continueLegacyWorkspace();
+    // Recent workspace.
+    const float sectionY = 374.0f;
+    dl->AddText(ImVec2(wp.x + margin, wp.y + sectionY), kText, "RECENT PROJECTS");
+    char countText[32]{};
+    std::snprintf(countText, sizeof(countText), "%zu PROJECTS", m_RecentProjects.size());
+    dl->AddText(ImVec2(wp.x + margin + 130.0f, wp.y + sectionY), kMuted, countText);
+    dl->AddLine(ImVec2(wp.x + margin, wp.y + sectionY + 27.0f),
+                ImVec2(wp.x + ws.x - margin, wp.y + sectionY + 27.0f), kLine);
 
-    dl->AddText(ImVec2(wp.x+rail+38,wp.y+27), kText, "PROJECTS");
-    dl->AddText(ImVec2(wp.x+rail+38,wp.y+53), kMuted, "YOUR WORLDS. YOUR ENGINE.");
-    if (ws.x > 1180.0f) dl->AddText(ImVec2(wp.x+ws.x-252,wp.y+40), kMuted, "CREATE   |   RENDER   |   BUILD");
-
-    const float x0=rail+38, top=122, right=ws.x-38;
-    const float createW=350, gap=28, recentW=std::max(390.0f,right-x0-createW-gap);
-    dl->AddText(ImVec2(wp.x+x0,wp.y+top), kMuted, "RECENT PROJECTS");
-
-    float y=top+30;
-    std::size_t removeIndex=static_cast<std::size_t>(-1);
+    float py = sectionY + 47.0f;
+    const float cardW = ws.x - margin * 2.0f;
+    std::size_t removeIndex = static_cast<std::size_t>(-1);
     if (m_RecentProjects.empty()) {
-        dl->AddRect(ImVec2(wp.x+x0,wp.y+y),ImVec2(wp.x+x0+recentW,wp.y+y+120),kLine,6.0f,ImDrawFlags_None,1.0f);
-        dl->AddText(ImVec2(wp.x+x0+22,wp.y+y+27),kText,"NO RECENT PROJECTS");
-        dl->AddText(ImVec2(wp.x+x0+22,wp.y+y+54),kMuted,"Open an existing project or create a new workspace.");
+        ImVec2 a(wp.x + margin, wp.y + py), b(wp.x + margin + cardW, wp.y + py + 105.0f);
+        dl->AddRectFilled(a, b, kPanel, 7.0f);
+        dl->AddRect(a, b, kLine, 7.0f, ImDrawFlags_None, 1.0f);
+        dl->AddText(ImVec2(a.x + 24.0f, a.y + 25.0f), kText, "YOUR PROJECTS WILL APPEAR HERE");
+        dl->AddText(ImVec2(a.x + 24.0f, a.y + 55.0f), kMuted,
+            "Create a new project or open an existing .project file to get started.");
     } else {
-        for(std::size_t i=0;i<m_RecentProjects.size();++i) {
-            const auto& recent=m_RecentProjects[i]; const bool exists=std::filesystem::is_regular_file(recent.descriptorPath);
-            ImGui::SetCursorPos(ImVec2(x0,y)); ImGui::PushID((int)i);
-            ImVec2 p=ImGui::GetCursorScreenPos(); ImGui::InvisibleButton("##card",ImVec2(recentW,92));
-            const bool hover=ImGui::IsItemHovered();
-            dl->AddRectFilled(p,ImVec2(p.x+recentW,p.y+92),hover?kPanelHover:kPanel,7.0f);
-            dl->AddRect(p,ImVec2(p.x+recentW,p.y+92),hover?kBlue:kLine,7.0f,ImDrawFlags_None,1.0f);
-            dl->AddRectFilled(ImVec2(p.x,p.y+14),ImVec2(p.x+3,p.y+78),exists?kCyan:kMuted);
-            dl->AddText(ImVec2(p.x+22,p.y+18),exists?kText:kMuted,recent.name.c_str());
-            const std::string sub=exists?recent.descriptorPath:"Project file is missing";
-            dl->AddText(ImVec2(p.x+22,p.y+50),kMuted,sub.c_str());
-            if(hover&&exists&&ImGui::IsItemClicked()) openProject(recent.descriptorPath);
-            ImGui::SetCursorPos(ImVec2(x0+recentW-82,y+31));
-            if(NavItem("##remove","REMOVE",false,ImVec2(72,30))) removeIndex=i;
-            ImGui::PopID(); y+=104;
+        for (std::size_t i = 0; i < m_RecentProjects.size() && i < 3; ++i) {
+            const auto& recent = m_RecentProjects[i];
+            const bool exists = std::filesystem::is_regular_file(recent.descriptorPath);
+            ImGui::PushID(static_cast<int>(i));
+            ImGui::SetCursorPos(ImVec2(margin, py));
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            ImGui::InvisibleButton("##project", ImVec2(cardW, 72.0f));
+            const bool hover = ImGui::IsItemHovered();
+            dl->AddRectFilled(p, ImVec2(p.x + cardW, p.y + 72.0f), hover ? kPanelHover : kPanel, 7.0f);
+            dl->AddRect(p, ImVec2(p.x + cardW, p.y + 72.0f), hover ? kBlue : kLine, 7.0f, ImDrawFlags_None, 1.0f);
+            dl->AddRectFilled(ImVec2(p.x, p.y + 12.0f), ImVec2(p.x + 3.0f, p.y + 60.0f), exists ? kCyan : kMuted);
+            dl->AddText(ImVec2(p.x + 22.0f, p.y + 14.0f), exists ? kText : kMuted, recent.name.c_str());
+            const std::string detail = exists ? recent.descriptorPath : "Project file is missing";
+            dl->AddText(ImVec2(p.x + 22.0f, p.y + 42.0f), kMuted, detail.c_str());
+            dl->AddText(ImVec2(p.x + cardW - 122.0f, p.y + 27.0f), hover ? kCyan : kMuted, exists ? "OPEN  >" : "MISSING");
+            if (hover && exists && ImGui::IsItemClicked()) openProject(recent.descriptorPath);
+            ImGui::SetCursorPos(ImVec2(margin + cardW - 58.0f, py + 22.0f));
+            if (NavItem("##remove", "X", false, ImVec2(36.0f, 28.0f))) removeIndex = i;
+            ImGui::PopID();
+            py += 84.0f;
         }
     }
-    if(removeIndex!=static_cast<std::size_t>(-1)) RemoveRecentProject(removeIndex);
+    if (removeIndex != static_cast<std::size_t>(-1)) RemoveRecentProject(removeIndex);
 
-    const float cx=x0+recentW+gap;
-    dl->AddText(ImVec2(wp.x+cx,wp.y+top),kMuted,"NEW PROJECT");
-    const float createBottom=std::min(wp.y+top+390.0f,wp.y+ws.y-58.0f);
-    dl->AddRectFilled(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,createBottom),kPanel,7);
-    dl->AddRect(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,createBottom),kLine,7.0f,ImDrawFlags_None,1.0f);
+    // Footer is deliberately quiet.
+    dl->AddLine(ImVec2(wp.x + margin, wp.y + ws.y - 48.0f), ImVec2(wp.x + ws.x - margin, wp.y + ws.y - 48.0f), kLine);
+    dl->AddText(ImVec2(wp.x + margin, wp.y + ws.y - 31.0f), kMuted, "VELCRYN ENGINE");
+    dl->AddText(ImVec2(wp.x + ws.x - 235.0f, wp.y + ws.y - 31.0f), kMuted, "WINDOWS + LINUX   //   v0.1");
 
-    ImGui::PushStyleColor(ImGuiCol_FrameBg,ImVec4(.035f,.055f,.078f,1));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,ImVec4(.05f,.08f,.11f,1));
-    ImGui::PushStyleColor(ImGuiCol_Border,ImGui::ColorConvertU32ToFloat4(kLine));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize,1);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,4);
-    ImGui::SetCursorPos(ImVec2(cx+20,top+65)); ImGui::TextDisabled("PROJECT NAME");
-    ImGui::SetCursorPosX(cx+20); ImGui::SetNextItemWidth(createW-40); ImGui::InputText("##ProjectName",m_NewProjectName,sizeof(m_NewProjectName));
-    ImGui::SetCursorPosX(cx+20); ImGui::TextDisabled("LOCATION");
-    ImGui::SetCursorPosX(cx+20); ImGui::SetNextItemWidth(createW-116); ImGui::InputText("##ProjectLocation",m_NewProjectLocation,sizeof(m_NewProjectLocation));
-    ImGui::SameLine();
-    if(NavItem("##browse","BROWSE",false,ImVec2(70,ImGui::GetFrameHeight()))) {
-        std::string folder; if(FileDialog::SelectFolder(folder)) std::snprintf(m_NewProjectLocation,sizeof(m_NewProjectLocation),"%s",folder.c_str());
+    if (!m_Error.empty())
+        dl->AddText(ImVec2(wp.x + margin + 150.0f, wp.y + ws.y - 31.0f), IM_COL32(245,112,108,255), m_Error.c_str());
+
+    // New-project flow is modal so the dashboard remains clean.
+    if (m_CreateProjectOpen) ImGui::OpenPopup("Create Velcryn Project");
+    ImGui::SetNextWindowSize(ImVec2(520.0f, 330.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(wp.x + ws.x * .5f, wp.y + ws.y * .5f), ImGuiCond_Always, ImVec2(.5f,.5f));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, ImGui::ColorConvertU32ToFloat4(kPanel));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(.035f,.055f,.078f,1));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImGui::ColorConvertU32ToFloat4(kLine));
+    ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 8.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+    if (ImGui::BeginPopupModal("Create Velcryn Project", nullptr, ImGuiWindowFlags_NoResize)) {
+        m_CreateProjectOpen = false;
+        ImGui::TextUnformatted("NEW VELCRYN PROJECT");
+        ImGui::TextDisabled("Create an isolated workspace for scenes, scripts, assets and settings.");
+        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+        ImGui::TextDisabled("PROJECT NAME");
+        ImGui::SetNextItemWidth(-1); ImGui::InputText("##ProjectName", m_NewProjectName, sizeof(m_NewProjectName));
+        ImGui::TextDisabled("LOCATION");
+        ImGui::SetNextItemWidth(400.0f); ImGui::InputText("##ProjectLocation", m_NewProjectLocation, sizeof(m_NewProjectLocation));
+        ImGui::SameLine();
+        if (ImGui::Button("Browse", ImVec2(78.0f, 0))) {
+            std::string folder; if (FileDialog::SelectFolder(folder))
+                std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", folder.c_str());
+        }
+        const std::filesystem::path preview=(std::filesystem::path(m_NewProjectLocation)/m_NewProjectName).lexically_normal();
+        ImGui::TextDisabled("PROJECT FOLDER");
+        ImGui::TextWrapped("%s", preview.string().c_str());
+        ImGui::SetCursorPosY(ImGui::GetWindowHeight()-62.0f);
+        if (ImGui::Button("Cancel", ImVec2(110.0f,38.0f))) ImGui::CloseCurrentPopup();
+        ImGui::SameLine(ImGui::GetWindowWidth()-190.0f);
+        if (AccentButton("##create", "CREATE", ImVec2(160.0f,38.0f))) {
+            if (createProject(m_NewProjectLocation,m_NewProjectName)) ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
-    const std::filesystem::path preview=(std::filesystem::path(m_NewProjectLocation)/m_NewProjectName).lexically_normal();
-    ImGui::SetCursorPosX(cx+20); ImGui::TextDisabled("PROJECT FOLDER");
-    ImGui::SetCursorPosX(cx+20); ImGui::PushTextWrapPos(cx+createW-20); ImGui::TextWrapped("%s",preview.string().c_str()); ImGui::PopTextWrapPos();
-    ImGui::SetCursorPos(ImVec2(cx+20,top+330));
-    if(AccentButton("##create","CREATE PROJECT",ImVec2(createW-40,42))) createProject(m_NewProjectLocation,m_NewProjectName);
-    ImGui::PopStyleVar(2); ImGui::PopStyleColor(3);
-
-    if(!m_Error.empty()) dl->AddText(ImVec2(wp.x+x0,wp.y+ws.y-34),IM_COL32(245,112,108,255),m_Error.c_str());
-    else dl->AddText(ImVec2(wp.x+x0,wp.y+ws.y-34),kMuted,"VELCRYN ENGINE   //   WINDOWS + LINUX");
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(3);
 
     ImGui::End();
     ImGui::PopStyleColor();
