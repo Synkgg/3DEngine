@@ -58,6 +58,8 @@ namespace Velcryn::RHI
         TextureFormat colorFormat = TextureFormat::RGBA16_Float;
         TextureFormat depthFormat = TextureFormat::D32_Float;
         bool depthTest = true, depthWrite = true, cullBackFaces = true;
+        bool sampledTexture = false;
+        bool alphaBlend = false;
         const char* debugName = nullptr;
     };
 
