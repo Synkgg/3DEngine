@@ -78,6 +78,11 @@ namespace Velcryn::RHI
         sampler.desc.addressModes = {nri::AddressMode::REPEAT, nri::AddressMode::REPEAT, nri::AddressMode::REPEAT};
         sampler.desc.mipMax = 16.0f;
         nri::PipelineLayoutDesc layout{};
+        // NRI requires the root-parameter register space to be unique from every
+        // descriptor-set register space. Keep push constants in space 0 and put
+        // sampled resources in space 1.
+        layout.rootRegisterSpace = 0;
+        textureSet.registerSpace = 1;
         layout.shaderStages = constants.shaderStages;
         layout.rootConstants = desc.constantSize ? &constants : nullptr;
         layout.rootConstantNum = desc.constantSize ? 1 : 0;
