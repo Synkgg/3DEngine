@@ -8,7 +8,6 @@
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
 #include "../../Audio/AudioEngine.h"
-#include <glad/gl.h>
 #include <algorithm>
 #include <cmath>
 #include <string>
