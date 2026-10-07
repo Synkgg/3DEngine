@@ -58,6 +58,7 @@ ProjectHub::ProjectHub() = default;
 
 void ProjectHub::Initialize()
 {
+    Velcryn::Editor::Brand::Initialize();
     LoadRecentProjects();
     const std::string defaultLocation = (std::filesystem::current_path() / "Projects").string();
     std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", defaultLocation.c_str());
