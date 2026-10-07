@@ -8,7 +8,6 @@
 #include <filesystem>
 #include <vector>
 
-#include <glad/gl.h>
 #include "Mesh.h"
 #include "ModelAsset.h"
 
