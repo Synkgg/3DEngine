@@ -529,22 +529,18 @@ void Application::Run()
             const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
             const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
 
-            // Input coordinates are window pixels while ImGui viewport metrics
-            // are logical window units. Convert them using the renderer target
-            // scale so hover/click hit testing matches the image actually shown.
-            const float targetWidth = static_cast<float>(std::max(1u, m_Renderer.GetViewportWidth()));
-            const float targetHeight = static_cast<float>(std::max(1u, m_Renderer.GetViewportHeight()));
-            const float scaleX = gameViewportSize.x > 0.0f ? targetWidth / gameViewportSize.x : 1.0f;
-            const float scaleY = gameViewportSize.y > 0.0f ? targetHeight / gameViewportSize.y : 1.0f;
-
+            // Viewport position/size and Input mouse coordinates are both in
+            // SDL/ImGui logical window coordinates here. UIRenderer performs
+            // the logical-canvas mapping itself, so do not scale this rectangle
+            // to the offscreen Vulkan render-target dimensions a second time.
             ui.SetLogicalSize(canvasSize.x, canvasSize.y);
             ui.UpdateInput(
                 m_UICanvas,
                 m_Input,
-                gameViewportPosition.x * scaleX,
-                gameViewportPosition.y * scaleY,
-                gameViewportSize.x * scaleX,
-                gameViewportSize.y * scaleY
+                gameViewportPosition.x,
+                gameViewportPosition.y,
+                gameViewportSize.x,
+                gameViewportSize.y
             );
 
             m_Runtime.Update(
