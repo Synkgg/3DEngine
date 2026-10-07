@@ -331,6 +331,18 @@ namespace Velcryn::RHI
         if (!handle || !data || handle.index > m_Buffers.size()) return false;
         const auto& current = m_Buffers[handle.index - 1];
         if (current.generation != handle.generation || !current.resource || current.desc.size != size) return false;
+        // Dynamic CPU-visible buffers are updated in place. Recreating the
+        // allocation for every UI quad/glyph was forcing allocation, binding,
+        // deferred destruction and vector churn hundreds of times per frame.
+        if (current.desc.cpuVisible)
+        {
+            void* mapped = m_Core.MapBuffer(*current.resource, 0, size);
+            if (!mapped) return false;
+            std::memcpy(mapped, data, size);
+            m_Core.UnmapBuffer(*current.resource);
+            return true;
+        }
+
         auto desc = current.desc;
         desc.debugName = "UpdatedBuffer";
         const auto replacement = CreateBuffer(desc, data);
