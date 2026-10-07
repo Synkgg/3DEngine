@@ -62,7 +62,7 @@ namespace
         const bool hovered = ImGui::IsItemHovered();
         ImDrawList* dl = ImGui::GetWindowDrawList();
         dl->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? IM_COL32(20, 117, 178, 255) : IM_COL32(14, 82, 130, 255), 5.0f);
-        dl->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? kCyan : kBlue, 5.0f, 0, 1.0f);
+        dl->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? kCyan : kBlue, 5.0f, ImDrawFlags_None, 1.0f);
         const ImVec2 ts = ImGui::CalcTextSize(label);
         dl->AddText(ImVec2(p.x + (size.x-ts.x)*.5f, p.y + (size.y-ts.y)*.5f), kText, label);
         return ImGui::IsItemClicked();
@@ -214,7 +214,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
     float y=top+30;
     std::size_t removeIndex=static_cast<std::size_t>(-1);
     if (m_RecentProjects.empty()) {
-        dl->AddRect(ImVec2(wp.x+x0,wp.y+y),ImVec2(wp.x+x0+recentW,wp.y+y+120),kLine,6);
+        dl->AddRect(ImVec2(wp.x+x0,wp.y+y),ImVec2(wp.x+x0+recentW,wp.y+y+120),kLine,6.0f,ImDrawFlags_None,1.0f);
         dl->AddText(ImVec2(wp.x+x0+22,wp.y+y+27),kText,"NO RECENT PROJECTS");
         dl->AddText(ImVec2(wp.x+x0+22,wp.y+y+54),kMuted,"Open an existing project or create a new workspace.");
     } else {
@@ -224,7 +224,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
             ImVec2 p=ImGui::GetCursorScreenPos(); ImGui::InvisibleButton("##card",ImVec2(recentW,72));
             const bool hover=ImGui::IsItemHovered();
             dl->AddRectFilled(p,ImVec2(p.x+recentW,p.y+72),hover?kPanelHover:kPanel,6);
-            dl->AddRect(p,ImVec2(p.x+recentW,p.y+72),hover?kBlue:kLine,6,0,1);
+            dl->AddRect(p,ImVec2(p.x+recentW,p.y+72),hover?kBlue:kLine,6.0f,ImDrawFlags_None,1.0f);
             dl->AddRectFilled(ImVec2(p.x,p.y+12),ImVec2(p.x+2,p.y+60),exists?kBlue:kMuted);
             dl->AddText(ImVec2(p.x+18,p.y+14),exists?kText:kMuted,recent.name.c_str());
             const std::string sub=exists?recent.descriptorPath:"Project file is missing";
@@ -240,7 +240,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
     const float cx=x0+recentW+gap;
     dl->AddText(ImVec2(wp.x+cx,wp.y+top),kMuted,"NEW PROJECT");
     dl->AddRectFilled(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,wp.y+ws.y-58),kPanel,7);
-    dl->AddRect(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,wp.y+ws.y-58),kLine,7);
+    dl->AddRect(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,wp.y+ws.y-58),kLine,7.0f,ImDrawFlags_None,1.0f);
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg,ImVec4(.035f,.055f,.078f,1));
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,ImVec4(.05f,.08f,.11f,1));
