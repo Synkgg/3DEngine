@@ -1,6 +1,12 @@
 #include "NRIDevice.h"
 
 #include "../../../Core/Logger.h"
+#include "../../../Platform/SDL/Window.h"
+
+#include <SDL3/SDL.h>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 #include <cstring>
 
@@ -11,7 +17,7 @@ namespace Velcryn::RHI
         Shutdown();
     }
 
-    bool NRIDevice::Initialize(Window&)
+    bool NRIDevice::Initialize(Window& window)
     {
         if (m_Device)
             return true;
@@ -30,7 +36,8 @@ namespace Velcryn::RHI
         }
 
         if (nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::CoreInterface), &m_Core) != nri::Result::SUCCESS ||
-            nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::HelperInterface), &m_Helper) != nri::Result::SUCCESS)
+            nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::HelperInterface), &m_Helper) != nri::Result::SUCCESS ||
+            nri::nriGetInterface(*m_Device, NRI_INTERFACE(nri::SwapChainInterface), &m_SwapChainInterface) != nri::Result::SUCCESS)
         {
             Logger::Error("RHI: failed to acquire required NRI interfaces.");
             Shutdown();
@@ -62,7 +69,84 @@ namespace Velcryn::RHI
         m_Capabilities.maxTextureDimension2D = deviceDesc.dimensions.texture2DMaxDim;
         m_Capabilities.maxColorAttachments = deviceDesc.shaderStage.fragment.attachmentMaxNum;
 
-        Logger::Info(std::string("RHI: NRI Vulkan device initialized on ") + deviceDesc.adapterDesc.name);
+        #if defined(_WIN32)
+        const SDL_PropertiesID properties = SDL_GetWindowProperties(window.GetNativeWindow());
+        void* hwnd = SDL_GetPointerProperty(properties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+        if (!hwnd)
+        {
+            Logger::Error("RHI: SDL did not expose a Win32 window handle.");
+            Shutdown();
+            return false;
+        }
+
+        nri::SwapChainDesc swapDesc{};
+        swapDesc.window.windows.hwnd = hwnd;
+        swapDesc.queue = m_GraphicsQueue;
+        swapDesc.width = static_cast<nri::Dim_t>(window.GetWidth());
+        swapDesc.height = static_cast<nri::Dim_t>(window.GetHeight());
+        swapDesc.textureNum = 3;
+        swapDesc.format = nri::SwapChainFormat::BT709_G22_8BIT;
+        swapDesc.flags = nri::SwapChainBits::NONE;
+        swapDesc.queuedFrameNum = 2;
+
+        if (m_SwapChainInterface.CreateSwapChain(*m_Device, swapDesc, m_SwapChain) != nri::Result::SUCCESS)
+        {
+            Logger::Error("RHI: failed to create the Vulkan swapchain.");
+            Shutdown();
+            return false;
+        }
+
+        uint32_t textureNum = 0;
+        nri::Texture* const* textures = m_SwapChainInterface.GetSwapChainTextures(*m_SwapChain, textureNum);
+        m_SwapChainTextures.assign(textures, textures + textureNum);
+        if (m_SwapChainTextures.empty())
+        {
+            Logger::Error("RHI: swapchain returned no backbuffers.");
+            Shutdown();
+            return false;
+        }
+
+        m_SwapChainFormat = m_Core.GetTextureDesc(*m_SwapChainTextures[0]).format;
+        m_SwapChainViews.resize(textureNum);
+        m_AcquireSemaphores.resize(textureNum);
+        m_ReleaseSemaphores.resize(textureNum);
+
+        for (uint32_t i = 0; i < textureNum; ++i)
+        {
+            nri::TextureViewDesc viewDesc{};
+            viewDesc.texture = m_SwapChainTextures[i];
+            viewDesc.type = nri::TextureView::COLOR_ATTACHMENT;
+            viewDesc.format = m_SwapChainFormat;
+            viewDesc.mipNum = 1;
+            viewDesc.layerNum = 1;
+            viewDesc.sliceNum = 1;
+            viewDesc.planes = nri::PlaneBits::COLOR;
+
+            if (m_Core.CreateDescriptor(viewDesc, m_SwapChainViews[i]) != nri::Result::SUCCESS ||
+                m_Core.CreateFence(*m_Device, nri::SWAPCHAIN_SEMAPHORE, m_AcquireSemaphores[i]) != nri::Result::SUCCESS ||
+                m_Core.CreateFence(*m_Device, nri::SWAPCHAIN_SEMAPHORE, m_ReleaseSemaphores[i]) != nri::Result::SUCCESS)
+            {
+                Logger::Error("RHI: failed to create swapchain frame resources.");
+                Shutdown();
+                return false;
+            }
+        }
+
+        if (m_Core.CreateFence(*m_Device, 0, m_FrameFence) != nri::Result::SUCCESS ||
+            m_Core.CreateCommandAllocator(*m_GraphicsQueue, m_FrameAllocator) != nri::Result::SUCCESS ||
+            m_Core.CreateCommandBuffer(*m_FrameAllocator, m_FrameCommandBuffer) != nri::Result::SUCCESS)
+        {
+            Logger::Error("RHI: failed to create Vulkan frame synchronization resources.");
+            Shutdown();
+            return false;
+        }
+#else
+        Logger::Error("RHI: Vulkan swapchain platform binding is not implemented on this platform yet.");
+        Shutdown();
+        return false;
+#endif
+
+        Logger::Info(std::string("RHI: NRI Vulkan device + swapchain initialized on ") + deviceDesc.adapterDesc.name);
         return true;
     }
 
@@ -72,6 +156,16 @@ namespace Velcryn::RHI
             return;
 
         WaitIdle();
+
+        if (m_FrameCommandBuffer) m_Core.DestroyCommandBuffer(m_FrameCommandBuffer);
+        if (m_FrameAllocator) m_Core.DestroyCommandAllocator(m_FrameAllocator);
+        if (m_FrameFence) m_Core.DestroyFence(m_FrameFence);
+        for (nri::Fence* fence : m_AcquireSemaphores) if (fence) m_Core.DestroyFence(fence);
+        for (nri::Fence* fence : m_ReleaseSemaphores) if (fence) m_Core.DestroyFence(fence);
+        for (nri::Descriptor* view : m_SwapChainViews) if (view) m_Core.DestroyDescriptor(view);
+        if (m_SwapChain) m_SwapChainInterface.DestroySwapChain(m_SwapChain);
+        m_FrameCommandBuffer = nullptr; m_FrameAllocator = nullptr; m_FrameFence = nullptr; m_SwapChain = nullptr;
+        m_AcquireSemaphores.clear(); m_ReleaseSemaphores.clear(); m_SwapChainViews.clear(); m_SwapChainTextures.clear();
 
         for (CommandSlot& slot : m_CommandLists)
         {
@@ -300,10 +394,89 @@ namespace Velcryn::RHI
 
     void NRIDevice::BeginFrame()
     {
+        if (!m_SwapChain || !m_FrameCommandBuffer)
+            return;
+
+        const uint64_t completedFrame = m_FrameIndex >= 2 ? 1 + m_FrameIndex - 2 : 0;
+        m_Core.Wait(*m_FrameFence, completedFrame);
+
+        m_AcquireIndex = static_cast<uint32_t>(m_FrameIndex % m_AcquireSemaphores.size());
+        if (m_SwapChainInterface.AcquireNextTexture(*m_SwapChain, *m_AcquireSemaphores[m_AcquireIndex], m_BackBufferIndex) != nri::Result::SUCCESS)
+            return;
+
+        m_Core.ResetCommandAllocator(*m_FrameAllocator);
+        if (m_Core.BeginCommandBuffer(*m_FrameCommandBuffer, nullptr) != nri::Result::SUCCESS)
+            return;
+
+        nri::TextureBarrierDesc toColor{};
+        toColor.texture = m_SwapChainTextures[m_BackBufferIndex];
+        toColor.before = {nri::AccessBits::NONE, nri::Layout::PRESENT, nri::StageBits::NONE};
+        toColor.after = {nri::AccessBits::COLOR_ATTACHMENT, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT};
+        toColor.mipNum = nri::REMAINING;
+        toColor.layerNum = nri::REMAINING;
+        toColor.planes = nri::PlaneBits::COLOR;
+        nri::BarrierDesc barrier{};
+        barrier.textures = &toColor;
+        barrier.textureNum = 1;
+        m_Core.CmdBarrier(*m_FrameCommandBuffer, barrier);
+
+        nri::AttachmentDesc color{};
+        color.descriptor = m_SwapChainViews[m_BackBufferIndex];
+        color.loadOp = nri::LoadOp::CLEAR;
+        color.storeOp = nri::StoreOp::STORE;
+        color.clearValue.color.f = {0.035f, 0.045f, 0.065f, 1.0f};
+
+        nri::RenderingDesc rendering{};
+        rendering.colors = &color;
+        rendering.colorNum = 1;
+        m_Core.CmdBeginRendering(*m_FrameCommandBuffer, rendering);
+        m_Core.CmdEndRendering(*m_FrameCommandBuffer);
     }
 
     void NRIDevice::EndFrame()
     {
+        if (!m_SwapChain || !m_FrameCommandBuffer)
+            return;
+
+        nri::TextureBarrierDesc toPresent{};
+        toPresent.texture = m_SwapChainTextures[m_BackBufferIndex];
+        toPresent.before = {nri::AccessBits::COLOR_ATTACHMENT, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT};
+        toPresent.after = {nri::AccessBits::NONE, nri::Layout::PRESENT, nri::StageBits::NONE};
+        toPresent.mipNum = nri::REMAINING;
+        toPresent.layerNum = nri::REMAINING;
+        toPresent.planes = nri::PlaneBits::COLOR;
+        nri::BarrierDesc barrier{};
+        barrier.textures = &toPresent;
+        barrier.textureNum = 1;
+        m_Core.CmdBarrier(*m_FrameCommandBuffer, barrier);
+        m_Core.EndCommandBuffer(*m_FrameCommandBuffer);
+
+        nri::FenceSubmitDesc waitFence{};
+        waitFence.fence = m_AcquireSemaphores[m_AcquireIndex];
+        waitFence.stages = nri::StageBits::COLOR_ATTACHMENT;
+
+        nri::FenceSubmitDesc releaseFence{};
+        releaseFence.fence = m_ReleaseSemaphores[m_BackBufferIndex];
+
+        nri::FenceSubmitDesc frameFence{};
+        frameFence.fence = m_FrameFence;
+        frameFence.value = 1 + m_FrameIndex;
+
+        nri::FenceSubmitDesc signals[] = {releaseFence, frameFence};
+        nri::CommandBuffer* commands[] = {m_FrameCommandBuffer};
+
+        nri::QueueSubmitDesc submit{};
+        submit.waitFences = &waitFence;
+        submit.waitFenceNum = 1;
+        submit.commandBuffers = commands;
+        submit.commandBufferNum = 1;
+        submit.signalFences = signals;
+        submit.signalFenceNum = 2;
+
+        if (m_Core.QueueSubmit(*m_GraphicsQueue, submit) == nri::Result::SUCCESS)
+            m_SwapChainInterface.QueuePresent(*m_SwapChain, *m_ReleaseSemaphores[m_BackBufferIndex]);
+
+        ++m_FrameIndex;
     }
 
     void NRIDevice::WaitIdle()
