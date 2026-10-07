@@ -68,9 +68,7 @@ bool Application::Initialize()
         return false;
     }
 
-    if (!m_ImGuiLayer.Initialize(
-        m_Window,
-        m_Renderer.GetContext()))
+    if (!m_ImGuiLayer.Initialize(m_Window))
     {
         m_Renderer.Shutdown();
         m_Window.Shutdown();
