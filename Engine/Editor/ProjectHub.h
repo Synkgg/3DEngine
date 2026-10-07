@@ -40,4 +40,5 @@ private:
     char m_NewProjectLocation[512]{};
     std::string m_Error;
     std::vector<RecentProject> m_RecentProjects;
+    bool m_CreateProjectOpen = false;
 };
