@@ -1,25 +1,19 @@
 #pragma once
-
+#include "../RHI/RHITypes.h"
 #include <cstdint>
 
 class IndexBuffer
 {
 public:
-    IndexBuffer();
+    IndexBuffer() = default;
     ~IndexBuffer();
-
-    bool Initialize(
-        const std::uint32_t* indices,
-        std::uint32_t count
-    );
-
-    void Bind();
-    void Unbind();
+    bool Initialize(const std::uint32_t* indices, std::uint32_t count);
+    void Bind() {}
+    void Unbind() {}
     void Shutdown();
-
-    std::uint32_t GetCount() const;
-
+    std::uint32_t GetCount() const { return m_Count; }
+    Velcryn::RHI::BufferHandle GetHandle() const { return m_Handle; }
 private:
-    unsigned int m_RendererID;
-    std::uint32_t m_Count;
+    Velcryn::RHI::BufferHandle m_Handle{};
+    std::uint32_t m_Count = 0;
 };
