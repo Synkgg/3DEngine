@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Graphics/Shader.h"
+#include "../Graphics/RHI/RHITypes.h"
 #include "UICanvas.h"
 #include "UILayout.h"
 
@@ -257,11 +257,8 @@ private:
     ) const;
 
 private:
-    Shader m_Shader;
-
-    unsigned int m_VAO = 0;
-    unsigned int m_VBO = 0;
-    unsigned int m_FontTexture = 0;
+    Velcryn::RHI::BufferHandle m_VertexBuffer{};
+    Velcryn::RHI::TextureHandle m_FontTexture{};
     static constexpr int FontAtlasWidth = 1024;
     static constexpr int FontAtlasHeight = 1024;
     static constexpr float FontBakeSize = 48.0f;
