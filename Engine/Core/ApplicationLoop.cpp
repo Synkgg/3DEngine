@@ -529,14 +529,22 @@ void Application::Run()
             const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
             const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
 
+            // Input coordinates are window pixels while ImGui viewport metrics
+            // are logical window units. Convert them using the renderer target
+            // scale so hover/click hit testing matches the image actually shown.
+            const float targetWidth = static_cast<float>(std::max(1u, m_Renderer.GetViewportWidth()));
+            const float targetHeight = static_cast<float>(std::max(1u, m_Renderer.GetViewportHeight()));
+            const float scaleX = gameViewportSize.x > 0.0f ? targetWidth / gameViewportSize.x : 1.0f;
+            const float scaleY = gameViewportSize.y > 0.0f ? targetHeight / gameViewportSize.y : 1.0f;
+
             ui.SetLogicalSize(canvasSize.x, canvasSize.y);
             ui.UpdateInput(
                 m_UICanvas,
                 m_Input,
-                gameViewportPosition.x,
-                gameViewportPosition.y,
-                gameViewportSize.x,
-                gameViewportSize.y
+                gameViewportPosition.x * scaleX,
+                gameViewportPosition.y * scaleY,
+                gameViewportSize.x * scaleX,
+                gameViewportSize.y * scaleY
             );
 
             m_Runtime.Update(
