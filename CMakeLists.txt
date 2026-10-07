@@ -208,6 +208,8 @@ add_executable(
     ${ENGINE_SOURCES}
     ${INTER_FONT_CPP}
 
+    $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/Engine/Branding/Velcryn.rc>
+
     #
     # GLAD
     #
