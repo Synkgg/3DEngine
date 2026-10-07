@@ -46,7 +46,6 @@ namespace Velcryn::RHI
         {
             nri::Buffer* resource = nullptr;
             std::vector<nri::Memory*> allocations;
-            nri::Descriptor* shaderResource = nullptr;
             std::uint32_t generation = 1;
         };
 
@@ -54,6 +53,7 @@ namespace Velcryn::RHI
         {
             nri::Texture* resource = nullptr;
             std::vector<nri::Memory*> allocations;
+            nri::Descriptor* shaderResource = nullptr;
             std::uint32_t generation = 1;
         };
 
