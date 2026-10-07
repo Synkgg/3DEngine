@@ -6,6 +6,18 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Use one MSVC runtime consistently across Velcryn and every dependency created
+# below (SDL, Lua, NRI, etc.). This must be set before FetchContent adds targets.
+# A cache variable is used because several dependencies configure nested targets.
+if (MSVC)
+    set(
+        CMAKE_MSVC_RUNTIME_LIBRARY
+        "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        CACHE STRING "MSVC runtime used by Velcryn and dependencies"
+        FORCE
+    )
+endif()
+
 # Keep single-config generators useful too. Visual Studio remains multi-config
 # and can switch Debug/Release from the IDE normally.
 if (NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
@@ -266,35 +278,13 @@ target_compile_definitions(
     $<$<CONFIG:RelWithDebInfo>:ENGINE_RELEASE=1>
 )
 
-# Link the Microsoft C/C++ runtime statically as well, so the portable
-# package does not depend on the VC runtime DLLs being installed beside it.
 if (MSVC)
-    set_property(TARGET VelcrynEditor PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_property(TARGET lua54 PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    if (TARGET SDL3-static)
-        set_property(TARGET SDL3-static PROPERTY
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
-
-
     target_compile_options(
         VelcrynEditor
         PRIVATE
         $<$<CONFIG:Debug>:/Od;/Zi>
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:RelWithDebInfo>:/O2;/Zi>
-    )
-
-    # Some Ninja/MSVC environments suppress the CRT default-library directives
-    # from object files. The engine intentionally uses the static MSVC runtime,
-    # so link the matching runtime libraries explicitly for a standalone EXE.
-    target_link_libraries(
-        VelcrynEditor
-        PRIVATE
-        $<$<CONFIG:Debug>:libcmtd;libcpmtd;libvcruntimed;libucrtd>
-        $<$<NOT:$<CONFIG:Debug>>:libcmt;libcpmt;libvcruntime;libucrt>
     )
 endif()
 
