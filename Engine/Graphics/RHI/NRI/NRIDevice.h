@@ -35,11 +35,11 @@ namespace Velcryn::RHI
         bool ReadTexture(TextureHandle texture, std::vector<std::uint8_t>& bytes) override;
         PipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
         void DestroyPipeline(PipelineHandle pipeline) override;
-        bool BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4]) override;
+        bool BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear = true) override;
         void EndRendering() override;
         bool DrawIndexed(PipelineHandle pipeline, BufferHandle vertices, BufferHandle indices,
             std::uint32_t indexCount, const void* constants, std::uint32_t constantSize,
-            std::uint32_t instanceCount = 1) override;
+            std::uint32_t instanceCount = 1, TextureHandle texture = {}) override;
 
         CommandListHandle BeginCommandList(QueueType queue) override;
         void EndCommandList(CommandListHandle commandList) override;
@@ -87,6 +87,7 @@ namespace Velcryn::RHI
             nri::Pipeline* resource = nullptr;
             nri::PipelineLayout* layout = nullptr;
             std::uint32_t generation = 1, stride = 0, constantSize = 0;
+            bool sampledTexture = false;
         };
         void TransitionTexture(TextureSlot& texture, nri::AccessLayoutStage after);
         void CollectGarbage();
@@ -117,6 +118,7 @@ namespace Velcryn::RHI
         nri::ImguiInterface m_ImguiInterface{};
         nri::Streamer* m_Streamer = nullptr;
         nri::Imgui* m_Imgui = nullptr;
+        nri::DescriptorPool* m_DescriptorPool = nullptr;
         nri::SwapChain* m_SwapChain = nullptr;
         std::vector<nri::Texture*> m_SwapChainTextures;
         std::vector<nri::Descriptor*> m_SwapChainViews;
