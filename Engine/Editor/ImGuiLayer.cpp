@@ -33,6 +33,11 @@ bool ImGuiLayer::Initialize(Window& window)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
+    // NRIImgui is the renderer backend. ImGui 1.92+ requires renderer
+    // backends that consume ImTextureData to advertise texture support.
+    io.BackendRendererName = "Velcryn_NRI";
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
+
     ImGui::StyleColorsDark();
 
     // Inter is bundled with the engine and loaded into the ImGui atlas.
