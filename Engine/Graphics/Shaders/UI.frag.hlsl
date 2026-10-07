@@ -6,6 +6,7 @@ struct Constants
     float4 gradient;
     float4 style; // useGradient, horizontal, rectWidthPixels, radiusPixels
     float4 rect;
+    float4 uvRect;
 };
 [[vk::push_constant]] Constants draw;
 Texture2D<float4> uiTexture : register(t0, space1);
