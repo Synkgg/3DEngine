@@ -105,6 +105,8 @@ public:
 
     std::uint64_t GetViewportTexture() const;
     Velcryn::RHI::TextureHandle GetSceneColorTexture() const { return m_Framebuffer.GetColorTexture(); }
+    unsigned int GetViewportWidth() const { return m_ViewportWidth; }
+    unsigned int GetViewportHeight() const { return m_ViewportHeight; }
 
     void ResizeViewport(unsigned int width, unsigned int height);
 
