@@ -293,9 +293,44 @@ bool UIRenderer::GetAbsolutePosition(
     return false;
 }
 
-void UIRenderer::DrawElement(const std::string&, const Element&) {}
-void UIRenderer::DrawTextElement(const std::string&, const TextElement&) {}
-void UIRenderer::DrawTextPixel(float,float,float,float,float,float,float) {}
+void UIRenderer::DrawElement(const std::string& id, const Element& element)
+{
+    float x = element.x, y = element.y;
+    std::unordered_set<std::string> resolving;
+    GetAbsolutePosition(id, x, y, resolving);
+    Velcryn::RHI::TextureHandle texture = m_WhiteTexture;
+    if (element.texture && element.texture->IsLoaded()) texture = element.texture->GetHandle();
+    DrawQuad(x, y, element.width, element.height, 0.0f, 0.0f, 1.0f, 1.0f,
+        Vec4(element.red, element.green, element.blue, element.alpha), texture);
+}
+
+void UIRenderer::DrawTextElement(const std::string& id, const TextElement& element)
+{
+    float originX = element.x, originY = element.y;
+    std::unordered_set<std::string> resolving;
+    GetAbsolutePosition(id, originX, originY, resolving);
+    const float pixel = std::max(1.0f, element.scale);
+    float x = originX, y = originY;
+    for (char ch : element.text)
+    {
+        if (ch == '\n') { x = originX; y += pixel * 8.0f; continue; }
+        for (int row = 0; row < 7; ++row)
+        {
+            const unsigned char bits = GetGlyphRow(ch, row);
+            for (int column = 0; column < 5; ++column)
+                if (bits & (1u << (4 - column)))
+                    DrawTextPixel(x + column * pixel, y + row * pixel, pixel,
+                        element.red, element.green, element.blue, element.alpha);
+        }
+        x += pixel * 6.0f;
+    }
+}
+
+void UIRenderer::DrawTextPixel(float x,float y,float size,float red,float green,float blue,float alpha)
+{
+    DrawQuad(x, y, size, size, 0.0f, 0.0f, 1.0f, 1.0f,
+        Vec4(red, green, blue, alpha), m_WhiteTexture);
+}
 
 unsigned char UIRenderer::GetGlyphRow(
     char character,
