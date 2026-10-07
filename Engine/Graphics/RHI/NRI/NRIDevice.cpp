@@ -394,7 +394,7 @@ namespace Velcryn::RHI
 
     void NRIDevice::BeginFrame()
     {
-        if (!m_SwapChain || !m_FrameCommandBuffer)
+        if (!m_SwapChain || !m_FrameCommandBuffer || m_FrameOpen)
             return;
 
         const uint64_t completedFrame = m_FrameIndex >= 2 ? 1 + m_FrameIndex - 2 : 0;
@@ -431,11 +431,12 @@ namespace Velcryn::RHI
         rendering.colorNum = 1;
         m_Core.CmdBeginRendering(*m_FrameCommandBuffer, rendering);
         m_Core.CmdEndRendering(*m_FrameCommandBuffer);
+        m_FrameOpen = true;
     }
 
     void NRIDevice::EndFrame()
     {
-        if (!m_SwapChain || !m_FrameCommandBuffer)
+        if (!m_SwapChain || !m_FrameCommandBuffer || !m_FrameOpen)
             return;
 
         nri::TextureBarrierDesc toPresent{};
@@ -477,6 +478,7 @@ namespace Velcryn::RHI
             m_SwapChainInterface.QueuePresent(*m_SwapChain, *m_ReleaseSemaphores[m_BackBufferIndex]);
 
         ++m_FrameIndex;
+        m_FrameOpen = false;
     }
 
     void NRIDevice::WaitIdle()
