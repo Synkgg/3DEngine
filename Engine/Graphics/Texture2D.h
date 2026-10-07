@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "RHI/RHITypes.h"
 
 class Texture2D
 {
@@ -11,22 +12,23 @@ public:
     bool Load(const std::string& filepath);
     void Unload();
 
+    // Binding is performed by the RHI descriptor/pipeline path.
     void Bind(unsigned int slot = 0) const;
     void Unbind() const;
 
     bool IsLoaded() const;
 
+    // Legacy compatibility only. OpenGL texture IDs no longer exist.
     unsigned int GetID() const;
+    Velcryn::RHI::TextureHandle GetHandle() const { return m_Handle; }
     int GetWidth() const;
     int GetHeight() const;
     int GetChannels() const;
 
 private:
-    unsigned int m_ID;
-
-    int m_Width;
-    int m_Height;
-    int m_Channels;
-
-    bool m_Loaded;
+    Velcryn::RHI::TextureHandle m_Handle{};
+    int m_Width = 0;
+    int m_Height = 0;
+    int m_Channels = 0;
+    bool m_Loaded = false;
 };
