@@ -136,10 +136,7 @@ void Renderer::DrawMeshInternal(Mesh* mesh, const Transform& transform, float re
     if (!mesh) return;
     struct Constants { Mat4 mvp; float color[4]; float normalColumns[3][4]; };
     const Mat4 model = transform.GetMatrix();
-    Constants constants{m_FrameViewProjection * model,
-        {red * m_LightColor.x * std::max(m_LightIntensity, 0.0f),
-         green * m_LightColor.y * std::max(m_LightIntensity, 0.0f),
-         blue * m_LightColor.z * std::max(m_LightIntensity, 0.0f), alpha}, {}};
+    Constants constants{m_FrameViewProjection * model, {red, green, blue, alpha}, {}};
     // Transform consists of rotation and scale: divide each basis column by
     // its squared length to obtain the inverse transpose for surface normals.
     for (int column = 0; column < 3; ++column)
