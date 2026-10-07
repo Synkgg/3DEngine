@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <UI.vert.h>
+#include <UI.frag.h>
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <imstb_truetype.h>
@@ -124,12 +126,44 @@ bool UIRenderer::Initialize()
     auto* device = Velcryn::RHI::GetDevice();
     if (!device) return false;
     Velcryn::RHI::BufferDesc desc{};
-    desc.size = sizeof(float) * 24;
+    desc.size = sizeof(float) * 16;
     desc.usage = Velcryn::RHI::BufferUsage::Vertex;
     desc.cpuVisible = true;
     desc.debugName = "UIQuadVertices";
     m_VertexBuffer = device->CreateBuffer(desc);
     if (!m_VertexBuffer) return false;
+
+    const std::uint32_t indices[6] = {0, 1, 2, 2, 3, 0};
+    Velcryn::RHI::BufferDesc indexDesc{};
+    indexDesc.size = sizeof(indices); indexDesc.usage = Velcryn::RHI::BufferUsage::Index;
+    indexDesc.debugName = "UIQuadIndices";
+    m_IndexBuffer = device->CreateBuffer(indexDesc, indices);
+    if (!m_IndexBuffer) { Shutdown(); return false; }
+
+    const Velcryn::RHI::VertexAttribute attributes[] = {
+        {0, 0, Velcryn::RHI::VertexFormat::Float2},
+        {1, sizeof(float) * 2, Velcryn::RHI::VertexFormat::Float2}
+    };
+    Velcryn::RHI::GraphicsPipelineDesc pipeline{};
+    pipeline.vertexShader = UI_vert; pipeline.fragmentShader = UI_frag;
+    pipeline.attributes = attributes; pipeline.vertexStride = sizeof(float) * 4;
+    pipeline.constantSize = sizeof(float) * 12;
+    pipeline.colorFormat = Velcryn::RHI::TextureFormat::RGBA16_Float;
+    pipeline.depthFormat = Velcryn::RHI::TextureFormat::D32_Float;
+    pipeline.depthTest = false; pipeline.depthWrite = false; pipeline.cullBackFaces = false;
+    pipeline.sampledTexture = true; pipeline.alphaBlend = true; pipeline.debugName = "RuntimeUI";
+    m_Pipeline = device->CreateGraphicsPipeline(pipeline);
+    if (!m_Pipeline) { Shutdown(); return false; }
+
+    const std::uint8_t white[4] = {255,255,255,255};
+    Velcryn::RHI::TextureDesc whiteDesc{};
+    whiteDesc.width = whiteDesc.height = 1;
+    whiteDesc.format = Velcryn::RHI::TextureFormat::RGBA8_UNorm;
+    whiteDesc.usage = Velcryn::RHI::TextureUsage::Sampled | Velcryn::RHI::TextureUsage::TransferDestination;
+    whiteDesc.debugName = "UIWhiteTexture";
+    m_WhiteTexture = device->CreateTexture(whiteDesc, white, sizeof(white));
+    if (!m_WhiteTexture) { Shutdown(); return false; }
+
     if (!InitializeFontAtlas()) Logger::Warning("Inter runtime font could not be loaded; UI renderer will continue without canvas text.");
     return true;
 }
@@ -138,9 +172,15 @@ void UIRenderer::Shutdown()
 {
     if (auto* device = Velcryn::RHI::GetDevice()) {
         if (m_FontTexture) device->DestroyTexture(m_FontTexture);
+        if (m_WhiteTexture) device->DestroyTexture(m_WhiteTexture);
+        if (m_Pipeline) device->DestroyPipeline(m_Pipeline);
+        if (m_IndexBuffer) device->DestroyBuffer(m_IndexBuffer);
         if (m_VertexBuffer) device->DestroyBuffer(m_VertexBuffer);
     }
     m_FontTexture = {};
+    m_WhiteTexture = {};
+    m_Pipeline = {};
+    m_IndexBuffer = {};
     m_VertexBuffer = {};
     m_Elements.clear();
     m_TextElements.clear();
@@ -188,7 +228,33 @@ void UIRenderer::Begin()
 
 void UIRenderer::End()
 {
-    // Runtime/canvas UI draw submission is owned by the Vulkan scene/UI pass.
+    for (const auto& [id, element] : m_Elements)
+        if (element.visible) DrawElement(id, element);
+    for (const auto& [id, element] : m_TextElements)
+        if (element.visible) DrawTextElement(id, element);
+}
+
+void UIRenderer::DrawQuad(float x, float y, float width, float height,
+    float u0, float v0, float u1, float v1, const Vec4& color,
+    Velcryn::RHI::TextureHandle texture)
+{
+    if (!m_Pipeline || !m_VertexBuffer || !m_IndexBuffer || width <= 0.0f || height <= 0.0f)
+        return;
+    struct Vertex { float x, y, u, v; };
+    const Vertex vertices[4] = {
+        {x, y, u0, v0}, {x + width, y, u1, v0},
+        {x + width, y + height, u1, v1}, {x, y + height, u0, v1}
+    };
+    struct Constants { float color[4]; float viewport[4]; float offset[4]; };
+    Constants constants{{color.x,color.y,color.z,color.w},
+        {static_cast<float>(m_Width),static_cast<float>(m_Height),m_UIScale,0.0f},
+        {m_UIOffsetX,m_UIOffsetY,0.0f,0.0f}};
+    if (auto* device = Velcryn::RHI::GetDevice())
+    {
+        if (!device->UpdateBuffer(m_VertexBuffer, vertices, sizeof(vertices))) return;
+        device->DrawIndexed(m_Pipeline, m_VertexBuffer, m_IndexBuffer, 6,
+            &constants, sizeof(constants), 1, texture ? texture : m_WhiteTexture);
+    }
 }
 
 bool UIRenderer::InitializeFontAtlas()
