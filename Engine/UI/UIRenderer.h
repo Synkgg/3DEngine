@@ -169,6 +169,9 @@ private:
         float u0, float v0, float u1, float v1,
         const Vec4& color
     );
+    void DrawQuad(float x, float y, float width, float height,
+        float u0, float v0, float u1, float v1,
+        const Vec4& color, Velcryn::RHI::TextureHandle texture);
 
     struct FontGlyph
     {
@@ -258,7 +261,10 @@ private:
 
 private:
     Velcryn::RHI::BufferHandle m_VertexBuffer{};
+    Velcryn::RHI::BufferHandle m_IndexBuffer{};
+    Velcryn::RHI::PipelineHandle m_Pipeline{};
     Velcryn::RHI::TextureHandle m_FontTexture{};
+    Velcryn::RHI::TextureHandle m_WhiteTexture{};
     static constexpr int FontAtlasWidth = 1024;
     static constexpr int FontAtlasHeight = 1024;
     static constexpr float FontBakeSize = 48.0f;
