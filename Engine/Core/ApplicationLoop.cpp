@@ -120,7 +120,14 @@ void Application::Run()
         {
             ImGuiIO& hubIO = ImGui::GetIO();
             hubIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-            RenderProjectHub();
+            m_ProjectHub.Render(
+                [this](const std::string& path) { return ActivateProject(path); },
+                [this](const std::string& location, const std::string& name) { return CreateProject(location, name); },
+                [this]()
+                {
+                    m_ShowProjectHub = false;
+                    SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Velcryn Editor - Legacy Workspace");
+                });
             m_ImGuiLayer.EndFrame();
             m_Renderer.EndFrame();
             finishFrame();
