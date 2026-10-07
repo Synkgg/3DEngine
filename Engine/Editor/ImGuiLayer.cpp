@@ -8,7 +8,6 @@
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
-#include <imgui_impl_opengl3.h>
 #include <ImGuizmo.h>
 #include <cstdio>
 
@@ -23,7 +22,7 @@ ImGuiLayer::~ImGuiLayer()
     Shutdown();
 }
 
-bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
+bool ImGuiLayer::Initialize(Window& window)
 {
     IMGUI_CHECKVERSION();
 
@@ -82,21 +81,11 @@ bool ImGuiLayer::Initialize(Window& window, SDL_GLContext context)
         iconRanges
     );
 
-    // Platform backend first, then renderer backend. This is the order
-    // expected by Dear ImGui's SDL3/OpenGL3 examples and backend lifecycle.
-    if (!ImGui_ImplSDL3_InitForOpenGL(
-        window.GetNativeWindow(),
-        context))
+    // SDL owns input/window integration only. GPU rendering is now owned by
+    // the Vulkan/NRI renderer, so no OpenGL renderer backend is initialized.
+    if (!ImGui_ImplSDL3_InitForVulkan(window.GetNativeWindow()))
     {
-        Logger::Error("ImGui SDL3 backend initialization failed.");
-        ImGui::DestroyContext();
-        return false;
-    }
-
-    if (!ImGui_ImplOpenGL3_Init("#version 450"))
-    {
-        Logger::Error("ImGui OpenGL3 backend initialization failed.");
-        ImGui_ImplSDL3_Shutdown();
+        Logger::Error("ImGui SDL3 Vulkan platform backend initialization failed.");
         ImGui::DestroyContext();
         return false;
     }
@@ -113,7 +102,6 @@ void ImGuiLayer::Shutdown()
         return;
     }
 
-    ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
 
     ImGui::DestroyContext();
@@ -123,7 +111,6 @@ void ImGuiLayer::Shutdown()
 
 void ImGuiLayer::BeginFrame()
 {
-    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 
@@ -131,11 +118,9 @@ void ImGuiLayer::BeginFrame()
 }
 void ImGuiLayer::EndFrame()
 {
+    // Build draw data here. The NRI renderer consumes ImGui::GetDrawData()
+    // while recording the Vulkan command buffer.
     ImGui::Render();
-
-    ImGui_ImplOpenGL3_RenderDrawData(
-        ImGui::GetDrawData()
-    );
 }
 
 void ImGuiLayer::ProcessEvent(void* event)
