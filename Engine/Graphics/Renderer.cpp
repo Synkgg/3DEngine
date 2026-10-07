@@ -49,6 +49,21 @@ bool Renderer::Initialize(Window& window)
         return false;
     }
 
+    if (!m_Framebuffer.Initialize(m_ViewportWidth, m_ViewportHeight, 1, true))
+    {
+        Logger::Error("Renderer: failed to create the Vulkan scene framebuffer.");
+        Velcryn::RHI::Shutdown();
+        return false;
+    }
+
+    if (!CreatePostProcessTarget())
+    {
+        Logger::Error("Renderer: failed to create Vulkan post-process targets.");
+        m_Framebuffer.Shutdown();
+        Velcryn::RHI::Shutdown();
+        return false;
+    }
+
     m_Camera.SetAspectRatio(
         static_cast<float>(window.GetWidth()) /
         static_cast<float>(window.GetHeight())
@@ -68,6 +83,8 @@ void Renderer::Shutdown()
     m_CylinderMesh.reset();
     m_ModelCache.clear();
     m_TextureManager.Clear();
+    DestroyPostProcessTarget();
+    m_Framebuffer.Shutdown();
 
     Velcryn::RHI::Shutdown();
     m_Window = nullptr;
