@@ -84,6 +84,7 @@ namespace Velcryn::RHI
         uint64_t m_FrameIndex = 0;
         uint32_t m_BackBufferIndex = 0;
         uint32_t m_AcquireIndex = 0;
+        bool m_FrameOpen = false;
         nri::Format m_SwapChainFormat = nri::Format::UNKNOWN;
         RHICapabilities m_Capabilities{};
 
