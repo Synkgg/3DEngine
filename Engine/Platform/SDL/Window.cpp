@@ -28,37 +28,12 @@ Window::~Window()
 
 bool Window::Initialize()
 {
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_MAJOR_VERSION,
-        4
-    );
-
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_MINOR_VERSION,
-        5
-    );
-
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_PROFILE_MASK,
-        SDL_GL_CONTEXT_PROFILE_CORE
-    );
-
-    SDL_GL_SetAttribute(
-        SDL_GL_DOUBLEBUFFER,
-        1
-    );
-
-    SDL_GL_SetAttribute(
-        SDL_GL_DEPTH_SIZE,
-        24
-    );
-
     m_Window =
         SDL_CreateWindow(
             m_Title.c_str(),
             m_Width,
             m_Height,
-            SDL_WINDOW_OPENGL |
+            SDL_WINDOW_VULKAN |
             SDL_WINDOW_RESIZABLE
         );
 
