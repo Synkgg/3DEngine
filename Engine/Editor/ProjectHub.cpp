@@ -14,27 +14,58 @@
 
 namespace
 {
-    // Compact Velcryn "V" mark inspired by the faceted identity concept.
-    // Drawn natively so the Hub stays sharp at any DPI and does not depend on
-    // an external branding texture.
-    void DrawVelcrynMark(ImDrawList* drawList, const ImVec2 origin, const float size)
+    constexpr ImU32 kBg = IM_COL32(8, 13, 20, 255);
+    constexpr ImU32 kRail = IM_COL32(10, 17, 26, 255);
+    constexpr ImU32 kPanel = IM_COL32(14, 23, 35, 255);
+    constexpr ImU32 kPanelHover = IM_COL32(19, 32, 47, 255);
+    constexpr ImU32 kLine = IM_COL32(37, 54, 72, 255);
+    constexpr ImU32 kText = IM_COL32(232, 238, 245, 255);
+    constexpr ImU32 kMuted = IM_COL32(116, 134, 153, 255);
+    constexpr ImU32 kBlue = IM_COL32(61, 166, 255, 255);
+    constexpr ImU32 kCyan = IM_COL32(0, 225, 255, 255);
+
+    void DrawVelcrynMark(ImDrawList* dl, ImVec2 p, float s)
     {
-        const ImU32 steel = IM_COL32(214, 225, 235, 255);
-        const ImU32 ice = IM_COL32(32, 184, 255, 255);
-        const ImU32 deep = IM_COL32(15, 84, 128, 255);
+        // Faceted, split-metal V matching the Velcryn identity board.
+        const ImVec2 l0(p.x, p.y + s * .04f), l1(p.x + s * .27f, p.y + s * .12f);
+        const ImVec2 lc(p.x + s * .50f, p.y + s * .82f), lb(p.x + s * .50f, p.y + s);
+        const ImVec2 r0(p.x + s, p.y), r1(p.x + s * .73f, p.y + s * .12f);
+        const ImVec2 notch(p.x + s * .50f, p.y + s * .43f);
+        dl->AddTriangleFilled(l0, l1, lc, IM_COL32(202, 216, 230, 255));
+        dl->AddTriangleFilled(l1, notch, lc, IM_COL32(94, 125, 154, 255));
+        dl->AddTriangleFilled(r0, r1, notch, IM_COL32(235, 242, 248, 255));
+        dl->AddTriangleFilled(r1, lc, notch, IM_COL32(91, 132, 170, 255));
+        dl->AddTriangleFilled(notch, lc, lb, IM_COL32(21, 93, 148, 255));
+        dl->AddLine(l0, lc, kBlue, 1.5f);
+        dl->AddLine(r0, notch, kCyan, 1.2f);
+        dl->AddLine(notch, lb, kBlue, 1.3f);
+    }
 
-        const ImVec2 a(origin.x, origin.y);
-        const ImVec2 b(origin.x + size * 0.28f, origin.y + size * 0.08f);
-        const ImVec2 c(origin.x + size * 0.50f, origin.y + size * 0.76f);
-        const ImVec2 d(origin.x + size * 0.72f, origin.y + size * 0.08f);
-        const ImVec2 e(origin.x + size, origin.y);
-        const ImVec2 f(origin.x + size * 0.50f, origin.y + size);
+    bool NavItem(const char* id, const char* label, bool active, ImVec2 size)
+    {
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        ImGui::InvisibleButton(id, size);
+        const bool hovered = ImGui::IsItemHovered();
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        if (hovered || active)
+            dl->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? kPanelHover : kPanel, 5.0f);
+        if (active)
+            dl->AddRectFilled(ImVec2(p.x, p.y + 8), ImVec2(p.x + 2, p.y + size.y - 8), kCyan, 1.0f);
+        dl->AddText(ImVec2(p.x + 18, p.y + (size.y - ImGui::GetFontSize()) * .5f), active ? kText : kMuted, label);
+        return ImGui::IsItemClicked();
+    }
 
-        drawList->AddTriangleFilled(a, b, c, steel);
-        drawList->AddTriangleFilled(d, e, c, ice);
-        drawList->AddTriangleFilled(c, d, f, deep);
-        drawList->AddLine(a, c, IM_COL32(72, 202, 255, 210), 1.25f);
-        drawList->AddLine(e, c, IM_COL32(110, 220, 255, 230), 1.25f);
+    bool AccentButton(const char* id, const char* label, ImVec2 size)
+    {
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        ImGui::InvisibleButton(id, size);
+        const bool hovered = ImGui::IsItemHovered();
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        dl->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? IM_COL32(20, 117, 178, 255) : IM_COL32(14, 82, 130, 255), 5.0f);
+        dl->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), hovered ? kCyan : kBlue, 5.0f, 0, 1.0f);
+        const ImVec2 ts = ImGui::CalcTextSize(label);
+        dl->AddText(ImVec2(p.x + (size.x-ts.x)*.5f, p.y + (size.y-ts.y)*.5f), kText, label);
+        return ImGui::IsItemClicked();
     }
 }
 
@@ -144,237 +175,97 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
     ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(io.DisplaySize);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImGui::ColorConvertU32ToFloat4(kBg));
+    ImGui::Begin("Velcryn Hub", nullptr, ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings);
 
-    const ImGuiWindowFlags flags =
-        ImGuiWindowFlags_NoDecoration |
-        ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_NoBringToFrontOnFocus;
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    const ImVec2 wp = ImGui::GetWindowPos();
+    const ImVec2 ws = ImGui::GetWindowSize();
+    const float rail = 230.0f;
+    dl->AddRectFilled(wp, ImVec2(wp.x+rail, wp.y+ws.y), kRail);
+    dl->AddLine(ImVec2(wp.x+rail,wp.y), ImVec2(wp.x+rail,wp.y+ws.y), kLine);
+    dl->AddLine(ImVec2(wp.x+rail+30,wp.y+86), ImVec2(wp.x+ws.x-30,wp.y+86), kLine);
 
-    // Hub-specific palette. Keep this local so opening a project restores the
-    // editor's normal theme without any global style mutation.
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.025f, 0.035f, 0.047f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.040f, 0.055f, 0.070f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.145f, 0.155f, 0.180f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.115f, 0.125f, 0.145f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.165f, 0.180f, 0.210f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.095f, 0.105f, 0.125f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.060f, 0.066f, 0.078f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.085f, 0.094f, 0.110f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.105f, 0.115f, 0.135f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.145f, 0.160f, 0.190f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.90f, 0.92f, 0.95f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImVec4(0.48f, 0.52f, 0.59f, 1.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 9.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));
+    DrawVelcrynMark(dl, ImVec2(wp.x+24,wp.y+20), 52);
+    dl->AddText(ImVec2(wp.x+91,wp.y+27), kText, "V E L C R Y N");
+    dl->AddText(ImVec2(wp.x+91,wp.y+48), kBlue, "E N G I N E");
 
-    ImGui::Begin("Velcryn Hub", nullptr, flags);
-
-    const float sidebarWidth = 238.0f;
-    const float footerHeight = 42.0f;
-
-    // Left rail: identity and primary actions.
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.018f, 0.026f, 0.036f, 1.0f));
-    ImGui::BeginChild("HubSidebar", ImVec2(sidebarWidth, 0), ImGuiChildFlags_None);
-    ImGui::PopStyleColor();
-
-    DrawVelcrynMark(ImGui::GetWindowDrawList(), ImVec2(ImGui::GetWindowPos().x + 22.0f, ImGui::GetWindowPos().y + 22.0f), 46.0f);
-    ImGui::SetCursorPos(ImVec2(82, 24));
-    ImGui::SetWindowFontScale(1.42f);
-    ImGui::TextUnformatted("VELCRYN");
-    ImGui::SetWindowFontScale(1.0f);
-    ImGui::SetCursorPosX(82);
-    ImGui::TextDisabled("ENGINE  /  PROJECT HUB");
-
-    ImGui::SetCursorPosY(100);
-    ImGui::SetCursorPosX(16);
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.055f, 0.42f, 0.68f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.075f, 0.55f, 0.86f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.035f, 0.32f, 0.54f, 1.0f));
-    if (ImGui::Button("+  New Project", ImVec2(sidebarWidth - 32.0f, 42.0f)))
-        ImGui::SetKeyboardFocusHere();
-    ImGui::PopStyleColor(3);
-
-    ImGui::SetCursorPosX(16);
-    if (ImGui::Button("Open Project...", ImVec2(sidebarWidth - 32.0f, 42.0f)))
-    {
-        std::string path;
-        if (FileDialog::OpenProject(path))
-            openProject(path);
+    ImGui::SetCursorPos(ImVec2(14,104));
+    NavItem("##projects","PROJECTS",true,ImVec2(202,40));
+    ImGui::SetCursorPosX(14);
+    if (NavItem("##open","OPEN PROJECT",false,ImVec2(202,40))) {
+        std::string path; if (FileDialog::OpenProject(path)) openProject(path);
     }
+    ImGui::SetCursorPosX(14);
+    if (NavItem("##refresh","REFRESH",false,ImVec2(202,40))) LoadRecentProjects();
 
-    ImGui::SetCursorPosX(16);
-    if (ImGui::Button("Refresh Projects", ImVec2(sidebarWidth - 32.0f, 38.0f)))
-        LoadRecentProjects();
+    ImGui::SetCursorPos(ImVec2(14,ws.y-72));
+    if (NavItem("##legacy","LEGACY WORKSPACE",false,ImVec2(202,40))) continueLegacyWorkspace();
 
-    ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 104.0f);
-    ImGui::SetCursorPosX(24);
-    ImGui::TextDisabled("VELCRYN ENGINE");
-    ImGui::SetCursorPosX(16);
-    if (ImGui::Button("Continue Legacy Workspace", ImVec2(sidebarWidth - 32.0f, 38.0f)))
-    {
-        continueLegacyWorkspace();
-    }
+    dl->AddText(ImVec2(wp.x+rail+34,wp.y+25), kText, "PROJECTS");
+    dl->AddText(ImVec2(wp.x+rail+34,wp.y+50), kMuted, "Build worlds with Velcryn Engine");
+    dl->AddText(ImVec2(wp.x+ws.x-177,wp.y+34), kMuted, "CREATE  |  RENDER  |  BUILD");
 
-    ImGui::EndChild();
-    ImGui::SameLine(0, 0);
+    const float x0=rail+34, top=112, right=ws.x-34;
+    const float createW=330, gap=24, recentW=std::max(330.0f,right-x0-createW-gap);
+    dl->AddText(ImVec2(wp.x+x0,wp.y+top), kMuted, "RECENT PROJECTS");
 
-    // Main workspace.
-    ImGui::BeginChild("HubMain", ImVec2(0, 0), ImGuiChildFlags_None);
-    ImGui::SetCursorPos(ImVec2(34, 28));
-    ImGui::SetWindowFontScale(1.62f);
-    ImGui::TextUnformatted("Create. Render. Build.");
-    ImGui::SetWindowFontScale(1.0f);
-    ImGui::SetCursorPosX(34);
-    ImGui::TextDisabled("Welcome to Velcryn. Open a world or start something new.");
-
-    const float contentTop = 94.0f;
-    const float padding = 34.0f;
-    const float mainWidth = ImGui::GetWindowWidth();
-    const float createWidth = std::min(360.0f, std::max(300.0f, mainWidth * 0.32f));
-    const float recentWidth = std::max(320.0f, mainWidth - createWidth - padding * 3.0f);
-    const float panelHeight = std::max(320.0f, ImGui::GetWindowHeight() - contentTop - footerHeight - 22.0f);
-
-    // Recent projects panel.
-    ImGui::SetCursorPos(ImVec2(padding, contentTop));
-    ImGui::BeginChild("RecentPanel", ImVec2(recentWidth, panelHeight), ImGuiChildFlags_Borders);
-    ImGui::SetCursorPos(ImVec2(20, 18));
-    ImGui::TextUnformatted("RECENT PROJECTS");
-    ImGui::SameLine();
-    ImGui::TextDisabled("  %d", static_cast<int>(m_RecentProjects.size()));
-    ImGui::SetCursorPosX(20);
-    ImGui::Separator();
-
-    if (m_RecentProjects.empty())
-    {
-        const float centerY = std::max(90.0f, panelHeight * 0.36f);
-        ImGui::SetCursorPosY(centerY);
-        const char* emptyTitle = "No recent projects";
-        const float titleWidth = ImGui::CalcTextSize(emptyTitle).x;
-        ImGui::SetCursorPosX(std::max(20.0f, (recentWidth - titleWidth) * 0.5f));
-        ImGui::TextUnformatted(emptyTitle);
-        const char* emptyText = "Open an existing project or create a new one.";
-        const float textWidth = ImGui::CalcTextSize(emptyText).x;
-        ImGui::SetCursorPosX(std::max(20.0f, (recentWidth - textWidth) * 0.5f));
-        ImGui::TextDisabled("%s", emptyText);
-    }
-    else
-    {
-        std::size_t removeIndex = static_cast<std::size_t>(-1);
-
-        for (std::size_t i = 0; i < m_RecentProjects.size(); ++i)
-        {
-            const RecentProject& recent = m_RecentProjects[i];
-            const bool exists = std::filesystem::is_regular_file(recent.descriptorPath);
-
-            ImGui::PushID(static_cast<int>(i));
-            ImGui::PushStyleColor(
-                ImGuiCol_ChildBg,
-                exists ? ImVec4(0.090f, 0.098f, 0.114f, 1.0f)
-                       : ImVec4(0.070f, 0.074f, 0.084f, 1.0f));
-            ImGui::BeginChild("ProjectCard", ImVec2(-1, 76), ImGuiChildFlags_Borders);
-            ImGui::PopStyleColor();
-
-            ImGui::SetCursorPos(ImVec2(16, 12));
-            ImGui::SetWindowFontScale(1.08f);
-            ImGui::TextUnformatted(recent.name.c_str());
-            ImGui::SetWindowFontScale(1.0f);
-
-            ImGui::SetCursorPos(ImVec2(16, 40));
-            if (exists)
-                ImGui::TextDisabled("%s", recent.descriptorPath.c_str());
-            else
-                ImGui::TextDisabled("Project file is missing");
-
-            const float actionX = std::max(180.0f, ImGui::GetWindowWidth() - 174.0f);
-            ImGui::SetCursorPos(ImVec2(actionX, 19));
-            ImGui::BeginDisabled(!exists);
-            if (ImGui::Button("Open", ImVec2(72, 34)))
-                openProject(recent.descriptorPath);
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            if (ImGui::Button("Remove", ImVec2(76, 34)))
-                removeIndex = i;
-
-            ImGui::EndChild();
-            ImGui::PopID();
+    float y=top+30;
+    std::size_t removeIndex=static_cast<std::size_t>(-1);
+    if (m_RecentProjects.empty()) {
+        dl->AddRect(ImVec2(wp.x+x0,wp.y+y),ImVec2(wp.x+x0+recentW,wp.y+y+120),kLine,6);
+        dl->AddText(ImVec2(wp.x+x0+22,wp.y+y+27),kText,"NO RECENT PROJECTS");
+        dl->AddText(ImVec2(wp.x+x0+22,wp.y+y+54),kMuted,"Open an existing project or create a new workspace.");
+    } else {
+        for(std::size_t i=0;i<m_RecentProjects.size();++i) {
+            const auto& recent=m_RecentProjects[i]; const bool exists=std::filesystem::is_regular_file(recent.descriptorPath);
+            ImGui::SetCursorPos(ImVec2(x0,y)); ImGui::PushID((int)i);
+            ImVec2 p=ImGui::GetCursorScreenPos(); ImGui::InvisibleButton("##card",ImVec2(recentW,72));
+            const bool hover=ImGui::IsItemHovered();
+            dl->AddRectFilled(p,ImVec2(p.x+recentW,p.y+72),hover?kPanelHover:kPanel,6);
+            dl->AddRect(p,ImVec2(p.x+recentW,p.y+72),hover?kBlue:kLine,6,0,1);
+            dl->AddRectFilled(ImVec2(p.x,p.y+12),ImVec2(p.x+2,p.y+60),exists?kBlue:kMuted);
+            dl->AddText(ImVec2(p.x+18,p.y+14),exists?kText:kMuted,recent.name.c_str());
+            const std::string sub=exists?recent.descriptorPath:"Project file is missing";
+            dl->AddText(ImVec2(p.x+18,p.y+40),kMuted,sub.c_str());
+            if(hover&&exists&&ImGui::IsItemClicked()) openProject(recent.descriptorPath);
+            ImGui::SetCursorPos(ImVec2(x0+recentW-72,y+21));
+            if(NavItem("##remove","REMOVE",false,ImVec2(62,30))) removeIndex=i;
+            ImGui::PopID(); y+=82;
         }
-
-        if (removeIndex != static_cast<std::size_t>(-1))
-            RemoveRecentProject(removeIndex);
     }
-    ImGui::EndChild();
+    if(removeIndex!=static_cast<std::size_t>(-1)) RemoveRecentProject(removeIndex);
 
-    // New project panel.
-    ImGui::SetCursorPos(ImVec2(padding * 2.0f + recentWidth, contentTop));
-    ImGui::BeginChild("CreatePanel", ImVec2(createWidth, panelHeight), ImGuiChildFlags_Borders);
-    ImGui::SetCursorPos(ImVec2(22, 20));
-    ImGui::SetWindowFontScale(1.18f);
-    ImGui::TextUnformatted("Create Project");
-    ImGui::SetWindowFontScale(1.0f);
-    ImGui::SetCursorPosX(22);
-    ImGui::TextDisabled("Start with an isolated project workspace.");
+    const float cx=x0+recentW+gap;
+    dl->AddText(ImVec2(wp.x+cx,wp.y+top),kMuted,"NEW PROJECT");
+    dl->AddRectFilled(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,wp.y+ws.y-58),kPanel,7);
+    dl->AddRect(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,wp.y+ws.y-58),kLine,7);
 
-    ImGui::SetCursorPos(ImVec2(22, 78));
-    ImGui::TextDisabled("PROJECT NAME");
-    ImGui::SetCursorPosX(22);
-    ImGui::SetNextItemWidth(createWidth - 44.0f);
-    ImGui::InputText("##ProjectName", m_NewProjectName, sizeof(m_NewProjectName));
-
-    ImGui::SetCursorPosX(22);
-    ImGui::TextDisabled("LOCATION");
-    ImGui::SetCursorPosX(22);
-    ImGui::SetNextItemWidth(createWidth - 116.0f);
-    ImGui::InputText("##ProjectLocation", m_NewProjectLocation, sizeof(m_NewProjectLocation));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg,ImVec4(.035f,.055f,.078f,1));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,ImVec4(.05f,.08f,.11f,1));
+    ImGui::PushStyleColor(ImGuiCol_Border,ImGui::ColorConvertU32ToFloat4(kLine));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize,1);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,4);
+    ImGui::SetCursorPos(ImVec2(cx+20,top+65)); ImGui::TextDisabled("PROJECT NAME");
+    ImGui::SetCursorPosX(cx+20); ImGui::SetNextItemWidth(createW-40); ImGui::InputText("##ProjectName",m_NewProjectName,sizeof(m_NewProjectName));
+    ImGui::SetCursorPosX(cx+20); ImGui::TextDisabled("LOCATION");
+    ImGui::SetCursorPosX(cx+20); ImGui::SetNextItemWidth(createW-116); ImGui::InputText("##ProjectLocation",m_NewProjectLocation,sizeof(m_NewProjectLocation));
     ImGui::SameLine();
-    if (ImGui::Button("Browse", ImVec2(66, 0)))
-    {
-        std::string folder;
-        if (FileDialog::SelectFolder(folder))
-            std::snprintf(m_NewProjectLocation, sizeof(m_NewProjectLocation), "%s", folder.c_str());
+    if(NavItem("##browse","BROWSE",false,ImVec2(70,ImGui::GetFrameHeight()))) {
+        std::string folder; if(FileDialog::SelectFolder(folder)) std::snprintf(m_NewProjectLocation,sizeof(m_NewProjectLocation),"%s",folder.c_str());
     }
+    const std::filesystem::path preview=(std::filesystem::path(m_NewProjectLocation)/m_NewProjectName).lexically_normal();
+    ImGui::SetCursorPosX(cx+20); ImGui::TextDisabled("PROJECT FOLDER");
+    ImGui::SetCursorPosX(cx+20); ImGui::PushTextWrapPos(cx+createW-20); ImGui::TextWrapped("%s",preview.string().c_str()); ImGui::PopTextWrapPos();
+    ImGui::SetCursorPos(ImVec2(cx+20,ws.y-120));
+    if(AccentButton("##create","CREATE PROJECT",ImVec2(createW-40,42))) createProject(m_NewProjectLocation,m_NewProjectName);
+    ImGui::PopStyleVar(2); ImGui::PopStyleColor(3);
 
-    const std::filesystem::path preview =
-        (std::filesystem::path(m_NewProjectLocation) / m_NewProjectName).lexically_normal();
+    if(!m_Error.empty()) dl->AddText(ImVec2(wp.x+x0,wp.y+ws.y-34),IM_COL32(245,112,108,255),m_Error.c_str());
+    else dl->AddText(ImVec2(wp.x+x0,wp.y+ws.y-34),kMuted,"VELCRYN ENGINE   //   WINDOWS + LINUX");
 
-    ImGui::SetCursorPosX(22);
-    ImGui::TextDisabled("PROJECT FOLDER");
-    ImGui::SetCursorPosX(22);
-    ImGui::PushTextWrapPos(createWidth - 22.0f);
-    ImGui::TextWrapped("%s", preview.string().c_str());
-    ImGui::PopTextWrapPos();
-
-    ImGui::SetCursorPosY(panelHeight - 72.0f);
-    ImGui::SetCursorPosX(22);
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.055f, 0.42f, 0.68f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.075f, 0.55f, 0.86f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.035f, 0.32f, 0.54f, 1.0f));
-    if (ImGui::Button("Create Project", ImVec2(createWidth - 44.0f, 44.0f)))
-        createProject(m_NewProjectLocation, m_NewProjectName);
-    ImGui::PopStyleColor(3);
-
-    ImGui::EndChild();
-
-    // Bottom status strip.
-    ImGui::SetCursorPos(ImVec2(padding, ImGui::GetWindowHeight() - 34.0f));
-    if (!m_Error.empty())
-    {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.48f, 0.46f, 1.0f));
-        ImGui::TextUnformatted(m_Error.c_str());
-        ImGui::PopStyleColor();
-    }
-    else
-    {
-        ImGui::TextDisabled("VELCRYN  //  Windows + Linux  //  Create | Render | Build");
-    }
-
-    ImGui::EndChild();
     ImGui::End();
-
-    ImGui::PopStyleVar(5);
-    ImGui::PopStyleColor(12);
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
 }
