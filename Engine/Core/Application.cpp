@@ -30,7 +30,7 @@
 
 Application::Application(const std::string& projectPath)
     : m_Running(false),
-    m_Window("MyEngine", 1280, 720),
+    m_Window("Velcryn Hub", 1280, 720),
     m_Renderer(),
     m_Input(),
     m_Time(),
@@ -131,7 +131,7 @@ bool Application::Initialize()
     if (m_ProjectManager.HasProject())
     {
         AddRecentProject(activeProject);
-        SDL_SetWindowTitle(m_Window.GetNativeWindow(), (activeProject.name + " - Editor").c_str());
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), (activeProject.name + " - Velcryn Editor").c_str());
     }
 
     return true;
@@ -213,8 +213,8 @@ void Application::ReturnToProjectHub()
 
     m_ShowProjectHub = true;
     m_ProjectHubError.clear();
-    SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Project Hub");
-    Logger::Info("Returned to Project Hub.");
+    SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Velcryn Hub");
+    Logger::Info("Returned to Velcryn Hub.");
 }
 
 bool Application::ActivateProject(const std::string& descriptorPath)
@@ -246,7 +246,7 @@ bool Application::ActivateProject(const std::string& descriptorPath)
     AddRecentProject(project);
     m_ShowProjectHub = false;
     m_ProjectHubError.clear();
-    SDL_SetWindowTitle(m_Window.GetNativeWindow(), (project.name + " - Editor").c_str());
+    SDL_SetWindowTitle(m_Window.GetNativeWindow(), (project.name + " - Velcryn Editor").c_str());
     return true;
 }
 
@@ -273,7 +273,7 @@ bool Application::CreateProject(const std::string& parentDirectory, const std::s
 
 std::string Application::GetHubStatePath() const
 {
-    char* prefPath = SDL_GetPrefPath("3DEngine", "Editor");
+    char* prefPath = SDL_GetPrefPath("Velcryn", "Editor");
     if (prefPath == nullptr)
         return (std::filesystem::current_path() / "Saved" / "RecentProjects.txt").string();
 
@@ -365,8 +365,8 @@ void Application::RenderProjectHub()
 
     // Hub-specific palette. Keep this local so opening a project restores the
     // editor's normal theme without any global style mutation.
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.055f, 0.060f, 0.070f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.075f, 0.082f, 0.095f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.025f, 0.035f, 0.047f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.040f, 0.055f, 0.070f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.145f, 0.155f, 0.180f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.115f, 0.125f, 0.145f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.165f, 0.180f, 0.210f, 1.0f));
@@ -383,28 +383,28 @@ void Application::RenderProjectHub()
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 9.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));
 
-    ImGui::Begin("Project Hub", nullptr, flags);
+    ImGui::Begin("Velcryn Hub", nullptr, flags);
 
     const float sidebarWidth = 238.0f;
     const float footerHeight = 42.0f;
 
     // Left rail: identity and primary actions.
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.040f, 0.044f, 0.052f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.018f, 0.026f, 0.036f, 1.0f));
     ImGui::BeginChild("HubSidebar", ImVec2(sidebarWidth, 0), ImGuiChildFlags_None);
     ImGui::PopStyleColor();
 
     ImGui::SetCursorPos(ImVec2(24, 28));
     ImGui::SetWindowFontScale(1.42f);
-    ImGui::TextUnformatted("3D ENGINE");
+    ImGui::TextUnformatted("VELCRYN");
     ImGui::SetWindowFontScale(1.0f);
     ImGui::SetCursorPosX(24);
-    ImGui::TextDisabled("PROJECT WORKSPACE");
+    ImGui::TextDisabled("ENGINE  /  PROJECT HUB");
 
     ImGui::SetCursorPosY(100);
     ImGui::SetCursorPosX(16);
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.28f, 0.52f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.34f, 0.62f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.13f, 0.23f, 0.44f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.055f, 0.42f, 0.68f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.075f, 0.55f, 0.86f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.035f, 0.32f, 0.54f, 1.0f));
     if (ImGui::Button("+  New Project", ImVec2(sidebarWidth - 32.0f, 42.0f)))
         ImGui::SetKeyboardFocusHere();
     ImGui::PopStyleColor(3);
@@ -423,12 +423,12 @@ void Application::RenderProjectHub()
 
     ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 104.0f);
     ImGui::SetCursorPosX(24);
-    ImGui::TextDisabled("WORKSPACE");
+    ImGui::TextDisabled("VELCRYN ENGINE");
     ImGui::SetCursorPosX(16);
     if (ImGui::Button("Continue Legacy Workspace", ImVec2(sidebarWidth - 32.0f, 38.0f)))
     {
         m_ShowProjectHub = false;
-        SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Editor - Legacy Workspace");
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Velcryn Editor - Legacy Workspace");
     }
 
     ImGui::EndChild();
@@ -438,10 +438,10 @@ void Application::RenderProjectHub()
     ImGui::BeginChild("HubMain", ImVec2(0, 0), ImGuiChildFlags_None);
     ImGui::SetCursorPos(ImVec2(34, 28));
     ImGui::SetWindowFontScale(1.62f);
-    ImGui::TextUnformatted("Your Projects");
+    ImGui::TextUnformatted("Create. Render. Build.");
     ImGui::SetWindowFontScale(1.0f);
     ImGui::SetCursorPosX(34);
-    ImGui::TextDisabled("Pick up where you left off, or create a clean workspace.");
+    ImGui::TextDisabled("Welcome to Velcryn. Open a world or start something new.");
 
     const float contentTop = 94.0f;
     const float padding = 34.0f;
@@ -561,9 +561,9 @@ void Application::RenderProjectHub()
 
     ImGui::SetCursorPosY(panelHeight - 72.0f);
     ImGui::SetCursorPosX(22);
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.28f, 0.52f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.34f, 0.62f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.13f, 0.23f, 0.44f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.055f, 0.42f, 0.68f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.075f, 0.55f, 0.86f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.035f, 0.32f, 0.54f, 1.0f));
     if (ImGui::Button("Create Project", ImVec2(createWidth - 44.0f, 44.0f)))
         CreateProject(m_NewProjectLocation, m_NewProjectName);
     ImGui::PopStyleColor(3);
@@ -580,7 +580,7 @@ void Application::RenderProjectHub()
     }
     else
     {
-        ImGui::TextDisabled("Projects keep game assets, settings, scenes, scripts, and UI isolated from the engine.");
+        ImGui::TextDisabled("VELCRYN  //  Windows + Linux  //  Create | Render | Build");
     }
 
     ImGui::EndChild();
