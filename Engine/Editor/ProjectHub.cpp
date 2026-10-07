@@ -223,7 +223,7 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
             ImGui::SetCursorPos(ImVec2(x0,y)); ImGui::PushID((int)i);
             ImVec2 p=ImGui::GetCursorScreenPos(); ImGui::InvisibleButton("##card",ImVec2(recentW,92));
             const bool hover=ImGui::IsItemHovered();
-            dl->AddRectFilled(p,ImVec2(p.x+recentW,p.y+92),hover?kPanelHover:kPanel,7);
+            dl->AddRectFilled(p,ImVec2(p.x+recentW,p.y+92),hover?kPanelHover:kPanel,7.0f);
             dl->AddRect(p,ImVec2(p.x+recentW,p.y+92),hover?kBlue:kLine,7.0f,ImDrawFlags_None,1.0f);
             dl->AddRectFilled(ImVec2(p.x,p.y+14),ImVec2(p.x+3,p.y+78),exists?kCyan:kMuted);
             dl->AddText(ImVec2(p.x+22,p.y+18),exists?kText:kMuted,recent.name.c_str());
@@ -239,7 +239,8 @@ void ProjectHub::Render(const OpenProjectCallback& openProject,
 
     const float cx=x0+recentW+gap;
     dl->AddText(ImVec2(wp.x+cx,wp.y+top),kMuted,"NEW PROJECT");
-    const float createBottom=std::min(wp.y+top+390.0f,wp.y+ws.y-58.0f);\n    dl->AddRectFilled(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,createBottom),kPanel,7);
+    const float createBottom=std::min(wp.y+top+390.0f,wp.y+ws.y-58.0f);
+    dl->AddRectFilled(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,createBottom),kPanel,7);
     dl->AddRect(ImVec2(wp.x+cx,wp.y+top+30),ImVec2(wp.x+cx+createW,createBottom),kLine,7.0f,ImDrawFlags_None,1.0f);
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg,ImVec4(.035f,.055f,.078f,1));
