@@ -148,7 +148,25 @@ FetchContent_Declare(
     GIT_TAG v180
     GIT_SHALLOW TRUE
 )
-FetchContent_MakeAvailable(NRI)
+# NRI v180 mirrors ImGui's renderer-facing texture structs internally. Velcryn
+# currently vendors ImGui 1.93 WIP, which added QueueUserData to ImTextureData.
+# Patch the fetched NRI mirror before compiling it so both sides have the same
+# ABI. Without this, NRI reads Width/Height at the old offsets and sees width=0.
+FetchContent_GetProperties(NRI)
+if (NOT nri_POPULATED)
+    FetchContent_Populate(NRI)
+endif()
+
+set(NRI_IMGUI_IMPL "${nri_SOURCE_DIR}/Source/Shared/ImguiInterface.hpp")
+file(READ "${NRI_IMGUI_IMPL}" NRI_IMGUI_IMPL_CONTENT)
+set(NRI_IMGUI_OLD "    void* BackendUserData;\\n    ImTextureID TexID;")
+set(NRI_IMGUI_NEW "    void* BackendUserData;\\n    void* QueueUserData;\\n    ImTextureID TexID;")
+string(FIND "${NRI_IMGUI_IMPL_CONTENT}" "${NRI_IMGUI_NEW}" NRI_IMGUI_ALREADY_PATCHED)
+if (NRI_IMGUI_ALREADY_PATCHED EQUAL -1)
+    string(REPLACE "${NRI_IMGUI_OLD}" "${NRI_IMGUI_NEW}" NRI_IMGUI_IMPL_CONTENT "${NRI_IMGUI_IMPL_CONTENT}")
+    file(WRITE "${NRI_IMGUI_IMPL}" "${NRI_IMGUI_IMPL_CONTENT}")
+endif()
+add_subdirectory("${nri_SOURCE_DIR}" "${nri_BINARY_DIR}")
 
 add_library(
     sol2_headers
