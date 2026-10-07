@@ -151,7 +151,7 @@ bool UIRenderer::Initialize()
     Velcryn::RHI::GraphicsPipelineDesc pipeline{};
     pipeline.vertexShader = UI_vert; pipeline.fragmentShader = UI_frag;
     pipeline.attributes = attributes; pipeline.vertexStride = sizeof(float) * 4;
-    pipeline.constantSize = sizeof(float) * 24;
+    pipeline.constantSize = sizeof(float) * 28;
     pipeline.colorFormat = Velcryn::RHI::TextureFormat::RGBA16_Float;
     pipeline.depthFormat = Velcryn::RHI::TextureFormat::D32_Float;
     pipeline.depthTest = false; pipeline.depthWrite = false; pipeline.cullBackFaces = false;
@@ -247,7 +247,7 @@ void UIRenderer::DrawQuad(float x, float y, float width, float height,
         return;
     struct Constants {
         float color[4]; float viewport[4]; float offset[4];
-        float gradient[4]; float style[4]; float rect[4];
+        float gradient[4]; float style[4]; float rect[4]; float uvRect[4];
     };
     Constants constants{{color.x,color.y,color.z,color.w},
         {static_cast<float>(m_Width),static_cast<float>(m_Height),m_UIScale,0.0f},
@@ -255,7 +255,8 @@ void UIRenderer::DrawQuad(float x, float y, float width, float height,
         {gradientColor.x,gradientColor.y,gradientColor.z,gradientColor.w},
         {useGradient ? 1.0f : 0.0f, horizontalGradient ? 1.0f : 0.0f,
          width * m_UIScale, cornerRadius * m_UIScale},
-        {x, y, width, height}};
+        {x, y, width, height},
+        {u0, v0, u1, v1}};
     if (auto* device = Velcryn::RHI::GetDevice())
     {
         device->DrawIndexed(m_Pipeline, m_VertexBuffer, m_IndexBuffer, 6,
