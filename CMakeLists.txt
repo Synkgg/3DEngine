@@ -112,6 +112,32 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cgltf)
 
+#
+# NRI - Velcryn's explicit low-level rendering backend
+#
+# Keep NRI behind the engine-owned RHI. Vulkan is the first explicit backend;
+# D3D12 stays disabled until the Vulkan path is established and tested.
+set(NRI_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
+set(NRI_ENABLE_VK_SUPPORT ON CACHE BOOL "" FORCE)
+set(NRI_ENABLE_D3D11_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_D3D12_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NONE_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_VALIDATION_SUPPORT ON CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NVTX_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_IMGUI_EXTENSION OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NIS_SDK OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NGX_SDK OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_FFX_SDK OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_XESS_SDK OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    NRI
+    GIT_REPOSITORY https://github.com/NVIDIA-RTX/NRI.git
+    GIT_TAG v180
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(NRI)
+
 add_library(
     sol2_headers
     INTERFACE
@@ -224,6 +250,7 @@ target_link_libraries(
     SDL3::SDL3-static
     lua54
     sol2_headers
+    NRI
 )
 
 #
