@@ -566,6 +566,8 @@ namespace Velcryn::RHI
         const uint64_t completedFrame = m_FrameIndex;
         m_Core.Wait(*m_FrameFence, completedFrame);
         CollectGarbage();
+        if (m_DescriptorPool)
+            m_Core.ResetDescriptorPool(*m_DescriptorPool);
 
         int width = 0, height = 0;
         SDL_GetWindowSizeInPixels(m_Window->GetNativeWindow(), &width, &height);
