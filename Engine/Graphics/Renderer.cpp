@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "RHI/RHI.h"
 #include "OpenGL/OpenGLShaderSources.h"
 
 using namespace Velcryn::Graphics::OpenGLShaders;
@@ -43,6 +44,14 @@ Renderer::~Renderer()
 bool Renderer::Initialize(Window& window)
 {
 	m_Window = &window;
+
+    // Bring the explicit RHI online during the migration. Rendering still falls
+    // through the legacy GL path until swapchain/pipeline migration is complete.
+    if (!Velcryn::RHI::Initialize(window, Velcryn::RHI::GraphicsAPI::Vulkan))
+    {
+        Logger::Error("Failed to initialize the Vulkan RHI.");
+        return false;
+    }
 
 	m_Context = SDL_GL_CreateContext(window.GetNativeWindow());
 
@@ -296,6 +305,7 @@ void Renderer::Shutdown()
 		m_Context = nullptr;
 	}
 
+	Velcryn::RHI::Shutdown();
 	m_Window = nullptr;
 }
 
