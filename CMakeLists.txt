@@ -179,6 +179,20 @@ if (NRI_IMGUI_ALREADY_PATCHED EQUAL -1)
     file(WRITE "${NRI_IMGUI_IMPL}" "${NRI_IMGUI_IMPL_CONTENT}")
 endif()
 
+# ImGui 1.93 also extended ImDrawCmd with TexRef before VtxOffset. NRI v180
+# already has TexRef, but its mirrored ImTextureData is the only layout that
+# changed in this revision. Patch NRI's font-texture lookup to use the texture
+# pointer key it owns instead of the ImGui TexID value. This avoids operator[]
+# inserting a null descriptor when ImGui 1.93's TexID lifecycle differs.
+set(NRI_IMGUI_FONT_LOOKUP_OLD [=[                    ImTextureID key = drawCmd.TexRef.TexData->TexID;
+                    descriptor = m_Textures[key].descriptor;]=])
+set(NRI_IMGUI_FONT_LOOKUP_NEW [=[                    ImTextureData* textureData = drawCmd.TexRef.TexData;
+                    uint64_t key = (uint64_t)textureData | ((uint64_t)textureData->UniqueID << 54ull);
+                    auto textureIt = m_Textures.find(key);
+                    descriptor = textureIt != m_Textures.end() ? textureIt->second.descriptor : nullptr;]=])
+string(REPLACE "${NRI_IMGUI_FONT_LOOKUP_OLD}" "${NRI_IMGUI_FONT_LOOKUP_NEW}" NRI_IMGUI_IMPL_CONTENT "${NRI_IMGUI_IMPL_CONTENT}")
+file(WRITE "${NRI_IMGUI_IMPL}" "${NRI_IMGUI_IMPL_CONTENT}")
+
 # Verify the fetched source actually contains the ABI field before NRI compiles.
 file(READ "${NRI_IMGUI_IMPL}" NRI_IMGUI_IMPL_VERIFIED)
 string(FIND "${NRI_IMGUI_IMPL_VERIFIED}" "void* QueueUserData;" NRI_IMGUI_QUEUE_USER_DATA)
