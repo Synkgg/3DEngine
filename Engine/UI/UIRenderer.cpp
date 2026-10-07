@@ -9,6 +9,7 @@
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
+#include "../Graphics/RHI/RHI.h"
 #include "../Core/Logger.h"
 #include "../Audio/AudioEngine.h"
 #include "../Editor/Fonts/InterFont.h"
@@ -119,127 +120,28 @@ UIRenderer::~UIRenderer()
 
 bool UIRenderer::Initialize()
 {
-    if (m_VAO != 0)
-    {
-        return true;
-    }
-
-    if (!m_Shader.Initialize(
-        UI_VERTEX_SHADER,
-        UI_FRAGMENT_SHADER))
-    {
-        return false;
-    }
-
-    glGenVertexArrays(
-        1,
-        &m_VAO
-    );
-
-    glGenBuffers(
-        1,
-        &m_VBO
-    );
-
-    glBindVertexArray(m_VAO);
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        m_VBO
-    );
-
-    const float vertices[24] =
-    {
-        // Position      UV
-        0.0f, 0.0f,      0.0f, 0.0f,
-        1.0f, 0.0f,      1.0f, 0.0f,
-        1.0f, 1.0f,      1.0f, 1.0f,
-
-        0.0f, 0.0f,      0.0f, 0.0f,
-        1.0f, 1.0f,      1.0f, 1.0f,
-        0.0f, 1.0f,      0.0f, 1.0f
-    };
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(vertices),
-        vertices,
-        GL_DYNAMIC_DRAW
-    );
-
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(
-        0,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(float) * 4,
-        reinterpret_cast<void*>(0)
-    );
-
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(
-        1,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(float) * 4,
-        reinterpret_cast<void*>(
-            sizeof(float) * 2
-            )
-    );
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        0
-    );
-
-    glBindVertexArray(0);
-
-    // The runtime font is optional at renderer startup. Visual UI must still
-    // initialize even when the editor is launched from a build directory
-    // where the source-tree font path is unavailable.
-    if (!InitializeFontAtlas())
-    {
-        Logger::Warning(
-            "Inter runtime font could not be loaded; UI renderer will continue without canvas text.");
-    }
-
+    if (m_VertexBuffer) return true;
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device) return false;
+    Velcryn::RHI::BufferDesc desc{};
+    desc.size = sizeof(float) * 24;
+    desc.usage = Velcryn::RHI::BufferUsage::Vertex;
+    desc.cpuVisible = true;
+    desc.debugName = "UIQuadVertices";
+    m_VertexBuffer = device->CreateBuffer(desc);
+    if (!m_VertexBuffer) return false;
+    if (!InitializeFontAtlas()) Logger::Warning("Inter runtime font could not be loaded; UI renderer will continue without canvas text.");
     return true;
 }
 
 void UIRenderer::Shutdown()
 {
-    if (m_FontTexture != 0)
-    {
-        glDeleteTextures(1, &m_FontTexture);
-        m_FontTexture = 0;
+    if (auto* device = Velcryn::RHI::GetDevice()) {
+        if (m_FontTexture) device->DestroyTexture(m_FontTexture);
+        if (m_VertexBuffer) device->DestroyBuffer(m_VertexBuffer);
     }
-
-    if (m_VBO != 0)
-    {
-        glDeleteBuffers(
-            1,
-            &m_VBO
-        );
-
-        m_VBO = 0;
-    }
-
-    if (m_VAO != 0)
-    {
-        glDeleteVertexArrays(
-            1,
-            &m_VAO
-        );
-
-        m_VAO = 0;
-    }
-
-    m_Shader.Shutdown();
-
+    m_FontTexture = {};
+    m_VertexBuffer = {};
     m_Elements.clear();
     m_TextElements.clear();
 }
@@ -277,117 +179,17 @@ void UIRenderer::SetLogicalSize(
 
 void UIRenderer::Begin()
 {
-    if (m_VAO == 0)
-    {
-        return;
-    }
-
-    glDisable(GL_DEPTH_TEST);
-
-    glEnable(GL_BLEND);
-
-    glBlendFunc(
-        GL_SRC_ALPHA,
-        GL_ONE_MINUS_SRC_ALPHA
-    );
-
-    const float scaleX =
-        static_cast<float>(m_Width) /
-        m_LogicalWidth;
-
-    const float scaleY =
-        static_cast<float>(m_Height) /
-        m_LogicalHeight;
-
-    m_UIScale =
-        std::min(
-            scaleX,
-            scaleY
-        );
-
-    m_UIOffsetX =
-        (
-            static_cast<float>(m_Width) -
-            m_LogicalWidth * m_UIScale
-            ) * 0.5f;
-
-    m_UIOffsetY =
-        (
-            static_cast<float>(m_Height) -
-            m_LogicalHeight * m_UIScale
-            ) * 0.5f;
-
-    m_Shader.Bind();
-
-    m_Shader.SetFloat(
-        "u_ScreenWidth",
-        static_cast<float>(m_Width)
-    );
-
-    m_Shader.SetFloat(
-        "u_ScreenHeight",
-        static_cast<float>(m_Height)
-    );
-
-    m_Shader.SetFloat(
-        "u_UIScale",
-        m_UIScale
-    );
-
-    m_Shader.SetFloat(
-        "u_UIOffsetX",
-        m_UIOffsetX
-    );
-
-    m_Shader.SetFloat(
-        "u_UIOffsetY",
-        m_UIOffsetY
-    );
+    const float scaleX = static_cast<float>(m_Width) / m_LogicalWidth;
+    const float scaleY = static_cast<float>(m_Height) / m_LogicalHeight;
+    m_UIScale = std::min(scaleX, scaleY);
+    m_UIOffsetX = (static_cast<float>(m_Width) - m_LogicalWidth * m_UIScale) * 0.5f;
+    m_UIOffsetY = (static_cast<float>(m_Height) - m_LogicalHeight * m_UIScale) * 0.5f;
 }
 
 void UIRenderer::End()
 {
-    if (m_VAO == 0)
-    {
-        return;
-    }
-
-    for (const auto& element :
-        m_Elements)
-    {
-        DrawElement(
-            element.first,
-            element.second
-        );
-    }
-
-    for (const auto& text :
-        m_TextElements)
-    {
-        DrawTextElement(
-            text.first,
-            text.second
-        );
-    }
-
-    m_Shader.Unbind();
-
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
+    // Runtime/canvas UI draw submission is owned by the Vulkan scene/UI pass.
 }
-
-
-
-
-
-
-
-// =============================================================
-// Canvas UI
-// =============================================================
-
-
-
 
 bool UIRenderer::InitializeFontAtlas()
 {
@@ -409,17 +211,16 @@ bool UIRenderer::InitializeFontAtlas()
     for (int i = 0; i < FontAtlasWidth * FontAtlasHeight; ++i)
         rgba[i * 4 + 3] = bitmap[i];
 
-    glGenTextures(1, &m_FontTexture);
-    glBindTexture(GL_TEXTURE_2D, m_FontTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA8,
-        FontAtlasWidth, FontAtlasHeight, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
-    glBindTexture(GL_TEXTURE_2D, 0);
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device) return false;
+    Velcryn::RHI::TextureDesc textureDesc{};
+    textureDesc.width = FontAtlasWidth;
+    textureDesc.height = FontAtlasHeight;
+    textureDesc.format = Velcryn::RHI::TextureFormat::RGBA8_UNorm;
+    textureDesc.usage = Velcryn::RHI::TextureUsage::Sampled | Velcryn::RHI::TextureUsage::TransferDestination;
+    textureDesc.debugName = "UIFontAtlas";
+    m_FontTexture = device->CreateTexture(textureDesc, rgba.data(), rgba.size());
+    if (!m_FontTexture) return false;
 
     for (int i = 0; i < 95; ++i)
     {
