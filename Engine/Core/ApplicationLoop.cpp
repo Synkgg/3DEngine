@@ -595,8 +595,10 @@ void Application::Run()
 
             if (!mesh->modelPath.empty())
             {
-                const std::string resolved=m_ProjectManager.ResolveAssetPath(mesh->modelPath);ModelAsset* asset=m_Renderer.GetModelAsset(resolved);
-                if(asset&&asset->IsSkeletal()&&!asset->animations.empty())m_Renderer.DrawAnimatedShadowModel(shadowTransform,resolved,(std::size_t)std::max(mesh->animationClip,0),mesh->animationTime,mesh->animationLoop);else m_Renderer.DrawShadowModel(shadowTransform,resolved);
+                const std::string resolved=m_ProjectManager.ResolveAssetPath(mesh->modelPath);
+                ModelAsset* asset=m_Renderer.GetModelAsset(resolved);
+                if(asset&&asset->IsSkeletal()&&!asset->animations.empty())m_Renderer.DrawAnimatedShadowModel(shadowTransform,resolved,(std::size_t)std::max(mesh->animationClip,0),mesh->animationTime,mesh->animationLoop);
+                else m_Renderer.DrawShadowModel(shadowTransform,resolved);
             }
             else
                 m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
@@ -698,7 +700,8 @@ void Application::Run()
 
                 if (!mesh->modelPath.empty())
                 {
-                    const std::string resolvedModel=m_ProjectManager.ResolveAssetPath(mesh->modelPath);ModelAsset* modelAsset=m_Renderer.GetModelAsset(resolvedModel);
+                    const std::string resolvedModel=m_ProjectManager.ResolveAssetPath(mesh->modelPath);
+                    ModelAsset* modelAsset=m_Renderer.GetModelAsset(resolvedModel);
                     if(modelAsset&&modelAsset->IsSkeletal()&&!modelAsset->animations.empty())
                     {
                         if(mesh->animationPlaying)mesh->animationTime+=m_Time.GetDeltaTime()*mesh->animationSpeed;
