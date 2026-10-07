@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(3DEngine)
+project(VelcrynEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -165,7 +165,7 @@ source_group(
 # Main executable
 #
 add_executable(
-    3DEngine
+    VelcrynEditor
 
     ${ENGINE_SOURCES}
     ${INTER_FONT_CPP}
@@ -200,7 +200,7 @@ add_executable(
 # Include directories
 #
 target_include_directories(
-    3DEngine
+    VelcrynEditor
     PRIVATE
 
     vendor/glad/include
@@ -218,7 +218,7 @@ target_include_directories(
 # Link libraries
 #
 target_link_libraries(
-    3DEngine
+    VelcrynEditor
     PRIVATE
 
     SDL3::SDL3-static
@@ -230,7 +230,7 @@ target_link_libraries(
 # ImGui / build configuration
 #
 target_compile_definitions(
-    3DEngine
+    VelcrynEditor
     PRIVATE
 
     IMGUI_IMPL_OPENGL_LOADER_GLAD2
@@ -242,7 +242,7 @@ target_compile_definitions(
 # Link the Microsoft C/C++ runtime statically as well, so the portable
 # package does not depend on the VC runtime DLLs being installed beside it.
 if (MSVC)
-    set_property(TARGET 3DEngine PROPERTY
+    set_property(TARGET VelcrynEditor PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     set_property(TARGET lua54 PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -253,7 +253,7 @@ if (MSVC)
 
 
     target_compile_options(
-        3DEngine
+        VelcrynEditor
         PRIVATE
         $<$<CONFIG:Debug>:/Od;/Zi>
         $<$<CONFIG:Release>:/O2>
@@ -264,7 +264,7 @@ if (MSVC)
     # from object files. The engine intentionally uses the static MSVC runtime,
     # so link the matching runtime libraries explicitly for a standalone EXE.
     target_link_libraries(
-        3DEngine
+        VelcrynEditor
         PRIVATE
         $<$<CONFIG:Debug>:libcmtd;libcpmtd;libvcruntimed;libucrtd>
         $<$<NOT:$<CONFIG:Debug>>:libcmt;libcpmt;libvcruntime;libucrt>
@@ -276,7 +276,7 @@ endif()
 #
 if (WIN32)
     target_link_libraries(
-        3DEngine
+        VelcrynEditor
         PRIVATE
 
         ole32
@@ -290,7 +290,7 @@ endif()
 #
 #if (WIN32 AND MSVC)
 #    target_link_options(
-#        3DEngine
+#        VelcrynEditor
 #        PRIVATE
 #        "/SUBSYSTEM:WINDOWS"
 #        "/ENTRY:mainCRTStartup"
@@ -305,7 +305,7 @@ endif()
 # Release, while also copying Assets beside the executable for direct launches.
 #
 set_target_properties(
-    3DEngine
+    VelcrynEditor
     PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
@@ -314,7 +314,7 @@ set_target_properties(
 # project-owned runtime DLL needs to be copied beside the executable.
 
 # Make the engine executable the startup target for Visual Studio generators.
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3DEngine)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VelcrynEditor)
 
 #
 # Portable distribution
@@ -327,7 +327,7 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3
 # Produces a self-contained editor executable plus external project folders:
 #
 #   portable/
-#     3DEngine.exe
+#     VelcrynEditor.exe
 #     Projects/
 #       <ProjectName>/
 #
@@ -340,12 +340,12 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PORTABLE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PORTABLE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E copy
-            "$<TARGET_FILE:3DEngine>"
-            "${PORTABLE_DIR}/3DEngine.exe"
+            "$<TARGET_FILE:VelcrynEditor>"
+            "${PORTABLE_DIR}/VelcrynEditor.exe"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_CURRENT_SOURCE_DIR}/Projects"
             "${PORTABLE_DIR}/Projects"
-    DEPENDS 3DEngine
-    COMMENT "Creating portable 3DEngine.exe + Projects package"
+    DEPENDS VelcrynEditor
+    COMMENT "Creating portable Velcryn Editor + Projects package"
     VERBATIM
 )
