@@ -2152,7 +2152,7 @@ bool UIEditor::RestoreCanvas(UICanvas& canvas,const std::string& snapshot)
     const std::filesystem::path temp=std::filesystem::temp_directory_path()/"engine_ui_editor_history.ui";
     { std::ofstream out(temp,std::ios::binary|std::ios::trunc); out<<snapshot; }
     m_SelectedWidget=nullptr; m_Dragging=false; m_Resizing=false;
-    return UISerializer::Load(canvas,temp.string());
+    return UISerializer::Load(canvas,temp.string(),m_UIAssetPath);
 }
 
 void UIEditor::PushHistory(UICanvas& canvas)
