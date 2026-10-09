@@ -167,7 +167,7 @@ function OnPracticeClicked()
 end
 function OnHostClicked()
     joining=false
-    if Network.Host(7777,2) then
+    if Network.Host(7777,2,"BREAKBULK / PRIVATE DUEL") then
         Input.SetCursorVisible(false)
         Scene.Load("Assets/Scenes/Arena.scene")
     else UI.SetText("NetworkStatus",Network.GetLastError()) end
