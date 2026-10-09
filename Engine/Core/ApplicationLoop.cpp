@@ -245,7 +245,7 @@ void Application::Run()
                 if (ImGui::Button("Browse..."))
                 {
                     std::string folder;
-                    if (FileDialog::SelectFolder(folder))
+                    if (FileDialog::SelectFolder(folder, L"Choose Game Export Destination"))
                         std::snprintf(exportParent, sizeof(exportParent), "%s", folder.c_str());
                 }
                 ImGui::TextUnformatted("New package folder name");
