@@ -1,5 +1,8 @@
+local Profiles = require("Scripts.Weapons.LoadoutProfiles")
 local joining=false
 local loadoutSlot="primary"
+local loadoutIndex=1
+local selectedCategory="rifle"
 local pendingScreen=nil
 local menuStatus=""
 local loadoutPrimary="rifle"
@@ -54,11 +57,8 @@ local function previewWeapon(id)
 end
 
 local function restoreLoadout()
-    local primary=Preferences.LoadString("breakbulk_primary","rifle")
-    local secondary=Preferences.LoadString("breakbulk_secondary","pistol")
-    loadoutPrimary=valid[primary] and primary or "rifle"
-    loadoutSecondary=valid[secondary] and secondary or "pistol"
-    if loadoutPrimary==loadoutSecondary then loadoutSecondary=loadoutPrimary=="pistol" and "rifle" or "pistol" end
+    loadoutIndex,loadoutPrimary,loadoutSecondary=Profiles.GetActive()
+    selectedCategory=loadoutPrimary
 end
 local function refreshLoadout()
     local selectedID=loadoutSlot=="primary" and loadoutPrimary or loadoutSecondary
@@ -79,7 +79,17 @@ local function refreshLoadout()
         UI.SetText(id.."Status",selected and "SELECTED" or (equipped and "EQUIPPED" or "AVAILABLE"))
         UI.SetColor(id.."Status",selected and .96 or .52,selected and .72 or .59,selected and .32 or .62,1)
     end
-    previewWeapon(selectedID)
+    for i=1,Profiles.count do
+        local selected=i==loadoutIndex
+        UI.SetColor("Profile"..i.."Plate",selected and .62 or .11,selected and .41 or .14,selected and .17 or .15,1)
+        UI.SetText("Profile"..i.."ButtonLabel",(selected and "> " or "")..string.format("%02d",i))
+    end
+    for _,id in ipairs(gunOrder) do
+        local selected=id==selectedCategory
+        UI.SetColor("Category_"..id.."_Plate",selected and .55 or .10,selected and .38 or .13,selected and .19 or .14,1)
+        UI.SetVisible("WeaponCategory_"..id,selected)
+    end
+    previewWeapon(selectedCategory)
 end
 
 local function openLoadout()
@@ -95,8 +105,25 @@ local function selectGun(id)
         if id==loadoutPrimary then loadoutPrimary=loadoutSecondary end
         loadoutSecondary=id
     end
+    selectedCategory=id
     refreshLoadout()
 end
+local function chooseProfile(index)
+    -- Switching presets keeps edits to the previous slot.
+    Profiles.Save(loadoutIndex,loadoutPrimary,loadoutSecondary)
+    Profiles.Select(index)
+    restoreLoadout()
+    refreshLoadout()
+end
+function OnProfile1Clicked() chooseProfile(1) end
+function OnProfile2Clicked() chooseProfile(2) end
+function OnProfile3Clicked() chooseProfile(3) end
+function OnProfile4Clicked() chooseProfile(4) end
+function OnProfile5Clicked() chooseProfile(5) end
+function OnCategoryRifle() selectedCategory="rifle";refreshLoadout() end
+function OnCategorySMG() selectedCategory="smg";refreshLoadout() end
+function OnCategoryShotgun() selectedCategory="shotgun";refreshLoadout() end
+function OnCategoryPistol() selectedCategory="pistol";refreshLoadout() end
 function OnLoadoutClicked() openLoadout() end
 function OnPrimarySlotClicked() loadoutSlot="primary";refreshLoadout() end
 function OnSecondarySlotClicked() loadoutSlot="secondary";refreshLoadout() end
@@ -105,10 +132,10 @@ function OnRifleSelected() selectGun("rifle") end
 function OnShotgunSelected() selectGun("shotgun") end
 function OnSMGSelected() selectGun("smg") end
 function OnLoadoutSaved()
-    Preferences.SaveString("breakbulk_primary",loadoutPrimary)
-    Preferences.SaveString("breakbulk_secondary",loadoutSecondary)
+    Profiles.Save(loadoutIndex,loadoutPrimary,loadoutSecondary)
+    Profiles.Select(loadoutIndex)
     restoreLoadout()
-    menuStatus="LOADOUT SAVED / "..guns[loadoutPrimary].name.." + "..guns[loadoutSecondary].name
+    menuStatus="CUSTOM "..loadoutIndex.." SAVED / "..guns[loadoutPrimary].name.." + "..guns[loadoutSecondary].name
     pendingScreen="main"
 end
 function OnLoadoutBack()
