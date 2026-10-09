@@ -1,5 +1,7 @@
 local joining=false
 local loadoutSlot="primary"
+local pendingScreen=nil
+local menuStatus=""
 local loadoutPrimary="rifle"
 local loadoutSecondary="pistol"
 local valid={pistol=true,rifle=true,shotgun=true,smg=true}
@@ -20,8 +22,8 @@ local function refreshLoadout()
     UI.SetText("PrimaryValue",guns[loadoutPrimary].name)
     UI.SetText("SecondaryValue",guns[loadoutSecondary].name)
     UI.SetText("SlotHint",loadoutSlot=="primary" and "SELECT YOUR PRIMARY WEAPON" or "SELECT YOUR SECONDARY WEAPON")
-    UI.SetText("PrimaryTabText",(loadoutSlot=="primary" and "> " or "").."01  PRIMARY")
-    UI.SetText("SecondaryTabText",(loadoutSlot=="secondary" and "> " or "").."02  SECONDARY")
+    UI.SetText("PrimaryTabLabel",(loadoutSlot=="primary" and "> " or "").."01  PRIMARY")
+    UI.SetText("SecondaryTabLabel",(loadoutSlot=="secondary" and "> " or "").."02  SECONDARY")
     for _,id in ipairs({"pistol","rifle","shotgun","smg"}) do
         local equipped=loadoutPrimary==id or loadoutSecondary==id
         local selected=(loadoutSlot=="primary" and loadoutPrimary==id) or (loadoutSlot=="secondary" and loadoutSecondary==id)
@@ -31,8 +33,8 @@ local function refreshLoadout()
 end
 local function openLoadout()
     loadoutSlot="primary"
-    UI.Load("Assets/UI/Loadout.ui")
-    refreshLoadout()
+    restoreLoadout()
+    pendingScreen="loadout"
 end
 local function selectGun(id)
     if loadoutSlot=="primary" then
@@ -55,17 +57,18 @@ function OnLoadoutSaved()
     Preferences.SaveString("breakbulk_primary",loadoutPrimary)
     Preferences.SaveString("breakbulk_secondary",loadoutSecondary)
     restoreLoadout()
-    UI.Load("Assets/UI/MainMenu.ui")
-    UI.SetText("NetworkStatus","LOADOUT SAVED / "..guns[loadoutPrimary].name.." + "..guns[loadoutSecondary].name)
+    menuStatus="LOADOUT SAVED / "..guns[loadoutPrimary].name.." + "..guns[loadoutSecondary].name
+    pendingScreen="main"
 end
 function OnLoadoutBack()
-    UI.Load("Assets/UI/MainMenu.ui")
-    UI.SetText("NetworkStatus","LOADOUT CHANGES NOT SAVED")
     restoreLoadout()
+    menuStatus="LOADOUT CHANGES NOT SAVED"
+    pendingScreen="main"
 end
 
 local joinElapsed=0
 function OnCreate()
+    restoreLoadout()
     UI.Load("Assets/UI/MainMenu.ui")
     Input.SetCursorVisible(true)
     Scene.SetPaused(false)
@@ -94,6 +97,17 @@ function OnJoinClicked()
     else UI.SetText("NetworkStatus",Network.GetLastError()) end
 end
 function OnUpdate(dt)
+    if pendingScreen then
+        local nextScreen=pendingScreen
+        pendingScreen=nil
+        if nextScreen=="loadout" then
+            UI.Load("Assets/UI/Loadout.ui")
+            refreshLoadout()
+        else
+            UI.Load("Assets/UI/MainMenu.ui")
+            UI.SetText("NetworkStatus",menuStatus)
+        end
+    end
     if not joining then return end
     joinElapsed=joinElapsed+dt
     if Network.IsReady() and Network.IsConnected() then
