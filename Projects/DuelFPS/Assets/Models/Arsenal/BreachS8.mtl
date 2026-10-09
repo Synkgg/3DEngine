@@ -1,0 +1,64 @@
+# Original Breakbulk weapon palette: graphite / parkerized steel / ceramic accents
+newmtl receiver
+Kd 0.17 0.22 0.245
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
+newmtl polymer
+Kd 0.09 0.11 0.125
+Ka 0.06 0.06 0.06
+Ks 0.09 0.09 0.09
+Ns 18
+d 1
+illum 2
+newmtl steel
+Kd 0.38 0.44 0.47
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
+newmtl accent
+Kd 0.16 0.54 0.57
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
+newmtl marking
+Kd 0.78 0.82 0.76
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
+newmtl sight
+Kd 0.16 0.85 0.72
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
+newmtl muzzle
+Kd 0.055 0.065 0.072
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
+newmtl grip
+Kd 0.12 0.145 0.155
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
+newmtl gold
+Kd 0.88 0.59 0.22
+Ka 0.06 0.06 0.06
+Ks 0.48 0.48 0.48
+Ns 110
+d 1
+illum 2
