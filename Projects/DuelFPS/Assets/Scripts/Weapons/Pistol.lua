@@ -1,5 +1,5 @@
 return {
-    id="pistol", displayName="MAKO P12 / SIDEARM",
+    id="pistol", shortName="MAKO", displayName="MAKO P12 / SIDEARM",
     viewmodelPrefab="Assets/Prefabs/PistolViewmodel.prefab",
     fireSound="Assets/Audio/Breakbulk/sidearm.wav",
     magSize=12, startingReserve=48, practiceReserve=999,
