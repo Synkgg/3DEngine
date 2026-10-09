@@ -1,6 +1,13 @@
 local WeaponSystem = require("Scripts.Weapons.WeaponSystem")
 local Pistol = require("Scripts.Weapons.Pistol")
 local Rifle = require("Scripts.Weapons.Rifle")
+local Shotgun = require("Scripts.Weapons.Shotgun")
+local SMG = require("Scripts.Weapons.SMG")
+local ShotPattern = require("Scripts.Weapons.ShotPattern")
+local gunDefs={pistol=Pistol,rifle=Rifle,shotgun=Shotgun,smg=SMG}
+local loadoutPrimary,loadoutSecondary="rifle","pistol"
+local loadoutSent=false
+local playerLoadouts={}
 
 local walkSpeed, sprintSpeed = 5.0, 8.0
 local sensitivity = 0.01
@@ -15,7 +22,7 @@ local WARMUP_DURATION, ROUND_END_DURATION = 3.0, 3.0
 local CHANNEL_COMBAT = 20
 local WAITING, WARMUP, ROUND_ACTIVE, ROUND_END, MATCH_END = 0, 1, 2, 3, 4
 
-local hitmarkerTimer, muzzleTimer = 0.0, 0.0
+local hitmarkerTimer = 0.0
 local weapons = nil
 local health, score = {[1]=MAX_HEALTH,[2]=MAX_HEALTH}, {[1]=0,[2]=0}
 local matchState, stateTimer, roundNumber = WAITING, 0.0, 0
@@ -101,7 +108,7 @@ local function beginWarmup()
     stateTimer=WARMUP_DURATION
     activeIntroTimer=0.0
     if weapons then weapons:ResetAmmo(false) end
-    hitmarkerTimer,muzzleTimer=0.0,0.0
+    hitmarkerTimer=0.0
     spawnRoundPlayers()
     broadcastState()
 end
@@ -161,8 +168,10 @@ local function validateShot(shooterID,sequence,round,weaponID,ox,oy,oz,dx,dy,dz)
     if shooterID~=1 and shooterID~=2 then return end
     if sequence<=(lastShotSequence[shooterID] or 0) then return end
     lastShotSequence[shooterID]=sequence
-    local def=weaponID=="rifle" and Rifle or weaponID=="pistol" and Pistol or nil
-    if not def or elapsed-(lastShotTime[shooterID] or -100)<def.fireInterval*.8 then return end
+    local def=gunDefs[weaponID]
+    local equipped=playerLoadouts[shooterID]
+    if not def or not equipped or (weaponID~=equipped[1] and weaponID~=equipped[2]) then return false end
+    if elapsed-(lastShotTime[shooterID] or -100)<def.fireInterval*.8 then return false end
     if (health[shooterID] or 0)<=0 then return end
     local shooter=shooterID==Controller.GetLocalID() and self.id or remotePawns[shooterID]
     if not shooter then return end
@@ -171,9 +180,16 @@ local function validateShot(shooterID,sequence,round,weaponID,ox,oy,oz,dx,dy,dz)
     local length=dx*dx+dy*dy+dz*dz
     if length<.9 or length>1.1 then return end
     lastShotTime[shooterID]=elapsed
-    local hit=Physics.Raycast(ox,oy,oz,dx,dy,dz,def.range,shooter)
-    local target=hit.entityID==self.id and Controller.GetLocalID() or remotePlayersByEntity[hit.entityID]
-    if hit.hit and target then applyHostShot(shooterID,target,def.damage) end
+    local damageByTarget={}
+    for _,dir in ipairs(ShotPattern.Directions(dx,dy,dz,def.pellets or 1,def.spread or 0)) do
+        local hit=Physics.Raycast(ox,oy,oz,dir.x,dir.y,dir.z,def.range,shooter)
+        local target=hit.entityID==self.id and Controller.GetLocalID() or remotePlayersByEntity[hit.entityID]
+        if hit.hit and target and target~=shooterID then
+            damageByTarget[target]=(damageByTarget[target] or 0)+def.damage
+        end
+    end
+    for target,damage in pairs(damageByTarget) do applyHostShot(shooterID,target,damage) end
+    return true
 end
 
 local function processCombatMessages()
@@ -187,8 +203,25 @@ local function processCombatMessages()
                     numbers[i]=tonumber(parts[i]);if not numbers[i] or numbers[i]~=numbers[i] or math.abs(numbers[i])>1000000 then valid=false end
                 end
                 if valid then
-                    validateShot(message.senderID,numbers[2],numbers[3],parts[4],numbers[5],numbers[6],numbers[7],numbers[8],numbers[9],numbers[10])
-                    Network.SendMessage(CHANNEL_COMBAT,"ACK:"..message.senderID..":"..numbers[2])
+                    local accepted=validateShot(message.senderID,numbers[2],numbers[3],parts[4],numbers[5],numbers[6],numbers[7],numbers[8],numbers[9],numbers[10])
+                    if accepted then
+                        Network.SendMessage(CHANNEL_COMBAT,"FX:"..message.senderID..":"..parts[4]..":"..
+                            parts[5]..":"..parts[6]..":"..parts[7]..":"..parts[8]..":"..parts[9]..":"..parts[10])
+                        Network.SendMessage(CHANNEL_COMBAT,"ACK:"..message.senderID..":"..numbers[2])
+                    end
+                end
+            elseif parts[1]=="LOADOUT" and Network.IsHost() and message.senderID==2 and #parts==3 then
+                if gunDefs[parts[2]] and gunDefs[parts[3]] and parts[2]~=parts[3] then
+                    playerLoadouts[2]={parts[2],parts[3]}
+                end
+            elseif parts[1]=="FX" and not Network.IsHost() and message.senderID==1 and #parts==9 then
+                local shooter=tonumber(parts[2])
+                if shooter and shooter~=Controller.GetLocalID() and gunDefs[parts[3]] and weapons then
+                    local x,y,z=tonumber(parts[4]),tonumber(parts[5]),tonumber(parts[6])
+                    local dx,dy,dz=tonumber(parts[7]),tonumber(parts[8]),tonumber(parts[9])
+                    if x and y and z and dx and dy and dz then
+                        weapons:SpawnRemoteShot(remotePawns[shooter] or 0,parts[3],x,y,z,dx,dy,dz)
+                    end
                 end
             elseif parts[1]=="ACK" and not Network.IsHost() and message.senderID==1 then
                 if tonumber(parts[2])==Controller.GetLocalID() then pendingShots[tonumber(parts[3])]=nil end
@@ -300,39 +333,33 @@ end
 
 local function handleWeaponShot(result)
     if not result then return end
-    muzzleTimer=0.055
     if not practiceMode then
         shotSequence=shotSequence+1
         local def=weapons:GetDefinition()
         local payload=string.format("SHOT:%d:%d:%s:%.3f:%.3f:%.3f:%.4f:%.4f:%.4f",shotSequence,roundNumber,def.id,result.originX,result.originY,result.originZ,result.forwardX,result.forwardY,result.forwardZ)
-        if Network.IsHost() then validateShot(Controller.GetLocalID(),shotSequence,roundNumber,def.id,result.originX,result.originY,result.originZ,result.forwardX,result.forwardY,result.forwardZ)
+        if Network.IsHost() then
+            if validateShot(Controller.GetLocalID(),shotSequence,roundNumber,def.id,result.originX,result.originY,result.originZ,result.forwardX,result.forwardY,result.forwardZ) then
+                Network.SendMessage(CHANNEL_COMBAT,"FX:"..Controller.GetLocalID()..":"..def.id..":"..
+                    string.format("%.3f:%.3f:%.3f:%.4f:%.4f:%.4f",result.originX,result.originY,result.originZ,result.forwardX,result.forwardY,result.forwardZ))
+            end
         else Network.SendMessage(CHANNEL_COMBAT,payload);pendingShots[shotSequence]={payload=payload,age=0,retry=0} end
     end
     if result.hit then
-        Debug.DrawLine(result.originX,result.originY,result.originZ,result.x,result.y,result.z,0.2,1.0,0.2,0.08)
-        local targetID=remotePlayersByEntity[result.entityID]
-        if practiceMode then
-            local target=false
-            for _,name in ipairs({"Target_10m","Target_15m","Target_20m","Target_25m_Left","Target_25m_Right","Target_35m"}) do
-                local e=Scene.FindEntity(name)
-                if e:IsValid() and e.id==result.entityID then target=true break end
-            end
-            if target then
-                practiceHits=practiceHits+1
-                hitmarkerTimer=0.12
-                Audio.PlaySFX("Assets/Audio/Breakbulk/hit.wav",0.7)
-            end
-        elseif targetID then
-            hitmarkerTimer=0.12
-            Audio.PlaySFX("Assets/Audio/Breakbulk/hit.wav",0.7)
-            local localID=Controller.GetLocalID()
-
+        local practiceTarget=false
+        local enemyHit=false
+        for _,pellet in ipairs(result.hits or {}) do
+            if practiceMode then
+                for _,name in ipairs({"Target_10m","Target_15m","Target_20m","Target_25m_Left","Target_25m_Right","Target_35m"}) do
+                    local e=Scene.FindEntity(name)
+                    if e:IsValid() and e.id==pellet.entityID then practiceTarget=true break end
+                end
+            elseif remotePlayersByEntity[pellet.entityID] then enemyHit=true end
         end
-    else
-        Debug.DrawLine(result.originX,result.originY,result.originZ,
-            result.originX+result.forwardX*result.range,
-            result.originY+result.forwardY*result.range,
-            result.originZ+result.forwardZ*result.range,1.0,0.2,0.2,0.08)
+        if practiceTarget or enemyHit then
+            if practiceTarget then practiceHits=practiceHits+1 end
+            hitmarkerTimer=.12
+            Audio.PlaySFX("Assets/Audio/Breakbulk/hit.wav",.7)
+        end
     end
 end
 
@@ -377,20 +404,20 @@ local function updateHUD()
     UI.SetText("RoundClock",practiceMode and "DRILL" or string.format("%02d:%02d",math.floor(stateTimer/60),math.ceil(stateTimer)%60))
     local weaponDef=weapons and weapons:GetDefinition() or nil
     local equipped=weaponDef and weaponDef.id or ""
-    local hasPistol=weapons and weapons:Has("pistol")
-    local hasRifle=weapons and weapons:Has("rifle")
+    local primary=gunDefs[loadoutPrimary]
+    local secondary=gunDefs[loadoutSecondary]
     UI.SetText("AmmoLabel",weaponDef and weaponDef.displayName or "UNARMED")
     UI.SetText("AmmoText",weaponDef and (tostring(ammo).."  /  "..tostring(reserve)) or "--  /  --")
-    UI.SetText("Slot1Text",(equipped=="pistol" and "> " or "").."1  MAKO")
-    UI.SetText("Slot2Text",(equipped=="rifle" and "> " or "").."2  KESTREL")
-    UI.SetColor("Slot1Plate",equipped=="pistol" and 0.30 or 0.08,equipped=="pistol" and 0.11 or 0.08,equipped=="pistol" and 0.025 or 0.09,0.96)
-    UI.SetColor("Slot2Plate",equipped=="rifle" and 0.30 or 0.08,equipped=="rifle" and 0.11 or 0.08,equipped=="rifle" and 0.025 or 0.09,0.96)
-    UI.SetColor("Slot1Text",hasPistol and 1.0 or 0.35,hasPistol and 0.86 or 0.35,hasPistol and 0.68 or 0.35,1.0)
-    UI.SetColor("Slot2Text",hasRifle and 1.0 or 0.35,hasRifle and 0.86 or 0.35,hasRifle and 0.68 or 0.35,1.0)
+    UI.SetText("Slot1Text",(equipped==loadoutPrimary and "> " or "").."1  "..(primary.shortName or loadoutPrimary:upper()))
+    UI.SetText("Slot2Text",(equipped==loadoutSecondary and "> " or "").."2  "..(secondary.shortName or loadoutSecondary:upper()))
+    UI.SetColor("Slot1Plate",equipped==loadoutPrimary and 0.30 or 0.08,equipped==loadoutPrimary and 0.11 or 0.08,equipped==loadoutPrimary and 0.025 or 0.09,0.96)
+    UI.SetColor("Slot2Plate",equipped==loadoutSecondary and 0.30 or 0.08,equipped==loadoutSecondary and 0.11 or 0.08,equipped==loadoutSecondary and 0.025 or 0.09,0.96)
+    UI.SetColor("Slot1Text",1,0.86,0.68,1)
+    UI.SetColor("Slot2Text",1,0.86,0.68,1)
     UI.SetVisible("ReloadText",weapons and weapons:IsReloading() or false)
     if weapons and weapons:IsReloading() then UI.SetText("ReloadText","RELOADING") end
     UI.SetVisible("Hitmarker",hitmarkerTimer>0)
-    UI.SetVisible("MuzzleFlash",muzzleTimer>0)
+    -- Muzzle flash is a 3D world effect spawned by WeaponVFX, not a HUD widget.
 
     local showWarmup=matchState==WARMUP
     local showRoundResult=matchState==ROUND_END
@@ -459,8 +486,16 @@ function OnCreate()
     })
     weapons:Register(Pistol)
     weapons:Register(Rifle)
-    weapons:Give("pistol",Pistol.startingReserve)
-    weapons:Give("rifle",Rifle.startingReserve)
+    weapons:Register(Shotgun)
+    weapons:Register(SMG)
+    local primary=Preferences.LoadString("breakbulk_primary","rifle")
+    local secondary=Preferences.LoadString("breakbulk_secondary","pistol")
+    loadoutPrimary=gunDefs[primary] and primary or "rifle"
+    loadoutSecondary=gunDefs[secondary] and secondary or "pistol"
+    if loadoutPrimary==loadoutSecondary then loadoutSecondary=loadoutPrimary=="pistol" and "rifle" or "pistol" end
+    weapons:SetLoadout(loadoutPrimary,loadoutSecondary,practiceMode)
+    playerLoadouts[Controller.GetLocalID()]={loadoutPrimary,loadoutSecondary}
+    loadoutSent=false
     State.SetNumber("duelfps_weapon_pickup",0)
     Input.SetCursorVisible(false)
     if practiceMode then
@@ -523,7 +558,13 @@ function OnUpdate(dt)
     end
     activeIntroTimer=math.max(0,activeIntroTimer-dt)
     hitmarkerTimer=math.max(0,hitmarkerTimer-dt)
-    muzzleTimer=math.max(0,muzzleTimer-dt)
+    if not practiceMode and Network.IsReady() and not loadoutSent then
+        loadoutSent=true
+        playerLoadouts[Controller.GetLocalID()]={loadoutPrimary,loadoutSecondary}
+        if not Network.IsHost() then
+            Network.SendMessage(CHANNEL_COMBAT,"LOADOUT:"..loadoutPrimary..":"..loadoutSecondary)
+        end
+    end
 
     if not practiceMode and not Controller.IsLocallyControlled(self.id) then return end
 
@@ -586,12 +627,15 @@ function OnUpdate(dt)
     local sprint=Input.IsKeyDown("Left Shift")
     local speed=weapons and weapons.aiming and 2.7 or (sprint and sprintSpeed or walkSpeed)
     stepTimer=stepTimer-dt
-    if length>0 and stepTimer<=0 then Audio.PlaySFX("Assets/Audio/Breakbulk/step.wav",.25);stepTimer=sprint and .29 or .43 end
+    if length>0 and stepTimer<=0 and CharacterController.IsGrounded() then
+        Audio.PlayFootstep(practiceMode and "concrete" or "metal",sprint)
+        stepTimer=sprint and .29 or .43
+    end
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
-    if Input.IsKeyPressed("1") and weapons then weapons:Equip("pistol") end
-    if Input.IsKeyPressed("2") and weapons then weapons:Equip("rifle") end
+    if Input.IsKeyPressed("1") and weapons then weapons:Equip(loadoutPrimary) end
+    if Input.IsKeyPressed("2") and weapons then weapons:Equip(loadoutSecondary) end
     if Input.IsKeyPressed("R") and weapons and weapons:Reload() then Audio.PlaySFX("Assets/Audio/Breakbulk/reload.wav",.5) end
     if Input.IsMouseButtonDown(1) and weapons then
         handleWeaponShot(weapons:Fire(self.id,playerCamera))
