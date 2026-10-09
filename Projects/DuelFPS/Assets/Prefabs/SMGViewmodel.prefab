@@ -24,7 +24,7 @@ Entity 2
 Name VECTOR K9
 Position 0 0 0
 Rotation 0 1.5708 0
-Scale 0.32 0.32 0.32
+Scale 0.19 0.19 0.19
 Parent 1
 PrefabSource ""
 HierarchyGroup 0
@@ -42,7 +42,7 @@ Collider 0
 Scripts 0
 Entity 3
 Name MuzzleSocket
-Position 2.13 0.63 0
+Position 2.71 0.81 0
 Rotation 0 -0 0
 Scale 1 1 1
 Parent 2
