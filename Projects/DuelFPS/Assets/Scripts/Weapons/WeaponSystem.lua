@@ -216,7 +216,9 @@ function WeaponSystem:Fire(ownerEntity, cameraEntity)
     end
     self.fx:Emit(c.x,c.y,c.z,f.x,f.y,f.z,def.range,
         first~=nil,first and first.x or 0,first and first.y or 0,first and first.z or 0,
-        def.muzzleSide,def.muzzleDistance)
+        self.aiming and def.adsSide or def.hipSide,
+        (self.aiming and def.adsForward or def.hipForward)+(def.muzzleLocalDistance or .6),
+        (self.aiming and def.adsDown or def.hipDown)+(def.muzzleLocalY or 0))
 
     return {
         hit=first~=nil,
