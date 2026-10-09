@@ -64,7 +64,7 @@ endif()
 
 # Preflight must not create missing asset directories in the source project.
 file(WRITE "${SOURCE}/MissingAssets.project"
-    "Version 1\\nName \\"Broken\\"\\nAssetDirectory \\"MissingAssets\\"\\nStartupScene \\"MissingAssets/Scenes/Main.scene\\"\\nSettings \\"ProjectSettings.cfg\\"\\n")
+    "Version 1\nName \"Broken\"\nAssetDirectory \"MissingAssets\"\nStartupScene \"MissingAssets/Scenes/Main.scene\"\nSettings \"ProjectSettings.cfg\"\n")
 execute_process(
     COMMAND "${EDITOR}" --export-game "${SOURCE}/MissingAssets.project" "${DEST}/ShouldNotExist"
     RESULT_VARIABLE MISSING_RESULT TIMEOUT 45)
