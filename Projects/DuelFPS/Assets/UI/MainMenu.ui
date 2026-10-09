@@ -56,8 +56,10 @@ ENGINE_UI 10
 0 1 "PlayHint" 1164 339 650 40 0 0 0 0 0 0 0.48 0.58 0.59 1 1 1 0 2 0 0 0 0 0 0 0 1 "Invite a rival or learn the yard solo." 25 0 1
 0 3 "HostButton" 1164 415 652 78 0 0 0 0 0 0 0.91 0.61 0.23 1 1 1 1 5 0 0 0 0 0 0 0 1 0.91 0.61 0.23 1 1 0.76 0.35 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.025 0.035 0.043 1 0.025 0.035 0.043 1 0.9 0.92 0.88 1 0.48 0.58 0.59 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/MainMenu.lua" "OnHostClicked" "" "" "" ""
 1 1 "HostLabel" 24 0 604 78 0 0 0 0 0 0 0.025 0.035 0.043 1 1 1 0 6 0 0 0 0 0 0 0 1 "HOST A DUEL     +" 22 0 1
-0 3 "PracticeButton" 1164 511 652 68 0 0 0 0 0 0 0.075 0.105 0.12 1 1 1 1 5 0 0 0 0 0 0 0 1 0.075 0.105 0.12 1 0.13 0.28 0.3 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.9 0.92 0.88 1 0.9 0.92 0.88 1 0.9 0.92 0.88 1 0.48 0.58 0.59 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/MainMenu.lua" "OnPracticeClicked" "" "" "" ""
-1 1 "PracticeLabel" 24 0 604 68 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 6 0 0 0 0 0 0 0 1 "PRACTICE / EXPLORE TERMINAL" 22 0 1
+0 3 "PracticeButton" 1164 511 316 68 0 0 0 0 0 0 0.075 0.105 0.12 1 1 1 1 5 0 0 0 0 0 0 0 1 0.075 0.105 0.12 1 0.13 0.28 0.3 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.9 0.92 0.88 1 0.9 0.92 0.88 1 0.9 0.92 0.88 1 0.48 0.58 0.59 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/MainMenu.lua" "OnPracticeClicked" "" "" "" ""
+1 1 "PracticeLabel" 12 0 292 68 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 6 0 0 0 0 0 0 0 1 "PRACTICE RANGE" 22 0 1
+0 3 "LoadoutButton" 1498 511 318 68 0 0 0 0 0 0 0.075 0.105 0.12 1 1 1 1 5 0 0 0 0 0 0 0 1 0.075 0.105 0.12 1 0.13 0.28 0.3 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.9 0.92 0.88 1 0.9 0.92 0.88 1 0.9 0.92 0.88 1 0.48 0.58 0.59 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/MainMenu.lua" "OnLoadoutClicked" "" "" "" ""
+1 1 "LoadoutLabel" 14 0 290 68 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 6 0 0 0 0 0 0 0 1 "CUSTOMIZE LOADOUT" 22 0 1
 0 0 "JoinRule" 1164 621 652 2 0 0 0 0 0 0 0.16 0.22 0.24 1 1 1 0 0 0 0 0 0 0 0 0 1
 0 1 "JoinCaption" 1164 651 650 38 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "JOIN A FRIEND" 24 0 1
 0 1 "AddressCaption" 1164 704 650 30 0 0 0 0 0 0 0.48 0.58 0.59 1 1 1 0 2 0 0 0 0 0 0 0 1 "HOST IP ADDRESS" 19 0 1
