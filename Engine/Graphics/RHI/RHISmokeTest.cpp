@@ -61,8 +61,19 @@ namespace
         armory->SetClicked(true);
         for(int i=0;i<10;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
         if(!menuUI.GetRoot()->Find("PrimaryTab") || !menuUI.GetRoot()->Find("shotgunButton") ||
-           !menuUI.GetRoot()->Find("smgButton")) {
-            Logger::Error("BREAKBULK: four-weapon loadout menu failed to open");
+           !menuUI.GetRoot()->Find("smgButton") || !menuUI.GetRoot()->Find("PreviewName") ||
+           !menuUI.GetRoot()->Find("StatDamageSegment10") ||
+           !menuUI.GetRoot()->Find("PreviewGun_shotgun")) {
+            Logger::Error("BREAKBULK: tactical four-weapon loadout UI failed to open");
+            menuRuntime.Stop(menu);return false;
+        }
+        // Exercise the real button->Lua->UI path, not just the asset parser.
+        auto* smgSelect=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("smgButton"));
+        smgSelect->SetClicked(true);
+        for(int i=0;i<3;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
+        auto* preview=dynamic_cast<UIText*>(menuUI.GetRoot()->Find("PreviewName"));
+        if(!preview || preview->GetText()!="VECTOR K9") {
+            Logger::Error("BREAKBULK: loadout selection did not refresh the weapon preview");
             menuRuntime.Stop(menu);return false;
         }
         auto* back=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("BackButton"));
