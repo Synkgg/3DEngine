@@ -2,6 +2,7 @@ local Profiles = require("Scripts.Weapons.LoadoutProfiles")
 local joining=false
 local joinElapsed=0
 local browserOpen=false
+local browserJoinPending=false
 local browserRows={}
 local browserRefreshElapsed=0
 local browserLastSignature=""
@@ -208,12 +209,14 @@ end
 
 function OnBrowseClicked()
     if joining then return end
+    browserJoinPending=false
     browserOpen=true
     pendingScreen="browser"
 end
 
 function OnBrowserRefresh()
     if joining then return end
+    browserJoinPending=false
     browserLastSignature=""
     local started=Network.SearchServers(7777)
     showBrowserRows()
@@ -226,6 +229,7 @@ function OnBrowserBack()
     if joining then return end
     Network.StopServerSearch()
     browserOpen=false
+    browserJoinPending=false
     browserRows={}
     browserLastSignature=""
     menuStatus="READY TO DEPLOY"
@@ -240,6 +244,7 @@ local function joinServer(index)
         UI.SetText("BrowserStatus","MATCH IS FULL. CHOOSE ANOTHER SERVER.")
         return
     end
+    browserJoinPending=true
     if Network.Join(server.address,server.port) then
         joining=true
         joinElapsed=0
@@ -285,7 +290,7 @@ function OnUpdate(dt)
             UI.SetText("NetworkStatus",menuStatus)
         end
     end
-    if browserOpen and not joining then
+    if browserOpen and not joining and not browserJoinPending then
         browserRefreshElapsed=browserRefreshElapsed+dt
         if browserRefreshElapsed>=0.2 then
             browserRefreshElapsed=0
