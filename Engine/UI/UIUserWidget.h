@@ -17,6 +17,12 @@ public:
     const std::string& GetSourcePath() const { return m_SourcePath; }
     void SetSourcePath(const std::string& path) { m_SourcePath = path; }
 
+    // Optional per-instance event target: reuse the same visual asset with
+    // different controller scripts (e.g. lobby vs. in-game loadout).
+    const std::string& GetEventScriptOverride() const { return m_EventScriptOverride; }
+    void SetEventScriptOverride(const std::string& path) { m_EventScriptOverride = path; }
+
 private:
     std::string m_SourcePath;
+    std::string m_EventScriptOverride;
 };
