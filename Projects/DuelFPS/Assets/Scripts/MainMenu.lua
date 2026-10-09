@@ -57,7 +57,7 @@ local function previewWeapon(id)
 end
 
 local function restoreLoadout()
-    loadoutIndex,loadoutPrimary,loadoutSecondary=Profiles.GetActive()
+    loadoutIndex,loadoutPrimary,loadoutSecondary=Profiles.GetActive(Preferences)
     selectedCategory=loadoutPrimary
 end
 local function refreshLoadout()
@@ -111,7 +111,7 @@ local function selectGun(id)
 end
 local function chooseProfile(index)
     -- Switching presets keeps edits to the previous slot.
-    Profiles.Save(loadoutIndex,loadoutPrimary,loadoutSecondary)
+    Profiles.Save(loadoutIndex,loadoutPrimary,loadoutSecondary,Preferences)
     Profiles.Select(index)
     restoreLoadout()
     refreshLoadout()
@@ -133,8 +133,8 @@ function OnRifleSelected() selectGun("rifle") end
 function OnShotgunSelected() selectGun("shotgun") end
 function OnSMGSelected() selectGun("smg") end
 function OnLoadoutSaved()
-    Profiles.Save(loadoutIndex,loadoutPrimary,loadoutSecondary)
-    Profiles.Select(loadoutIndex)
+    Profiles.Save(loadoutIndex,loadoutPrimary,loadoutSecondary,Preferences)
+    Profiles.Select(loadoutIndex,Preferences)
     restoreLoadout()
     menuStatus="CUSTOM "..loadoutIndex.." SAVED / "..guns[loadoutPrimary].name.." + "..guns[loadoutSecondary].name
     pendingScreen="main"
