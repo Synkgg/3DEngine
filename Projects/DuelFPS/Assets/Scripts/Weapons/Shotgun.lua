@@ -1,5 +1,5 @@
 return {
-    id="shotgun", displayName="BREACH S8 / SHOTGUN",
+    id="shotgun", shortName="BREACH", displayName="BREACH S8 / SHOTGUN",
     viewmodelPrefab="Assets/Prefabs/ShotgunViewmodel.prefab",
     fireSound="Assets/Audio/Breakbulk/carbine.wav",
     magSize=8, startingReserve=32, practiceReserve=999,
