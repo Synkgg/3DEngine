@@ -126,6 +126,7 @@ bool RunUIInteractionTests(Renderer& renderer)
     input.ProcessEvent(wheel); input.Update(); input.UpdateMouseState(140,90,0);
     ui.UpdateInput(canvas,input,100,50,640,480);
     check(std::abs(scrollPtr->GetScrollOffset()-110.0f)<0.01f, "mouse wheel scrolls clipped content");
+    input.Update(); // consume wheel once, just as the main loop does
     pointer(140,120,false);
     check(scrolled->IsHovered(), "scrolled child is hit-testable inside viewport");
     check(UISerializer::Save(canvas,"out/build/scrollbox-smoke.ui"), "save scroll box asset");
