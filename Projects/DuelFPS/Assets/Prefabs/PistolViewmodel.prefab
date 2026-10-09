@@ -28,7 +28,7 @@ PrefabSource ""
 Mesh 1 0 "Assets/Models/Arsenal/MakoP12.obj" 0
 Color 1 1 1 1 1
 Texture 0
-Material 1 0.75 0.28 1 0
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0
