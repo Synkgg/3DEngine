@@ -79,7 +79,17 @@ bool NetworkManager::OpenSocket(std::uint16_t port){
  m_LastSend=m_LastReceive=SDL_GetTicks();
  return true;
 }
-bool NetworkManager::Host(std::uint16_t port,std::uint32_t maxPlayers){Disconnect();m_MaxPlayers=std::clamp(maxPlayers,2u,32u);if(!OpenSocket(port))return false;m_Mode=Mode::Host;m_LocalPlayerID=1;m_LastError.clear();Logger::Info("Network: hosting on UDP port "+std::to_string(port)+".");return true;}
+bool NetworkManager::Host(std::uint16_t port,std::uint32_t maxPlayers,const std::string& serverName){
+ Disconnect();
+ m_MaxPlayers=std::clamp(maxPlayers,2u,32u);
+ m_HostName=serverName.substr(0,47);
+ for(char& ch:m_HostName)if(static_cast<unsigned char>(ch)<32)ch=' ';
+ if(m_HostName.empty())m_HostName="Velcryn Server";
+ if(!OpenSocket(port))return false;
+ m_Mode=Mode::Host;m_LocalPlayerID=1;m_LastError.clear();
+ Logger::Info("Network: hosting "+m_HostName+" on UDP port "+std::to_string(m_BoundPort)+".");
+ return true;
+}
 bool NetworkManager::Join(const std::string& address,std::uint16_t port){Disconnect();if(!OpenSocket(0))return false;in_addr a{};if(inet_pton(AF_INET,address.c_str(),&a)!=1){Disconnect();SetError("Join currently requires an IPv4 address.");return false;}m_Server={a.s_addr,port,1};m_Mode=Mode::Client;m_LastError.clear();SendHello();Logger::Info("Network: joining "+address+":"+std::to_string(port)+".");return true;}
 bool NetworkManager::SearchServers(std::uint16_t port)
 {
@@ -227,8 +237,7 @@ void NetworkManager::Update(){
    reply.port=m_BoundPort;
    reply.players=static_cast<std::uint16_t>(GetPlayerCount());
    reply.maxPlayers=static_cast<std::uint16_t>(m_MaxPlayers);
-   const char* title="BREAKBULK DUEL";
-   std::memcpy(reply.name,title,std::strlen(title));
+   std::memcpy(reply.name,m_HostName.data(),m_HostName.size());
    sendto(s,reinterpret_cast<const char*>(&reply),sizeof(reply),0,reinterpret_cast<sockaddr*>(&from),len);
    continue;
   }
