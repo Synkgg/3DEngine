@@ -73,7 +73,11 @@ namespace
         if(!practice){menuRuntime.Stop(menu);return false;}
         practice->SetClicked(true);
         for(int i=0;i<10;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
-        const bool drill=menu.FindEntityByName("PracticeMode").IsValid()&&menuUI.GetRoot()->Find("AmmoText")&&menu.FindEntityByName("KESTREL AR4 Viewmodel").IsValid();
+        const bool hasWeapon=menu.FindEntityByName("KESTREL AR4 Viewmodel").IsValid() ||
+            menu.FindEntityByName("MAKO P12 Viewmodel").IsValid() ||
+            menu.FindEntityByName("BREACH S8 Viewmodel").IsValid() ||
+            menu.FindEntityByName("VECTOR K9 Viewmodel").IsValid();
+        const bool drill=menu.FindEntityByName("PracticeMode").IsValid()&&menuUI.GetRoot()->Find("AmmoText")&&hasWeapon;
         menuRuntime.Stop(menu);
         if(!drill){Logger::Error("BREAKBULK: actual menu-to-drill Lua flow failed");return false;}
         Scene hostScene,clientScene;SceneSerializer hl(hostScene),cl(clientScene);
