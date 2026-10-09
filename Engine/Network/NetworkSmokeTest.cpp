@@ -13,6 +13,17 @@ int RunNetworkSmokeTest()
     auto check=[&](bool pass,const char* name){Logger::Info(std::string(pass?"PASS: ":"FAIL: ")+name);ok&=pass;};
     NetworkManager host,client,third;
     check(host.Host(0,2),"bind ephemeral host socket");
+    NetworkManager browser;
+    check(browser.SearchServers(host.GetBoundPort()),"open nonblocking LAN server search");
+    for(int i=0;i<80;++i){host.Update();browser.Update();SDL_Delay(3);}
+    bool discovered=false;
+    for(const auto& server:browser.GetServers())
+        if(server.address=="127.0.0.1" && server.port==host.GetBoundPort() &&
+           server.players==1 && server.maxPlayers==2)discovered=true;
+    check(discovered,"discover local duel with address, port and player count");
+    browser.StopServerSearch();
+    check(!browser.IsSearchingServers(),"stop LAN server search");
+
     check(client.Join("127.0.0.1",host.GetBoundPort()),"start client handshake");
     auto pump=[&](){for(int i=0;i<20;++i){host.Update();client.Update();third.Update();SDL_Delay(2);}};
     pump();
