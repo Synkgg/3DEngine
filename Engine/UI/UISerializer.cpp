@@ -418,5 +418,19 @@ bool UISerializer::PopulateUserWidget(UIUserWidget& widget, const std::string& h
         std::unique_ptr<UIWidget> child = root->DetachChild(root->GetChildren().front().get());
         widget.AddChild(std::move(child));
     }
+    // Controller script is an instance-level choice, not a visual property.
+    // The same Loadout.ui can therefore dispatch to MainMenu.lua in the
+    // lobby and Player.lua while in-game.
+    if (!widget.GetEventScriptOverride().empty())
+    {
+        const auto overrideEvents = [&](auto&& self, UIWidget& node) -> void
+        {
+            if (auto* button = dynamic_cast<UIButton*>(&node))
+                button->SetOnClickScript(widget.GetEventScriptOverride());
+            for (const auto& child : node.GetChildren())
+                self(self, *child);
+        };
+        overrideEvents(overrideEvents, widget);
+    }
     return true;
 }
