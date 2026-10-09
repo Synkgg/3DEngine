@@ -3,6 +3,8 @@
 #include "../Platform/Windows/FileDialog.h"
 #include <SDL3/SDL.h>
 #include <imgui.h>
+#include <cstdio>
+#include <cstring>
 #include "../Scene/Entity.h"
 #include "../Scene/Components/TransformComponent.h"
 #include "../Scene/Components/MeshComponent.h"
@@ -161,30 +163,157 @@ void Application::Run()
             m_ImGuiLayer.GetIconFont(),
             m_ActiveUIDocument < 0);
 
+        // File > Export Game: choose a destination parent, inspect the saved
+        // project, and build a standalone folder without overwriting anything.
         static std::string exportStatus;
-        if (m_Editor.ConsumeExportRequest()) { exportStatus.clear(); ImGui::OpenPopup("Export Windows game"); }
-        ImGui::SetNextWindowSize(ImVec2(560, 260), ImGuiCond_Appearing);
-        if (ImGui::BeginPopupModal("Export Windows game", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        static char exportParent[2048]{};
+        static char exportFolder[256]{};
+        static bool preferReleaseBuild = true;
+        static bool saveSceneBeforeExport = true;
+        static bool exportSucceeded = false;
+        static GameExportSummary exportSummary;
+        static std::string exportPreflightError;
+        const auto refreshExportPreflight = [&]()
         {
-            ImGui::TextUnformatted("WINDOWS / VULKAN");
-            ImGui::TextWrapped("Packages the saved startup scene, all project assets and this executable. Save scene and UI changes before exporting. Use a Release build for distribution.");
-            ImGui::Spacing();
-            if (!m_ProjectManager.HasProject()) ImGui::TextWrapped("Open a project before exporting.");
-            else if (ImGui::Button("Choose destination and export", ImVec2(320, 40)))
+            exportSummary = {};
+            exportPreflightError.clear();
+            if (m_ProjectManager.HasProject())
+                InspectGameExport(m_ProjectManager.GetActiveProject().descriptorPath,
+                                  exportSummary, exportPreflightError);
+        };
+        if (m_Editor.ConsumeExportRequest())
+        {
+            exportStatus.clear();
+            exportSucceeded = false;
+            if (m_ProjectManager.HasProject())
             {
-                std::string folder;
-                if (FileDialog::SelectFolder(folder))
-                {
-                    const auto& project = m_ProjectManager.GetActiveProject();
-                    const auto output = std::filesystem::path(folder) / (project.descriptorPath.stem().string() + "-Windows");
-                    const auto executable = std::filesystem::path(SDL_GetBasePath()) / "VelcrynEditor.exe";
-                    std::string error;
-                    exportStatus = ExportGame(project.descriptorPath, output, executable, error)
-                        ? "Export complete: " + output.string() : "Export failed: " + error;
-                }
+                const Project& project = m_ProjectManager.GetActiveProject();
+                std::snprintf(exportParent, sizeof(exportParent), "%s",
+                              project.rootDirectory.parent_path().string().c_str());
+                std::snprintf(exportFolder, sizeof(exportFolder), "%s-Windows",
+                              project.descriptorPath.stem().string().c_str());
             }
-            ImGui::TextWrapped("%s", exportStatus.c_str());
-            if (ImGui::Button("Close")) ImGui::CloseCurrentPopup();
+            refreshExportPreflight();
+            ImGui::OpenPopup("Export Windows game");
+        }
+        ImGui::SetNextWindowSize(ImVec2(650.0f, 440.0f), ImGuiCond_Appearing);
+        if (ImGui::BeginPopupModal("Export Windows game", nullptr, ImGuiWindowFlags_NoResize))
+        {
+            ImGui::TextUnformatted("STANDALONE WINDOWS GAME");
+            ImGui::TextDisabled("Vulkan / x64 - exports saved project assets and a playable executable");
+            ImGui::Separator();
+            if (!m_ProjectManager.HasProject())
+            {
+                ImGui::TextWrapped("Open a .project workspace before exporting.");
+            }
+            else
+            {
+                const Project& project = m_ProjectManager.GetActiveProject();
+                ImGui::Text("Project: %s", project.name.c_str());
+                ImGui::TextWrapped("Startup scene: %s", project.startupScene.generic_string().c_str());
+                if (ImGui::Button("Use open scene as startup"))
+                {
+                    if (m_Editor.GetSceneFilePath().empty())
+                        exportStatus = "Save the open scene before making it the startup scene.";
+                    else if (m_Editor.IsPlaying())
+                        exportStatus = "Stop Play mode before saving or changing the startup scene.";
+                    else if (!m_Editor.SaveCurrentScene(m_Scene))
+                        exportStatus = "Could not save the current scene.";
+                    else if (!m_ProjectManager.SetStartupScene(m_Editor.GetSceneFilePath()))
+                        exportStatus = "The startup scene must be a saved .scene inside this project.";
+                    else
+                    {
+                        exportStatus = "Startup scene updated and saved.";
+                        refreshExportPreflight();
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Recheck project"))
+                    refreshExportPreflight();
+                if (!exportPreflightError.empty())
+                    ImGui::TextWrapped("Preflight: %s", exportPreflightError.c_str());
+                else
+                    ImGui::Text("Ready: %llu asset files (%.1f MiB)",
+                                static_cast<unsigned long long>(exportSummary.assetFileCount),
+                                static_cast<double>(exportSummary.assetBytes) / (1024.0 * 1024.0));
+
+                ImGui::Separator();
+                ImGui::TextUnformatted("Destination parent folder");
+                ImGui::SetNextItemWidth(510.0f);
+                ImGui::InputText("##ExportParent", exportParent, sizeof(exportParent));
+                ImGui::SameLine();
+                if (ImGui::Button("Browse..."))
+                {
+                    std::string folder;
+                    if (FileDialog::SelectFolder(folder))
+                        std::snprintf(exportParent, sizeof(exportParent), "%s", folder.c_str());
+                }
+                ImGui::TextUnformatted("New package folder name");
+                ImGui::SetNextItemWidth(350.0f);
+                ImGui::InputText("##ExportFolder", exportFolder, sizeof(exportFolder));
+
+                ImGui::Checkbox("Save the open scene before export", &saveSceneBeforeExport);
+                ImGui::Checkbox("Prefer a Release executable when available", &preferReleaseBuild);
+
+                const std::filesystem::path currentExe =
+                    std::filesystem::path(SDL_GetBasePath()) / "VelcrynEditor.exe";
+                const std::filesystem::path releaseExe =
+                    currentExe.parent_path().parent_path() / "x64-Release" / "VelcrynEditor.exe";
+                const bool releaseAvailable = std::filesystem::is_regular_file(releaseExe);
+                const bool runningRelease = currentExe.parent_path().filename() == "x64-Release";
+                const std::filesystem::path selectedExe =
+                    preferReleaseBuild && releaseAvailable ? releaseExe : currentExe;
+                ImGui::TextWrapped("Executable: %s", selectedExe.string().c_str());
+                if (!runningRelease && (!preferReleaseBuild || !releaseAvailable))
+                    ImGui::TextWrapped("Note: exporting the running build. Build x64-Release for a smaller, optimized distribution.");
+                ImGui::TextDisabled("Saved UI documents and other assets must be saved separately.");
+
+                const std::string folderName(exportFolder);
+                const bool validName = !folderName.empty() && folderName != "." && folderName != ".." &&
+                    folderName.find_first_of("<>:\\"/\\\\|?*") == std::string::npos &&
+                    folderName.back() != '.' && folderName.back() != ' ';
+                const bool canExport = validName && exportParent[0] != '\\0' &&
+                    !m_Editor.IsPlaying() && exportPreflightError.empty();
+                if (!validName)
+                    ImGui::TextUnformatted("Choose a valid Windows folder name.");
+                if (m_Editor.IsPlaying())
+                    ImGui::TextUnformatted("Stop Play mode before exporting.");
+
+                ImGui::BeginDisabled(!canExport);
+                if (ImGui::Button("Export Game", ImVec2(180.0f, 36.0f)))
+                {
+                    exportSucceeded = false;
+                    exportStatus.clear();
+                    if (saveSceneBeforeExport && !m_Editor.GetSceneFilePath().empty() &&
+                        !m_Editor.SaveCurrentScene(m_Scene))
+                        exportStatus = "Export canceled: the open scene could not be saved.";
+                    else if (!m_Editor.GetProjectSettings().Save(project.GetSettingsPath().string()))
+                        exportStatus = "Export canceled: project settings could not be saved.";
+                    else
+                    {
+                        const std::filesystem::path output =
+                            std::filesystem::path(exportParent) / folderName;
+                        std::string error;
+                        exportSucceeded = ExportGame(project.descriptorPath, output, selectedExe, error);
+                        exportStatus = exportSucceeded ? "Export complete: " + output.string()
+                                                       : "Export failed: " + error;
+                        refreshExportPreflight();
+                    }
+                }
+                ImGui::EndDisabled();
+                ImGui::SameLine();
+                if (ImGui::Button("Close", ImVec2(100.0f, 36.0f)))
+                    ImGui::CloseCurrentPopup();
+                if (!exportStatus.empty())
+                {
+                    ImGui::Separator();
+                    ImGui::TextWrapped("%s", exportStatus.c_str());
+                }
+                if (exportSucceeded)
+                    ImGui::TextDisabled("Run Game.exe from the exported folder. Share the entire folder.");
+            }
+            if (!m_ProjectManager.HasProject() && ImGui::Button("Close"))
+                ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
         }
 
