@@ -4,6 +4,7 @@
 #include "UISlider.h"
 #include "UIScrollBox.h"
 #include "UISerializer.h"
+#include "UIUserWidget.h"
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/RHI/RHI.h"
@@ -29,6 +30,37 @@ bool RunUIInteractionTests(Renderer& renderer)
         ui.UpdateInput(canvas, input, 100, 50, 640, 480);
     };
     ui.SetMouseInteractionEnabled(true);
+    // Both hosts must instantiate the SAME visual asset but route buttons
+    // to the controller script belonging to their current scene.
+    {
+        UICanvas composed;
+        const bool lobbyLoaded = UISerializer::Load(
+            composed, "Projects/DuelFPS/Assets/UI/LoadoutLobby.ui");
+        check(lobbyLoaded, "lobby widget blueprint composition");
+        if (lobbyLoaded)
+        {
+            const auto* instance = dynamic_cast<const UIUserWidget*>(
+                composed.GetRoot()->Find("LoadoutPage"));
+            const auto* button = dynamic_cast<const UIButton*>(
+                composed.GetRoot()->Find("SaveButton"));
+            check(instance && instance->GetSourcePath() == "Assets/UI/Loadout.ui" &&
+                button && button->GetOnClickScript() == "Assets/Scripts/MainMenu.lua",
+                "lobby instance uses shared layout and lobby callbacks");
+        }
+        const bool gameLoaded = UISerializer::Load(
+            composed, "Projects/DuelFPS/Assets/UI/LoadoutInGame.ui");
+        check(gameLoaded, "in-game widget blueprint composition");
+        if (gameLoaded)
+        {
+            const auto* instance = dynamic_cast<const UIUserWidget*>(
+                composed.GetRoot()->Find("LoadoutPage"));
+            const auto* button = dynamic_cast<const UIButton*>(
+                composed.GetRoot()->Find("SaveButton"));
+            check(instance && instance->GetSourcePath() == "Assets/UI/Loadout.ui" &&
+                button && button->GetOnClickScript() == "Assets/Scripts/Player.lua",
+                "in-game instance uses shared layout and gameplay callbacks");
+        }
+    }
     check(UISerializer::Load(canvas, "Projects/DuelFPS/Assets/UI/MainMenu.ui"), "load real menu asset");
     ui.SetLogicalSize(1920,1080);
     auto* host = dynamic_cast<UIButton*>(canvas.GetRoot()->Find("HostButton"));
