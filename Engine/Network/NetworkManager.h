@@ -96,6 +96,7 @@ private:
     int m_SearchSocket=-1;
 #endif
     std::uint16_t m_SearchPort=7777;
+    std::uint32_t m_SearchNonce=0;
     std::uint64_t m_SearchStarted=0;
     std::uint64_t m_SearchLastBroadcast=0;
     bool m_SearchingServers=false;
