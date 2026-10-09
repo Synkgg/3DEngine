@@ -932,10 +932,17 @@ void LuaScript::BindEngineAPI()
     sceneApi.set_function("FindChild", [this](std::uint32_t parentID, const std::string& name)
     {
         if (!m_Scene || parentID == 0 || name.empty()) return std::uint32_t(0);
-        for (Entity child : m_Scene->GetChildren(Entity(parentID)))
+        // Search the whole prefab subtree: authored attachment sockets
+        // normally live under the rotated/scaled mesh child.
+        std::vector<Entity> pending = m_Scene->GetChildren(Entity(parentID));
+        while (!pending.empty())
         {
+            const Entity child = pending.back();
+            pending.pop_back();
             const NameComponent* named = m_Scene->GetComponent<NameComponent>(child);
             if (named && named->name == name) return child.GetID();
+            const auto grandchildren = m_Scene->GetChildren(child);
+            pending.insert(pending.end(), grandchildren.begin(), grandchildren.end());
         }
         return std::uint32_t(0);
     });
