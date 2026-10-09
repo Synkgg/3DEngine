@@ -1,0 +1,21 @@
+MyEngineScene
+Entities 1
+Entity 1
+Name World Bullet Tracer
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 1 0.72 0.28 1
+Texture 0
+Material 1 0 0.5 1 0.85
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+HierarchyFolders 0
