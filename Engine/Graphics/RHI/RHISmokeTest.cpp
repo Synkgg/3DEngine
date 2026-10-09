@@ -45,6 +45,13 @@ namespace
         ProjectManager project;
         if(!project.Load("Projects/DuelFPS/DuelFPS.project"))return false;
         renderer.SetProjectRoot(std::filesystem::absolute("Projects/DuelFPS"));
+        // All four authored meshes must import as actual renderable geometry.
+        for(const char* weapon:{"MakoP12","KestrelAR4","BreachS8","VectorK9"}) {
+            if(!renderer.GetModelAsset(std::string("Assets/Models/Arsenal/")+weapon+".obj")) {
+                Logger::Error(std::string("BREAKBULK: cannot import weapon mesh: ")+weapon);
+                return false;
+            }
+        }
         Scene menu;std::vector<HierarchyFolder> folders;SceneSerializer menuLoader(menu);
         if(!menuLoader.Load(project.ResolveAssetPath("Assets/Scenes/MainMenu.scene"),folders))return false;
         Input menuInput;UICanvas menuUI;Runtime menuRuntime;menuRuntime.SetProjectManager(&project);
