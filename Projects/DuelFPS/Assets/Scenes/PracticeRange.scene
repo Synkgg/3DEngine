@@ -374,7 +374,7 @@ Rotation 0 1.5708 0
 Scale 0.32 0.32 0.32
 Parent 19
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Weapons/Pistol_1.obj" 0
+Mesh 1 0 "Assets/Models/Arsenal/MakoP12.obj" 0
 Color 1 1 1 1 1
 Texture 0
 Material 1 0.72 0.28 1 0 "" "" "" "" ""
@@ -428,7 +428,7 @@ Rotation 0 1.5708 0
 Scale 0.38 0.38 0.38
 Parent 20
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Weapons/AssaultRifle_1.obj" 0
+Mesh 1 0 "Assets/Models/Arsenal/KestrelAR4.obj" 0
 Color 1 1 1 1 1
 Texture 0
 Material 1 0.65 0.3 1 0 "" "" "" "" ""
