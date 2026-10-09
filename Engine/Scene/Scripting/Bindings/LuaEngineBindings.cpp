@@ -1229,6 +1229,10 @@ void LuaScript::BindEngineAPI()
     audioApi.set_function("GetMasterVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetMasterVolume():1.0f;});
     audioApi.set_function("SetSFXVolume",[this](float v){if(m_Runtime&&m_Runtime->GetAudioEngine())m_Runtime->GetAudioEngine()->SetSFXVolume(v);});
     audioApi.set_function("GetSFXVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetSFXVolume():1.0f;});
+    audioApi.set_function("PlayFootstep",[this](const std::string& surface,bool sprint){
+        return m_Runtime && m_Runtime->GetAudioEngine() &&
+               m_Runtime->GetAudioEngine()->PlayFootstep(surface,sprint);
+    });
     audioApi.set_function("PlaySFX",[this](const std::string& path,float volume){
         if(!m_Runtime||!m_Runtime->GetAudioEngine()) return false;
         AudioEngine* audio=m_Runtime->GetAudioEngine();
