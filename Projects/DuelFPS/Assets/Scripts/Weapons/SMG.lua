@@ -1,5 +1,5 @@
 return {
-    id="smg", displayName="VECTOR K9 / SMG",
+    id="smg", shortName="VECTOR", displayName="VECTOR K9 / SMG",
     viewmodelPrefab="Assets/Prefabs/SMGViewmodel.prefab",
     fireSound="Assets/Audio/Breakbulk/carbine.wav",
     magSize=36, startingReserve=144, practiceReserve=999,
