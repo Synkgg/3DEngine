@@ -270,9 +270,9 @@ void Application::Run()
 
                 const std::string folderName(exportFolder);
                 const bool validName = !folderName.empty() && folderName != "." && folderName != ".." &&
-                    folderName.find_first_of("<>:\\"/\\\\|?*") == std::string::npos &&
+                    folderName.find_first_of("<>:\"/\\|?*") == std::string::npos &&
                     folderName.back() != '.' && folderName.back() != ' ';
-                const bool canExport = validName && exportParent[0] != '\\0' &&
+                const bool canExport = validName && exportParent[0] != '\0' &&
                     !m_Editor.IsPlaying() && exportPreflightError.empty();
                 if (!validName)
                     ImGui::TextUnformatted("Choose a valid Windows folder name.");
