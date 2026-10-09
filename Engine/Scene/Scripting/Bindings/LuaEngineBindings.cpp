@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
+#include <vector>
 
 #include "../../Scene.h"
 #include "../../PrefabSerializer.h"
