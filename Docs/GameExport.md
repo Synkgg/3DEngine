@@ -51,6 +51,15 @@ The game resolves assets relative to its exported project root, not the
 current working directory. `Game.exe` detects the launch marker and runs
 without the editor workspace.
 
+To check a package without opening a Vulkan window, run:
+
+```powershell
+& C:\\Games\\Breakbulk-Windows\\Game.exe --verify-game-package
+```
+
+A successful check confirms the launch marker, project descriptor, startup
+scene and packaged asset directory. It does not replace an actual gameplay test.
+
 ## Command line
 
 From the repository root on Windows:
