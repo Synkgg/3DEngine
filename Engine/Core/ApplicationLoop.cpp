@@ -110,7 +110,8 @@ void Application::Run()
         const bool runtimeEscapePressed =
             m_Runtime.IsRunning() &&
             m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE);
-         const bool stopRuntimeBeforeUpdate =
+        const bool stopRuntimeBeforeUpdate =
+            !m_GameMode &&
             runtimeEscapePressed &&
             m_Scene.GetEntities().empty();
 
