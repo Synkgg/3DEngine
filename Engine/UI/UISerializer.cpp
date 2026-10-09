@@ -152,7 +152,8 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     return static_cast<bool>(out);
 }
 
-bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
+bool UISerializer::Load(UICanvas& canvas, const std::string& filepath,
+                        const std::string& referenceHost)
 {
     // Reject circular Widget Blueprint references (A -> B -> A), including
     // indirect cycles. This also bounds nesting to avoid stack exhaustion.
@@ -371,7 +372,8 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         {
             if (auto* reusable = dynamic_cast<UIUserWidget*>(child.get()))
             {
-                if (!PopulateUserWidget(*reusable, filepath)) return false;
+                if (!PopulateUserWidget(*reusable,
+                    referenceHost.empty() ? filepath : referenceHost)) return false;
             }
             else if (!self(self, *child)) return false;
         }
