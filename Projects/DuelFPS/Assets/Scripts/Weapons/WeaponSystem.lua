@@ -177,29 +177,38 @@ function WeaponSystem:Update(dt, cameraEntity)
     local forwardOffset = self.aiming and def.adsForward or def.hipForward
     local down = self.aiming and def.adsDown or def.hipDown
 
-    -- Recoil moves the carried weapon visibly UP and BACK, then settles.
-    local base = self.viewmodelBaseOffset
-    -- Normalize the horizontal camera-right vector. Without this, the
-    -- weapon's lateral offset collapses near vertical look angles.
-    local horizontalLength = math.max(0.0001, math.sqrt(f.x*f.x + f.z*f.z))
-    local horizontalRightX, horizontalRightZ = -f.z/horizontalLength, f.x/horizontalLength
-    local x = c.x + horizontalRightX * (side + base.x) + f.x * (forwardOffset - self.kick + base.z)
-    local y = c.y + f.y * (forwardOffset - self.kick + base.z) + down + base.y + self.kick * 1.6
-    local z = c.z + horizontalRightZ * (side + base.x) + f.z * (forwardOffset - self.kick + base.z)
-    local moving=self.api.Input.IsKeyDown("W") or self.api.Input.IsKeyDown("S") or self.api.Input.IsKeyDown("A") or self.api.Input.IsKeyDown("D")
-    if moving and not self.aiming then y=y+math.sin(self.animationTime*13)*.008 end
-    local reloadPose=self.reloadTimer>0 and math.sin(math.pi*self.reloadTimer/def.reloadTime) or 0
-    y=y-reloadPose*.12
-    self.api.Scene.SetPosition(self.viewmodel, x, y, z)
+    -- Camera-relative position keeps the gun in the same part of the screen
+    -- while looking up/down. Right x Forward gives camera Up; the previous
+    -- world-Y offset drifted as the camera pitched.
+    local upX = r.y*f.z-r.z*f.y
+    local upY = r.z*f.x-r.x*f.z
+    local upZ = r.x*f.y-r.y*f.x
+    local upLength = math.max(0.0001, math.sqrt(upX*upX+upY*upY+upZ*upZ))
+    upX,upY,upZ = upX/upLength,upY/upLength,upZ/upLength
 
+    -- The prefab root contains only the carried pose. The mesh child already
+    -- has its GunPack +90 degree Y correction. Pitching the parent with the
+    -- additive Euler hierarchy caused the barrel to bank onto its side.
+    -- Keep a level, yaw-only root and use the camera basis for screen anchoring.
+    local base = self.viewmodelBaseOffset
+    local rightAmount = side + base.x
+    local forwardAmount = forwardOffset - self.kick + base.z
+    local upAmount = down + base.y + self.kick * 1.6
+    local moving = self.api.Input.IsKeyDown("W") or self.api.Input.IsKeyDown("S")
+        or self.api.Input.IsKeyDown("A") or self.api.Input.IsKeyDown("D")
+    if moving and not self.aiming then upAmount=upAmount+math.sin(self.animationTime*13)*.008 end
+    local reloadPose = self.reloadTimer>0 and math.sin(math.pi*self.reloadTimer/def.reloadTime) or 0
+    upAmount=upAmount-reloadPose*.12
+
+    self.api.Scene.SetPosition(self.viewmodel,
+        c.x+r.x*rightAmount+f.x*forwardAmount+upX*upAmount,
+        c.y+r.y*rightAmount+f.y*forwardAmount+upY*upAmount,
+        c.z+r.z*rightAmount+f.z*forwardAmount+upZ*upAmount)
+
+    -- Scene.SetRotation accepts DEGREES. The child mesh's Y=90deg is already
+    -- authored in the prefab; do not add camera pitch or any roll here.
     local yaw = math.deg(math.atan(-f.x, -f.z))
-    local horizontal = math.sqrt(f.x * f.x + f.z * f.z)
-    local pitch = math.deg(math.atan(f.y, horizontal))
-    -- A GunPack barrel runs along local +X and the mesh child turns it
-    -- toward local -Z. Pitch the parent around camera-right; never roll
-    -- the root around its barrel (the old -pitch / reload Z tilt made
-    -- weapons flip onto their sides when looking vertically).
-    self.api.Scene.SetRotation(self.viewmodel, pitch, yaw, 0)
+    self.api.Scene.SetRotation(self.viewmodel, 0, yaw, 0)
 end
 
 function WeaponSystem:SpawnRemoteShot(ownerEntity,weaponID,ox,oy,oz,dx,dy,dz)
