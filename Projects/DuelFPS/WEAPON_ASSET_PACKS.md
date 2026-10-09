@@ -11,41 +11,49 @@ BREAKBULK's four loadout weapons are currently **Mako P12** (pistol),
 | Shotgun | `Assets/Prefabs/ShotgunViewmodel.prefab` |
 | SMG | `Assets/Prefabs/SMGViewmodel.prefab` |
 
-## Using a purchased or free weapon pack
+## Installed GunPack models
 
-1. Confirm that the asset license permits use and distribution in games.
-2. Copy the model and its textures into a folder under
-   `Projects/DuelFPS/Assets/Models/` (for example, `Models/ImportedWeapons`).
-3. Use **OBJ + MTL + textures** or **glTF/GLB** models. The current model
-   loader does **not** support direct FBX import. Convert FBX to glTF/GLB or
-   OBJ first, keeping the original license and texture maps.
-4. In each weapon prefab, replace the gun mesh path on the model child,
-   keeping the prefab root and its separate `MuzzleSocket` child.
-5. In the prefab editor, position and orient the model so the barrel points
-   along **local -Z**. Adjust model scale/rotation without changing the
-   first-person viewmodel root. Move `MuzzleSocket` to the actual barrel exit.
-6. Save the prefab and test both hip fire and ADS. The 3D muzzle flash,
-   tracer and impact system reads the socket's transformed world position
-   when the weapon fires.
+The four first-person prefabs now use the OBJ/MTL files committed under
+`Assets/Models/GunPack/`. No external download or conversion is needed:
 
-The muzzle socket is a real **transform entity**, not a UI element and not
-a baked-in fixed distance. The current default sockets are:
+| Class | Installed model | Mesh yaw | Mesh scale | Muzzle socket in mesh-local coordinates |
+| --- | --- | --- | --- | --- |
+| Pistol | `Pistol_1.obj` | +90° | 0.47 | (1.479757, 0.563, 0) |
+| Assault rifle | `AssaultRifle_1.obj` | +90° | 0.60 | (2.916603, 0.540, 0) |
+| Shotgun | `Shotgun_1.obj` | +90° | 0.38 | (3.800570, 0.150, 0) |
+| SMG slot | `Bullpup_1.obj` | +90° | 0.32 | (2.719206, 0.814, 0) |
 
-| Weapon | MuzzleSocket local position (x, y, z) |
-| --- | --- |
-| Mako P12 | (0, 0.015, -0.585) |
-| Kestrel AR4 | (0, 0.005, -1.170) |
-| Breach S8 | (0, 0.030, -1.230) |
-| Vector K9 | (0, 0.005, -0.870) |
+**The pack has no explicitly named SMG.** `Bullpup_1` is a provisional
+stand-in; it can be swapped for a preferred compact model without changing
+the gameplay class or loadout save data.
 
-A prefab missing the socket still works using the legacy camera-relative
-fallback, but it will be less accurate. Keeping the socket makes the VFX
-follow recoil, ADS and any new model's barrel geometry.
+The supplied OBJ files are authored with the barrel pointing along **+X**.
+Each prefab rotates its mesh child by +90° around Y to point toward the
+engine's **-Z** first-person forward direction. The `MuzzleSocket` is now
+a child of that mesh (not the viewmodel root), positioned at the measured
+front barrel area in source-model coordinates. This means scaling/rotating
+the gun also moves its muzzle attachment. The Lua `Scene.FindChild` API
+searches descendants so nested sockets are discovered by `WeaponSystem`.
+Muzzle flash, tracer and impact effects are 3D scene prefabs, not HUD images.
 
-**Do not copy the model's license into the game unless required or permitted.**
-If the pack requires attribution, include its required attribution in the
-distributed game. Assets must be present under the project asset directory
-before using **File > Export Game**; the exporter packages saved project assets.
+These initial scales and muzzle locations were derived from OBJ geometry,
+**not verified against a live rendered gameplay frame**. Inspect each
+weapon in Play mode and fine-tune its grip, ADS and muzzle placement if
+needed. A barrel can end before the mesh's maximum X when a sight or
+accessory extends beyond it.
+
+### Importing another weapon model
+
+1. Confirm the asset's license allows use and distribution in games.
+2. Place its model and associated MTL/textures under `Assets/Models/`.
+   The loader supports OBJ+MTL or glTF/GLB, but not direct FBX import.
+3. Change the `Mesh` path on entity 2 in the relevant viewmodel prefab.
+4. Rotate/scale the mesh to face -Z and adjust the mesh-local
+   `MuzzleSocket` child (entity 3) to the barrel exit.
+5. Test hip fire, ADS, recoil and world-space muzzle VFX.
+6. Save and re-export the game to include the changed asset.
+
+Check any attribution/distribution requirements before publishing this pack.
 
 ## Replacing the armory artwork
 
