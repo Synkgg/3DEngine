@@ -24,7 +24,7 @@ Entity 2
 Name MAKO P12
 Position 0 0 0
 Rotation 0 1.5708 0
-Scale 0.47 0.47 0.47
+Scale 0.26 0.26 0.26
 Parent 1
 PrefabSource ""
 HierarchyGroup 0
@@ -42,7 +42,7 @@ Collider 0
 Scripts 0
 Entity 3
 Name MuzzleSocket
-Position 0.8 0.22 0
+Position 1.47 0.50 0
 Rotation 0 -0 0
 Scale 1 1 1
 Parent 2
