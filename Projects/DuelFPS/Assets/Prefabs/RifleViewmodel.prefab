@@ -24,7 +24,7 @@ Entity 2
 Name KESTREL AR4
 Position 0 0 0
 Rotation 0 1.5708 0
-Scale 0.6 0.6 0.6
+Scale 0.30 0.30 0.30
 Parent 1
 PrefabSource ""
 HierarchyGroup 0
@@ -42,7 +42,7 @@ Collider 0
 Scripts 0
 Entity 3
 Name MuzzleSocket
-Position 2.13 0.39 0
+Position 2.91 0.65 0
 Rotation 0 -0 0
 Scale 1 1 1
 Parent 2
