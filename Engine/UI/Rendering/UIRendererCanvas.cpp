@@ -43,7 +43,15 @@ void UIRenderer::RenderCanvas(
     // A full-canvas opaque background also covers letterbox margins. Keep
     // controls in logical coordinates, but don't expose the 3D sky around menus.
     if (!root->GetChildren().empty() && m_UIScale > 0) {
-        const auto& background = root->GetChildren().front();
+        const UIWidget* background = root->GetChildren().front().get();
+        // A full-screen reusable UI may contain the full-canvas backdrop.
+        // Follow only full-screen transparent instance containers.
+        while (background && background->GetType() == UIWidgetType::UserWidget &&
+               background->IsVisible() && !background->GetChildren().empty() &&
+               background->GetPosition().x == 0 && background->GetPosition().y == 0 &&
+               background->GetSize().x == m_LogicalWidth &&
+               background->GetSize().y == m_LogicalHeight)
+            background = background->GetChildren().front().get();
         if (background && background->GetType() == UIWidgetType::Panel && background->IsVisible() &&
             background->GetPosition().x == 0 && background->GetPosition().y == 0 &&
             background->GetSize().x == m_LogicalWidth && background->GetSize().y == m_LogicalHeight &&
