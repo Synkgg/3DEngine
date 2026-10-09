@@ -62,6 +62,7 @@ local function restoreLoadout()
 end
 local function refreshLoadout()
     local selectedID=loadoutSlot=="primary" and loadoutPrimary or loadoutSecondary
+    UI.SetText("SlotsTitle","CUSTOM LOADOUT "..loadoutIndex)
     UI.SetText("PrimaryValue",guns[loadoutPrimary].name)
     UI.SetText("SecondaryValue",guns[loadoutSecondary].name)
     UI.SetText("SlotHint",loadoutSlot=="primary" and "CHOOSE A PRIMARY WEAPON" or "CHOOSE A SECONDARY WEAPON")
