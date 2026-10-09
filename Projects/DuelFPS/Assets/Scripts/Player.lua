@@ -568,7 +568,7 @@ local function openFieldArmory()
     editingCategory=editingPrimary
     CharacterController.Move(0,0)
     Input.SetCursorVisible(true)
-    UI.Load("Assets/UI/Loadout.ui")
+    UI.Load("Assets/UI/LoadoutInGame.ui")
     refreshFieldArmory()
 end
 
