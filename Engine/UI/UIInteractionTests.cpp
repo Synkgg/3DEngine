@@ -59,6 +59,8 @@ bool RunUIInteractionTests(Renderer& renderer)
             check(instance && instance->GetSourcePath() == "Assets/UI/Loadout.ui" &&
                 button && button->GetOnClickScript() == "Assets/Scripts/Player.lua",
                 "in-game instance uses shared layout and gameplay callbacks");
+            check(button && composed.GetRoot()->Find("LoadoutPage.SaveButton") == button,
+                "qualified widget names resolve inside reused UI pages");
         }
     }
     check(UISerializer::Load(canvas, "Projects/DuelFPS/Assets/UI/MainMenu.ui"), "load real menu asset");
@@ -167,7 +169,7 @@ bool RunUIInteractionTests(Renderer& renderer)
     auto* loadedScroll = dynamic_cast<UIScrollBox*>(loaded.GetRoot()->Find("Scroll Box"));
     check(loadedScroll && loadedScroll->GetContentHeight()==320 &&
         std::abs(loadedScroll->GetScrollOffset()-110.0f)<0.01f,
-        "scroll box survives UI v11 roundtrip");
+        "scroll box survives UI v12 roundtrip");
 
     check(UISerializer::Load(canvas,"Projects/DuelFPS/Assets/UI/Loadout.ui"),
         "load grouped main-menu armory");
