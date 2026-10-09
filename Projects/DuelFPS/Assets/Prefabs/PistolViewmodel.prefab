@@ -20,12 +20,12 @@ Collider 0
 Scripts 0
 Entity 2
 Name MAKO P12
-Position 0 0 0
-Rotation 0 0 0
-Scale 1 1 1
+Position 0 -0.245 0.11
+Rotation 0 90 0
+Scale 0.47 0.47 0.47
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Arsenal/MakoP12.obj" 0
+Mesh 1 0 "Assets/Models/GunPack/Pistol_1.obj" 0
 Color 1 1 1 1 1
 Texture 0
 Material 0
@@ -38,10 +38,10 @@ Collider 0
 Scripts 0
 Entity 3
 Name MuzzleSocket
-Position 0 0.015 -0.585
+Position 1.479757 0.563 0
 Rotation 0 0 0
 Scale 1 1 1
-Parent 1
+Parent 2
 PrefabSource ""
 Mesh 0
 Color 0
