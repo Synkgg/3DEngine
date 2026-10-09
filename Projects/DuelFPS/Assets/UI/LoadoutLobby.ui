@@ -1,0 +1,3 @@
+ENGINE_UI 12
+1920 1080
+0 8 "LoadoutPage" 0 0 1920 1080 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1 "Assets/UI/Loadout.ui" "Assets/Scripts/MainMenu.lua"
