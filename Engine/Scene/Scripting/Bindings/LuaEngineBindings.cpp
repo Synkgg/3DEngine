@@ -27,6 +27,7 @@
 #include "../../Components/PawnComponent.h"
 #include "../../Components/PlayerStartComponent.h"
 #include "../../Components/MeshComponent.h"
+#include "../../Components/NameComponent.h"
 #include "../../Components/ColliderComponent.h"
 #include "../../Components/InteractableComponent.h"
 #include "../../Components/LightComponent.h"
