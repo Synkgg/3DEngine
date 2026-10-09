@@ -157,20 +157,46 @@ void UIWidget::RemoveChild(UIWidget* child)
 
 UIWidget* UIWidget::Find(const std::string& name)
 {
-    if (m_Name == name) return this;
-    for (const auto& child : m_Children)
-    {
-        if (UIWidget* result = child->Find(name)) return result;
-    }
-    return nullptr;
+    return const_cast<UIWidget*>(
+        static_cast<const UIWidget*>(this)->Find(name));
 }
 
 const UIWidget* UIWidget::Find(const std::string& name) const
 {
+    // Qualified paths disambiguate multiple instances of the same source
+    // widget (e.g. "Inventory.HealthBar"). Unqualified legacy names still
+    // search the entire hierarchy as before.
+    const std::size_t separator = name.find('.');
+    if (separator != std::string::npos)
+    {
+        const std::string first = name.substr(0, separator);
+        if (m_Name == first)
+        {
+            const UIWidget* node = this;
+            std::size_t start = separator + 1;
+            while (start < name.size())
+            {
+                const std::size_t end = name.find('.', start);
+                const std::string segment = name.substr(start, end == std::string::npos ?
+                    std::string::npos : end - start);
+                if (segment.empty()) return nullptr;
+                const UIWidget* next = nullptr;
+                for (const auto& child : node->GetChildren())
+                    if (child->GetName() == segment) { next = child.get(); break; }
+                if (!next) return nullptr;
+                node = next;
+                if (end == std::string::npos) return node;
+                start = end + 1;
+            }
+            return nullptr;
+        }
+        for (const auto& child : m_Children)
+            if (const UIWidget* result = child->Find(name)) return result;
+        return nullptr;
+    }
+
     if (m_Name == name) return this;
     for (const auto& child : m_Children)
-    {
         if (const UIWidget* result = child->Find(name)) return result;
-    }
     return nullptr;
 }
