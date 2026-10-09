@@ -171,25 +171,7 @@ const UIWidget* UIWidget::Find(const std::string& name) const
     {
         const std::string first = name.substr(0, separator);
         if (m_Name == first)
-        {
-            const UIWidget* node = this;
-            std::size_t start = separator + 1;
-            while (start < name.size())
-            {
-                const std::size_t end = name.find('.', start);
-                const std::string segment = name.substr(start, end == std::string::npos ?
-                    std::string::npos : end - start);
-                if (segment.empty()) return nullptr;
-                const UIWidget* next = nullptr;
-                for (const auto& child : node->GetChildren())
-                    if (child->GetName() == segment) { next = child.get(); break; }
-                if (!next) return nullptr;
-                node = next;
-                if (end == std::string::npos) return node;
-                start = end + 1;
-            }
-            return nullptr;
-        }
+            return Find(name.substr(separator + 1));
         for (const auto& child : m_Children)
             if (const UIWidget* result = child->Find(name)) return result;
         return nullptr;
