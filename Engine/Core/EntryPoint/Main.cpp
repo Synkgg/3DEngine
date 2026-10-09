@@ -17,6 +17,26 @@ int main(int argc, char** argv)
     if (argc > 1 && std::string(argv[1]) == "--network-smoke-test") return RunNetworkSmokeTest();
 
     const std::filesystem::path base = SDL_GetBasePath();
+    // Package self-check works from any working directory and needs no GPU.
+    // It is also used by the automated export regression test.
+    if (argc > 1 && std::string(argv[1]) == "--verify-game-package")
+    {
+        if (!std::filesystem::is_regular_file(base / "VelcrynGame.cfg"))
+        {
+            Logger::Error("This executable is not in a packaged game folder.");
+            return 1;
+        }
+        GameExportSummary summary;
+        std::string error;
+        if (!InspectGameExport(base / "Game.project", summary, error))
+        {
+            Logger::Error("Invalid game package: " + error);
+            return 1;
+        }
+        Logger::Info("Valid game package: " + summary.projectName +
+                     " (" + std::to_string(summary.assetFileCount) + " asset files)");
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--export-game")
     {
         if (argc != 4) { Logger::Error("Usage: --export-game project.project NEW_OUTPUT_FOLDER"); return 2; }
