@@ -179,7 +179,10 @@ function WeaponSystem:Update(dt, cameraEntity)
 
     -- Recoil moves the carried weapon visibly UP and BACK, then settles.
     local base = self.viewmodelBaseOffset
-    local horizontalRightX, horizontalRightZ = -f.z, f.x
+    -- Normalize the horizontal camera-right vector. Without this, the
+    -- weapon's lateral offset collapses near vertical look angles.
+    local horizontalLength = math.max(0.0001, math.sqrt(f.x*f.x + f.z*f.z))
+    local horizontalRightX, horizontalRightZ = -f.z/horizontalLength, f.x/horizontalLength
     local x = c.x + horizontalRightX * (side + base.x) + f.x * (forwardOffset - self.kick + base.z)
     local y = c.y + f.y * (forwardOffset - self.kick + base.z) + down + base.y + self.kick * 1.6
     local z = c.z + horizontalRightZ * (side + base.x) + f.z * (forwardOffset - self.kick + base.z)
