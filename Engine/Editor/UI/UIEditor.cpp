@@ -2003,7 +2003,9 @@ UIRect UIEditor::GetAbsoluteRect(
     if (parent == nullptr || parent->GetParent() == nullptr)
         return UILayout::Calculate(widget, canvasRect);
 
-    const UIRect parentRect = GetAbsoluteRect(*parent, canvasRect);
+    UIRect parentRect = GetAbsoluteRect(*parent, canvasRect);
+    if (const auto* scroll = dynamic_cast<const UIScrollBox*>(parent))
+        parentRect.y -= scroll->GetScrollOffset();
     return UILayout::Calculate(widget, parentRect);
 }
 
@@ -2017,6 +2019,7 @@ std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
     copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder()); copy->SetRenderOpacity(source.GetRenderOpacity());
     copy->SetCornerRadius(source.GetCornerRadius()); copy->SetGradientEnabled(source.HasGradient());
     copy->SetGradientColor(source.GetGradientColor()); copy->SetGradientDirection(source.GetGradientDirection());
+    if(auto* a=dynamic_cast<const UIScrollBox*>(&source)) if(auto* b=dynamic_cast<UIScrollBox*>(copy.get())) { b->SetContentHeight(a->GetContentHeight()); b->SetScrollOffset(a->GetScrollOffset()); }
     if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); b->SetHorizontalAlignment(a->GetHorizontalAlignment()); b->SetVerticalAlignment(a->GetVerticalAlignment()); }
     if(auto* a=dynamic_cast<const UITextInput*>(&source)) if(auto* b=dynamic_cast<UITextInput*>(copy.get())) { b->SetText(a->GetText()); b->SetPlaceholder(a->GetPlaceholder()); b->SetFontSize(a->GetFontSize()); b->SetMaxLength(a->GetMaxLength()); b->SetPassword(a->IsPassword()); }
     if(auto* a=dynamic_cast<const UISlider*>(&source)) if(auto* b=dynamic_cast<UISlider*>(copy.get())) { b->SetValue(a->GetValue()); b->SetFillColor(a->GetFillColor()); b->SetHandleColor(a->GetHandleColor()); }
