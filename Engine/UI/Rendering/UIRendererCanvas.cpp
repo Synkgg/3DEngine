@@ -5,6 +5,7 @@
 #include "../UITextInput.h"
 #include "../UISlider.h"
 #include "../UIProgressBar.h"
+#include "../UIScrollBox.h"
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
@@ -133,18 +134,23 @@ void UIRenderer::RenderCanvasWidget(
         );
     }
 
-    for (const auto& child :
-        widget.GetChildren())
+    UIRect childRect = rect;
+    const UIRect previousClip = m_ClipRect;
+    if (const auto* scroll = dynamic_cast<const UIScrollBox*>(&widget))
     {
-        if (child)
-        {
-            RenderCanvasWidget(
-                *child,
-                rect,
-                renderer
-            );
-        }
+        const float left = std::max(previousClip.x, rect.x);
+        const float top = std::max(previousClip.y, rect.y);
+        const float right = std::min(previousClip.x + previousClip.width, rect.x + rect.width);
+        const float bottom = std::min(previousClip.y + previousClip.height, rect.y + rect.height);
+        m_ClipRect = {left, top, std::max(0.0f, right-left), std::max(0.0f, bottom-top)};
+        childRect.y -= scroll->GetScrollOffset();
     }
+    if (m_ClipRect.width > 0.0f && m_ClipRect.height > 0.0f)
+    {
+        for (const auto& child : widget.GetChildren())
+            if (child) RenderCanvasWidget(*child, childRect, renderer);
+    }
+    m_ClipRect = previousClip;
 }
 
 void UIRenderer::DrawCanvasWidget(const UIWidget& widget, const UIRect& rect, Renderer* renderer)
