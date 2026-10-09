@@ -495,6 +495,9 @@ void Editor::ConfigureProject(const std::filesystem::path& assetRoot, const std:
     m_ProjectSettingsPath = std::filesystem::absolute(settingsPath).lexically_normal();
     m_ContentBrowserPath = m_AssetRoot.string();
     m_SelectedAssetPath.clear();
+    // Do not offer a scene from a previous project as the export startup scene.
+    m_SceneFilePath.clear();
+    m_HierarchyFolders.clear();
 
     if (!m_ProjectSettings.Load(settingsPath.string()))
     {
