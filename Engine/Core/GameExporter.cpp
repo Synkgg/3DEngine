@@ -46,7 +46,7 @@ namespace
             throw std::runtime_error("Select a saved .project file before exporting.");
 
         ProjectManager manager;
-        if (!manager.Load(descriptor.string()))
+        if (!manager.Load(descriptor.string(), false))
             throw std::runtime_error("Cannot read the project descriptor.");
 
         ExportSource source{};
