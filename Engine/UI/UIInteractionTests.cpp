@@ -2,6 +2,7 @@
 #include "UIButton.h"
 #include "UITextInput.h"
 #include "UISlider.h"
+#include "UIScrollBox.h"
 #include "UISerializer.h"
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
@@ -108,6 +109,41 @@ bool RunUIInteractionTests(Renderer& renderer)
     pointer(121,71,false); check(!round->IsHovered(), "rounded transparent corners are not clickable");
     round->SetNormalImage("normal.png"); round->SetHovered(true);
     check(round->GetCurrentImage()=="normal.png", "missing hover image keeps normal image");
+    // Scroll box: wheel changes content offset, children are clipped for
+    // input, and v11 serialization preserves the authored scroll settings.
+    canvas.Clear(); canvas.SetSize({640,480}); ui.SetLogicalSize(640,480);
+    auto scrolling = std::make_unique<UIScrollBox>();
+    scrolling->SetPosition({20,20}); scrolling->SetSize({200,100});
+    scrolling->SetContentHeight(320);
+    auto scrolledButton = std::make_unique<UIButton>();
+    scrolledButton->SetName("ScrolledButton");
+    scrolledButton->SetPosition({10,150}); scrolledButton->SetSize({100,40});
+    auto* scrolled = static_cast<UIButton*>(scrolling->AddChild(std::move(scrolledButton)));
+    auto* scrollPtr = static_cast<UIScrollBox*>(canvas.GetRoot()->AddChild(std::move(scrolling)));
+    pointer(140,120,false);
+    check(!scrolled->IsHovered(), "off-screen scroll box children cannot be clicked");
+    SDL_Event wheel{}; wheel.type=SDL_EVENT_MOUSE_WHEEL; wheel.wheel.y=-2.0f;
+    input.ProcessEvent(wheel); input.Update(); input.UpdateMouseState(140,90,0);
+    ui.UpdateInput(canvas,input,100,50,640,480);
+    check(std::abs(scrollPtr->GetScrollOffset()-110.0f)<0.01f, "mouse wheel scrolls clipped content");
+    pointer(140,120,false);
+    check(scrolled->IsHovered(), "scrolled child is hit-testable inside viewport");
+    check(UISerializer::Save(canvas,"out/build/scrollbox-smoke.ui"), "save scroll box asset");
+    UICanvas loaded;
+    check(UISerializer::Load(loaded,"out/build/scrollbox-smoke.ui"), "load scroll box asset");
+    auto* loadedScroll = dynamic_cast<UIScrollBox*>(loaded.GetRoot()->Find("Scroll Box"));
+    check(loadedScroll && loadedScroll->GetContentHeight()==320 &&
+        std::abs(loadedScroll->GetScrollOffset()-110.0f)<0.01f,
+        "scroll box survives UI v11 roundtrip");
+
+    check(UISerializer::Load(canvas,"Projects/DuelFPS/Assets/UI/Loadout.ui"),
+        "load grouped main-menu armory");
+    check(canvas.GetRoot()->Find("Profile5Button") &&
+        canvas.GetRoot()->Find("Category_rifle_Button") &&
+        canvas.GetRoot()->Find("WeaponCategory_smg"),
+        "loadout profiles, category tabs and parent groups exist");
+    check(UISerializer::Load(canvas,"Projects/DuelFPS/Assets/UI/LoadoutInGame.ui"),
+        "load grouped in-game armory");
     ui.Clear(); ui.SetMouseInteractionEnabled(false);
     return ok;
 }
