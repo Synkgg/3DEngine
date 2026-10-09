@@ -437,6 +437,8 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT V
 
 include(CTest)
 if(BUILD_TESTING)
+    add_test(NAME Scene.MuzzleSocket COMMAND VelcrynEditor --scene-transform-smoke-test)
+    set_tests_properties(Scene.MuzzleSocket PROPERTIES TIMEOUT 20 LABELS "scene;transform;gameplay")
     add_test(NAME Game.Network COMMAND VelcrynEditor --network-smoke-test)
     set_tests_properties(Game.Network PROPERTIES TIMEOUT 20 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" LABELS "network;gameplay")
     add_test(NAME RHI.Smoke COMMAND ${CMAKE_COMMAND}
