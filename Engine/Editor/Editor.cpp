@@ -353,7 +353,7 @@ void Editor::Render(
                 {
                     m_ProjectSettings.SetRenderSettings(settings);
                     renderer.SetRenderSettings(settings);
-                    if (!m_ProjectSettings.Save())
+                    if (!m_ProjectSettings.Save(m_ProjectSettingsPath.string()))
                         Logger::Error("Failed to save project rendering settings.");
                 }
             }
@@ -492,6 +492,7 @@ void Editor::StopPlaying()
 void Editor::ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath)
 {
     m_AssetRoot = std::filesystem::absolute(assetRoot).lexically_normal();
+    m_ProjectSettingsPath = std::filesystem::absolute(settingsPath).lexically_normal();
     m_ContentBrowserPath = m_AssetRoot.string();
     m_SelectedAssetPath.clear();
 
