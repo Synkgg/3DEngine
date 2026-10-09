@@ -62,6 +62,16 @@ if(INSIDE_RESULT EQUAL 0)
     message(FATAL_ERROR "Exporter allowed output inside the source project.")
 endif()
 
+# Preflight must not create missing asset directories in the source project.
+file(WRITE "${SOURCE}/MissingAssets.project"
+    "Version 1\\nName \\"Broken\\"\\nAssetDirectory \\"MissingAssets\\"\\nStartupScene \\"MissingAssets/Scenes/Main.scene\\"\\nSettings \\"ProjectSettings.cfg\\"\\n")
+execute_process(
+    COMMAND "${EDITOR}" --export-game "${SOURCE}/MissingAssets.project" "${DEST}/ShouldNotExist"
+    RESULT_VARIABLE MISSING_RESULT TIMEOUT 45)
+if(MISSING_RESULT EQUAL 0 OR EXISTS "${SOURCE}/MissingAssets")
+    message(FATAL_ERROR "Missing asset directory was accepted or created during preflight.")
+endif()
+
 file(GLOB STAGING_FOLDERS "${DEST}/*.velcryn-staging-*")
 if(STAGING_FOLDERS)
     message(FATAL_ERROR "Exporter left temporary staging folders: ${STAGING_FOLDERS}")
