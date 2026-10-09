@@ -57,8 +57,8 @@ function Profiles.Select(slot,preferences)
     return slot,primary,secondary
 end
 function Profiles.GetActive(preferences)
-    local slot=Profiles.Active()
-    local primary,secondary=Profiles.Get(slot)
+    local slot=Profiles.Active(preferences)
+    local primary,secondary=Profiles.Get(slot,preferences)
     return slot,primary,secondary
 end
 return Profiles
