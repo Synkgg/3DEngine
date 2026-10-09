@@ -59,7 +59,7 @@ namespace
         auto* armory=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("LoadoutButton"));
         if(!armory){menuRuntime.Stop(menu);return false;}
         armory->SetClicked(true);
-        for(int i=0;i<3;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
+        for(int i=0;i<10;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
         if(!menuUI.GetRoot()->Find("PrimaryTab") || !menuUI.GetRoot()->Find("shotgunButton") ||
            !menuUI.GetRoot()->Find("smgButton")) {
             Logger::Error("BREAKBULK: four-weapon loadout menu failed to open");
@@ -68,7 +68,7 @@ namespace
         auto* back=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("BackButton"));
         if(!back){menuRuntime.Stop(menu);return false;}
         back->SetClicked(true);
-        for(int i=0;i<3;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
+        for(int i=0;i<10;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
         auto* practice=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("PracticeButton"));
         if(!practice){menuRuntime.Stop(menu);return false;}
         practice->SetClicked(true);
