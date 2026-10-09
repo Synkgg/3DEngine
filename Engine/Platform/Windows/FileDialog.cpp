@@ -368,7 +368,7 @@ namespace FileDialog
         return !path.empty();
     }
 
-    bool SelectFolder(std::string& path)
+    bool SelectFolder(std::string& path, const wchar_t* title)
     {
         bool shouldUninitialize = false;
         if (!InitializeCOM(shouldUninitialize)) return false;
@@ -378,7 +378,7 @@ namespace FileDialog
         DWORD options = 0;
         dialog->GetOptions(&options);
         dialog->SetOptions(options | FOS_PICKFOLDERS | FOS_PATHMUSTEXIST);
-        dialog->SetTitle(L"Choose Project Location");
+        dialog->SetTitle(title);
         result = dialog->Show(nullptr);
         if (SUCCEEDED(result))
         {
