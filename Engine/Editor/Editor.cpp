@@ -523,3 +523,20 @@ bool Editor::OpenScene(Scene& scene, const std::filesystem::path& path)
     Logger::Info("Loaded scene: " + path.filename().string());
     return true;
 }
+
+bool Editor::SaveCurrentScene(Scene& scene)
+{
+    if (m_SceneFilePath.empty())
+    {
+        Logger::Error("Save the current scene before exporting it.");
+        return false;
+    }
+    SceneSerializer serializer(scene);
+    if (!serializer.Save(m_SceneFilePath, m_HierarchyFolders))
+    {
+        Logger::Error("Failed to save scene: " + m_SceneFilePath);
+        return false;
+    }
+    Logger::Info("Scene saved: " + m_SceneFilePath);
+    return true;
+}
