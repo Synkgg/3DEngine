@@ -12,6 +12,7 @@ local function peer(host)
     e.CharacterController={Move=nop,Jump=nop,IsGrounded=function()return true end};e.Audio={PlaySFX=nop,PlayFootstep=nop};e.Debug={DrawLine=nop}
     e.transform={SetPosition=function(x,y,z)t.pos[1]={x=x,y=y,z=z}end,GetPosition=function()return t.pos[1]end}
     e.Scene={FindEntity=function(name)return {id=name=='FirstPersonCamera' and 2 or 0,IsValid=function()return false end}end,
+        GetName=function()return "Concrete Floor" end,
         InstantiatePrefab=function(path)t.nextEntity=t.nextEntity+1;t.pos[t.nextEntity]={x=0,y=1,z=0};if path:find("RemotePawn") then t.remotePawn=t.nextEntity end;return t.nextEntity end,
         DestroyEntity=nop,FindChild=function(root,name)return name=="MuzzleSocket" and (root+1000) or 0 end,
         GetWorldPosition=function(id)return t.pos[id-1000] or {x=0,y=1,z=-1}end,
