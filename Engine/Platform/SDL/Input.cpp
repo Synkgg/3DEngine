@@ -16,6 +16,8 @@ Input::Input()
 
 void Input::Update()
 {
+    m_MouseWheelY = m_PendingMouseWheelY;
+    m_PendingMouseWheelY = 0.0f;
     m_TextInput.swap(m_PendingTextInput);
     m_PendingTextInput.clear();
     m_PreviousKeyboardState =
@@ -122,6 +124,8 @@ void Input::SetMouseCapture(SDL_Window* window, bool captured)
 
 void Input::ProcessEvent(const SDL_Event& event)
 {
+    if (event.type == SDL_EVENT_MOUSE_WHEEL)
+        m_PendingMouseWheelY += event.wheel.y;
     if (event.type == SDL_EVENT_TEXT_INPUT && event.text.text)
         m_PendingTextInput += event.text.text;
 }
