@@ -1,5 +1,11 @@
 local Profiles = require("Scripts.Weapons.LoadoutProfiles")
 local joining=false
+local browserOpen=false
+local browserRows={}
+local browserRefreshElapsed=0
+local browserLastSignature=""
+local maxBrowserRows=6
+
 local loadoutSlot="primary"
 local loadoutIndex=1
 local selectedCategory="rifle"
@@ -166,6 +172,89 @@ function OnHostClicked()
         Scene.Load("Assets/Scenes/Arena.scene")
     else UI.SetText("NetworkStatus",Network.GetLastError()) end
 end
+local function showBrowserRows()
+    local servers=Network.GetServers()
+    local signature=tostring(#servers)..":"..tostring(Network.IsSearchingServers())
+    for i=1,maxBrowserRows do
+        local server=servers[i]
+        if server then
+            signature=signature..":"..server.address..":"..server.port..":"..server.players
+        end
+    end
+    if signature==browserLastSignature then return end
+    browserLastSignature=signature
+    browserRows=servers
+    for i=1,maxBrowserRows do
+        local server=servers[i]
+        UI.SetVisible("ServerRow"..i,server~=nil)
+        if server then
+            UI.SetText("Server"..i.."Title",server.name)
+            UI.SetText("Server"..i.."Info",server.address..":"..server.port..
+                (server.full and "   /   MATCH FULL" or "   /   OPEN SESSION"))
+            UI.SetText("Server"..i.."Players",server.players.." / "..server.maxPlayers)
+            UI.SetText("Server"..i.."ButtonLabel",server.full and "FULL" or "JOIN SERVER  >")
+        end
+    end
+    local count=#servers
+    if count==0 then
+        UI.SetText("BrowserStatus",Network.IsSearchingServers()
+            and "SEARCHING LOCAL NETWORK...  NO SESSIONS YET"
+            or "NO LAN SERVERS FOUND. HOST A DUEL OR USE DIRECT IP.")
+    else
+        UI.SetText("BrowserStatus",count.." LOCAL "..(count==1 and "SESSION" or "SESSIONS")..
+            " FOUND  /  "..(Network.IsSearchingServers() and "SCANNING..." or "SCAN COMPLETE"))
+    end
+end
+
+function OnBrowseClicked()
+    if joining then return end
+    browserOpen=true
+    pendingScreen="browser"
+end
+
+function OnBrowserRefresh()
+    if joining then return end
+    browserLastSignature=""
+    if not Network.SearchServers(7777) then
+        UI.SetText("BrowserStatus","SEARCH FAILED / "..Network.GetLastError())
+    else
+        showBrowserRows()
+    end
+end
+
+function OnBrowserBack()
+    if joining then return end
+    Network.StopServerSearch()
+    browserOpen=false
+    browserRows={}
+    browserLastSignature=""
+    menuStatus="READY TO DEPLOY"
+    pendingScreen="main"
+end
+
+local function joinServer(index)
+    if joining then return end
+    local server=browserRows[index]
+    if not server then return end
+    if server.full then
+        UI.SetText("BrowserStatus","MATCH IS FULL. CHOOSE ANOTHER SERVER.")
+        return
+    end
+    if Network.Join(server.address,server.port) then
+        joining=true
+        joinElapsed=0
+        UI.SetText("BrowserStatus","CONNECTING TO "..server.address..":"..server.port.." ...")
+    else
+        UI.SetText("BrowserStatus","JOIN FAILED / "..Network.GetLastError())
+    end
+end
+function OnServer1Clicked() joinServer(1) end
+function OnServer2Clicked() joinServer(2) end
+function OnServer3Clicked() joinServer(3) end
+function OnServer4Clicked() joinServer(4) end
+function OnServer5Clicked() joinServer(5) end
+function OnServer6Clicked() joinServer(6) end
+
 function OnJoinClicked()
     if joining then return end
     local address=UI.GetText("AddressField"):gsub("%s","")
@@ -182,9 +271,25 @@ function OnUpdate(dt)
         if nextScreen=="loadout" then
             UI.Load("Assets/UI/Loadout.ui")
             refreshLoadout()
+        elseif nextScreen=="browser" then
+            UI.Load("Assets/UI/ServerBrowser.ui")
+            browserRefreshElapsed=0
+            browserLastSignature=""
+            if Network.SearchServers(7777) then
+                showBrowserRows()
+            else
+                UI.SetText("BrowserStatus","SEARCH FAILED / "..Network.GetLastError())
+            end
         else
             UI.Load("Assets/UI/MainMenu.ui")
             UI.SetText("NetworkStatus",menuStatus)
+        end
+    end
+    if browserOpen and not joining then
+        browserRefreshElapsed=browserRefreshElapsed+dt
+        if browserRefreshElapsed>=0.2 then
+            browserRefreshElapsed=0
+            showBrowserRows()
         end
     end
     if not joining then return end
@@ -195,6 +300,7 @@ function OnUpdate(dt)
     if not Network.IsConnected() or joinElapsed>12 then
         local reason=Network.GetLastError()
         if reason=="" then reason="NO RESPONSE. CHECK ADDRESS AND UDP 7777." end
-        Network.Disconnect();joining=false;UI.SetText("NetworkStatus",reason)
+        Network.Disconnect();joining=false
+        UI.SetText(browserOpen and "BrowserStatus" or "NetworkStatus",reason)
     end
 end
