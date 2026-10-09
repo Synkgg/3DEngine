@@ -70,7 +70,7 @@ namespace
             << ' ' << widget.GetRenderOpacity();
 
         if (const UIUserWidget* reusable = dynamic_cast<const UIUserWidget*>(&widget))
-            out << ' ' << std::quoted(reusable->GetSourcePath());
+            out << ' ' << std::quoted(reusable->GetSourcePath()) << ' ' << std::quoted(reusable->GetEventScriptOverride());
         else if (const UIScrollBox* scroll = dynamic_cast<const UIScrollBox*>(&widget))
             out << ' ' << scroll->GetContentHeight() << ' ' << scroll->GetScrollOffset();
         else if (const UIText* text = dynamic_cast<const UIText*>(&widget))
@@ -242,9 +242,11 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         if (UIUserWidget* reusable = dynamic_cast<UIUserWidget*>(widget.get()))
         {
             std::string source;
-            row >> std::quoted(source);
+            std::string eventScript;
+            row >> std::quoted(source) >> std::quoted(eventScript);
             if (!row) return false;
             reusable->SetSourcePath(source);
+            reusable->SetEventScriptOverride(eventScript);
         }
         else if (UIScrollBox* scroll = dynamic_cast<UIScrollBox*>(widget.get()))
         {
