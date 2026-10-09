@@ -35,6 +35,11 @@ For a full-screen source authored at 1920x1080, use a 1920x1080 instance at
 (0, 0) for pixel-identical layout. Smaller reusable components should be
 authored relative to their own local origin.
 
+If several instances contain widgets with the same names, Lua can address
+one instance using a qualified name, for example
+`UI.SetVisible("LoadoutPage.PreviewGun_rifle", true)`. Unqualified names
+continue to work when only one matching widget is present.
+
 The instance's **Event Script** is optional. When set, every imported
 button's `On Click Script` is routed to that script, while the button's
 function name is retained. The host scene must contain a running Lua script
