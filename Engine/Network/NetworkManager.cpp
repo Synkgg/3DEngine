@@ -160,7 +160,7 @@ void NetworkManager::PollServerSearch()
      reply.players>reply.maxPlayers)continue;
   char ip[INET_ADDRSTRLEN]{};
   if(!inet_ntop(AF_INET,&from.sin_addr,ip,sizeof(ip)))continue;
-  const auto nameLength=std::find(reply.name,reply.name+sizeof(reply.name),'\\0')-reply.name;
+  const auto nameLength=std::find(reply.name,reply.name+sizeof(reply.name),'\0')-reply.name;
   std::string name(reply.name,static_cast<std::size_t>(nameLength));
   for(char& ch:name)if(static_cast<unsigned char>(ch)<32)ch=' ';
   if(name.empty())name="LAN DUEL";
