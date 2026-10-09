@@ -9,5 +9,5 @@ return {
     hipForward=0.56, adsForward=0.63, hipDown=-0.20, adsDown=-0.14,
     cameraKick=0.010, viewKick=0.045, kickRecovery=6,
     recoilRiseSpeed=12, recoilReturnSpeed=7,
-    muzzleDistance=0.72, muzzleSide=0.015, muzzleDown=-0.02
+    muzzleLocalDistance=0.585, muzzleLocalY=0.015
 }
