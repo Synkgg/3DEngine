@@ -10,6 +10,7 @@
 #include "../../UI/UISlider.h"
 #include "../../UI/UIProgressBar.h"
 #include "../../UI/UIScrollBox.h"
+#include "../../UI/UIUserWidget.h"
 #include "../../UI/UISerializer.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
@@ -183,6 +184,7 @@ void UIEditor::Draw(
         {
             paletteItem("Panel", UIWidgetType::Panel);
             paletteItem("Scroll Box", UIWidgetType::ScrollBox);
+            paletteItem("User Widget", UIWidgetType::UserWidget);
         }
         ImGui::Spacing();
         ImGui::TextDisabled("Click to add, or drag into the Designer");
@@ -316,7 +318,8 @@ void UIEditor::DrawHierarchy(
         widget.GetType()==UIWidgetType::Button ? "[Button]" :
         widget.GetType()==UIWidgetType::TextInput ? "[TextInput]" :
         widget.GetType()==UIWidgetType::Slider ? "[Slider]" :
-        widget.GetType()==UIWidgetType::ScrollBox ? "[ScrollBox]" : "[Progress]";
+        widget.GetType()==UIWidgetType::ScrollBox ? "[ScrollBox]" :
+        widget.GetType()==UIWidgetType::UserWidget ? "[UserWidget]" : "[Progress]";
     const bool open =
         ImGui::TreeNodeEx(
             &widget,
@@ -427,6 +430,7 @@ void UIEditor::DrawInspector(
         case UIWidgetType::Slider: return "Slider";
         case UIWidgetType::ProgressBar: return "Progress Bar";
         case UIWidgetType::ScrollBox: return "Scroll Box";
+        case UIWidgetType::UserWidget: return "User Widget";
         }
         return "Widget";
     };
@@ -1272,6 +1276,7 @@ void UIEditor::DrawDesigner(
         ImGui::TextDisabled("CREATE WIDGET");
         if(ImGui::MenuItem("Panel")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Panel); }
         if(ImGui::MenuItem("Scroll Box")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::ScrollBox); }
+        if(ImGui::MenuItem("User Widget")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::UserWidget); }
         if(ImGui::MenuItem("Text")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Text); }
         if(ImGui::MenuItem("Image")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Image); }
         if(ImGui::MenuItem("Button")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Button); }
@@ -1925,7 +1930,7 @@ void UIEditor::AddWidget(
         parent->GetType() ==
         UIWidgetType::Image ||
         parent->GetType() ==
-        UIWidgetType::Button || parent->GetType() == UIWidgetType::TextInput || parent->GetType() == UIWidgetType::Slider || parent->GetType() == UIWidgetType::ProgressBar)
+        UIWidgetType::Button || parent->GetType() == UIWidgetType::UserWidget || parent->GetType() == UIWidgetType::TextInput || parent->GetType() == UIWidgetType::Slider || parent->GetType() == UIWidgetType::ProgressBar)
     {
         parent =
             canvas.GetRoot();
@@ -1960,6 +1965,7 @@ void UIEditor::AddWidget(
     {
     case UIWidgetType::Panel: defaultSize=Vec2(320.0f,220.0f); break;
     case UIWidgetType::ScrollBox: defaultSize=Vec2(420.0f,300.0f); break;
+    case UIWidgetType::UserWidget: defaultSize=Vec2(1920.0f,1080.0f); break;
     case UIWidgetType::Text: defaultSize=Vec2(240.0f,48.0f); break;
     case UIWidgetType::Image: defaultSize=Vec2(180.0f,180.0f); break;
     case UIWidgetType::Button: defaultSize=Vec2(220.0f,48.0f); break;
@@ -2019,6 +2025,7 @@ std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
     copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder()); copy->SetRenderOpacity(source.GetRenderOpacity());
     copy->SetCornerRadius(source.GetCornerRadius()); copy->SetGradientEnabled(source.HasGradient());
     copy->SetGradientColor(source.GetGradientColor()); copy->SetGradientDirection(source.GetGradientDirection());
+    if(auto* a=dynamic_cast<const UIUserWidget*>(&source)) if(auto* b=dynamic_cast<UIUserWidget*>(copy.get())) b->SetSourcePath(a->GetSourcePath());
     if(auto* a=dynamic_cast<const UIScrollBox*>(&source)) if(auto* b=dynamic_cast<UIScrollBox*>(copy.get())) { b->SetContentHeight(a->GetContentHeight()); b->SetScrollOffset(a->GetScrollOffset()); }
     if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); b->SetHorizontalAlignment(a->GetHorizontalAlignment()); b->SetVerticalAlignment(a->GetVerticalAlignment()); }
     if(auto* a=dynamic_cast<const UITextInput*>(&source)) if(auto* b=dynamic_cast<UITextInput*>(copy.get())) { b->SetText(a->GetText()); b->SetPlaceholder(a->GetPlaceholder()); b->SetFontSize(a->GetFontSize()); b->SetMaxLength(a->GetMaxLength()); b->SetPassword(a->IsPassword()); }
