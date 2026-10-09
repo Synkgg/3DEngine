@@ -11,11 +11,20 @@ From the repository root:
 .\out\build\x64-Release\VelcrynEditor.exe .\Projects\DuelFPS\DuelFPS.project
 ```
 
-Press **Play** in the editor. Choose **Create Duel** on one instance and
-**Connect** on the other. On the same PC, use `127.0.0.1`. On a LAN, enter the
-host's IPv4 address. The game uses UDP port 7777. Internet direct-IP sessions
-require that port to reach the host; there is no matchmaking service or automatic
-NAT traversal. **Explore Terminal** runs the map and target drill offline.
+Press **Play** in the editor. Choose **Host a Duel** on one instance.
+On another PC on the same LAN, choose **Find LAN Servers**: the new server
+browser scans UDP port 7777 without blocking the game, lists discovered session
+names, IPv4 addresses and player counts, and lets you join with one click.
+Select **Refresh** to scan again; full sessions cannot be joined. You can also
+use the existing direct-IP **Connect** field (or `127.0.0.1` on the same PC).
+
+**LAN discovery is not an internet-wide public server directory.** It uses UDP
+broadcasts, so both computers must be on a reachable local network and Windows
+Firewall must allow the game/UDP 7777. For players on different public IPs,
+continue using direct IP and configure the host's port forwarding/firewall.
+A worldwide server browser requires a hosted master-server directory and
+public-server registration (plus NAT traversal or port forwarding). No such
+internet service is included. **Practice Range** runs the target drill offline.
 
 | Control | Action |
 |---|---|
@@ -64,7 +73,8 @@ retained as a renderer regression fixture; the new menu uses TerminalDrill.
 ctest --test-dir out/build/x64-Release --output-on-failure
 ```
 
-- `Game.Network`: real loopback sockets, full-lobby rejection, reconnection,
+- `Game.Network`: real loopback sockets, LAN discovery and advertised
+  player counts, full-lobby rejection, reconnection,
   transform/message delivery and host shutdown; shipping Lua scripts exercised
   through five rounds, victory, mutual rematch, draw, reload and client hit checks.
 - `RHI.Smoke`: GPU map/menu/HUD readbacks, menu hover, map collision rays, plus
