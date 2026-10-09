@@ -122,6 +122,7 @@ private:
 
     std::string m_ContentBrowserPath;
     std::filesystem::path m_AssetRoot;
+    std::filesystem::path m_ProjectSettingsPath;
     std::string m_SelectedAssetPath;
     std::string m_PendingUIAssetPath;
     std::string m_MeshPreviewPath;
