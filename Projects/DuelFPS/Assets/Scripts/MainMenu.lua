@@ -112,7 +112,7 @@ end
 local function chooseProfile(index)
     -- Switching presets keeps edits to the previous slot.
     Profiles.Save(loadoutIndex,loadoutPrimary,loadoutSecondary,Preferences)
-    Profiles.Select(index)
+    Profiles.Select(index,Preferences)
     restoreLoadout()
     refreshLoadout()
 end
