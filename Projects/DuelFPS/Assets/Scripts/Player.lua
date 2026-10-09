@@ -501,7 +501,7 @@ function OnCreate()
     weapons:Register(Rifle)
     weapons:Register(Shotgun)
     weapons:Register(SMG)
-    local _,primary,secondary=Profiles.GetActive()
+    local _,primary,secondary=Profiles.GetActive(Preferences)
     loadoutPrimary,loadoutSecondary=primary,secondary
     weapons:SetLoadout(loadoutPrimary,loadoutSecondary,practiceMode)
     playerLoadouts[Controller.GetLocalID()]={loadoutPrimary,loadoutSecondary}
@@ -563,7 +563,7 @@ local function openFieldArmory()
     if loadoutMenuOpen then return end
     loadoutMenuOpen=true
     paused=true
-    editingProfile,editingPrimary,editingSecondary=Profiles.GetActive()
+    editingProfile,editingPrimary,editingSecondary=Profiles.GetActive(Preferences)
     editingSlot="primary"
     editingCategory=editingPrimary
     CharacterController.Move(0,0)
@@ -574,8 +574,8 @@ end
 
 local function closeFieldArmory(apply)
     if not loadoutMenuOpen then return end
-    if apply and Profiles.Save(editingProfile,editingPrimary,editingSecondary) then
-        Profiles.Select(editingProfile)
+    if apply and Profiles.Save(editingProfile,editingPrimary,editingSecondary,Preferences) then
+        Profiles.Select(editingProfile,Preferences)
         local changed=loadoutPrimary~=editingPrimary or loadoutSecondary~=editingSecondary
         loadoutPrimary,loadoutSecondary=editingPrimary,editingSecondary
         -- Re-selecting an unchanged preset must not refill ammo mid-round.
@@ -591,9 +591,9 @@ end
 
 local function selectFieldProfile(index)
     -- Commit edits to the slot being left, then load the next preset.
-    Profiles.Save(editingProfile,editingPrimary,editingSecondary)
+    Profiles.Save(editingProfile,editingPrimary,editingSecondary,Preferences)
     editingProfile=index
-    editingPrimary,editingSecondary=Profiles.Get(index)
+    editingPrimary,editingSecondary=Profiles.Get(index,Preferences)
     editingCategory=editingPrimary
     refreshFieldArmory()
 end
