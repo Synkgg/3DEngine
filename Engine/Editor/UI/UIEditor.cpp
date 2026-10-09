@@ -33,6 +33,17 @@
 #include <sstream>
 #include <chrono>
 
+namespace
+{
+    bool IsLinkedWidgetChild(const UIWidget* widget)
+    {
+        for (const UIWidget* parent = widget ? widget->GetParent() : nullptr;
+             parent; parent = parent->GetParent())
+            if (parent->GetType() == UIWidgetType::UserWidget) return true;
+        return false;
+    }
+}
+
 bool UIEditor::OpenAsset(UICanvas& canvas, const std::string& path)
 {
     m_SelectedWidget = nullptr;
@@ -159,7 +170,7 @@ void UIEditor::Draw(
             ImGui::PushID(static_cast<int>(type));
             if (ImGui::Selectable(label))
                 AddWidget(canvas, type);
-            if (ImGui::BeginDragDropSource())
+            if (!IsLinkedWidgetChild(&widget) && ImGui::BeginDragDropSource())
             {
                 const int payloadType = static_cast<int>(type);
                 ImGui::SetDragDropPayload("UI_PALETTE_WIDGET", &payloadType, sizeof(payloadType));
@@ -338,7 +349,7 @@ void UIEditor::DrawHierarchy(
         );
     }
 
-    if (ImGui::BeginPopupContextItem("##WidgetContext"))
+    if (!IsLinkedWidgetChild(&widget) && ImGui::BeginPopupContextItem("##WidgetContext"))
     {
         if (m_SelectedWidget != &widget)
             SelectWidget(&widget);
@@ -365,7 +376,7 @@ void UIEditor::DrawHierarchy(
         ImGui::EndDragDropSource();
     }
 
-    if (ImGui::BeginDragDropTarget())
+    if (!IsLinkedWidgetChild(&widget) && widget.GetType() != UIWidgetType::UserWidget && ImGui::BeginDragDropTarget())
     {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("UI_WIDGET_REPARENT"))
         {
@@ -1636,6 +1647,15 @@ void UIEditor::DrawWidget(
 void UIEditor::SelectWidget(
     UIWidget* widget)
 {
+    // Linked content is edited in its source blueprint, never as an
+    // unsaved override in a host screen.
+    for (UIWidget* parent = widget ? widget->GetParent() : nullptr;
+         parent; parent = parent->GetParent())
+        if (parent->GetType() == UIWidgetType::UserWidget)
+        {
+            widget = parent;
+            break;
+        }
     m_SelectedWidget =
         widget;
 
