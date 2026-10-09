@@ -24,7 +24,7 @@ Entity 2
 Name BREACH S8
 Position 0 -0.02 0
 Rotation 0 1.5708 0
-Scale 0.38 0.38 0.38
+Scale 0.20 0.20 0.20
 Parent 1
 PrefabSource ""
 HierarchyGroup 0
@@ -42,7 +42,7 @@ Collider 0
 Scripts 0
 Entity 3
 Name MuzzleSocket
-Position 2 0.37 0
+Position 3.79 0.16 0
 Rotation 0 -0 0
 Scale 1 1 1
 Parent 2
