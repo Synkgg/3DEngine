@@ -4,12 +4,14 @@
 #include "../UIButton.h"
 #include "../UITextInput.h"
 #include "../UISlider.h"
+#include "../UIScrollBox.h"
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
 #include "../../Audio/AudioEngine.h"
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <string>
 
 bool UIRenderer::ViewportToCanvas(
@@ -95,6 +97,48 @@ void UIRenderer::UpdateInput(
     const float localY = input.GetMouseY() - viewportY;
     const bool inside = ViewportToCanvas(localX, localY, viewportWidth, viewportHeight, mouse);
     const UIRect canvasRect{0.0f, 0.0f, m_LogicalWidth, m_LogicalHeight};
+
+    // Route wheel input to the deepest visible scroll box beneath the cursor.
+    // The box clips both drawing and hit testing, so off-screen buttons
+    // cannot receive clicks.
+    if (inside && std::abs(input.GetMouseWheelY()) > 0.001f)
+    {
+        std::function<UIScrollBox*(UIWidget&, const UIRect&)> findScroll =
+            [&](UIWidget& node, const UIRect& parent) -> UIScrollBox*
+        {
+            if (!node.IsVisible() || !node.IsEnabled()) return nullptr;
+            const UIRect rect = node.GetParent() ? UILayout::Calculate(node, parent) : parent;
+            if (auto* scroll = dynamic_cast<UIScrollBox*>(&node))
+                if (mouse.x < rect.x || mouse.y < rect.y ||
+                    mouse.x >= rect.x+rect.width || mouse.y >= rect.y+rect.height)
+                    return nullptr;
+            UIRect contentRect = rect;
+            if (auto* scroll = dynamic_cast<UIScrollBox*>(&node))
+                contentRect.y -= scroll->GetScrollOffset();
+            const auto& children = node.GetChildren();
+            for (auto it = children.rbegin(); it != children.rend(); ++it)
+                if (UIScrollBox* nested = findScroll(**it, contentRect)) return nested;
+            if (auto* scroll = dynamic_cast<UIScrollBox*>(&node))
+                if (mouse.x >= rect.x && mouse.y >= rect.y &&
+                    mouse.x < rect.x+rect.width && mouse.y < rect.y+rect.height)
+                {
+                    float contentHeight = scroll->GetContentHeight();
+                    for (const auto& child : scroll->GetChildren())
+                    {
+                        if (!child || !child->IsVisible()) continue;
+                        const UIRect childBounds = UILayout::Calculate(*child, rect);
+                        contentHeight = std::max(contentHeight,
+                            childBounds.y+childBounds.height-rect.y);
+                    }
+                    scroll->SetScrollOffset(std::clamp(
+                        scroll->GetScrollOffset() - input.GetMouseWheelY()*55.0f,
+                        0.0f, std::max(0.0f, contentHeight-rect.height)));
+                    return scroll;
+                }
+            return nullptr;
+        };
+        findScroll(*root, canvasRect);
+    }
 
     UIWidget* hit = inside ? FindTopControl(*root, canvasRect, mouse) : nullptr;
     // One topmost control owns input across all interactive widget types.
@@ -237,10 +281,19 @@ UIWidget* UIRenderer::FindTopControl(UIWidget& widget, const UIRect& parentRect,
 {
     if (!widget.IsVisible()) return nullptr;
     const UIRect rect = widget.GetParent() ? UILayout::Calculate(widget, parentRect) : parentRect;
+    UIRect contentRect = rect;
+    if (const auto* scroll = dynamic_cast<const UIScrollBox*>(&widget))
+    {
+        // Scroll boxes are clipping ancestors, not just visual containers.
+        if (mouse.x < rect.x || mouse.y < rect.y ||
+            mouse.x >= rect.x+rect.width || mouse.y >= rect.y+rect.height)
+            return nullptr;
+        contentRect.y -= scroll->GetScrollOffset();
+    }
     if (widget.IsEnabled()) {
         const auto& children = widget.GetChildren();
         for (auto it = children.rbegin(); it != children.rend(); ++it)
-            if (UIWidget* hit = FindTopControl(**it, rect, mouse)) return hit;
+            if (UIWidget* hit = FindTopControl(**it, contentRect, mouse)) return hit;
     }
     const bool interactive = dynamic_cast<UIButton*>(&widget) || dynamic_cast<UITextInput*>(&widget) || dynamic_cast<UISlider*>(&widget);
     if (!interactive || !widget.IsHitTestVisible() || rect.width <= 0 || rect.height <= 0 ||
