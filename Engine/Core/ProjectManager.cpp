@@ -5,7 +5,7 @@
 #include <system_error>
 #include <array>
 
-bool ProjectManager::Load(const std::string& descriptorPath)
+bool ProjectManager::Load(const std::string& descriptorPath, bool createAssetDirectories)
 {
     std::filesystem::path descriptor = std::filesystem::absolute(descriptorPath).lexically_normal();
     std::ifstream file(descriptor);
@@ -55,7 +55,13 @@ bool ProjectManager::Load(const std::string& descriptorPath)
     }
 
     std::error_code directoryError;
-    std::filesystem::create_directories(project.GetAssetRoot(), directoryError);
+    if (createAssetDirectories)
+        std::filesystem::create_directories(project.GetAssetRoot(), directoryError);
+    else if (!std::filesystem::is_directory(project.GetAssetRoot(), directoryError))
+    {
+        Logger::Error("Project asset directory is missing: " + project.GetAssetRoot().string());
+        return false;
+    }
     if (directoryError)
     {
         Logger::Error("Failed to access project asset directory: " + project.GetAssetRoot().string());
