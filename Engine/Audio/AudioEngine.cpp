@@ -57,13 +57,13 @@ void AudioEngine::SetUIVolume(float v){m_UIVolume=std::clamp(v,0.0f,1.0f);}
 bool AudioEngine::PlayFootstep(const std::string& surface, bool sprint)
 {
     if (!m_Device) return false;
-    // Two staggered contact transients (heel + toe) with low-frequency body,
-    // surface-dependent grit and, on metal, a short resonant plate ring.
-    // Each step gets a different pitch, timing and noise seed; no WAV files or
-    // filesystem access are required in packaged games.
+    // Layered procedural footsteps: boot heel, toe, scuff and surface body.
+    // Distinct metal/concrete/wood responses and per-step variation work
+    // without external sample dependencies in exported builds.
     constexpr int sampleRate = 48000;
     constexpr float pi = 3.14159265358979323846f;
     const bool metal = surface == "metal";
+    const bool wood = surface == "wood";
     const unsigned int sequence = ++m_FootstepSequence;
     std::uint32_t rng = 0x9E3779B9u ^ (sequence * 1664525u);
     auto noise = [&rng]() -> float
@@ -73,7 +73,7 @@ bool AudioEngine::PlayFootstep(const std::string& surface, bool sprint)
     };
     const float variation = static_cast<float>(sequence % 7u) / 6.0f;
     const float pitch = 0.91f + variation * 0.17f + (sprint ? 0.10f : 0.0f);
-    const float duration = metal ? 0.24f : 0.19f;
+    const float duration = metal ? 0.27f : (wood ? 0.23f : 0.20f);
     const int count = static_cast<int>(sampleRate * duration);
     std::vector<float> samples(static_cast<std::size_t>(count), 0.0f);
     float low = 0.0f;
@@ -82,23 +82,35 @@ bool AudioEngine::PlayFootstep(const std::string& surface, bool sprint)
     {
         const float t = static_cast<float>(i) / static_cast<float>(sampleRate);
         const float raw = noise();
-        const float cutoff = metal ? 0.22f : 0.11f;
+        const float cutoff = metal ? 0.18f : (wood ? 0.14f : 0.095f);
         low += cutoff * (raw - low);
-        const float body = low * std::exp(-t * (metal ? 26.0f : 34.0f));
+        const float body = low * std::exp(-t * (metal ? 25.0f : (wood ? 31.0f : 39.0f)));
         const float heel = std::exp(-t * 67.0f);
         const float toeTime = t - (sprint ? 0.062f : 0.078f);
         const float toe = toeTime > 0.0f ? std::exp(-toeTime * 76.0f) : 0.0f;
         const float contact = (heel + 0.62f * toe);
-        const float bass = std::sin(2.0f * pi * (78.0f * pitch * t - 38.0f * t * t)) *
-                           std::exp(-t * 29.0f);
-        const float grit = (raw - previous * 0.35f) * contact * (metal ? 0.11f : 0.17f);
+        const float bassFrequency = wood ? 115.0f : (metal ? 82.0f : 66.0f);
+        const float bass = std::sin(2.0f * pi * (bassFrequency * pitch * t - 30.0f * t * t)) *
+                           std::exp(-t * (wood ? 35.0f : 29.0f));
+        const float high = raw - low;
+        const float grit = (raw - previous * 0.30f) * contact *
+                           (metal ? 0.12f : (wood ? 0.075f : 0.19f));
+        // The scuff is deliberately quieter than the contact. It moves
+        // slightly earlier when sprinting and breaks up repeated samples.
+        const float scuffTime = sprint ? 0.030f : 0.052f;
+        const float scuff = t > scuffTime
+            ? high * std::exp(-(t - scuffTime) * (metal ? 32.0f : 48.0f)) * 0.10f
+            : 0.0f;
         const float ring = metal ?
-            (std::sin(2.0f * pi * 840.0f * pitch * t) * 0.13f +
-             std::sin(2.0f * pi * 1220.0f * pitch * t) * 0.06f) *
-            std::exp(-t * 23.0f) : 0.0f;
+            (std::sin(2.0f * pi * 510.0f * pitch * t) * 0.07f +
+             std::sin(2.0f * pi * 930.0f * pitch * t) * 0.025f) *
+            std::exp(-t * 31.0f) : 0.0f;
+        const float woodKnock = wood ?
+            std::sin(2.0f * pi * 225.0f * pitch * t) *
+            std::exp(-t * 40.0f) * 0.17f : 0.0f;
         previous = raw;
-        float sample = (body * 0.8f + bass * 0.26f + grit + ring) *
-                       (sprint ? 0.85f : 0.70f);
+        float sample = (body * 0.86f + bass * 0.24f + grit + scuff + ring + woodKnock) *
+                       (sprint ? 0.89f : 0.71f);
         // A short attack ramp avoids a digital click at the start.
         sample *= std::min(1.0f, t * 900.0f);
         samples[static_cast<std::size_t>(i)] = std::clamp(sample, -1.0f, 1.0f);
