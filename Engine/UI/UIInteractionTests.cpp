@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstring>
 #include <fstream>
+#include <filesystem>
 #include <algorithm>
 
 bool RunUIInteractionTests(Renderer& renderer)
@@ -179,6 +180,19 @@ bool RunUIInteractionTests(Renderer& renderer)
         "loadout profiles, category tabs and parent groups exist");
     check(UISerializer::Load(canvas,"Projects/DuelFPS/Assets/UI/LoadoutInGame.ui"),
         "load grouped in-game armory");
+    // A widget blueprint must never recursively include itself.
+    {
+        UICanvas cyclic;
+        auto instance = std::make_unique<UIUserWidget>();
+        instance->SetName("Recursive");
+        instance->SetSourcePath("reusable-cycle.ui");
+        cyclic.GetRoot()->AddChild(std::move(instance));
+        const std::string fixture = "out/build/reusable-cycle.ui";
+        check(UISerializer::Save(cyclic, fixture), "save linked widget reference");
+        check(!UISerializer::Load(cyclic, fixture), "reject circular widget blueprint");
+        std::error_code ignored;
+        std::filesystem::remove(fixture, ignored);
+    }
     ui.Clear(); ui.SetMouseInteractionEnabled(false);
     return ok;
 }
