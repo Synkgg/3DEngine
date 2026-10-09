@@ -11,6 +11,7 @@ function WeaponSystem.new(api)
         equipped = nil,
         viewmodel = 0,
         muzzleSocket = 0,
+        viewmodelBaseOffset = {x=0,y=0,z=0},
         cooldown = 0.0,
         reloadTimer = 0.0,
         kick = 0.0,
@@ -90,6 +91,9 @@ function WeaponSystem:Equip(weaponID)
     self.recoilApplied = 0.0
     self.viewmodel = self.api.Scene.InstantiatePrefab(def.viewmodelPrefab, 0)
     if self.viewmodel and self.viewmodel ~= 0 then
+        -- The prefab root is a camera-relative pose offset, not a world
+        -- position. Preserve authored offsets instead of overwriting them.
+        self.viewmodelBaseOffset = self.api.Scene.GetPosition(self.viewmodel)
         self.muzzleSocket = self.api.Scene.FindChild(self.viewmodel, "MuzzleSocket")
     end
     return true
@@ -174,9 +178,11 @@ function WeaponSystem:Update(dt, cameraEntity)
     local down = self.aiming and def.adsDown or def.hipDown
 
     -- Recoil moves the carried weapon visibly UP and BACK, then settles.
-    local x = c.x + r.x * side + f.x * (forwardOffset - self.kick)
-    local y = c.y + r.y * side + f.y * (forwardOffset - self.kick) + down + self.kick * 1.6
-    local z = c.z + r.z * side + f.z * (forwardOffset - self.kick)
+    local base = self.viewmodelBaseOffset
+    local horizontalRightX, horizontalRightZ = -f.z, f.x
+    local x = c.x + horizontalRightX * (side + base.x) + f.x * (forwardOffset - self.kick + base.z)
+    local y = c.y + f.y * (forwardOffset - self.kick + base.z) + down + base.y + self.kick * 1.6
+    local z = c.z + horizontalRightZ * (side + base.x) + f.z * (forwardOffset - self.kick + base.z)
     local moving=self.api.Input.IsKeyDown("W") or self.api.Input.IsKeyDown("S") or self.api.Input.IsKeyDown("A") or self.api.Input.IsKeyDown("D")
     if moving and not self.aiming then y=y+math.sin(self.animationTime*13)*.008 end
     local reloadPose=self.reloadTimer>0 and math.sin(math.pi*self.reloadTimer/def.reloadTime) or 0
@@ -186,7 +192,11 @@ function WeaponSystem:Update(dt, cameraEntity)
     local yaw = math.deg(math.atan(-f.x, -f.z))
     local horizontal = math.sqrt(f.x * f.x + f.z * f.z)
     local pitch = math.deg(math.atan(f.y, horizontal))
-    self.api.Scene.SetRotation(self.viewmodel, -pitch+reloadPose*16, yaw, reloadPose*-24)
+    -- A GunPack barrel runs along local +X and the mesh child turns it
+    -- toward local -Z. Pitch the parent around camera-right; never roll
+    -- the root around its barrel (the old -pitch / reload Z tilt made
+    -- weapons flip onto their sides when looking vertically).
+    self.api.Scene.SetRotation(self.viewmodel, pitch, yaw, 0)
 end
 
 function WeaponSystem:SpawnRemoteShot(ownerEntity,weaponID,ox,oy,oz,dx,dy,dz)
