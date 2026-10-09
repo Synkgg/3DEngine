@@ -6,6 +6,7 @@
 #include "UITextInput.h"
 #include "UISlider.h"
 #include "UIProgressBar.h"
+#include "UIScrollBox.h"
 #include "UIWidgetFactory.h"
 
 #include <filesystem>
@@ -66,7 +67,9 @@ namespace
             << ' ' << widget.HasGradient() << ' ' << widget.GetGradientColor().x << ' ' << widget.GetGradientColor().y << ' ' << widget.GetGradientColor().z << ' ' << widget.GetGradientColor().w << ' ' << static_cast<int>(widget.GetGradientDirection()) << ' ' << widget.GetCornerRadius()
             << ' ' << widget.GetRenderOpacity();
 
-        if (const UIText* text = dynamic_cast<const UIText*>(&widget))
+        if (const UIScrollBox* scroll = dynamic_cast<const UIScrollBox*>(&widget))
+            out << ' ' << scroll->GetContentHeight() << ' ' << scroll->GetScrollOffset();
+        else if (const UIText* text = dynamic_cast<const UIText*>(&widget))
             out << ' ' << std::quoted(EncodeText(text->GetText())) << ' ' << text->GetFontSize() << ' ' << static_cast<int>(text->GetHorizontalAlignment()) << ' ' << static_cast<int>(text->GetVerticalAlignment());
         else if (const UITextInput* input = dynamic_cast<const UITextInput*>(&widget))
             out << ' ' << std::quoted(input->GetText()) << ' ' << std::quoted(input->GetPlaceholder())
@@ -131,7 +134,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "ENGINE_UI 10\n";
+    out << "ENGINE_UI 11\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -152,7 +155,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     in >> magic >> version;
     // Read the old marker for existing assets, but all newly saved UI files use
     // the engine-neutral marker.
-    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 10) return false;
+    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 11) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -189,7 +192,8 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         float cornerRadius=0.0f; if(version>=9) row >> cornerRadius;
         float renderOpacity=1.0f; if(version>=10) row >> renderOpacity;
 
-        const int maxType = version >= 10 ? static_cast<int>(UIWidgetType::ProgressBar) : static_cast<int>(UIWidgetType::Slider);
+        const int maxType = version >= 11 ? static_cast<int>(UIWidgetType::ScrollBox) :
+            (version >= 10 ? static_cast<int>(UIWidgetType::ProgressBar) : static_cast<int>(UIWidgetType::Slider));
         if (!row || typeValue < 0 || typeValue > maxType)
             return false;
 
@@ -211,7 +215,15 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         widget->SetCornerRadius(cornerRadius);
         widget->SetRenderOpacity(renderOpacity);
 
-        if (UIText* text = dynamic_cast<UIText*>(widget.get()))
+        if (UIScrollBox* scroll = dynamic_cast<UIScrollBox*>(widget.get()))
+        {
+            float contentHeight = 0.0f, scrollOffset = 0.0f;
+            row >> contentHeight >> scrollOffset;
+            if (!row) return false;
+            scroll->SetContentHeight(contentHeight);
+            scroll->SetScrollOffset(scrollOffset);
+        }
+        else if (UIText* text = dynamic_cast<UIText*>(widget.get()))
         {
             std::string value;
             float fontSize = 24.0f;
