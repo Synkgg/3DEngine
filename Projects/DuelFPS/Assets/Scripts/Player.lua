@@ -9,6 +9,7 @@ local gunDefs={pistol=Pistol,rifle=Rifle,shotgun=Shotgun,smg=SMG}
 local loadoutPrimary,loadoutSecondary="rifle","pistol"
 local loadoutSent=false
 local loadoutMenuOpen=false
+local pendingArmoryAction=nil
 local editingSlot="primary"
 local editingProfile=1
 local editingPrimary,editingSecondary="rifle","pistol"
@@ -605,7 +606,7 @@ local function selectFieldGun(id)
     editingCategory=id
     refreshFieldArmory()
 end
-function OnLoadoutClicked() openFieldArmory() end
+function OnLoadoutClicked() pendingArmoryAction="open" end
 function OnPrimarySlotClicked() editingSlot="primary";refreshFieldArmory() end
 function OnSecondarySlotClicked() editingSlot="secondary";refreshFieldArmory() end
 function OnProfile1Clicked() selectFieldProfile(1) end
@@ -621,8 +622,8 @@ function OnRifleSelected() selectFieldGun("rifle") end
 function OnSMGSelected() selectFieldGun("smg") end
 function OnShotgunSelected() selectFieldGun("shotgun") end
 function OnPistolSelected() selectFieldGun("pistol") end
-function OnLoadoutSaved() closeFieldArmory(true) end
-function OnLoadoutBack() closeFieldArmory(false) end
+function OnLoadoutSaved() pendingArmoryAction="apply" end
+function OnLoadoutBack() pendingArmoryAction="close" end
 
 function OnResumeClicked()
     if paused then setPaused(false) end
@@ -645,6 +646,15 @@ function OnReturnToMenuClicked()
 end
 
 function OnUpdate(dt)
+    -- Never replace the canvas inside a UI button callback: the input
+    -- dispatcher may still be traversing that widget hierarchy.
+    if pendingArmoryAction then
+        local action=pendingArmoryAction
+        pendingArmoryAction=nil
+        if action=="open" then openFieldArmory()
+        elseif action=="apply" then closeFieldArmory(true)
+        elseif action=="close" then closeFieldArmory(false) end
+    end
     elapsed=elapsed+dt
     damageTimer=math.max(0,damageTimer-dt)
     for sequence,pending in pairs(pendingShots) do
