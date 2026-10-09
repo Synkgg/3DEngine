@@ -925,6 +925,32 @@ void LuaScript::BindEngineAPI()
         if (m_Scene) m_Scene->ClearParent(Entity(childID), keepWorld);
     });
 
+    // Resolve a named attachment point belonging to a specific prefab
+    // instance. Unlike global FindEntity, this remains unambiguous when
+    // multiple actors carry the same weapon.
+    sceneApi.set_function("FindChild", [this](std::uint32_t parentID, const std::string& name)
+    {
+        if (!m_Scene || parentID == 0 || name.empty()) return std::uint32_t(0);
+        for (Entity child : m_Scene->GetChildren(Entity(parentID)))
+        {
+            const NameComponent* named = m_Scene->GetComponent<NameComponent>(child);
+            if (named && named->name == name) return child.GetID();
+        }
+        return std::uint32_t(0);
+    });
+
+    sceneApi.set_function("GetWorldPosition", [this](std::uint32_t entityID)
+    {
+        sol::table result = m_Lua->create_table();
+        const Entity entity = m_Scene ? m_Scene->FindEntityByID(entityID) : Entity();
+        const Vec3 value = entity.IsValid()
+            ? m_Scene->GetWorldTransform(entity).position : Vec3(0.0f, 0.0f, 0.0f);
+        result["x"] = value.x;
+        result["y"] = value.y;
+        result["z"] = value.z;
+        return result;
+    });
+
     sceneApi.set_function("GetPosition", [this](std::uint32_t entityID)
     {
         sol::table result = m_Lua->create_table();
