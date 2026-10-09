@@ -59,7 +59,17 @@ namespace Velcryn::RHI
         TextureFormat depthFormat = TextureFormat::D32_Float;
         bool depthTest = true, depthWrite = true, cullBackFaces = true;
         bool sampledTexture = false;
+        std::uint32_t uniformSize = 0;
+        bool displayEncodedTexture = false;
+        bool clampSampler = false;
         bool alphaBlend = false;
+        std::uint32_t textureCount = 1;
+        std::uint32_t sampleCount = 1;
+        std::uint32_t rawTextureMask = 0;
+        bool secondColor = false;
+        bool lineList = false;
+        bool depthLessEqual = false;
+        bool cullFrontFaces = false;
         const char* debugName = nullptr;
     };
 

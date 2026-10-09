@@ -32,11 +32,11 @@ namespace Velcryn::RHI
         virtual PipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) = 0;
         virtual void DestroyPipeline(PipelineHandle pipeline) = 0;
         // These commands record into the current graphics frame.
-        virtual bool BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear = true) = 0;
+        virtual bool BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear = true, TextureHandle secondColor = {}, TextureHandle resolveColor = {}, TextureHandle resolveDepth = {}, TextureHandle resolveNormal = {}) = 0;
         virtual void EndRendering() = 0;
         virtual bool DrawIndexed(PipelineHandle pipeline, BufferHandle vertices, BufferHandle indices,
             std::uint32_t indexCount, const void* constants, std::uint32_t constantSize,
-            std::uint32_t instanceCount = 1, TextureHandle texture = {}) = 0;
+            std::uint32_t instanceCount = 1, TextureHandle texture = {}, std::span<const std::byte> uniforms = {}, std::span<const TextureHandle> additionalTextures = {}) = 0;
 
         virtual CommandListHandle BeginCommandList(QueueType queue = QueueType::Graphics) = 0;
         virtual void EndCommandList(CommandListHandle commandList) = 0;

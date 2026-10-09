@@ -54,29 +54,35 @@ namespace Velcryn::RHI
 
     PipelineHandle NRIDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& desc)
     {
-        if (!m_Device || desc.vertexShader.empty() || desc.fragmentShader.empty() ||
+        if (!m_Device || desc.vertexShader.empty() || (desc.fragmentShader.empty() && desc.colorFormat != TextureFormat::Unknown) ||
             desc.attributes.size() > 255 || desc.vertexStride > 65535 || desc.constantSize % 4)
             return {};
         PipelineSlot slot{};
         slot.stride = desc.vertexStride;
         slot.constantSize = desc.constantSize;
         slot.sampledTexture = desc.sampledTexture;
+        slot.uniformSize = desc.uniformSize;
+        slot.textureCount = desc.textureCount; slot.rawTextureMask = desc.rawTextureMask;
+        slot.displayEncodedTexture = desc.displayEncodedTexture;
         nri::RootConstantDesc constants{0, desc.constantSize, nri::StageBits::VERTEX_SHADER | nri::StageBits::FRAGMENT_SHADER};
-        nri::DescriptorRangeDesc textureRange{};
+        nri::DescriptorRangeDesc ranges[2]{};
+        auto& textureRange = ranges[0];
+        ranges[1] = {32, 1, nri::DescriptorType::CONSTANT_BUFFER, constants.shaderStages};
         textureRange.baseRegisterIndex = 0;
-        textureRange.descriptorNum = 1;
+        textureRange.descriptorNum = desc.textureCount;
         textureRange.descriptorType = nri::DescriptorType::TEXTURE;
         textureRange.shaderStages = nri::StageBits::FRAGMENT_SHADER;
         nri::DescriptorSetDesc textureSet{};
         textureSet.registerSpace = 0;
         textureSet.ranges = &textureRange;
-        textureSet.rangeNum = 1;
+        textureSet.rangeNum = desc.uniformSize ? 2 : 1;
         nri::RootSamplerDesc sampler{};
         sampler.registerIndex = 0;
         sampler.shaderStages = nri::StageBits::FRAGMENT_SHADER;
         sampler.desc.filters = {nri::Filter::LINEAR, nri::Filter::LINEAR, nri::Filter::LINEAR, nri::FilterOp::AVERAGE};
         sampler.desc.addressModes = {nri::AddressMode::REPEAT, nri::AddressMode::REPEAT, nri::AddressMode::REPEAT};
         sampler.desc.mipMax = 16.0f;
+        if (desc.clampSampler) sampler.desc.addressModes = {nri::AddressMode::CLAMP_TO_EDGE, nri::AddressMode::CLAMP_TO_EDGE, nri::AddressMode::CLAMP_TO_EDGE};
         nri::PipelineLayoutDesc layout{};
         // NRI requires the root-parameter register space to be unique from every
         // descriptor-set register space. Keep push constants in space 0 and put
@@ -119,17 +125,20 @@ namespace Velcryn::RHI
             color.colorBlend = {nri::BlendFactor::SRC_ALPHA, nri::BlendFactor::ONE_MINUS_SRC_ALPHA, nri::BlendOp::ADD};
             color.alphaBlend = {nri::BlendFactor::ONE, nri::BlendFactor::ONE_MINUS_SRC_ALPHA, nri::BlendOp::ADD};
         }
+        nri::MultisampleDesc multisample{}; multisample.sampleNum=static_cast<nri::Sample_t>(desc.sampleCount); multisample.sampleMask=nri::ALL;
         nri::GraphicsPipelineDesc pipeline{};
+        pipeline.multisample=&multisample;
         pipeline.pipelineLayout = slot.layout;
         pipeline.vertexInput = &input;
-        pipeline.inputAssembly.topology = nri::Topology::TRIANGLE_LIST;
-        pipeline.rasterization.cullMode = desc.cullBackFaces ? nri::CullMode::BACK : nri::CullMode::NONE;
+        pipeline.inputAssembly.topology = desc.lineList ? nri::Topology::LINE_LIST : nri::Topology::TRIANGLE_LIST;
+        pipeline.rasterization.cullMode = desc.cullFrontFaces ? nri::CullMode::FRONT : desc.cullBackFaces ? nri::CullMode::BACK : nri::CullMode::NONE;
         pipeline.rasterization.frontCounterClockwise = true;
-        pipeline.outputMerger.colors = &color; pipeline.outputMerger.colorNum = 1;
+        nri::ColorAttachmentDesc colors[2] = {color, color};
+        pipeline.outputMerger.colors = colors; pipeline.outputMerger.colorNum = desc.colorFormat == TextureFormat::Unknown ? 0 : (desc.secondColor ? 2 : 1);
         pipeline.outputMerger.depthStencilFormat = ToNRIFormat(desc.depthFormat);
-        pipeline.outputMerger.depth.compareOp = desc.depthTest ? nri::CompareOp::LESS : nri::CompareOp::NONE;
+        pipeline.outputMerger.depth.compareOp = desc.depthTest ? (desc.depthLessEqual ? nri::CompareOp::LESS_EQUAL : nri::CompareOp::LESS) : nri::CompareOp::NONE;
         pipeline.outputMerger.depth.write = desc.depthWrite;
-        pipeline.shaders = shaders; pipeline.shaderNum = 2;
+        pipeline.shaders = shaders; pipeline.shaderNum = desc.fragmentShader.empty() ? 1 : 2;
         if (m_Core.CreateGraphicsPipeline(*m_Device, pipeline, slot.resource) != nri::Result::SUCCESS)
         {
             m_Core.DestroyPipelineLayout(slot.layout);
@@ -178,28 +187,46 @@ namespace Velcryn::RHI
         slot.state = after;
     }
 
-    bool NRIDevice::BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear)
+    bool NRIDevice::BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear, TextureHandle secondColor, TextureHandle resolveColor, TextureHandle resolveDepth, TextureHandle resolveNormal)
     {
-        if (!m_FrameOpen || m_Rendering || !color || !depth || !clearColor ||
-            color.index > m_Textures.size() || depth.index > m_Textures.size()) return false;
-        auto& c = m_Textures[color.index - 1]; auto& d = m_Textures[depth.index - 1];
-        if (c.generation != color.generation || d.generation != depth.generation || !c.attachment || !d.attachment ||
-            c.desc.width != d.desc.width || c.desc.height != d.desc.height) return false;
-        TransitionTexture(c, {nri::AccessBits::COLOR_ATTACHMENT, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT});
-        TransitionTexture(d, {nri::AccessBits::DEPTH_STENCIL_ATTACHMENT, nri::Layout::DEPTH_STENCIL_ATTACHMENT, nri::StageBits::DEPTH_STENCIL_ATTACHMENT});
-        nri::AttachmentDesc ca{}, da{};
-        ca.descriptor = c.attachment; ca.loadOp = clear ? nri::LoadOp::CLEAR : nri::LoadOp::LOAD; ca.storeOp = nri::StoreOp::STORE;
-        std::memcpy(&ca.clearValue.color.f, clearColor, sizeof(float) * 4);
-        da.descriptor = d.attachment; da.loadOp = clear ? nri::LoadOp::CLEAR : nri::LoadOp::LOAD; da.storeOp = nri::StoreOp::STORE;
-        da.clearValue.depthStencil.depth = 1.0f;
+        if (!m_FrameOpen || m_Rendering || (!color && !depth) || !clearColor) return false;
+        auto valid = [&](TextureHandle h) { return !h || (h.index <= m_Textures.size() && m_Textures[h.index-1].generation == h.generation && m_Textures[h.index-1].attachment); };
+        if (!valid(resolveColor) || !valid(resolveDepth) || !valid(resolveNormal) || !valid(color) || !valid(depth) || !valid(secondColor) || (secondColor && !color)) return false;
+        auto& target = m_Textures[(color ? color : depth).index-1];
+        nri::AttachmentDesc colors[2]{}, da{};
+        TextureHandle handles[2] = {color, secondColor};
+        for (int i=0;i<2;++i) if (handles[i]) {
+            auto& c = m_Textures[handles[i].index-1];
+            if (c.desc.width != target.desc.width || c.desc.height != target.desc.height) return false;
+            TransitionTexture(c, {nri::AccessBits::COLOR_ATTACHMENT, nri::Layout::COLOR_ATTACHMENT, nri::StageBits::COLOR_ATTACHMENT});
+            colors[i].descriptor=c.attachment; colors[i].loadOp=clear?nri::LoadOp::CLEAR:nri::LoadOp::LOAD; colors[i].storeOp=nri::StoreOp::STORE;
+            std::memcpy(&colors[i].clearValue.color.f, clearColor, sizeof(float)*4);
+        }
+        if (depth) {
+            auto& d=m_Textures[depth.index-1];
+            if (d.desc.width != target.desc.width || d.desc.height != target.desc.height) return false;
+            TransitionTexture(d, {nri::AccessBits::DEPTH_STENCIL_ATTACHMENT, nri::Layout::DEPTH_STENCIL_ATTACHMENT, nri::StageBits::DEPTH_STENCIL_ATTACHMENT});
+            da.descriptor=d.attachment; da.loadOp=clear?nri::LoadOp::CLEAR:nri::LoadOp::LOAD; da.storeOp=nri::StoreOp::STORE; da.clearValue.depthStencil.depth=1;
+        }
+        TextureHandle resolves[]={resolveColor,resolveNormal,resolveDepth};
+        TextureHandle sources[]={color,secondColor,depth};
+        nri::AttachmentDesc* attachments[]={&colors[0],&colors[1],&da};
+        for(int i=0;i<3;++i) if(resolves[i]) {
+            if(!sources[i]) return false;
+            auto& dst=m_Textures[resolves[i].index-1];
+            if(dst.desc.width!=target.desc.width || dst.desc.height!=target.desc.height || dst.desc.sampleCount!=1 || target.desc.sampleCount<=1) return false;
+            TransitionTexture(dst,i==2 ? nri::AccessLayoutStage{nri::AccessBits::DEPTH_STENCIL_ATTACHMENT,nri::Layout::DEPTH_STENCIL_ATTACHMENT,nri::StageBits::DEPTH_STENCIL_ATTACHMENT} : nri::AccessLayoutStage{nri::AccessBits::COLOR_ATTACHMENT,nri::Layout::COLOR_ATTACHMENT,nri::StageBits::COLOR_ATTACHMENT});
+            attachments[i]->resolveDst=dst.attachment;
+            attachments[i]->resolveOp=i==2?nri::ResolveOp::MIN:nri::ResolveOp::AVERAGE;
+        }
+        m_RenderResolves={resolveColor,resolveNormal,resolveDepth};
         nri::RenderingDesc rendering{};
-        rendering.colors = &ca; rendering.colorNum = 1; rendering.depth = da;
+        rendering.colors=colors; rendering.colorNum=color?(secondColor?2:1):0; rendering.depth=da;
         m_Core.CmdBeginRendering(*m_FrameCommandBuffer, rendering);
-        nri::Viewport viewport{0, 0, static_cast<float>(c.desc.width), static_cast<float>(c.desc.height), 0, 1};
-        nri::Rect scissor{0, 0, static_cast<nri::Dim_t>(c.desc.width), static_cast<nri::Dim_t>(c.desc.height)};
-        m_Core.CmdSetViewports(*m_FrameCommandBuffer, &viewport, 1);
-        m_Core.CmdSetScissors(*m_FrameCommandBuffer, &scissor, 1);
-        m_RenderColor = color; m_RenderDepth = depth; m_Rendering = true;
+        nri::Viewport viewport{0,0,float(target.desc.width),float(target.desc.height),0,1};
+        nri::Rect scissor{0,0,static_cast<nri::Dim_t>(target.desc.width),static_cast<nri::Dim_t>(target.desc.height)};
+        m_Core.CmdSetViewports(*m_FrameCommandBuffer,&viewport,1); m_Core.CmdSetScissors(*m_FrameCommandBuffer,&scissor,1);
+        m_RenderColor=color; m_RenderSecondColor=secondColor; m_RenderDepth=depth; m_Rendering=true;
         return true;
     }
 
@@ -207,13 +234,13 @@ namespace Velcryn::RHI
     {
         if (!m_Rendering) return;
         m_Core.CmdEndRendering(*m_FrameCommandBuffer);
-        auto& color = m_Textures[m_RenderColor.index - 1];
-        TransitionTexture(color, {nri::AccessBits::SHADER_RESOURCE, nri::Layout::SHADER_RESOURCE, nri::StageBits::FRAGMENT_SHADER});
-        m_RenderColor = {}; m_RenderDepth = {}; m_Rendering = false;
+        for (auto handle : {m_RenderColor, m_RenderSecondColor, m_RenderDepth, m_RenderResolves[0], m_RenderResolves[1], m_RenderResolves[2]}) if (handle)
+            TransitionTexture(m_Textures[handle.index-1], {nri::AccessBits::SHADER_RESOURCE,nri::Layout::SHADER_RESOURCE,nri::StageBits::FRAGMENT_SHADER});
+        m_RenderResolves={}; m_RenderColor={}; m_RenderSecondColor={}; m_RenderDepth={}; m_Rendering=false;
     }
 
     bool NRIDevice::DrawIndexed(PipelineHandle pipeline, BufferHandle vertices, BufferHandle indices,
-        uint32_t count, const void* constants, uint32_t constantSize, uint32_t instances, TextureHandle texture)
+        uint32_t count, const void* constants, uint32_t constantSize, uint32_t instances, TextureHandle texture, std::span<const std::byte> uniforms, std::span<const TextureHandle> additionalTextures)
     {
         if (!m_Rendering || !pipeline || !vertices || !indices || !count || !instances ||
             pipeline.index > m_Pipelines.size() || vertices.index > m_Buffers.size() || indices.index > m_Buffers.size()) return false;
@@ -233,6 +260,7 @@ namespace Velcryn::RHI
             nri::SetRootConstantsDesc root{}; root.data = constants; root.size = constantSize;
             m_Core.CmdSetRootConstants(*m_FrameCommandBuffer, root);
         }
+        if (uniforms.size() != p.uniformSize) return false;
         if (p.sampledTexture)
         {
             if (!m_DescriptorPool || !texture || texture.index > m_Textures.size()) return false;
@@ -241,11 +269,43 @@ namespace Velcryn::RHI
             nri::DescriptorSet* set = nullptr;
             if (m_Core.AllocateDescriptorSets(*m_DescriptorPool, *p.layout, 0, &set, 1, 0) != nri::Result::SUCCESS || !set)
                 return false;
-            nri::Descriptor* descriptor = t.shaderResource;
+            if (additionalTextures.size()+1 != p.textureCount) return false;
+            std::vector<nri::Descriptor*> descriptors;
+            for (uint32_t index=0; index<p.textureCount; ++index) {
+                const auto handle = index == 0 ? texture : additionalTextures[index-1];
+                if (!handle || handle.index > m_Textures.size()) return false;
+                const auto& source=m_Textures[handle.index-1];
+                if (source.generation != handle.generation || !source.shaderResource) return false;
+                const bool raw=p.displayEncodedTexture || ((p.rawTextureMask>>index)&1);
+                descriptors.push_back(raw && source.imguiResource ? source.imguiResource : source.shaderResource);
+            }
             nri::UpdateDescriptorRangeDesc update{};
-            update.descriptorSet = set; update.rangeIndex = 0; update.baseDescriptor = 0;
-            update.descriptors = &descriptor; update.descriptorNum = 1;
-            m_Core.UpdateDescriptorRanges(&update, 1);
+            update.descriptorSet=set; update.rangeIndex=0; update.baseDescriptor=0;
+            update.descriptors=descriptors.data(); update.descriptorNum=p.textureCount;
+            m_Core.UpdateDescriptorRanges(&update,1);
+            if (p.uniformSize)
+            {
+                const auto alignment = m_Core.GetDeviceDesc(*m_Device).memoryAlignment.constantBufferOffset;
+                const uint64_t size = (p.uniformSize + alignment - 1) / alignment * alignment;
+                auto& arena = m_Buffers[m_DrawUniformBuffer.index - 1];
+                if (m_DrawUniformOffset + size > arena.desc.size) {
+                    Logger::Error("RHI: per-frame draw uniform arena exhausted."); return false;
+                }
+                auto* resource = arena.resource;
+                void* mapped = m_Core.MapBuffer(*resource, m_DrawUniformOffset, size);
+                if (!mapped) return false;
+                std::memcpy(mapped, uniforms.data(), uniforms.size());
+                m_Core.UnmapBuffer(*resource);
+                nri::BufferViewDesc view{};
+                view.buffer = resource; view.type = nri::BufferView::CONSTANT_BUFFER;
+                view.offset = m_DrawUniformOffset; view.size = size;
+                m_DrawUniformOffset += size;
+                nri::Descriptor* constantView = nullptr;
+                if (m_Core.CreateBufferView(view, constantView) != nri::Result::SUCCESS) return false;
+                update.rangeIndex = 1; update.descriptors = &constantView; update.descriptorNum = 1;
+                m_Core.UpdateDescriptorRanges(&update, 1);
+                m_Garbage.push_back([this, constantView] { m_Core.DestroyDescriptor(constantView); });
+            }
             nri::SetDescriptorSetDesc bind{}; bind.setIndex = 0; bind.descriptorSet = set; bind.bindPoint = nri::BindPoint::GRAPHICS;
             m_Core.CmdSetDescriptorSet(*m_FrameCommandBuffer, bind);
         }

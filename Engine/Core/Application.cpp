@@ -29,8 +29,10 @@
 #include <cstdio>
 
 
-Application::Application(const std::string& projectPath)
+Application::Application(const std::string& projectPath, bool gameMode, int frameLimit)
     : m_Running(false),
+    m_GameMode(gameMode),
+    m_FrameLimit(frameLimit),
     m_Window("Velcryn Hub", 1280, 720),
     m_Renderer(),
     m_Input(),
@@ -91,7 +93,7 @@ bool Application::Initialize()
     m_Renderer.GetUIRenderer().SetAudioEngine(&m_Audio);
     m_Runtime.SetAudioEngine(&m_Audio);
     m_Runtime.SetProjectManager(&m_ProjectManager);
-    m_ProjectHub.Initialize();
+    if (!m_GameMode) m_ProjectHub.Initialize();
     if (!m_ProjectPath.empty())
     {
         if (!m_ProjectManager.Load(m_ProjectPath)) return false;
@@ -127,10 +129,15 @@ bool Application::Initialize()
 
     if (m_ProjectManager.HasProject())
     {
-        m_ProjectHub.AddRecentProject(activeProject);
-        SDL_SetWindowTitle(m_Window.GetNativeWindow(), (activeProject.name + " - Velcryn Editor").c_str());
+        if (!m_GameMode) m_ProjectHub.AddRecentProject(activeProject);
+        SDL_SetWindowTitle(m_Window.GetNativeWindow(), (activeProject.name + (m_GameMode ? "" : " - Velcryn Editor")).c_str());
     }
 
+    if (m_GameMode)
+    {
+        ImGui::GetIO().IniFilename = nullptr;
+        StartRuntime();
+    }
     return true;
 }
 

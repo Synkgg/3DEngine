@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <vector>
+#include <chrono>
 
 #include "Mesh.h"
 #include "ModelAsset.h"
@@ -15,6 +16,7 @@
 #include "Framebuffer.h"
 
 #include "Grid.h"
+#include "PostDrawData.h"
 #include "PrimitiveType.h"
 #include "../Math/Transform.h"
 #include "../Math/Vec3.h"
@@ -49,7 +51,7 @@ public:
     void Shutdown();
 
     static constexpr int ShadowCascadeCount = 3;
-    void BeginShadowPass(int cascadeIndex = 0);
+    bool BeginShadowPass(int cascadeIndex = 0);
     void DrawShadowMesh(const Transform& transform, PrimitiveType primitive);
     void EndShadowPass();
 
@@ -89,22 +91,28 @@ public:
         float ambientOcclusion = 1.0f, float emissive = 0.0f,
         const Texture2D* normalMap = nullptr, const Texture2D* metallicMap = nullptr,
         const Texture2D* roughnessMap = nullptr, const Texture2D* aoMap = nullptr,
-        const Texture2D* emissiveMap = nullptr
+        const Texture2D* emissiveMap = nullptr, bool overrideMaterial = false,
+        const std::vector<Mat4>* pose = nullptr
     );
     void DrawAnimatedModel(
         const Transform& transform, const std::string& modelPath,
         std::size_t clipIndex, float animationTime, bool loop = true,
-        float red = 1.0f, float green = 1.0f, float blue = 1.0f, float alpha = 1.0f
+        float red = 1.0f, float green = 1.0f, float blue = 1.0f, float alpha = 1.0f,
+        const Texture2D* texture = nullptr, float metallic = 0.0f, float roughness = 0.65f,
+        float ambientOcclusion = 1.0f, float emissive = 0.0f,
+        const Texture2D* normalMap = nullptr, const Texture2D* metallicMap = nullptr,
+        const Texture2D* roughnessMap = nullptr, const Texture2D* aoMap = nullptr,
+        const Texture2D* emissiveMap = nullptr, bool overrideMaterial = false
     );
     void DrawShadowModel(const Transform& transform, const std::string& modelPath);
     void DrawAnimatedShadowModel(const Transform& transform, const std::string& modelPath, std::size_t clipIndex, float animationTime, bool loop = true);
-    unsigned int RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
-    unsigned int RenderAnimatedModelPreview(const std::string& modelPath, std::size_t clipIndex, float animationTime, unsigned int width = 256, unsigned int height = 256);
+    std::uint64_t RenderModelPreview(const std::string& modelPath, unsigned int width = 256, unsigned int height = 256);
+    std::uint64_t RenderAnimatedModelPreview(const std::string& modelPath, std::size_t clipIndex, float animationTime, unsigned int width = 256, unsigned int height = 256);
     ModelAsset* GetModelAsset(const std::string& modelPath);
     void InvalidateModelAsset(const std::string& modelPath);
 
     std::uint64_t GetViewportTexture() const;
-    Velcryn::RHI::TextureHandle GetSceneColorTexture() const { return m_Framebuffer.GetColorTexture(); }
+    Velcryn::RHI::TextureHandle GetSceneColorTexture() const { return m_PostColorTexture; }
     unsigned int GetViewportWidth() const { return m_ViewportWidth; }
     unsigned int GetViewportHeight() const { return m_ViewportHeight; }
 
@@ -161,7 +169,19 @@ public:
     }
 
 private:
-    Velcryn::RHI::PipelineHandle m_MeshPipeline{};
+    Velcryn::RHI::PipelineHandle m_MeshPipeline{}, m_ShadowPipeline{}, m_PreviewPipeline{};
+    bool m_InShadowPass = false;
+    bool m_InPreviewPass = false;
+    void RenderPendingPreviews();
+    Velcryn::RHI::PipelineHandle m_PostPipeline{}, m_TAAPipeline{}, m_BloomExtractPipeline{}, m_BloomBlurPipeline{}, m_SkyPipeline{}, m_CopyPipeline{};
+    Velcryn::RHI::BufferHandle m_FullscreenVertices{}, m_FullscreenIndices{};
+    PostDrawData m_PreviousPostData{};
+    bool CreateMeshPipelines();
+    void BeginSceneRendering(bool clear=false,bool normals=true);
+    bool CreateFullscreenPipelines();
+    void DestroyFullscreenPipelines();
+    PostDrawData GetPostDrawData() const;
+    void DrawFullscreen(Velcryn::RHI::PipelineHandle pipeline, const PostDrawData& data, Velcryn::RHI::TextureHandle first, std::span<const Velcryn::RHI::TextureHandle> others);
     Velcryn::RHI::TextureHandle m_WhiteTexture{};
     Window* m_Window;
 
@@ -179,8 +199,6 @@ private:
     Velcryn::RHI::TextureHandle m_HistoryTexture[2]{};
     int m_HistoryReadIndex = 0;
     bool m_HistoryValid = false;
-    unsigned int m_ModelPreviewWidth = 0;
-    unsigned int m_ModelPreviewHeight = 0;
 
     struct ModelPreviewTexture
     {
@@ -188,6 +206,10 @@ private:
         Velcryn::RHI::TextureHandle depth{};
         unsigned int width = 0;
         unsigned int height = 0;
+        std::string path;
+        std::size_t clip = 0;
+        float time = 0;
+        bool animated = false, pending = true;
     };
     std::unordered_map<std::string, ModelPreviewTexture> m_ModelPreviewCache;
 
@@ -196,6 +218,11 @@ private:
     std::unique_ptr<Mesh> m_SphereMesh;
     std::unique_ptr<Mesh> m_CylinderMesh;
     std::unordered_map<std::string, std::unique_ptr<ModelAsset>> m_ModelCache;
+    struct ModelSourceCheck {
+        std::chrono::steady_clock::time_point nextCheck;
+        std::string assetPath;
+    };
+    std::unordered_map<std::string, ModelSourceCheck> m_ModelSourceChecks;
     std::filesystem::path m_ProjectRoot;
 
     Camera m_Camera;
@@ -216,7 +243,6 @@ private:
     RenderSettings m_RenderSettings{};
     RenderDebugView m_DebugView = RenderDebugView::Lit;
     Mat4 m_FrameViewProjection = Mat4::Identity();
-    bool m_FrameShaderStateReady = false;
 
     struct DebugLine { Vec3 start; Vec3 end; Vec3 color; float remaining = 0.0f; };
     DebugRenderer m_DebugRenderer;
@@ -229,7 +255,6 @@ private:
     Mesh* GetPrimitiveMesh(PrimitiveType primitive);
     Mesh* GetModelMesh(const std::string& modelPath);
     void DrawMeshInternal(Mesh* mesh, const Transform& transform, float red, float green, float blue, float alpha, const Texture2D* texture, float metallic, float roughness, float ambientOcclusion, float emissive, const Texture2D* normalMap, const Texture2D* metallicMap, const Texture2D* roughnessMap, const Texture2D* aoMap, const Texture2D* emissiveMap, const std::vector<Mat4>* bones = nullptr);
-    void UploadFrameShaderState();
 
     bool CreateShadowTarget();
     void DestroyShadowTarget();
@@ -240,7 +265,5 @@ private:
     void RenderPostProcess();
     Velcryn::RHI::TextureHandle RenderBloom();
     void ResolveTAA();
-    bool EnsureModelPreviewTarget(unsigned int width, unsigned int height);
-    void DestroyModelPreviewTarget();
     void DestroyModelPreviewCache();
 };

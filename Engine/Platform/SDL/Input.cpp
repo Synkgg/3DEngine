@@ -16,6 +16,8 @@ Input::Input()
 
 void Input::Update()
 {
+    m_TextInput.swap(m_PendingTextInput);
+    m_PendingTextInput.clear();
     m_PreviousKeyboardState =
         m_CurrentKeyboardState;
 
@@ -33,11 +35,9 @@ void Input::Update()
         }
     }
 
-    m_PreviousMouseButtons = m_MouseButtons;
-    m_MouseButtons = SDL_GetMouseState(
-        &m_MouseX,
-        &m_MouseY
-    );
+    float x, y;
+    const auto buttons = SDL_GetMouseState(&x, &y);
+    UpdateMouseState(x, y, buttons);
 
     if (m_MouseCaptured)
     {
@@ -118,4 +118,17 @@ void Input::SetMouseCapture(SDL_Window* window, bool captured)
     }
 
     m_MouseCaptured = captured;
+}
+
+void Input::ProcessEvent(const SDL_Event& event)
+{
+    if (event.type == SDL_EVENT_TEXT_INPUT && event.text.text)
+        m_PendingTextInput += event.text.text;
+}
+
+void Input::UpdateMouseState(float x, float y, SDL_MouseButtonFlags buttons)
+{
+    m_PreviousMouseButtons = m_MouseButtons;
+    m_MouseButtons = buttons;
+    m_MouseX = x; m_MouseY = y;
 }

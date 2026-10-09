@@ -39,6 +39,21 @@ void UIRenderer::RenderCanvas(
         m_LogicalHeight
     };
 
+    // A full-canvas opaque background also covers letterbox margins. Keep
+    // controls in logical coordinates, but don't expose the 3D sky around menus.
+    if (!root->GetChildren().empty() && m_UIScale > 0) {
+        const auto& background = root->GetChildren().front();
+        if (background && background->GetType() == UIWidgetType::Panel && background->IsVisible() &&
+            background->GetPosition().x == 0 && background->GetPosition().y == 0 &&
+            background->GetSize().x == m_LogicalWidth && background->GetSize().y == m_LogicalHeight &&
+            background->GetColor().w >= 1 && background->GetRenderOpacity() >= 1 && !background->HasGradient()) {
+            const auto clip = m_ClipRect;
+            m_ClipRect = {-m_UIOffsetX/m_UIScale,-m_UIOffsetY/m_UIScale,float(m_Width)/m_UIScale,float(m_Height)/m_UIScale};
+            DrawQuad(m_ClipRect.x,m_ClipRect.y,m_ClipRect.width,m_ClipRect.height,0,0,1,1,background->GetColor(),m_WhiteTexture);
+            m_ClipRect = clip;
+        }
+    }
+
     for (const auto& child :
         root->GetChildren())
     {
@@ -150,8 +165,9 @@ void UIRenderer::DrawCanvasWidget(const UIWidget& widget, const UIRect& rect, Re
         if (Texture2D* loaded = renderer->LoadTexture(texturePath); loaded && loaded->IsLoaded())
             texture = loaded->GetHandle();
 
-    DrawQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 0.0f, 1.0f, 1.0f,
-        color, texture, widget.GetGradientColor(), widget.HasGradient(),
+    Vec4 gradient = widget.GetGradientColor(); gradient.w *= InheritedOpacity(widget);
+    DrawQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 1.0f, 1.0f, 0.0f,
+        color, texture, gradient, widget.HasGradient(),
         widget.GetGradientDirection() == UIGradientDirection::Horizontal, widget.GetCornerRadius());
 }
 
@@ -183,18 +199,40 @@ void UIRenderer::DrawProgressBar(const UIProgressBar& progress,const UIRect& rec
 
 void UIRenderer::DrawTextInput(const UITextInput& input, const UIRect& rect)
 {
-    // Background is drawn by the normal widget path before this text overlay.
     DrawCanvasWidget(input, rect, nullptr);
+    const UIRect previousClip = m_ClipRect;
+    const float left = std::max(previousClip.x, rect.x+12);
+    const float top = std::max(previousClip.y, rect.y+4);
+    m_ClipRect = {left, top,
+        std::max(0.0f, std::min(previousClip.x+previousClip.width, rect.x+rect.width-12)-left),
+        std::max(0.0f, std::min(previousClip.y+previousClip.height, rect.y+rect.height-4)-top)};
+    const float opacity = InheritedOpacity(input);
+    const float scale = input.GetFontSize()/FontBakeSize;
+    const std::string display = input.GetDisplayText();
+    auto measure = [&](std::size_t end) {
+        float width = 0;
+        for (std::size_t i=0; i<std::min(end, display.size()); ++i) {
+            unsigned char ch = display[i]; if (ch < 32 || ch > 126) ch = '?';
+            width += m_FontGlyphs[ch-32].xadvance*scale;
+        }
+        return width;
+    };
+    const float caret = input.GetText().empty() ? 0 : measure(input.GetCursor());
+    const float scroll = input.IsFocused() ? std::max(0.0f, caret-m_ClipRect.width+2) : 0;
+    const float x = rect.x+12-scroll;
+    if (input.IsFocused() && input.HasSelection())
+        DrawQuad(x, rect.y+8, measure(display.size()), input.GetFontSize()*1.2f, 0,0,1,1,
+            Vec4(0.18f,0.38f,0.65f,0.7f*opacity), m_WhiteTexture);
     UIText text;
-    text.SetPosition(Vec2(rect.x + 12.0f, rect.y + 8.0f));
-    text.SetSize(Vec2(std::max(0.0f, rect.width - 24.0f), rect.height - 16.0f));
     text.SetFontSize(input.GetFontSize());
-    text.SetColor(input.GetText().empty() ? Vec4(0.45f,0.48f,0.52f,1.0f) : Vec4(0.92f,0.94f,0.97f,1.0f));
-    std::string display = input.GetDisplayText();
-    if (input.IsFocused()) display += "|";
-    text.SetText(display);
-    text.SetRenderOpacity(InheritedOpacity(input));
-    DrawCanvasText(text, UIRect{rect.x + 12.0f, rect.y + 8.0f, std::max(0.0f, rect.width - 24.0f), rect.height - 16.0f});
+    text.SetColor(input.GetText().empty() ? Vec4(0.45f,0.48f,0.52f,1) : Vec4(0.92f,0.94f,0.97f,1));
+    text.SetText(display); text.SetRenderOpacity(opacity);
+    DrawCanvasText(text, {x, rect.y+8, std::max(0.0f, rect.width-24), rect.height-16});
+    if (input.IsFocused())
+        DrawQuad(x+caret, rect.y+8, 1.5f, input.GetFontSize()*1.2f, 0,0,1,1,
+            Vec4(0.95f,0.97f,1,opacity), m_WhiteTexture);
+    m_ClipRect = previousClip;
+
 }
 
 void UIRenderer::DrawCanvasText(

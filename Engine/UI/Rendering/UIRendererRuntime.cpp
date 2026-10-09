@@ -44,6 +44,7 @@ void UIRenderer::DrawRect(
     element.texture = nullptr;
     element.visible = true;
 
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
     m_Elements[id] = element;
 }
 
@@ -58,6 +59,8 @@ void UIRenderer::SetRect(
     float blue,
     float alpha)
 {
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
+    m_TextElements.erase(id);
     Element& element =
         m_Elements[id];
 
@@ -87,6 +90,8 @@ void UIRenderer::SetText(
     float blue,
     float alpha)
 {
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
+    m_Elements.erase(id);
     TextElement& element =
         m_TextElements[id];
 
@@ -117,6 +122,8 @@ void UIRenderer::SetImage(
     float blue,
     float alpha)
 {
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
+    m_TextElements.erase(id);
     Element& element =
         m_Elements[id];
 
@@ -190,17 +197,20 @@ void UIRenderer::Remove(
 {
     m_Elements.erase(id);
     m_TextElements.erase(id);
+    std::erase(m_ElementOrder, id);
 }
 
 void UIRenderer::Clear()
 {
+    m_ElementOrder.clear();
     m_Elements.clear();
     m_TextElements.clear();
     m_PressedCanvasButton = nullptr;
     m_BackspaceHeldTime = m_DeleteHeldTime = 0.0f;
     m_BackspaceRepeatTime = m_DeleteRepeatTime = 0.0f;
-    if (m_FocusedTextInput)
-        m_FocusedTextInput->SetFocused(false);
+    // The owning canvas may already have been replaced by UI.Load/Clear.
+    m_DraggedSlider = nullptr;
+    m_InputCanvas = nullptr;
     m_FocusedTextInput = nullptr;
 }
 
@@ -300,7 +310,7 @@ void UIRenderer::DrawElement(const std::string& id, const Element& element)
     GetAbsolutePosition(id, x, y, resolving);
     Velcryn::RHI::TextureHandle texture = m_WhiteTexture;
     if (element.texture && element.texture->IsLoaded()) texture = element.texture->GetHandle();
-    DrawQuad(x, y, element.width, element.height, 0.0f, 0.0f, 1.0f, 1.0f,
+    DrawQuad(x, y, element.width, element.height, 0.0f, 1.0f, 1.0f, 0.0f,
         Vec4(element.red, element.green, element.blue, element.alpha), texture);
 }
 
@@ -309,23 +319,12 @@ void UIRenderer::DrawTextElement(const std::string& id, const TextElement& eleme
     float originX = element.x, originY = element.y;
     std::unordered_set<std::string> resolving;
     GetAbsolutePosition(id, originX, originY, resolving);
-    const float pixel = std::max(1.0f, element.scale);
-    float x = originX, y = originY;
-    for (char ch : element.text)
-    {
-        if (ch == '\n') { x = originX; y += pixel * 8.0f; continue; }
-        for (int row = 0; row < 7; ++row)
-        {
-            const unsigned char bits = GetGlyphRow(ch, row);
-            for (int column = 0; column < 5; ++column)
-                if (bits & (1u << (4 - column)))
-                    DrawTextPixel(x + column * pixel, y + row * pixel, pixel,
-                        element.red, element.green, element.blue, element.alpha);
-        }
-        x += pixel * 6.0f;
-    }
+    UIText text;
+    text.SetText(element.text);
+    text.SetFontSize(std::max(1.0f, element.scale) * 8.0f);
+    text.SetColor(Vec4(element.red, element.green, element.blue, element.alpha));
+    DrawCanvasText(text, UIRect{originX, originY, m_LogicalWidth - originX, m_LogicalHeight - originY});
 }
-
 void UIRenderer::DrawTextPixel(float x,float y,float size,float red,float green,float blue,float alpha)
 {
     DrawQuad(x, y, size, size, 0.0f, 0.0f, 1.0f, 1.0f,

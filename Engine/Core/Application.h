@@ -26,7 +26,7 @@
 class Application
 {
 public:
-    explicit Application(const std::string& projectPath = {});
+    explicit Application(const std::string& projectPath = {}, bool gameMode = false, int frameLimit = 0);
 
     bool Initialize();
     void Run();
@@ -42,6 +42,8 @@ private:
     void UpdateLighting();
 
     bool m_Running;
+    bool m_GameMode = false;
+    int m_FrameLimit = 0;
     Window m_Window;
     Renderer m_Renderer;
     Input m_Input;

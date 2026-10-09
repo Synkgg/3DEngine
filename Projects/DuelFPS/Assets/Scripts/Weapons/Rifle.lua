@@ -1,8 +1,8 @@
 return {
     id = "rifle",
-    displayName = "RIFLE",
+    displayName = "KESTREL / CARBINE",
     viewmodelPrefab = "Assets/Prefabs/RifleViewmodel.prefab",
-    fireSound = "Assets/Audio/Weapons/rifle.wav",
+    fireSound = "Assets/Audio/Breakbulk/carbine.wav",
     magSize = 30,
     startingReserve = 90,
     practiceReserve = 999,

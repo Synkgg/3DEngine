@@ -54,7 +54,12 @@ public:
     void SetHoveredImage(const std::string& v) { m_HoveredImage=v; }
     void SetPressedImage(const std::string& v) { m_PressedImage=v; }
     void SetDisabledImage(const std::string& v) { m_DisabledImage=v; }
-    const std::string& GetCurrentImage() const { if(!IsEnabled()) return m_DisabledImage; if(m_Pressed) return m_PressedImage; if(m_Hovered) return m_HoveredImage; return m_NormalImage; }
+    const std::string& GetCurrentImage() const {
+        if (!IsEnabledInHierarchy() && !m_DisabledImage.empty()) return m_DisabledImage;
+        if (IsEnabledInHierarchy() && m_Pressed && !m_PressedImage.empty()) return m_PressedImage;
+        if (IsEnabledInHierarchy() && m_Hovered && !m_HoveredImage.empty()) return m_HoveredImage;
+        return m_NormalImage;
+    }
 
     const std::string& GetClickSoundPath() const { return m_ClickSoundPath; }
     void SetClickSoundPath(const std::string& path) { m_ClickSoundPath = path; }

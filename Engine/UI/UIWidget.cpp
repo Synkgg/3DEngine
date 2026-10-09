@@ -1,13 +1,23 @@
 #include "UIWidget.h"
 
 #include <algorithm>
+#include <atomic>
 
 UIWidget::UIWidget(UIWidgetType type)
     : m_Type(type)
 {
+    static std::atomic<std::uint64_t> nextId{1};
+    m_InstanceId = nextId.fetch_add(1, std::memory_order_relaxed);
 }
 
 UIWidgetType UIWidget::GetType() const { return m_Type; }
+
+bool UIWidget::IsEnabledInHierarchy() const
+{
+    for (const UIWidget* widget = this; widget; widget = widget->GetParent())
+        if (!widget->IsEnabled()) return false;
+    return true;
+}
 
 const std::string& UIWidget::GetName() const { return m_Name; }
 void UIWidget::SetName(const std::string& name) { m_Name = name; }
@@ -73,7 +83,11 @@ bool UIWidget::IsHitTestVisible() const { return m_HitTestVisible; }
 void UIWidget::SetHitTestVisible(bool enabled) { m_HitTestVisible = enabled; }
 
 int UIWidget::GetZOrder() const { return m_ZOrder; }
-void UIWidget::SetZOrder(int zOrder) { m_ZOrder = zOrder; }
+void UIWidget::SetZOrder(int zOrder) {
+    m_ZOrder = zOrder;
+    if (m_Parent) std::stable_sort(m_Parent->m_Children.begin(), m_Parent->m_Children.end(),
+        [](const auto& a, const auto& b) { return a->GetZOrder() < b->GetZOrder(); });
+}
 
 float UIWidget::GetRenderOpacity() const { return m_RenderOpacity; }
 void UIWidget::SetRenderOpacity(float opacity) { m_RenderOpacity = std::clamp(opacity, 0.0f, 1.0f); }

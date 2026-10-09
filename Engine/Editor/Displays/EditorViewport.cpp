@@ -13,6 +13,7 @@
 #include <limits>
 #include <filesystem>
 #include <string>
+#include <cstdio>
 
 namespace
 {
@@ -644,6 +645,10 @@ void Editor::RenderViewport(
 		ImGui::Separator();
 
 		ImGui::Checkbox("Show Grid", &m_ShowGrid);
+        if (!m_Playing && ImGui::Button("Reset editor view")) {
+            renderer.SetCameraPosition(Vec3(0, 8, 18));
+            renderer.SetCameraRotation(-1.5707963f, -0.35f);
+        }
 
 		ImGui::SetNextItemWidth(170.0f);
 		ImGui::DragFloat("Camera Speed", &m_EditorCameraSpeed, 0.25f, 0.5f, 40.0f, "%.1f");
@@ -816,6 +821,32 @@ void Editor::RenderViewport(
 
 	bool viewportImageHovered =
 		ImGui::IsItemHovered();
+
+    if (!m_Playing && viewportSize.x > 360 && viewportSize.y > 100)
+    {
+        // Draw-list overlays do not steal viewport input or change the image item.
+        const Vec3 camera = renderer.GetCameraPosition();
+        const Vec3 forward = renderer.GetCameraForward();
+        char status[192];
+        std::snprintf(status, sizeof(status),
+            "Position %.1f, %.1f, %.1f | Look %.2f, %.2f, %.2f\n%.1f ms | %.0f FPS",
+            camera.x, camera.y, camera.z, forward.x, forward.y, forward.z,
+            1000.0f / std::max(ImGui::GetIO().Framerate, 1.0f), ImGui::GetIO().Framerate);
+        auto* draw = ImGui::GetWindowDrawList();
+        const ImVec2 origin(viewportPosition.x + 12, viewportPosition.y + viewportSize.y - 54);
+        const ImVec2 size = ImGui::CalcTextSize(status);
+        draw->AddRectFilled(ImVec2(origin.x-5, origin.y-4), ImVec2(origin.x+size.x+5, origin.y+size.y+4), IM_COL32(20,23,28,210), 4);
+        draw->AddText(origin, IM_COL32(235,238,245,255), status);
+        const Mat4 view = renderer.GetCameraViewMatrix();
+        const ImVec2 center(viewportPosition.x + 48, viewportPosition.y + 68);
+        const ImU32 colors[] = {IM_COL32(245,80,70,255), IM_COL32(95,220,100,255), IM_COL32(80,140,255,255)};
+        const char* labels[] = {"X", "Y", "Z"};
+        for (int axis = 0; axis < 3; ++axis) {
+            const ImVec2 end(center.x + view.elements[axis*4]*28, center.y - view.elements[axis*4+1]*28);
+            draw->AddLine(center, end, colors[axis], 2);
+            draw->AddText(ImVec2(end.x+3, end.y-7), colors[axis], labels[axis]);
+        }
+    }
 
 	// Asset drops land directly in the scene. Prefabs instantiate as complete
 	// hierarchies; models create a normal mesh entity.

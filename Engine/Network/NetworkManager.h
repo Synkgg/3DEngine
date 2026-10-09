@@ -23,7 +23,8 @@ class NetworkManager
 {
 public:
     ~NetworkManager();
-    bool Host(std::uint16_t port = 7777);
+    bool Host(std::uint16_t port = 7777, std::uint32_t maxPlayers = 8);
+    std::uint16_t GetBoundPort() const { return m_BoundPort; }
     bool Join(const std::string& address, std::uint16_t port = 7777);
     void Update();
     void Disconnect();
@@ -44,7 +45,7 @@ public:
 
 private:
     enum class Mode { Offline, Host, Client };
-    struct Endpoint { std::uint32_t address=0; std::uint16_t port=0; std::uint32_t playerID=0; };
+    struct Endpoint { std::uint32_t address=0; std::uint16_t port=0; std::uint32_t playerID=0; std::uint64_t lastSeen=0; };
     bool OpenSocket(std::uint16_t port);
     void SendHello();
     void SetError(const std::string& message);
@@ -52,6 +53,9 @@ private:
     void SendMessageTo(const Endpoint& endpoint, std::uint32_t senderID, std::uint16_t channel, const std::string& payload);
 
     Mode m_Mode=Mode::Offline;
+    std::uint32_t m_MaxPlayers=8;
+    std::uint16_t m_BoundPort=0;
+    std::uint64_t m_LastSend=0,m_LastReceive=0;
 #ifdef _WIN32
     std::uintptr_t m_Socket=~(std::uintptr_t)0;
 #else

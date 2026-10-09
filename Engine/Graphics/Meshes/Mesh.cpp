@@ -1,4 +1,22 @@
 #include "Mesh.h"
 #include "../ModelAsset.h"
 #include "../RHI/RHI.h"
-Mesh::Mesh(const std::vector<Vertex>&v,const std::vector<std::uint32_t>&i):m_Vertices(v),m_Indices(i){m_VertexBuffer.Initialize(v.data(),(unsigned)(v.size()*sizeof(Vertex)));m_IndexBuffer.Initialize(i.data(),(std::uint32_t)i.size());}Mesh::~Mesh(){if(m_SkinBuffer)if(auto*d=Velcryn::RHI::GetDevice())d->DestroyBuffer(m_SkinBuffer);}void Mesh::Bind(){}void Mesh::Unbind(){}std::uint32_t Mesh::GetIndexCount()const{return m_IndexBuffer.GetCount();}const std::vector<Vertex>&Mesh::GetVertices()const{return m_Vertices;}const std::vector<std::uint32_t>&Mesh::GetIndices()const{return m_Indices;}void Mesh::SetSkinWeights(const std::vector<BoneWeight>&w){if(w.size()!=m_Vertices.size()||w.empty())return;struct W{std::uint32_t j[4];float w[4];};std::vector<W>g(w.size());for(size_t i=0;i<w.size();++i)for(int k=0;k<4;++k){g[i].j[k]=w[i].joints[k];g[i].w[k]=w[i].weights[k];}auto*d=Velcryn::RHI::GetDevice();if(!d)return;if(m_SkinBuffer)d->DestroyBuffer(m_SkinBuffer);Velcryn::RHI::BufferDesc b{};b.size=g.size()*sizeof(W);b.usage=Velcryn::RHI::BufferUsage::Vertex;b.debugName="SkinWeights";m_SkinBuffer=d->CreateBuffer(b,g.data());}
+Mesh::Mesh(const std::vector<Vertex>& vertices,const std::vector<std::uint32_t>& indices):m_Vertices(vertices),m_Indices(indices)
+{
+    std::vector<MeshVertex> gpu(vertices.size());
+    for(size_t i=0;i<vertices.size();++i)gpu[i].vertex=vertices[i];
+    m_VertexBuffer.Initialize(gpu.data(),unsigned(gpu.size()*sizeof(MeshVertex)));
+    m_IndexBuffer.Initialize(indices.data(),uint32_t(indices.size()));
+}
+Mesh::~Mesh()=default;
+void Mesh::Bind(){} void Mesh::Unbind(){}
+std::uint32_t Mesh::GetIndexCount()const{return m_IndexBuffer.GetCount();}
+const std::vector<Vertex>& Mesh::GetVertices()const{return m_Vertices;}
+const std::vector<uint32_t>& Mesh::GetIndices()const{return m_Indices;}
+void Mesh::SetSkinWeights(const std::vector<BoneWeight>& weights)
+{
+    if(weights.size()!=m_Vertices.size())return;
+    std::vector<MeshVertex> gpu(weights.size());
+    for(size_t i=0;i<weights.size();++i){gpu[i].vertex=m_Vertices[i];for(int j=0;j<4;++j){gpu[i].joints[j]=float(weights[i].joints[j]);gpu[i].weights[j]=weights[i].weights[j];}}
+    m_VertexBuffer.Initialize(gpu.data(),unsigned(gpu.size()*sizeof(MeshVertex)));
+}

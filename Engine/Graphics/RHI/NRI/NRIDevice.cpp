@@ -93,12 +93,19 @@ namespace Velcryn::RHI
         if (m_StreamerInterface.CreateStreamer(*m_Device, streamerDesc, m_Streamer) != nri::Result::SUCCESS) { Logger::Error("RHI: failed to create NRI streamer."); Shutdown(); return false; }
         nri::DescriptorPoolDesc descriptorPoolDesc{};
         descriptorPoolDesc.descriptorSetMaxNum = 4096;
-        descriptorPoolDesc.textureMaxNum = 4096;
+        descriptorPoolDesc.textureMaxNum = 65536;
+        descriptorPoolDesc.constantBufferMaxNum = 4096;
         if (m_Core.CreateDescriptorPool(*m_Device, descriptorPoolDesc, m_DescriptorPool) != nri::Result::SUCCESS)
         {
             Logger::Error("RHI: failed to create the graphics descriptor pool.");
             Shutdown(); return false;
         }
+        BufferDesc drawUniformDesc{};
+        drawUniformDesc.size = 64 * 1024 * 1024;
+        drawUniformDesc.cpuVisible = true; drawUniformDesc.usage = BufferUsage::Constant;
+        drawUniformDesc.debugName = "FrameDrawUniformArena";
+        m_DrawUniformBuffer = CreateBuffer(drawUniformDesc, nullptr);
+        if (!m_DrawUniformBuffer) { Shutdown(); return false; }
         nri::ImguiDesc imguiDesc{}; imguiDesc.descriptorPoolSize = 2048;
         if (m_ImguiInterface.CreateImgui(*m_Device, imguiDesc, m_Imgui) != nri::Result::SUCCESS) { Logger::Error("RHI: failed to create NRI ImGui renderer."); Shutdown(); return false; }
         Logger::Info(std::string("RHI: NRI Vulkan device + swapchain + ImGui initialized on ") + deviceDesc.adapterDesc.name);
@@ -246,6 +253,7 @@ namespace Velcryn::RHI
         m_CommandLists.clear();
         m_Textures.clear();
         m_Buffers.clear();
+        m_DrawUniformBuffer = {}; m_DrawUniformOffset = 0;
 
         nri::nriDestroyDevice(m_Device);
         m_Device = nullptr;
@@ -577,6 +585,7 @@ namespace Velcryn::RHI
         // One allocator: wait for its last submission before resetting it.
         const uint64_t completedFrame = m_FrameIndex;
         m_Core.Wait(*m_FrameFence, completedFrame);
+        m_DrawUniformOffset = 0;
         CollectGarbage();
         if (m_DescriptorPool)
             m_Core.ResetDescriptorPool(*m_DescriptorPool);

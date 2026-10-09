@@ -1,8 +1,8 @@
 return {
     id = "pistol",
-    displayName = "PISTOL",
+    displayName = "MAKO / SIDEARM",
     viewmodelPrefab = "Assets/Prefabs/PistolViewmodel.prefab",
-    fireSound = "Assets/Audio/Weapons/rifle.wav",
+    fireSound = "Assets/Audio/Breakbulk/sidearm.wav",
     magSize = 12,
     startingReserve = 48,
     practiceReserve = 999,

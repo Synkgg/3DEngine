@@ -29,6 +29,7 @@ void Renderer::DrawDirectionalLight(
 	const Vec3& position,
 	const Vec3& direction)
 {
+if(auto* d=Velcryn::RHI::GetDevice()){d->EndRendering();BeginSceneRendering(false,false);}
 	m_DebugRenderer.DrawDirectionalLight(
 		m_Camera.GetViewMatrix(),
 		m_Camera.GetProjectionMatrix(),
@@ -49,6 +50,7 @@ void Renderer::DrawCollider(
 		depth * 0.5f
 	);
 
+if(auto* d=Velcryn::RHI::GetDevice()){d->EndRendering();BeginSceneRendering(false,false);}
 	m_DebugRenderer.DrawBox(
 		GetCameraViewMatrix(),
 		GetCameraProjectionMatrix(),
@@ -88,15 +90,16 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     if (desiredSizes != m_ShadowMapSizes) { m_ShadowMapSizes = desiredSizes; if (!CreateShadowTarget()) Logger::Error("Failed to resize cascaded shadow maps."); }
     m_Camera.SetFarPlane(m_RenderSettings.viewDistance);
 
-    const unsigned int samples = m_RenderSettings.antiAliasing
-        ? static_cast<unsigned int>(m_RenderSettings.antiAliasingSamples) : 1u;
-    if (m_Framebuffer.GetSamples() != samples &&
-        !m_Framebuffer.SetSamples(samples))
-    {
-        Logger::Error("Failed to apply anti-aliasing sample count.");
-        m_RenderSettings.antiAliasing = m_Framebuffer.GetSamples() > 1;
-        m_RenderSettings.antiAliasingSamples = static_cast<int>(m_Framebuffer.GetSamples());
+    const unsigned int requested=m_RenderSettings.antiAliasing?static_cast<unsigned int>(m_RenderSettings.antiAliasingSamples):1u;
+    const unsigned int samples=requested>=8?8:requested>=4?4:requested>=2?2:1;
+    if(m_Framebuffer.GetSamples()!=samples) {
+        if(!m_Framebuffer.SetSamples(samples)) {Logger::Error("Failed to apply MSAA targets.");return;}
+        DestroyFullscreenPipelines();m_Grid.Shutdown();m_DebugRenderer.Shutdown();
+        if(!CreateMeshPipelines()||!CreateFullscreenPipelines()||!m_Grid.Initialize(samples)||!m_DebugRenderer.Initialize(samples))
+            Logger::Error("Failed to apply MSAA pipelines.");
+        m_HistoryValid=false;
     }
+
 
 }
 
@@ -168,35 +171,34 @@ void Renderer::DestroyShadowTarget()
     m_ShadowMapReady = false;
 }
 
-void Renderer::BeginShadowPass(int cascadeIndex)
+bool Renderer::BeginShadowPass(int cascadeIndex)
 {
-    if (cascadeIndex == 0) { m_ShadowMapReady = false; UpdateLightSpaceMatrices(); }
-    if (!m_RenderSettings.shadows || cascadeIndex < 0 || cascadeIndex >= ShadowCascadeCount ||
-        !m_ShadowDepthTextures[cascadeIndex]) return;
-    m_ActiveShadowCascade = cascadeIndex;
-    // Depth rendering is recorded by the Vulkan scene pass. Legacy GL state is intentionally gone.
+    if(cascadeIndex==0){m_ShadowMapReady=false;UpdateLightSpaceMatrices();}
+    if(!m_RenderSettings.shadows||cascadeIndex<0||cascadeIndex>=ShadowCascadeCount||!m_ShadowDepthTextures[cascadeIndex])return false;
+    auto* device=Velcryn::RHI::GetDevice();if(!device)return false;
+    device->EndRendering();m_ActiveShadowCascade=cascadeIndex;
+    m_InShadowPass=device->BeginRendering({},m_ShadowDepthTextures[cascadeIndex],m_ClearColor);
+    return m_InShadowPass;
 }
-
-void Renderer::DrawShadowMesh(const Transform&, PrimitiveType)
+void Renderer::DrawShadowMesh(const Transform& transform,PrimitiveType primitive)
 {
-    // Mesh shadow draws are queued by the Vulkan scene renderer.
+    if(m_InShadowPass)DrawMesh(transform,primitive,1,1,1,1);
 }
-
-void Renderer::DrawShadowModel(const Transform&, const std::string&)
+void Renderer::DrawShadowModel(const Transform& transform,const std::string& path)
 {
-    // Model shadow draws are queued by the Vulkan scene renderer.
+    if(m_InShadowPass)DrawModel(transform,path,1,1,1,1);
 }
-
-void Renderer::DrawAnimatedShadowModel(const Transform&, const std::string&, std::size_t, float, bool)
+void Renderer::DrawAnimatedShadowModel(const Transform& transform,const std::string& path,std::size_t clip,float time,bool loop)
 {
-    // Animated shadow draws are queued by the Vulkan scene renderer.
+    if(m_InShadowPass)DrawAnimatedModel(transform,path,clip,time,loop,1,1,1,1);
 }
-
 void Renderer::EndShadowPass()
 {
-    if (m_ActiveShadowCascade == ShadowCascadeCount - 1)
-        m_ShadowMapReady = true;
+    if(!m_InShadowPass)return;
+    auto* device=Velcryn::RHI::GetDevice();device->EndRendering();m_InShadowPass=false;
+    if(m_ActiveShadowCascade==ShadowCascadeCount-1)m_ShadowMapReady=true;
+    BeginSceneRendering();
 }
 
 void Renderer::AddDebugLine(const Vec3& start,const Vec3& end,const Vec3& color,float duration){m_DebugLines.push_back({start,end,color,duration});}
-void Renderer::DrawDebugLines(float deltaTime){for(const DebugLine& line:m_DebugLines)m_DebugRenderer.DrawLine(GetCameraViewMatrix(),GetCameraProjectionMatrix(),line.start,line.end,line.color);for(auto it=m_DebugLines.begin();it!=m_DebugLines.end();){if(it->remaining<=0.0f||(it->remaining-=deltaTime)<=0.0f)it=m_DebugLines.erase(it);else ++it;}}
+void Renderer::DrawDebugLines(float deltaTime){if(auto* d=Velcryn::RHI::GetDevice()){d->EndRendering();BeginSceneRendering(false,false);}for(const DebugLine& line:m_DebugLines)m_DebugRenderer.DrawLine(GetCameraViewMatrix(),GetCameraProjectionMatrix(),line.start,line.end,line.color);for(auto it=m_DebugLines.begin();it!=m_DebugLines.end();){if(it->remaining<=0.0f||(it->remaining-=deltaTime)<=0.0f)it=m_DebugLines.erase(it);else ++it;}}

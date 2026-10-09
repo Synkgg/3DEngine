@@ -455,7 +455,7 @@ void Editor::RenderContentBrowser(
                 std::error_code previewError;
                 const std::string modelPath =
                     entry.path.lexically_normal().string();
-                const unsigned int previewTexture =
+                const std::uint64_t previewTexture =
                     renderer.RenderModelPreview(modelPath, 144, 144);
 
                 if (previewTexture != 0)
@@ -1032,7 +1032,7 @@ void Editor::RenderContentBrowser(
             }
             const ImVec2 available = ImGui::GetContentRegionAvail();
             const float side = std::max(180.0f, std::min(available.x, available.y - 70.0f));
-            const unsigned int texture = skeletal && previewAsset && !previewAsset->animations.empty() ? renderer.RenderAnimatedModelPreview(m_MeshPreviewPath,(std::size_t)m_MeshPreviewClip,m_MeshPreviewTime,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f)) : renderer.RenderModelPreview(m_MeshPreviewPath,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f));
+            const std::uint64_t texture = skeletal && previewAsset && !previewAsset->animations.empty() ? renderer.RenderAnimatedModelPreview(m_MeshPreviewPath,(std::size_t)m_MeshPreviewClip,m_MeshPreviewTime,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f)) : renderer.RenderModelPreview(m_MeshPreviewPath,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f));
 
             if (texture != 0)
             {

@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 struct Vec2
 {
@@ -59,6 +60,7 @@ public:
     virtual ~UIWidget() = default;
 
     UIWidgetType GetType() const;
+    std::uint64_t GetInstanceId() const { return m_InstanceId; }
 
     const std::string& GetName() const;
     void SetName(const std::string& name);
@@ -95,6 +97,7 @@ public:
     void SetVisible(bool visible);
 
     bool IsEnabled() const;
+    bool IsEnabledInHierarchy() const;
     void SetEnabled(bool enabled);
 
     bool IsHitTestVisible() const;
@@ -118,6 +121,7 @@ public:
 
 private:
     UIWidgetType m_Type;
+    std::uint64_t m_InstanceId;
     std::string m_Name;
 
     UIAnchors m_Anchors;

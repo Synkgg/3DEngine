@@ -52,8 +52,10 @@ public:
         float viewportX,
         float viewportY,
         float viewportWidth,
-        float viewportHeight
+        float viewportHeight,
+        float deltaTime = 1.0f / 60.0f
     );
+    bool HasTextInputFocus() const { return m_FocusedTextInput != nullptr; }
 
     bool ViewportToCanvas(
         float mouseX,
@@ -235,9 +237,7 @@ private:
     );
 
     void ResetButtonInput(UIWidget& widget);
-    UIButton* FindTopButton(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
-    UITextInput* FindTopTextInput(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
-    UISlider* FindTopSlider(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
+    UIWidget* FindTopControl(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
 
     bool GetAbsolutePosition(
         const std::string& id,
@@ -289,11 +289,14 @@ private:
 
     float m_UIOffsetX = 0.0f;
     float m_UIOffsetY = 0.0f;
+    UIRect m_ClipRect{};
 
     std::unordered_map<
         std::string,
         Element
     > m_Elements;
+    // Preserve script creation order so backgrounds cannot randomly cover images.
+    std::vector<std::string> m_ElementOrder;
 
     std::unordered_map<
         std::string,
@@ -301,9 +304,12 @@ private:
     > m_TextElements;
 
     bool m_MouseInteractionEnabled = false;
+    const UICanvas* m_InputCanvas = nullptr;
+    std::uint64_t m_InputCanvasRevision = 0;
     UIButton* m_PressedCanvasButton = nullptr;
     UITextInput* m_FocusedTextInput = nullptr;
     UISlider* m_DraggedSlider = nullptr;
+    std::uint64_t m_PressedButtonId = 0, m_FocusedTextId = 0, m_DraggedSliderId = 0;
     float m_BackspaceHeldTime = 0.0f;
     float m_DeleteHeldTime = 0.0f;
     float m_BackspaceRepeatTime = 0.0f;

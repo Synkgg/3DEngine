@@ -13,7 +13,8 @@ function WeaponSystem.new(api)
         kick = 0.0,
         recoilTarget = 0.0,
         recoilApplied = 0.0,
-        aiming = false
+        aiming = false,
+        animationTime=0
     }, WeaponSystem)
 end
 
@@ -82,11 +83,11 @@ function WeaponSystem:IsReloading()
 end
 
 function WeaponSystem:ResetAmmo(practice)
-    local def, item = self:GetDefinition(), self:GetItem()
-    if not def or not item then return end
-    item.ammo = def.magSize
-    item.reserve = practice and def.practiceReserve or def.startingReserve
-    self.reloadTimer = 0.0
+    for id,item in pairs(self.inventory) do
+        local def=self.definitions[id]
+        item.ammo=def.magSize;item.reserve=practice and def.practiceReserve or def.startingReserve
+    end
+    self.reloadTimer=0;self.cooldown=0;self.kick=0;self.recoilTarget=0;self.recoilApplied=0
 end
 
 function WeaponSystem:Reload()
@@ -98,6 +99,7 @@ function WeaponSystem:Reload()
 end
 
 function WeaponSystem:Update(dt, cameraEntity)
+    self.animationTime=self.animationTime+dt
     self.cooldown = math.max(0.0, self.cooldown - dt)
 
     local def, item = self:GetDefinition(), self:GetItem()
@@ -143,12 +145,16 @@ function WeaponSystem:Update(dt, cameraEntity)
     local x = c.x + r.x * side + f.x * (forwardOffset - self.kick)
     local y = c.y + r.y * side + f.y * (forwardOffset - self.kick) + down + self.kick * 1.6
     local z = c.z + r.z * side + f.z * (forwardOffset - self.kick)
+    local moving=self.api.Input.IsKeyDown("W") or self.api.Input.IsKeyDown("S") or self.api.Input.IsKeyDown("A") or self.api.Input.IsKeyDown("D")
+    if moving and not self.aiming then y=y+math.sin(self.animationTime*13)*.008 end
+    local reloadPose=self.reloadTimer>0 and math.sin(math.pi*self.reloadTimer/def.reloadTime) or 0
+    y=y-reloadPose*.12
     self.api.Scene.SetPosition(self.viewmodel, x, y, z)
 
     local yaw = math.deg(math.atan(-f.x, -f.z))
     local horizontal = math.sqrt(f.x * f.x + f.z * f.z)
     local pitch = math.deg(math.atan(f.y, horizontal))
-    self.api.Scene.SetRotation(self.viewmodel, -pitch, yaw, 0.0)
+    self.api.Scene.SetRotation(self.viewmodel, -pitch+reloadPose*16, yaw, reloadPose*-24)
 end
 
 function WeaponSystem:Fire(ownerEntity, cameraEntity)

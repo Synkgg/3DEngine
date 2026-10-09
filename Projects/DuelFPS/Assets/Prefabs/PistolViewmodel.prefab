@@ -1,7 +1,7 @@
 MyEngineScene
 Entities 2
 Entity 1
-Name Pistol Viewmodel
+Name Mako Viewmodel
 Position 0 0 0
 Rotation 0 0 0
 Scale 1 1 1
@@ -19,16 +19,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 2
-Name Pistol Model
-Position -0.16 -0.20 0
-Rotation 0 1.5708 -0.035
-Scale 0.25 0.25 0.25
+Name Mako
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Weapons/Pistol_1.obj" 0
+Mesh 1 0 "Assets/Models/Breakbulk/Mako.obj" 0
 Color 1 1 1 1 1
 Texture 0
-Material 1 0.72 0.3 1 0 "" "" "" "" ""
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0

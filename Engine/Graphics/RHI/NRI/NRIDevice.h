@@ -10,6 +10,7 @@
 #include <Extensions/NRIImgui.h>
 
 #include <vector>
+#include <array>
 #include <functional>
 
 namespace Velcryn::RHI
@@ -35,11 +36,11 @@ namespace Velcryn::RHI
         bool ReadTexture(TextureHandle texture, std::vector<std::uint8_t>& bytes) override;
         PipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
         void DestroyPipeline(PipelineHandle pipeline) override;
-        bool BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear = true) override;
+        bool BeginRendering(TextureHandle color, TextureHandle depth, const float clearColor[4], bool clear = true, TextureHandle secondColor = {}, TextureHandle resolveColor = {}, TextureHandle resolveDepth = {}, TextureHandle resolveNormal = {}) override;
         void EndRendering() override;
         bool DrawIndexed(PipelineHandle pipeline, BufferHandle vertices, BufferHandle indices,
             std::uint32_t indexCount, const void* constants, std::uint32_t constantSize,
-            std::uint32_t instanceCount = 1, TextureHandle texture = {}) override;
+            std::uint32_t instanceCount = 1, TextureHandle texture = {}, std::span<const std::byte> uniforms = {}, std::span<const TextureHandle> additionalTextures = {}) override;
 
         CommandListHandle BeginCommandList(QueueType queue) override;
         void EndCommandList(CommandListHandle commandList) override;
@@ -88,6 +89,9 @@ namespace Velcryn::RHI
             nri::PipelineLayout* layout = nullptr;
             std::uint32_t generation = 1, stride = 0, constantSize = 0;
             bool sampledTexture = false;
+            std::uint32_t uniformSize = 0;
+            bool displayEncodedTexture = false;
+            uint32_t textureCount = 1, rawTextureMask = 0;
         };
         void TransitionTexture(TextureSlot& texture, nri::AccessLayoutStage after);
         void CollectGarbage();
@@ -98,8 +102,11 @@ namespace Velcryn::RHI
         bool m_RebuildSwapChain = false, m_DeviceFailed = false;
         std::vector<bool> m_Presented;
         std::vector<PipelineSlot> m_Pipelines;
+        BufferHandle m_DrawUniformBuffer{};
+        std::uint64_t m_DrawUniformOffset = 0;
         std::vector<std::function<void()>> m_Garbage;
-        TextureHandle m_RenderColor{}, m_RenderDepth{};
+        std::array<TextureHandle, 3> m_RenderResolves{};
+        TextureHandle m_RenderColor{}, m_RenderDepth{}, m_RenderSecondColor{};
         bool m_Rendering = false;
 
         nri::Queue* ResolveQueue(QueueType queue) const;

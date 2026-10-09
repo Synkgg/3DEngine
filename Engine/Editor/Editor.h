@@ -41,6 +41,7 @@ public:
     bool IsPlaying() const;
     void StopPlaying();
     bool ConsumeProjectHubRequest();
+    bool ConsumeExportRequest() { bool result = m_ExportRequested; m_ExportRequested = false; return result; }
 
     void ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath);
     bool OpenScene(Scene& scene, const std::filesystem::path& path);
@@ -52,6 +53,7 @@ public:
     const ProjectSettings& GetProjectSettings() const { return m_ProjectSettings; }
 
 private:
+    bool m_ExportRequested = false;
     Entity CreatePrimitiveEntity(
         Scene& scene,
         PrimitiveType primitive,

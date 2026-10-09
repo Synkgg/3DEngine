@@ -24,6 +24,14 @@ local activeIntroTimer = 0.0
 local playerCamera = 0
 local practiceMode = false
 local practiceHits = 0
+local damageTimer,previousHealth,stepTimer=0,100,0
+local ROUND_DURATION=90
+local elapsed,shotSequence,stateSequence,lastStateSequence=0,0,0,-1
+local lastShotSequence,lastShotTime={},{}
+local pendingShots={}
+local rematchVotes={[1]=false,[2]=false}
+local rematchRetry=0
+
 
 local function setPaused(value)
     paused=value
@@ -37,6 +45,8 @@ local function movePlayerToStart(playerID)
     if playerID==Controller.GetLocalID() then
         transform.SetPosition(start.x,start.y,start.z)
         CharacterController.Move(0.0,0.0)
+        Scene.SetRotation(self.id,0,0,0)
+        if playerCamera~=0 then Scene.SetRotation(playerCamera,0,playerID==1 and -90 or 90,0) end
     else
         local entityID=remotePawns[playerID]
         if entityID and entityID~=0 then
@@ -74,8 +84,9 @@ end
 local function broadcastState()
     if not Network.IsHost() then return end
     local timerTenths=math.max(0,math.floor(stateTimer*10+0.5))
+    stateSequence=stateSequence+1
     Network.SendMessage(CHANNEL_COMBAT,
-        "STATE:"..matchState..":"..timerTenths..":"..roundNumber..":"..
+        "STATE:"..stateSequence..":"..matchState..":"..timerTenths..":"..roundNumber..":"..
         health[1]..":"..health[2]..":"..score[1]..":"..score[2]..":"..
         roundWinner..":"..matchWinner)
 end
@@ -83,6 +94,7 @@ end
 local function beginWarmup()
     if not Network.IsHost() then return end
     roundNumber=roundNumber+1
+    pendingShots={};lastShotTime={};rematchVotes={[1]=false,[2]=false}
     health[1],health[2]=MAX_HEALTH,MAX_HEALTH
     roundWinner,matchWinner=0,0
     matchState=WARMUP
@@ -111,8 +123,8 @@ end
 local function finishRound(winnerID)
     if not Network.IsHost() or matchState~=ROUND_ACTIVE then return end
     roundWinner=winnerID
-    score[winnerID]=(score[winnerID] or 0)+1
-    if score[winnerID]>=ROUNDS_TO_WIN then
+    if winnerID>0 then score[winnerID]=(score[winnerID] or 0)+1 end
+    if winnerID>0 and score[winnerID]>=ROUNDS_TO_WIN then
         matchWinner=winnerID
         matchState=MATCH_END
         stateTimer=0.0
@@ -137,25 +149,59 @@ local function applyReplicatedState(newState,newTimer,newRound,h1,h2,s1,s2,newRo
     health[1],health[2]=h1,h2
     score[1],score[2]=s1,s2
     roundWinner,matchWinner=newRoundWinner,newMatchWinner
-    if previousState~=matchState and matchState==WARMUP then spawnRoundPlayers() end
+    if previousState~=matchState and matchState==WARMUP then
+        spawnRoundPlayers();pendingShots={};rematchVotes={[1]=false,[2]=false}
+        if weapons then weapons:ResetAmmo(false) end
+        Input.SetCursorVisible(false)
+    end
+end
+
+local function validateShot(shooterID,sequence,round,weaponID,ox,oy,oz,dx,dy,dz)
+    if not Network.IsHost() or matchState~=ROUND_ACTIVE or round~=roundNumber then return end
+    if shooterID~=1 and shooterID~=2 then return end
+    if sequence<=(lastShotSequence[shooterID] or 0) then return end
+    lastShotSequence[shooterID]=sequence
+    local def=weaponID=="rifle" and Rifle or weaponID=="pistol" and Pistol or nil
+    if not def or elapsed-(lastShotTime[shooterID] or -100)<def.fireInterval*.8 then return end
+    if (health[shooterID] or 0)<=0 then return end
+    local shooter=shooterID==Controller.GetLocalID() and self.id or remotePawns[shooterID]
+    if not shooter then return end
+    local p=Scene.GetPosition(shooter)
+    if (ox-p.x)^2+(oy-p.y)^2+(oz-p.z)^2>9 then return end
+    local length=dx*dx+dy*dy+dz*dz
+    if length<.9 or length>1.1 then return end
+    lastShotTime[shooterID]=elapsed
+    local hit=Physics.Raycast(ox,oy,oz,dx,dy,dz,def.range,shooter)
+    local target=hit.entityID==self.id and Controller.GetLocalID() or remotePlayersByEntity[hit.entityID]
+    if hit.hit and target then applyHostShot(shooterID,target,def.damage) end
 end
 
 local function processCombatMessages()
     for _,message in ipairs(Network.ConsumeMessages()) do
         if message.channel==CHANNEL_COMBAT then
-            local target,damage=string.match(message.payload,"^SHOT:(%d+):(%d+)$")
-            if target and Network.IsHost() then
-                applyHostShot(message.senderID,tonumber(target),tonumber(damage))
-            else
-                local st,timer,rnd,h1,h2,s1,s2,rw,mw=string.match(
-                    message.payload,
-                    "^STATE:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+)$")
-                if st and not Network.IsHost() then
-                    applyReplicatedState(
-                        tonumber(st),tonumber(timer)/10.0,tonumber(rnd),
-                        tonumber(h1),tonumber(h2),tonumber(s1),tonumber(s2),
-                        tonumber(rw),tonumber(mw))
+            local parts={}
+            for token in message.payload:gmatch("[^:]+") do parts[#parts+1]=token end
+            if parts[1]=="SHOT" and Network.IsHost() and #parts==10 then
+                local numbers={};local valid=true
+                for _,i in ipairs({2,3,5,6,7,8,9,10}) do
+                    numbers[i]=tonumber(parts[i]);if not numbers[i] or numbers[i]~=numbers[i] or math.abs(numbers[i])>1000000 then valid=false end
                 end
+                if valid then
+                    validateShot(message.senderID,numbers[2],numbers[3],parts[4],numbers[5],numbers[6],numbers[7],numbers[8],numbers[9],numbers[10])
+                    Network.SendMessage(CHANNEL_COMBAT,"ACK:"..message.senderID..":"..numbers[2])
+                end
+            elseif parts[1]=="ACK" and not Network.IsHost() and message.senderID==1 then
+                if tonumber(parts[2])==Controller.GetLocalID() then pendingShots[tonumber(parts[3])]=nil end
+            elseif parts[1]=="STATE" and not Network.IsHost() and message.senderID==1 and #parts==11 then
+                local v={};local valid=true
+                for i=2,11 do v[i]=tonumber(parts[i]);if not v[i] then valid=false end end
+                if valid and v[2]>lastStateSequence then
+                    lastStateSequence=v[2]
+                    applyReplicatedState(v[3],v[4]/10,v[5],v[6],v[7],v[8],v[9],v[10],v[11])
+                end
+            elseif parts[1]=="REMATCH" and Network.IsHost() and matchState==MATCH_END and message.senderID==2 then
+                rematchVotes[2]=true
+                if rematchVotes[1] then beginMatch() end
             end
         end
     end
@@ -175,6 +221,10 @@ local function updateNetworking(dt)
     end
 
     local localID=Controller.GetLocalID()
+    if Network.IsHost() and Network.GetPlayerCount()<2 and remotePawns[2] then
+        Scene.DestroyEntity(remotePawns[2]);remotePlayersByEntity[remotePawns[2]]=nil
+        remotePawns[2]=nil;remoteTargets[2]=nil;lastShotSequence[2]=nil
+    end
     for _,remote in ipairs(Network.GetRemoteTransforms()) do
         if remote.playerID~=localID then
             local entityID=getOrCreateRemotePawn(remote.playerID)
@@ -227,13 +277,18 @@ local function updateHostMatch(dt)
         if stateTimer<=0 then
             if matchState==WARMUP then
                 matchState=ROUND_ACTIVE
-                stateTimer=0.0
+                stateTimer=ROUND_DURATION
                 activeIntroTimer=0.65
                 broadcastState()
             else
                 beginWarmup()
             end
         end
+    end
+
+    if matchState==ROUND_ACTIVE then
+        stateTimer=math.max(0,stateTimer-dt)
+        if stateTimer==0 then finishRound(health[1]==health[2] and 0 or (health[1]>health[2] and 1 or 2)) end
     end
 
     stateBroadcastTimer=stateBroadcastTimer+dt
@@ -246,6 +301,13 @@ end
 local function handleWeaponShot(result)
     if not result then return end
     muzzleTimer=0.055
+    if not practiceMode then
+        shotSequence=shotSequence+1
+        local def=weapons:GetDefinition()
+        local payload=string.format("SHOT:%d:%d:%s:%.3f:%.3f:%.3f:%.4f:%.4f:%.4f",shotSequence,roundNumber,def.id,result.originX,result.originY,result.originZ,result.forwardX,result.forwardY,result.forwardZ)
+        if Network.IsHost() then validateShot(Controller.GetLocalID(),shotSequence,roundNumber,def.id,result.originX,result.originY,result.originZ,result.forwardX,result.forwardY,result.forwardZ)
+        else Network.SendMessage(CHANNEL_COMBAT,payload);pendingShots[shotSequence]={payload=payload,age=0,retry=0} end
+    end
     if result.hit then
         Debug.DrawLine(result.originX,result.originY,result.originZ,result.x,result.y,result.z,0.2,1.0,0.2,0.08)
         local targetID=remotePlayersByEntity[result.entityID]
@@ -258,14 +320,13 @@ local function handleWeaponShot(result)
             if target then
                 practiceHits=practiceHits+1
                 hitmarkerTimer=0.12
-                Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
+                Audio.PlaySFX("Assets/Audio/Breakbulk/hit.wav",0.7)
             end
         elseif targetID then
             hitmarkerTimer=0.12
-            Audio.PlaySFX("Assets/Audio/Weapons/hit.wav",0.7)
+            Audio.PlaySFX("Assets/Audio/Breakbulk/hit.wav",0.7)
             local localID=Controller.GetLocalID()
-            if Network.IsHost() then applyHostShot(localID,targetID,result.damage)
-            else Network.SendMessage(CHANNEL_COMBAT,"SHOT:"..targetID..":"..math.floor(result.damage)) end
+
         end
     else
         Debug.DrawLine(result.originX,result.originY,result.originZ,
@@ -297,6 +358,9 @@ local function updateHUD()
     local localID=practiceMode and 1 or Controller.GetLocalID()
     local opponentID=localID==1 and 2 or 1
     local localHealth=health[localID] or MAX_HEALTH
+    if localHealth<previousHealth then damageTimer=.25 end
+    previousHealth=localHealth
+    UI.SetVisible("DamageFlash",damageTimer>0)
     local dead=localHealth<=0
     local localScore=score[localID] or 0
     local enemyScore=score[opponentID] or 0
@@ -308,15 +372,17 @@ local function updateHUD()
     UI.SetValue("HealthBar",math.max(0.0,math.min(1.0,localHealth/MAX_HEALTH)))
     UI.SetText("HealthText",tostring(localHealth).." / "..tostring(MAX_HEALTH))
     UI.SetText("ScoreText",scoreLine)
-    local ammo,reserve=weapons and weapons:GetAmmo() or 0,0
+    local ammo,reserve=0,0
+    if weapons then ammo,reserve=weapons:GetAmmo() end
+    UI.SetText("RoundClock",practiceMode and "DRILL" or string.format("%02d:%02d",math.floor(stateTimer/60),math.ceil(stateTimer)%60))
     local weaponDef=weapons and weapons:GetDefinition() or nil
     local equipped=weaponDef and weaponDef.id or ""
     local hasPistol=weapons and weapons:Has("pistol")
     local hasRifle=weapons and weapons:Has("rifle")
     UI.SetText("AmmoLabel",weaponDef and weaponDef.displayName or "UNARMED")
     UI.SetText("AmmoText",weaponDef and (tostring(ammo).."  /  "..tostring(reserve)) or "--  /  --")
-    UI.SetText("Slot1Text",(equipped=="pistol" and "> " or "").."1  PISTOL")
-    UI.SetText("Slot2Text",(equipped=="rifle" and "> " or "").."2  RIFLE")
+    UI.SetText("Slot1Text",(equipped=="pistol" and "> " or "").."1  MAKO")
+    UI.SetText("Slot2Text",(equipped=="rifle" and "> " or "").."2  KESTREL")
     UI.SetColor("Slot1Plate",equipped=="pistol" and 0.30 or 0.08,equipped=="pistol" and 0.11 or 0.08,equipped=="pistol" and 0.025 or 0.09,0.96)
     UI.SetColor("Slot2Plate",equipped=="rifle" and 0.30 or 0.08,equipped=="rifle" and 0.11 or 0.08,equipped=="rifle" and 0.025 or 0.09,0.96)
     UI.SetColor("Slot1Text",hasPistol and 1.0 or 0.35,hasPistol and 0.86 or 0.35,hasPistol and 0.68 or 0.35,1.0)
@@ -358,7 +424,7 @@ local function updateHUD()
     elseif showRoundResult then
         UI.SetText("MatchStatus","ROUND "..roundNumber.." COMPLETE")
         UI.SetText("CenterMessage","")
-        UI.SetText("RoundResultTitle",roundWinner==localID and "ROUND WON" or "ROUND LOST")
+        UI.SetText("RoundResultTitle",roundWinner==0 and "STALEMATE" or (roundWinner==localID and "ROUND SECURED" or "ROUND LOST"))
         UI.SetText("RoundResultScore",scoreLine)
         UI.SetText("RoundResultNext","NEXT ROUND IN "..math.max(1,math.ceil(stateTimer)))
     elseif showMatchResult then
@@ -367,7 +433,7 @@ local function updateHUD()
         UI.SetText("MatchResultTitle",matchWinner==localID and "VICTORY" or "DEFEAT")
         UI.SetText("MatchResultScore",scoreLine)
         UI.SetText("MatchResultHint",matchWinner==localID and "MATCH WON" or "MATCH LOST")
-        UI.SetText("RematchLabel",Network.IsHost() and "REMATCH" or "HOST CAN START REMATCH")
+        UI.SetText("RematchLabel",rematchVotes[localID] and "WAITING FOR RIVAL" or "REQUEST REMATCH")
     end
 end
 
@@ -393,6 +459,8 @@ function OnCreate()
     })
     weapons:Register(Pistol)
     weapons:Register(Rifle)
+    weapons:Give("pistol",Pistol.startingReserve)
+    weapons:Give("rifle",Rifle.startingReserve)
     State.SetNumber("duelfps_weapon_pickup",0)
     Input.SetCursorVisible(false)
     if practiceMode then
@@ -402,7 +470,6 @@ function OnCreate()
         UI.SetText("MatchStatus","PRACTICE RANGE // TARGET DRILL")
         UI.SetText("CenterMessage","")
     else
-        weapons:Give("pistol",Pistol.startingReserve)
         updatePossessionAndSpawn()
         if Network.IsHost() then beginMatch() end
     end
@@ -417,10 +484,11 @@ function OnDisconnectClicked()
 end
 
 function OnRematchClicked()
-    if matchState==MATCH_END and Network.IsHost() then
-        Input.SetCursorVisible(false)
-        beginMatch()
-    end
+    if matchState~=MATCH_END then return end
+    rematchVotes[Controller.GetLocalID()]=true
+    if Network.IsHost() then
+        if rematchVotes[2] then Input.SetCursorVisible(false);beginMatch() end
+    else Network.SendMessage(CHANNEL_COMBAT,"REMATCH") end
 end
 
 function OnReturnToMenuClicked()
@@ -428,7 +496,19 @@ function OnReturnToMenuClicked()
 end
 
 function OnUpdate(dt)
+    elapsed=elapsed+dt
+    damageTimer=math.max(0,damageTimer-dt)
+    for sequence,pending in pairs(pendingShots) do
+        pending.age=pending.age+dt;pending.retry=pending.retry+dt
+        if pending.age>1 then pendingShots[sequence]=nil
+        elseif pending.retry>.08 then pending.retry=0;Network.SendMessage(CHANNEL_COMBAT,pending.payload) end
+    end
+    if not Network.IsHost() and rematchVotes[2] and matchState==MATCH_END then
+        rematchRetry=rematchRetry+dt
+        if rematchRetry>.3 then rematchRetry=0;Network.SendMessage(CHANNEL_COMBAT,"REMATCH") end
+    end
     if not practiceMode and not Network.IsConnected() then
+        State.SetBool("breakbulk_disconnected",true)
         Input.SetCursorVisible(true)
         Scene.Load("Assets/Scenes/MainMenu.scene")
         return
@@ -455,6 +535,7 @@ function OnUpdate(dt)
         UI.SetText("ScoreText","TARGET HITS  "..practiceHits)
         local prompt=Scene.GetInteractionPrompt()
         UI.SetText("CenterMessage",prompt~="" and ("[E]  "..string.upper(prompt)) or "")
+        UI.SetVisible("CenterMessage",prompt~="")
         UI.SetVisible("RoundIntro",false)
         UI.SetVisible("RoundResult",false)
         UI.SetVisible("MatchResult",false)
@@ -502,13 +583,16 @@ function OnUpdate(dt)
     local forward,right=Camera.GetForward(),Camera.GetRight()
     local mx,mz=right.x*ix+forward.x*iz,right.z*ix+forward.z*iz
     local length=math.sqrt(mx*mx+mz*mz)
-    local speed=Input.IsKeyDown("Left Shift") and sprintSpeed or walkSpeed
+    local sprint=Input.IsKeyDown("Left Shift")
+    local speed=weapons and weapons.aiming and 2.7 or (sprint and sprintSpeed or walkSpeed)
+    stepTimer=stepTimer-dt
+    if length>0 and stepTimer<=0 then Audio.PlaySFX("Assets/Audio/Breakbulk/step.wav",.25);stepTimer=sprint and .29 or .43 end
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
     if Input.IsKeyPressed("Space") then CharacterController.Jump() end
     if Input.IsKeyPressed("1") and weapons then weapons:Equip("pistol") end
     if Input.IsKeyPressed("2") and weapons then weapons:Equip("rifle") end
-    if Input.IsKeyPressed("R") and weapons then weapons:Reload() end
+    if Input.IsKeyPressed("R") and weapons and weapons:Reload() then Audio.PlaySFX("Assets/Audio/Breakbulk/reload.wav",.5) end
     if Input.IsMouseButtonDown(1) and weapons then
         handleWeaponShot(weapons:Fire(self.id,playerCamera))
     end

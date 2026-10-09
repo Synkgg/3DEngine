@@ -21,6 +21,7 @@ Vec2 UICanvas::GetSize() const { return m_Size; }
 
 void UICanvas::Clear()
 {
+    ++m_Revision;
     m_Root = std::make_unique<UIPanel>();
     m_Root->SetName("Canvas");
     m_Root->SetPosition(Vec2(0.0f, 0.0f));

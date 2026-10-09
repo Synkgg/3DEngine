@@ -5,7 +5,6 @@
 #include "UIButton.h"
 #include "UITextInput.h"
 #include "UISlider.h"
-#include "UISlider.h"
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
@@ -23,93 +22,6 @@
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <imstb_truetype.h>
-
-namespace
-{
-    const char* UI_VERTEX_SHADER = R"(
-        #version 450 core
-
-        layout(location = 0) in vec2 a_Position;
-        layout(location = 1) in vec2 a_UV;
-
-        uniform float u_ScreenWidth;
-        uniform float u_ScreenHeight;
-
-        uniform float u_UIScale;
-        uniform float u_UIOffsetX;
-        uniform float u_UIOffsetY;
-
-        out vec2 v_UV;
-
-        void main()
-        {
-            float screenX =
-                a_Position.x * u_UIScale +
-                u_UIOffsetX;
-
-            float screenY =
-                a_Position.y * u_UIScale +
-                u_UIOffsetY;
-
-            float ndcX =
-                (screenX / u_ScreenWidth) * 2.0 - 1.0;
-
-            float ndcY =
-                1.0 -
-                (screenY / u_ScreenHeight) * 2.0;
-
-            gl_Position =
-                vec4(ndcX, ndcY, 0.0, 1.0);
-
-            v_UV = a_UV;
-        }
-    )";
-
-    const char* UI_FRAGMENT_SHADER = R"(
-        #version 450 core
-
-        in vec2 v_UV;
-
-        uniform vec4 u_Color;
-        uniform vec4 u_GradientColor;
-        uniform int u_UseGradient;
-        uniform int u_GradientDirection;
-        uniform sampler2D u_Texture;
-        uniform int u_UseTexture;
-        uniform vec2 u_RectSize;
-        uniform float u_CornerRadius;
-
-        out vec4 FragColor;
-
-        void main()
-        {
-            // UI quads use a flipped V for texture sampling, but rounding only
-            // needs a stable 0..1 local coordinate inside the rectangle.
-            if (u_CornerRadius > 0.001)
-            {
-                vec2 localUV = vec2(v_UV.x, 1.0 - v_UV.y);
-                vec2 p = localUV * u_RectSize;
-                vec2 halfSize = u_RectSize * 0.5;
-                float radius = min(u_CornerRadius, min(halfSize.x, halfSize.y));
-                vec2 q = abs(p - halfSize) - (halfSize - vec2(radius));
-                float sd = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - radius;
-                if (sd > 0.0) discard;
-            }
-            float gradientT = u_GradientDirection == 1 ? v_UV.x : v_UV.y;
-            vec4 baseColor = u_UseGradient != 0 ? mix(u_Color, u_GradientColor, gradientT) : u_Color;
-            if (u_UseTexture != 0)
-            {
-                FragColor =
-                    texture(u_Texture, v_UV) *
-                    baseColor;
-            }
-            else
-            {
-                FragColor = baseColor;
-            }
-        }
-    )";
-}
 
 UIRenderer::UIRenderer()
 {
@@ -151,11 +63,11 @@ bool UIRenderer::Initialize()
     Velcryn::RHI::GraphicsPipelineDesc pipeline{};
     pipeline.vertexShader = UI_vert; pipeline.fragmentShader = UI_frag;
     pipeline.attributes = attributes; pipeline.vertexStride = sizeof(float) * 4;
-    pipeline.constantSize = sizeof(float) * 28;
+    pipeline.constantSize = sizeof(float) * 32;
     pipeline.colorFormat = Velcryn::RHI::TextureFormat::RGBA16_Float;
     pipeline.depthFormat = Velcryn::RHI::TextureFormat::D32_Float;
     pipeline.depthTest = false; pipeline.depthWrite = false; pipeline.cullBackFaces = false;
-    pipeline.sampledTexture = true; pipeline.alphaBlend = true; pipeline.debugName = "RuntimeUI";
+    pipeline.sampledTexture = true; pipeline.displayEncodedTexture = true; pipeline.clampSampler = true; pipeline.alphaBlend = true; pipeline.debugName = "RuntimeUI";
     m_Pipeline = device->CreateGraphicsPipeline(pipeline);
     if (!m_Pipeline) { Shutdown(); return false; }
 
@@ -188,6 +100,7 @@ void UIRenderer::Shutdown()
     m_VertexBuffer = {};
     m_Elements.clear();
     m_TextElements.clear();
+    m_ElementOrder.clear();
 }
 
 void UIRenderer::Resize(
@@ -223,6 +136,7 @@ void UIRenderer::SetLogicalSize(
 
 void UIRenderer::Begin()
 {
+    m_ClipRect = {0, 0, m_LogicalWidth, m_LogicalHeight};
     const float scaleX = static_cast<float>(m_Width) / m_LogicalWidth;
     const float scaleY = static_cast<float>(m_Height) / m_LogicalHeight;
     m_UIScale = std::min(scaleX, scaleY);
@@ -232,10 +146,25 @@ void UIRenderer::Begin()
 
 void UIRenderer::End()
 {
-    for (const auto& [id, element] : m_Elements)
-        if (element.visible) DrawElement(id, element);
-    for (const auto& [id, element] : m_TextElements)
-        if (element.visible) DrawTextElement(id, element);
+    for (const auto& id : m_ElementOrder)
+    {
+        std::string ancestor = id;
+        std::unordered_set<std::string> visited;
+        bool visible = true;
+        while (!ancestor.empty()) {
+            if (!visited.insert(ancestor).second) { visible = false; break; }
+            if (auto it = m_Elements.find(ancestor); it != m_Elements.end()) {
+                if (!it->second.visible) { visible = false; break; }
+                ancestor = it->second.parent;
+            } else if (auto it = m_TextElements.find(ancestor); it != m_TextElements.end()) {
+                if (!it->second.visible) { visible = false; break; }
+                ancestor = it->second.parent;
+            } else break;
+        }
+        if (!visible) continue;
+        if (auto it = m_Elements.find(id); it != m_Elements.end()) DrawElement(id, it->second);
+        else if (auto it = m_TextElements.find(id); it != m_TextElements.end()) DrawTextElement(id, it->second);
+    }
 }
 
 void UIRenderer::DrawQuad(float x, float y, float width, float height,
@@ -247,7 +176,7 @@ void UIRenderer::DrawQuad(float x, float y, float width, float height,
         return;
     struct Constants {
         float color[4]; float viewport[4]; float offset[4];
-        float gradient[4]; float style[4]; float rect[4]; float uvRect[4];
+        float gradient[4]; float style[4]; float rect[4]; float uvRect[4]; float clip[4];
     };
     Constants constants{{color.x,color.y,color.z,color.w},
         {static_cast<float>(m_Width),static_cast<float>(m_Height),m_UIScale,0.0f},
@@ -256,7 +185,10 @@ void UIRenderer::DrawQuad(float x, float y, float width, float height,
         {useGradient ? 1.0f : 0.0f, horizontalGradient ? 1.0f : 0.0f,
          width * m_UIScale, cornerRadius * m_UIScale},
         {x, y, width, height},
-        {u0, v0, u1, v1}};
+        {u0, v0, u1, v1},
+        {m_ClipRect.x*m_UIScale+m_UIOffsetX, m_ClipRect.y*m_UIScale+m_UIOffsetY,
+         (m_ClipRect.x+m_ClipRect.width)*m_UIScale+m_UIOffsetX,
+         (m_ClipRect.y+m_ClipRect.height)*m_UIScale+m_UIOffsetY}};
     if (auto* device = Velcryn::RHI::GetDevice())
     {
         device->DrawIndexed(m_Pipeline, m_VertexBuffer, m_IndexBuffer, 6,

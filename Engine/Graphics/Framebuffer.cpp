@@ -17,8 +17,6 @@ bool Framebuffer::CreateTargets()
     auto* device=Velcryn::RHI::GetDevice();
     if(!device || !m_Width || !m_Height) return false;
 
-    // Resolve/MSAA is moved into the render graph. Keep editor targets sampleable.
-    m_Samples=1;
 
     Velcryn::RHI::TextureDesc color{};
     color.width=m_Width; color.height=m_Height;
@@ -40,6 +38,11 @@ bool Framebuffer::CreateTargets()
     depth.debugName="SceneDepth";
     m_Depth=device->CreateTexture(depth);
 
+    if(m_Samples>1) {
+        color.sampleCount=normal.sampleCount=depth.sampleCount=m_Samples;
+        m_MSColor=device->CreateTexture(color);m_MSNormal=device->CreateTexture(normal);m_MSDepth=device->CreateTexture(depth);
+        if(!m_MSColor||!m_MSNormal||!m_MSDepth){Shutdown();return false;}
+    }
     if(!m_Color || !m_Normal || !m_Depth){Shutdown();return false;}
     return true;
 }
@@ -57,18 +60,19 @@ bool Framebuffer::Resize(unsigned int width,unsigned int height)
 
 bool Framebuffer::SetSamples(unsigned int samples)
 {
-    // Vulkan MSAA resolve will be a render-graph concern; editor targets remain single-sample.
-    m_Samples=std::clamp(samples,1u,8u);
-    return true;
+    samples=samples>=8?8:samples>=4?4:samples>=2?2:1;
+    if(samples==m_Samples)return true;
+    Shutdown();m_Samples=samples;return CreateTargets();
 }
 
 void Framebuffer::Shutdown()
 {
     if(auto* device=Velcryn::RHI::GetDevice())
     {
+        for(auto handle:{m_MSColor,m_MSNormal,m_MSDepth})if(handle)device->DestroyTexture(handle);
         if(m_Color)device->DestroyTexture(m_Color);
         if(m_Normal)device->DestroyTexture(m_Normal);
         if(m_Depth)device->DestroyTexture(m_Depth);
     }
-    m_Color={};m_Normal={};m_Depth={};
+    m_Color={};m_Normal={};m_Depth={};m_MSColor={};m_MSNormal={};m_MSDepth={};
 }

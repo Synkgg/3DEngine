@@ -1,4 +1,6 @@
 #include "Application.h"
+#include "GameExporter.h"
+#include "../Platform/Windows/FileDialog.h"
 #include <SDL3/SDL.h>
 #include <imgui.h>
 #include "../Scene/Entity.h"
@@ -39,6 +41,7 @@ void Application::Run()
 
         while (SDL_PollEvent(&event))
         {
+            m_Input.ProcessEvent(event);
             // While gameplay owns relative mouse input, do not feed mouse
             // motion/buttons/wheel into Dear ImGui. SDL relative mode hides
             // the OS cursor, but ImGui otherwise keeps integrating those
@@ -148,6 +151,8 @@ void Application::Run()
             imguiIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         }
 
+        if (!m_GameMode)
+        {
         // Persistent editor shell: scenes and asset editors are documents.
         // Scene rendering stays alive regardless of which document is active.
         m_Editor.Render(
@@ -155,6 +160,33 @@ void Application::Run()
             m_Scene,
             m_ImGuiLayer.GetIconFont(),
             m_ActiveUIDocument < 0);
+
+        static std::string exportStatus;
+        if (m_Editor.ConsumeExportRequest()) { exportStatus.clear(); ImGui::OpenPopup("Export Windows game"); }
+        ImGui::SetNextWindowSize(ImVec2(560, 260), ImGuiCond_Appearing);
+        if (ImGui::BeginPopupModal("Export Windows game", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextUnformatted("WINDOWS / VULKAN");
+            ImGui::TextWrapped("Packages the saved startup scene, all project assets and this executable. Save scene and UI changes before exporting. Use a Release build for distribution.");
+            ImGui::Spacing();
+            if (!m_ProjectManager.HasProject()) ImGui::TextWrapped("Open a project before exporting.");
+            else if (ImGui::Button("Choose destination and export", ImVec2(320, 40)))
+            {
+                std::string folder;
+                if (FileDialog::SelectFolder(folder))
+                {
+                    const auto& project = m_ProjectManager.GetActiveProject();
+                    const auto output = std::filesystem::path(folder) / (project.descriptorPath.stem().string() + "-Windows");
+                    const auto executable = std::filesystem::path(SDL_GetBasePath()) / "VelcrynEditor.exe";
+                    std::string error;
+                    exportStatus = ExportGame(project.descriptorPath, output, executable, error)
+                        ? "Export complete: " + output.string() : "Export failed: " + error;
+                }
+            }
+            ImGui::TextWrapped("%s", exportStatus.c_str());
+            if (ImGui::Button("Close")) ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
 
         if (m_Editor.ConsumeProjectHubRequest())
         {
@@ -366,6 +398,14 @@ void Application::Run()
             StopRuntime();
         }
 
+        }
+        else
+        {
+            int width = 0, height = 0;
+            SDL_GetWindowSizeInPixels(m_Window.GetNativeWindow(), &width, &height);
+            if (width > 0 && height > 0) m_Renderer.ResizeViewport(width, height);
+        }
+
         if (!m_Runtime.IsRunning())
         {
             bool rightMouseDown =
@@ -526,8 +566,10 @@ void Application::Run()
             ui.SetMouseInteractionEnabled(m_Runtime.WantsCursor());
 
             const Vec2 canvasSize = m_UICanvas.GetSize();
-            const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
-            const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
+            int logicalWidth = 0, logicalHeight = 0;
+            SDL_GetWindowSize(m_Window.GetNativeWindow(), &logicalWidth, &logicalHeight);
+            const ImVec2 gameViewportPosition = m_GameMode ? ImVec2(0, 0) : m_Editor.GetViewportPosition();
+            const ImVec2 gameViewportSize = m_GameMode ? ImVec2(float(logicalWidth), float(logicalHeight)) : m_Editor.GetViewportSize();
 
             // Viewport position/size and Input mouse coordinates are both in
             // SDL/ImGui logical window coordinates here. UIRenderer performs
@@ -540,8 +582,12 @@ void Application::Run()
                 gameViewportPosition.x,
                 gameViewportPosition.y,
                 gameViewportSize.x,
-                gameViewportSize.y
+                gameViewportSize.y,
+                m_Time.GetDeltaTime()
             );
+            if (ui.HasTextInputFocus()) {
+                if (!SDL_TextInputActive(m_Window.GetNativeWindow())) SDL_StartTextInput(m_Window.GetNativeWindow());
+            } else if (SDL_TextInputActive(m_Window.GetNativeWindow())) SDL_StopTextInput(m_Window.GetNativeWindow());
 
             m_Runtime.Update(
                 m_Scene,
@@ -553,7 +599,7 @@ void Application::Run()
             // If nobody claimed Escape by opening a pause/menu state, treat it
             // as the editor's Stop shortcut. This makes Escape reliable in
             // arbitrary scenes instead of depending on game-specific Lua.
-            if (runtimeEscapePressed &&
+            if (!m_GameMode && runtimeEscapePressed &&
                 m_Runtime.IsRunning() &&
                 !m_Runtime.IsPaused() &&
                 !m_Runtime.WantsCursor())
@@ -564,7 +610,7 @@ void Application::Run()
         }
 
         // Apply a Stop requested during Runtime::Update in the same frame.
-        if (!m_Editor.IsPlaying() && m_Runtime.IsRunning())
+        if (!m_GameMode && !m_Editor.IsPlaying() && m_Runtime.IsRunning())
         {
             StopRuntime();
         }
@@ -579,7 +625,7 @@ void Application::Run()
         // so the material shader can sample a stable light-space depth map.
         for (int shadowCascade = 0; shadowCascade < Renderer::ShadowCascadeCount; ++shadowCascade)
         {
-            m_Renderer.BeginShadowPass(shadowCascade);
+            if (!m_Renderer.BeginShadowPass(shadowCascade)) continue;
         for (const Entity& entity : m_Scene.GetEntities())
         {
             TransformComponent* transform =
@@ -615,11 +661,6 @@ void Application::Run()
         }
 
         m_Renderer.DrawSky();
-
-        if (!m_Runtime.IsRunning() && m_Editor.IsGridVisible())
-        {
-            m_Renderer.DrawGrid();
-        }
 
         for (const Entity& entity : m_Scene.GetEntities())
         {
@@ -711,7 +752,11 @@ void Application::Run()
                     if(modelAsset&&modelAsset->IsSkeletal()&&!modelAsset->animations.empty())
                     {
                         if(mesh->animationPlaying)mesh->animationTime+=m_Time.GetDeltaTime()*mesh->animationSpeed;
-                        m_Renderer.DrawAnimatedModel(meshTransform,resolvedModel,(std::size_t)std::max(mesh->animationClip,0),mesh->animationTime,mesh->animationLoop,red,green,blue,alpha);
+                        m_Renderer.DrawAnimatedModel(meshTransform, resolvedModel, (std::size_t)std::max(mesh->animationClip,0),
+                            mesh->animationTime, mesh->animationLoop, red, green, blue, alpha, texture,
+                            material ? material->metallic : 0.0f, material ? material->roughness : 0.65f,
+                            material ? material->ambientOcclusion : 1.0f, material ? material->emissive : 0.0f,
+                            normalMap, metallicMap, roughnessMap, aoMap, emissiveMap, material != nullptr);
                     }
                     else m_Renderer.DrawModel(
                         meshTransform, resolvedModel,
@@ -720,7 +765,7 @@ void Application::Run()
                         material ? material->roughness : 0.65f,
                         material ? material->ambientOcclusion : 1.0f,
                         material ? material->emissive : 0.0f,
-                        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap
+                        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap, material != nullptr
                     );
                 }
                 else
@@ -737,6 +782,9 @@ void Application::Run()
                 }
             }
         }
+
+        if (!m_Runtime.IsRunning() && m_Editor.IsGridVisible())
+            m_Renderer.DrawGrid();
 
         Entity selectedEntity =
             m_Editor.GetSelectedEntity();
@@ -832,9 +880,17 @@ void Application::Run()
             m_Renderer.EndOverlay();
         }
 
+        if (m_GameMode)
+        {
+            const auto* viewport = ImGui::GetMainViewport();
+            ImGui::GetBackgroundDrawList()->AddImage(
+                (ImTextureID)m_Renderer.GetViewportTexture(), viewport->Pos,
+                ImVec2(viewport->Pos.x + viewport->Size.x, viewport->Pos.y + viewport->Size.y));
+        }
         m_ImGuiLayer.EndFrame();
 
         m_Renderer.EndFrame();
+        if (m_FrameLimit > 0 && --m_FrameLimit == 0) m_Running = false;
         finishFrame();
     }
 }

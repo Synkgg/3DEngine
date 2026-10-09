@@ -7,23 +7,23 @@ struct Constants
     float4 style; // useGradient, horizontal, rectWidthPixels, radiusPixels
     float4 rect;
     float4 uvRect;
+    float4 clip;
 };
 [[vk::push_constant]] Constants draw;
 Texture2D<float4> uiTexture : register(t0, space1);
 SamplerState uiSampler : register(s0, space0);
 
-float4 main([[vk::location(0)]] float2 uv : TEXCOORD0) : SV_Target0
+float4 main(float4 position : SV_Position, [[vk::location(0)]] float2 uv : TEXCOORD0, [[vk::location(1)]] float2 localUV : TEXCOORD1) : SV_Target0
 {
-    float t = draw.style.y > 0.5 ? uv.x : uv.y;
+    if (any(position.xy < draw.clip.xy) || any(position.xy >= draw.clip.zw)) discard;
+    float t = draw.style.y > 0.5 ? localUV.x : localUV.y;
     float4 tint = draw.style.x > 0.5 ? lerp(draw.color, draw.gradient, t) : draw.color;
 
     float radius = draw.style.w;
     if (radius > 0.01)
     {
-        float width = max(draw.style.z, 1.0);
-        float height = max(abs(ddx(uv.y)) > 0.0 ? width * abs(ddx(uv.x) / ddx(uv.y)) : width, 1.0);
-        float2 size = float2(width, height);
-        float2 p = uv * size;
+        float2 size = max(draw.rect.zw * draw.viewport.z, 1.0);
+        float2 p = localUV * size;
         float2 halfSize = size * 0.5;
         radius = min(radius, min(halfSize.x, halfSize.y));
         float2 q = abs(p - halfSize) - (halfSize - radius);

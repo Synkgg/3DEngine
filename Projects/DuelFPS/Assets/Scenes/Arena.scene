@@ -1,10 +1,10 @@
 MyEngineScene
-Environment 1 4 1 1 1 180 0.78 0.0004 0.12 1 85
-Entities 9
+Environment 1 4 1 0 1 220 0.9 0.001 0.13 1 90
+Entities 35
 Entity 1
-Name Player
-Position 0 1.5 10
-Rotation 0 3.14159 0
+Name Operator
+Position 0 1.2 14
+Rotation 0 0 0
 Scale 1 1 1
 Parent 0
 PrefabSource ""
@@ -15,15 +15,15 @@ Material 0
 Interactable 0
 Player 1 0 0
 PlayerStart 0
-CharacterController 1 9.81 7 0 1
+CharacterController 1 18 6.5 0 1
 Light 0
-Collider 1 0.8 2 0.8
+Collider 1 0.65 1.8 0.65
 Scripts 1
 Script Assets/Scripts/Player.lua
-Entity 9
+Entity 2
 Name FirstPersonCamera
-Position 0 0.55 0
-Rotation 0 1.5708 0
+Position 0 0.65 0
+Rotation 0 -1.5708 0
 Scale 1 1 1
 Parent 1
 PrefabSource ""
@@ -36,103 +36,31 @@ Player 0
 PlayerStart 0
 CharacterController 0
 Light 0
-Camera 1 90 0.1 1000 1
+Camera 1 90 0.08 220 1
 Collider 0
 Scripts 0
-Entity 2
-Name ArenaFloor
-Position 0 -0.5 0
-Rotation 0 0 0
-Scale 30 1 40
-Parent 0
-PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.12 0.14 0.17 1
-Texture 0
-Material 1 0.18 0.72 1 0
-Interactable 0
-Player 0
-PlayerStart 0
-CharacterController 0
-Light 0
-Collider 1 30 1 40
-Scripts 0
 Entity 3
-Name WestWall
-Position -15 2.5 0
+Name BREAKBULK - Terminal
+Position 0 0 0
 Rotation 0 0 0
-Scale 1 6 40
+Scale 1 1 1
 Parent 0
 PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.18 0.20 0.24 1
+Mesh 1 0 "Assets/Models/Breakbulk/Terminal.obj" 0
+Color 1 1 1 1 1
 Texture 0
-Material 1 0.2 0.7 1 0
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0
 CharacterController 0
 Light 0
-Collider 1 1 6 40
+Collider 0
 Scripts 0
 Entity 4
-Name EastWall
-Position 15 2.5 0
+Name South insertion
+Position -4 1.2 14
 Rotation 0 0 0
-Scale 1 6 40
-Parent 0
-PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.18 0.20 0.24 1
-Texture 0
-Material 1 0.2 0.7 1 0
-Interactable 0
-Player 0
-PlayerStart 0
-CharacterController 0
-Light 0
-Collider 1 1 6 40
-Scripts 0
-Entity 5
-Name NorthWall
-Position 0 2.5 -20
-Rotation 0 0 0
-Scale 30 6 1
-Parent 0
-PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.18 0.20 0.24 1
-Texture 0
-Material 1 0.2 0.7 1 0
-Interactable 0
-Player 0
-PlayerStart 0
-CharacterController 0
-Light 0
-Collider 1 30 6 1
-Scripts 0
-Entity 6
-Name SouthWall
-Position 0 2.5 20
-Rotation 0 0 0
-Scale 30 6 1
-Parent 0
-PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.18 0.20 0.24 1
-Texture 0
-Material 1 0.2 0.7 1 0
-Interactable 0
-Player 0
-PlayerStart 0
-CharacterController 0
-Light 0
-Collider 1 30 6 1
-Scripts 0
-Entity 7
-Name Player Start 1
-Position 0 1.5 10
-Rotation 0 3.14159 0
 Scale 1 1 1
 Parent 0
 PrefabSource ""
@@ -147,9 +75,9 @@ CharacterController 0
 Light 0
 Collider 0
 Scripts 0
-Entity 8
-Name Player Start 2
-Position 0 1.5 -10
+Entity 5
+Name North insertion
+Position 4 1.2 -14
 Rotation 0 0 0
 Scale 1 1 1
 Parent 0
@@ -163,6 +91,546 @@ Player 0
 PlayerStart 1 2
 CharacterController 0
 Light 0
+Collider 0
+Scripts 0
+Entity 6
+Name Terminal pavement
+Position 0 -0.3 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 30 0.6 36
+Scripts 0
+Entity 7
+Name Perimeter barrier
+Position -14.7 1.8 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.6 3.6 36
+Scripts 0
+Entity 8
+Name Perimeter barrier
+Position 14.7 1.8 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.6 3.6 36
+Scripts 0
+Entity 9
+Name End barrier
+Position 0 1.8 -17.7
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 30 3.6 0.6
+Scripts 0
+Entity 10
+Name End barrier
+Position 0 1.8 17.7
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 30 3.6 0.6
+Scripts 0
+Entity 11
+Name C1 shell
+Position -8.0 1.55 -8.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 3.1 7.4
+Scripts 0
+Entity 12
+Name C2 shell
+Position 8.0 1.55 8.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 3.1 7.4
+Scripts 0
+Entity 13
+Name C3 left shell
+Position -9.55 1.55 5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.18 3.1 7.4
+Scripts 0
+Entity 14
+Name C3 right shell
+Position -6.45 1.55 5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.18 3.1 7.4
+Scripts 0
+Entity 15
+Name C3 roof
+Position -8.0 3.02 5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 0.18 7.4
+Scripts 0
+Entity 16
+Name C3 floor
+Position -8.0 0.07 5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 0.14 7.4
+Scripts 0
+Entity 17
+Name C4 left shell
+Position 6.45 1.55 -5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.18 3.1 7.4
+Scripts 0
+Entity 18
+Name C4 right shell
+Position 9.55 1.55 -5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.18 3.1 7.4
+Scripts 0
+Entity 19
+Name C4 roof
+Position 8.0 3.02 -5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 0.18 7.4
+Scripts 0
+Entity 20
+Name C4 floor
+Position 8.0 0.07 -5.0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 0.14 7.4
+Scripts 0
+Entity 21
+Name C5 shell
+Position -1.8 1.55 -5.0
+Rotation 0 1.5708 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 3.1 7.4
+Scripts 0
+Entity 22
+Name C6 shell
+Position 1.8 1.55 5.0
+Rotation 0 1.5708 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 3.2 3.1 7.4
+Scripts 0
+Entity 23
+Name Crate cover
+Position -3 0.7 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1.5 1.4 1.5
+Scripts 0
+Entity 24
+Name Crate cover
+Position 3 0.7 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1.5 1.4 1.5
+Scripts 0
+Entity 25
+Name Crate cover
+Position -11 0.7 12
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1.5 1.4 1.5
+Scripts 0
+Entity 26
+Name Crate cover
+Position 11 0.7 -12
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1.5 1.4 1.5
+Scripts 0
+Entity 27
+Name Crate cover
+Position -11 0.7 -1
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1.5 1.4 1.5
+Scripts 0
+Entity 28
+Name Crate cover
+Position 11 0.7 1
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1.5 1.4 1.5
+Scripts 0
+Entity 29
+Name Light mast
+Position -13 4 -15
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.16 8 0.16
+Scripts 0
+Entity 30
+Name Light mast
+Position 13 4 15
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.16 8 0.16
+Scripts 0
+Entity 31
+Name Light mast
+Position -13 4 15
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.16 8 0.16
+Scripts 0
+Entity 32
+Name Light mast
+Position 13 4 -15
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.16 8 0.16
+Scripts 0
+Entity 33
+Name Late shift sun
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 1 1 0.84 0.64 -0.48 -0.78 -0.38 2.3 0 90 23 35 1
+Collider 0
+Scripts 0
+Entity 34
+Name Terminal work light
+Position -11 4 -12
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 1 0.52 0.75 1 0 -1 0 4 1 10 23 35 0
+Collider 0
+Scripts 0
+Entity 35
+Name Terminal work light
+Position 11 4 12
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 1 0.52 0.75 1 0 -1 0 4 1 10 23 35 0
 Collider 0
 Scripts 0
 HierarchyFolders 0

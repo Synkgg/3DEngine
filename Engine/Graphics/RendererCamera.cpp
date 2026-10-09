@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "RHI/RHI.h"
 #include "../Platform/SDL/Window.h"
 #include "PrimitiveMesh.h"
 #include "ModelLoader.h"
@@ -41,12 +42,18 @@ void Renderer::ResetCamera()
 
 void Renderer::DrawSky()
 {
-    // Recorded by the Vulkan scene pass.
+    const auto data=GetPostDrawData();
+    const Velcryn::RHI::TextureHandle others[]={m_WhiteTexture,m_WhiteTexture,m_WhiteTexture};
+    DrawFullscreen(m_SkyPipeline,data,m_WhiteTexture,others);
 }
 
 void Renderer::DrawGrid()
 {
-    // Recorded by the Vulkan scene pass using Grid's RHI vertex buffer.
+    if(auto* device=Velcryn::RHI::GetDevice()) {
+        device->EndRendering();
+        BeginSceneRendering(false,false);
+        m_Grid.Draw(m_FrameViewProjection, m_Camera.GetPosition());
+    }
 }
 
 Mat4 Renderer::GetCameraViewMatrix() const

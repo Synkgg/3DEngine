@@ -1189,6 +1189,10 @@ bool SceneSerializer::Load(
                     light.direction.y >>
                     light.direction.z >>
                     light.intensity;
+                if (lightLine.fail()) {
+                    Logger::Error("Invalid required Light data for entity " + std::to_string(entityID));
+                    return false;
+                }
 
                 int lightType = 0;
                 int castShadows = 1;

@@ -17,7 +17,7 @@ if(NOT DXC_PROBE_RESULT EQUAL 0)
     message(FATAL_ERROR "DXC must support SPIR-V. Set VELCRYN_DXC to the standalone DXC or Vulkan SDK compiler. ${DXC_PROBE_ERROR}")
 endif()
 set(VELCRYN_SHADER_HEADERS)
-foreach(SHADER_NAME Mesh UI)
+foreach(SHADER_NAME Mesh UI Grid Post TAA BloomExtract BloomBlur Sky Copy Debug Preview)
     foreach(STAGE vert frag)
         if(STAGE STREQUAL "vert")
             set(PROFILE vs_6_0)
@@ -33,7 +33,7 @@ foreach(SHADER_NAME Mesh UI)
                 "$<IF:$<CONFIG:Debug>,-Od,-O3>" -Fo "${SPIRV}" "${SOURCE}"
             COMMAND ${CMAKE_COMMAND} "-DINPUT=${SPIRV}" "-DOUTPUT=${HEADER}" "-DSYMBOL=${SHADER_NAME}_${STAGE}"
                 -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
-            DEPENDS "${SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/Mesh.vert.hlsl" "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/PostData.hlsli" "${SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/MeshData.hlsli" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
             VERBATIM)
         list(APPEND VELCRYN_SHADER_HEADERS "${HEADER}")
     endforeach()
@@ -437,6 +437,8 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT V
 
 include(CTest)
 if(BUILD_TESTING)
+    add_test(NAME Game.Network COMMAND VelcrynEditor --network-smoke-test)
+    set_tests_properties(Game.Network PROPERTIES TIMEOUT 20 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" LABELS "network;gameplay")
     add_test(NAME RHI.Smoke COMMAND ${CMAKE_COMMAND}
         "-DEDITOR=$<TARGET_FILE:VelcrynEditor>" "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
         "-DLOG_DIR=${CMAKE_CURRENT_BINARY_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunRHISmokeTest.cmake")

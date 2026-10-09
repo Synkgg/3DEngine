@@ -5,6 +5,8 @@
 
 #include "../Core/Logger.h"
 #include "RHI/RHI.h"
+#include <vector>
+#include <algorithm>
 
 Texture2D::Texture2D() = default;
 Texture2D::~Texture2D() { Unload(); }
@@ -49,7 +51,26 @@ bool Texture2D::Load(const std::string& filepath)
         static_cast<std::size_t>(m_Width) *
         static_cast<std::size_t>(m_Height) * 4u;
 
-    m_Handle = device->CreateTexture(desc, pixels, byteSize);
+    // The legacy renderer generated UNORM mipmaps. Preserve that working space
+    // for existing scene/data textures; the RHI still exposes an sRGB view when needed.
+    std::vector<std::uint8_t> mipData(pixels,pixels+byteSize);
+    unsigned int width=desc.width,height=desc.height;
+    std::size_t previousOffset=0;
+    while(width>1 || height>1) {
+        const unsigned int nextWidth=std::max(1u,width/2),nextHeight=std::max(1u,height/2);
+        const std::size_t nextOffset=mipData.size();
+        mipData.resize(nextOffset+std::size_t(nextWidth)*nextHeight*4);
+        for(unsigned int y=0;y<nextHeight;++y)for(unsigned int x=0;x<nextWidth;++x)for(unsigned int c=0;c<4;++c) {
+            unsigned int sum=0,count=0;
+            for(unsigned int sy=y*height/nextHeight;sy<(y+1)*height/nextHeight;++sy)
+                for(unsigned int sx=x*width/nextWidth;sx<(x+1)*width/nextWidth;++sx) {
+                    sum+=mipData[previousOffset+(std::size_t(sy)*width+sx)*4+c];++count;
+                }
+            mipData[nextOffset+(std::size_t(y)*nextWidth+x)*4+c]=static_cast<std::uint8_t>((sum+count/2)/count);
+        }
+        previousOffset=nextOffset;width=nextWidth;height=nextHeight;++desc.mipLevels;
+    }
+    m_Handle = device->CreateTexture(desc, mipData.data(), mipData.size());
     stbi_image_free(pixels);
 
     if (!m_Handle)

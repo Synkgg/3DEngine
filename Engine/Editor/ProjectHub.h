@@ -41,4 +41,5 @@ private:
     std::string m_Error;
     std::vector<RecentProject> m_RecentProjects;
     bool m_CreateProjectOpen = false;
+    char m_Search[128]{};
 };

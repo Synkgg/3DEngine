@@ -253,6 +253,8 @@ void Editor::Render(
 
             ImGui::Separator();
 
+            if (ImGui::MenuItem("Export Game (Windows)...")) m_ExportRequested = true;
+
             if (ImGui::MenuItem("Back to Project Hub"))
             {
                 m_ProjectHubRequested = true;
