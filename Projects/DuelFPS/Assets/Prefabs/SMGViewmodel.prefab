@@ -20,12 +20,12 @@ Collider 0
 Scripts 0
 Entity 2
 Name VECTOR K9
-Position 0 0 0
-Rotation 0 0 0
-Scale 1 1 1
+Position 0 -0.255 0
+Rotation 0 90 0
+Scale 0.32 0.32 0.32
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Arsenal/VectorK9.obj" 0
+Mesh 1 0 "Assets/Models/GunPack/Bullpup_1.obj" 0
 Color 1 1 1 1 1
 Texture 0
 Material 0
@@ -38,10 +38,10 @@ Collider 0
 Scripts 0
 Entity 3
 Name MuzzleSocket
-Position 0 0.005 -0.87
+Position 2.719206 0.814 0
 Rotation 0 0 0
 Scale 1 1 1
-Parent 1
+Parent 2
 PrefabSource ""
 Mesh 0
 Color 0
