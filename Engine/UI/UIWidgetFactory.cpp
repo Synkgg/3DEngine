@@ -1,6 +1,7 @@
 #include "UIWidgetFactory.h"
 
 #include "UIPanel.h"
+#include "UIScrollBox.h"
 #include "UIText.h"
 #include "UIImage.h"
 #include "UIButton.h"
@@ -33,6 +34,9 @@ UIWidgetFactory::Create(UIWidgetType type)
 
     case UIWidgetType::ProgressBar:
         return std::make_unique<UIProgressBar>();
+
+    case UIWidgetType::ScrollBox:
+        return std::make_unique<UIScrollBox>();
     }
 
     return nullptr;
