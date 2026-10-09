@@ -628,8 +628,22 @@ function OnUpdate(dt)
     local speed=weapons and weapons.aiming and 2.7 or (sprint and sprintSpeed or walkSpeed)
     stepTimer=stepTimer-dt
     if length>0 and stepTimer<=0 and CharacterController.IsGrounded() then
-        Audio.PlayFootstep(practiceMode and "concrete" or "metal",sprint)
-        stepTimer=sprint and .29 or .43
+        -- Read the floor beneath the character, not the game mode. Metal
+        -- cargo decks ring differently from concrete and wooden cover.
+        local surface="concrete"
+        local p=transform.GetPosition()
+        local ground=Physics.Raycast(p.x,p.y+.25,p.z,0,-1,0,2.2,self.id)
+        if ground and ground.hit and ground.entityID and ground.entityID~=0 then
+            local name=Scene.GetName(ground.entityID):lower()
+            if name:find("metal") or name:find("container") or name:find("catwalk")
+                or name:find("grate") or name:find("ramp") then
+                surface="metal"
+            elseif name:find("wood") or name:find("crate") or name:find("pallet") then
+                surface="wood"
+            end
+        end
+        Audio.PlayFootstep(surface,sprint)
+        stepTimer=sprint and .275 or (weapons and weapons.aiming and .54 or .41)
     end
     if length>0 then mx,mz=mx/length*speed,mz/length*speed end
     CharacterController.Move(mx,mz)
