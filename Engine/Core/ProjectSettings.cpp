@@ -4,6 +4,9 @@
 
 bool ProjectSettings::Load(const std::string& path)
 {
+    // A missing settings file in a newly opened project must not inherit
+    // rendering values from the previous workspace.
+    m_RenderSettings = RenderSettings{};
     m_Loaded = true;
     std::ifstream file(path);
     if (!file) return false;
