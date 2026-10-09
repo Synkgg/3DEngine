@@ -654,6 +654,44 @@ void UIEditor::DrawInspector(
         }
     });
 
+    if (auto* reusable = dynamic_cast<UIUserWidget*>(&widget))
+    {
+        category("Reusable Widget", "widget blueprint nested UI asset source", true, [&](auto& row)
+        {
+            row("Source UI", "path to another .ui asset", [&]
+            {
+                static std::uint64_t editId = 0;
+                static char sourceBuffer[1024]{};
+                static std::string lastError;
+                if (editId != widget.GetInstanceId())
+                {
+                    editId = widget.GetInstanceId();
+                    std::snprintf(sourceBuffer, sizeof(sourceBuffer), "%s",
+                                  reusable->GetSourcePath().c_str());
+                    lastError.clear();
+                }
+                ImGui::SetNextItemWidth(-1.0f);
+                const bool entered = ImGui::InputText("##SourceUI", sourceBuffer,
+                    sizeof(sourceBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+                if (entered || ImGui::Button("Apply / Reload"))
+                {
+                    const std::string previous = reusable->GetSourcePath();
+                    reusable->SetSourcePath(sourceBuffer);
+                    if (!UISerializer::PopulateUserWidget(*reusable, m_UIAssetPath))
+                    {
+                        reusable->SetSourcePath(previous);
+                        lastError = "Missing, invalid or circular .ui asset.";
+                    }
+                    else lastError.clear();
+                }
+                if (!lastError.empty())
+                    ImGui::TextWrapped("%s", lastError.c_str());
+                ImGui::TextDisabled("Example: Assets/UI/Loadout.ui");
+                ImGui::TextDisabled("Edit the source UI to update every instance.");
+            });
+        });
+    }
+
     if(auto* scroll=dynamic_cast<UIScrollBox*>(&widget))
     {
         category("Scrolling","scroll box viewport content height offset mouse wheel",true,[&](auto& row)
