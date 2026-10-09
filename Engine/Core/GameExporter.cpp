@@ -156,8 +156,12 @@ bool ExportGame(const fs::path& descriptor, const fs::path& destination,
         const fs::path output = fs::absolute(destination).lexically_normal();
         if (output.filename().empty() || output.filename() == "." || output.filename() == "..")
             throw std::runtime_error("Choose a named, new output folder.");
-        if (fs::exists(output))
-            throw std::runtime_error("That export folder already exists. Choose a new folder name.");
+        // symlink_status also detects dangling links, which exists() misses.
+        // Never publish over a pre-existing directory, file or link.
+        std::error_code outputStatusError;
+        const fs::file_status outputStatus = fs::symlink_status(output, outputStatusError);
+        if (outputStatus.type() != fs::file_type::not_found)
+            throw std::runtime_error("That export path already exists or cannot be inspected. Choose a new folder name.");
 
         const fs::path parent = fs::canonical(output.parent_path());
         if (!fs::is_directory(parent))
