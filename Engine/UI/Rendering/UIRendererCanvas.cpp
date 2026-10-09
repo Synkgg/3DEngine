@@ -155,6 +155,8 @@ void UIRenderer::RenderCanvasWidget(
 
 void UIRenderer::DrawCanvasWidget(const UIWidget& widget, const UIRect& rect, Renderer* renderer)
 {
+    // A user widget is a transparent container; its linked children draw below.
+    if (widget.GetType() == UIWidgetType::UserWidget) return;
     Vec4 color = widget.GetColor();
     std::string texturePath;
     if (const auto* button = dynamic_cast<const UIButton*>(&widget))
