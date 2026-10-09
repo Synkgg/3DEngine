@@ -689,6 +689,25 @@ void UIEditor::DrawInspector(
                 ImGui::TextDisabled("Example: Assets/UI/Loadout.ui");
                 ImGui::TextDisabled("Edit the source UI to update every instance.");
             });
+            row("Event Script", "optional controller script for button callbacks", [&]
+            {
+                static std::uint64_t eventEditId = 0;
+                static char eventBuffer[1024]{};
+                if (eventEditId != widget.GetInstanceId())
+                {
+                    eventEditId = widget.GetInstanceId();
+                    std::snprintf(eventBuffer, sizeof(eventBuffer), "%s",
+                        reusable->GetEventScriptOverride().c_str());
+                }
+                ImGui::SetNextItemWidth(-1.0f);
+                if (ImGui::InputText("##EventScript", eventBuffer, sizeof(eventBuffer),
+                    ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    reusable->SetEventScriptOverride(eventBuffer);
+                    UISerializer::PopulateUserWidget(*reusable, m_UIAssetPath);
+                }
+                ImGui::TextDisabled("Optional: Assets/Scripts/Player.lua");
+            });
         });
     }
 
@@ -2063,7 +2082,7 @@ std::unique_ptr<UIWidget> UIEditor::CloneWidget(const UIWidget& source) const
     copy->SetHitTestVisible(source.IsHitTestVisible()); copy->SetZOrder(source.GetZOrder()); copy->SetRenderOpacity(source.GetRenderOpacity());
     copy->SetCornerRadius(source.GetCornerRadius()); copy->SetGradientEnabled(source.HasGradient());
     copy->SetGradientColor(source.GetGradientColor()); copy->SetGradientDirection(source.GetGradientDirection());
-    if(auto* a=dynamic_cast<const UIUserWidget*>(&source)) if(auto* b=dynamic_cast<UIUserWidget*>(copy.get())) b->SetSourcePath(a->GetSourcePath());
+    if(auto* a=dynamic_cast<const UIUserWidget*>(&source)) if(auto* b=dynamic_cast<UIUserWidget*>(copy.get())) { b->SetSourcePath(a->GetSourcePath()); b->SetEventScriptOverride(a->GetEventScriptOverride()); }
     if(auto* a=dynamic_cast<const UIScrollBox*>(&source)) if(auto* b=dynamic_cast<UIScrollBox*>(copy.get())) { b->SetContentHeight(a->GetContentHeight()); b->SetScrollOffset(a->GetScrollOffset()); }
     if(auto* a=dynamic_cast<const UIText*>(&source)) if(auto* b=dynamic_cast<UIText*>(copy.get())) { b->SetText(a->GetText()); b->SetFontSize(a->GetFontSize()); b->SetHorizontalAlignment(a->GetHorizontalAlignment()); b->SetVerticalAlignment(a->GetVerticalAlignment()); }
     if(auto* a=dynamic_cast<const UITextInput*>(&source)) if(auto* b=dynamic_cast<UITextInput*>(copy.get())) { b->SetText(a->GetText()); b->SetPlaceholder(a->GetPlaceholder()); b->SetFontSize(a->GetFontSize()); b->SetMaxLength(a->GetMaxLength()); b->SetPassword(a->IsPassword()); }
