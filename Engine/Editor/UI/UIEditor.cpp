@@ -1271,6 +1271,7 @@ void UIEditor::DrawDesigner(
     {
         ImGui::TextDisabled("CREATE WIDGET");
         if(ImGui::MenuItem("Panel")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Panel); }
+        if(ImGui::MenuItem("Scroll Box")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::ScrollBox); }
         if(ImGui::MenuItem("Text")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Text); }
         if(ImGui::MenuItem("Image")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Image); }
         if(ImGui::MenuItem("Button")) { PushHistory(canvas); AddWidget(canvas,UIWidgetType::Button); }
@@ -1287,7 +1288,7 @@ void UIEditor::DrawDesigner(
             {
                 const int value = *static_cast<const int*>(payload->Data);
                 if (value >= static_cast<int>(UIWidgetType::Panel) &&
-                    value <= static_cast<int>(UIWidgetType::ProgressBar))
+                    value <= static_cast<int>(UIWidgetType::ScrollBox))
                 {
                     AddWidget(canvas, static_cast<UIWidgetType>(value));
                     if (m_SelectedWidget)
@@ -1958,6 +1959,7 @@ void UIEditor::AddWidget(
     switch(type)
     {
     case UIWidgetType::Panel: defaultSize=Vec2(320.0f,220.0f); break;
+    case UIWidgetType::ScrollBox: defaultSize=Vec2(420.0f,300.0f); break;
     case UIWidgetType::Text: defaultSize=Vec2(240.0f,48.0f); break;
     case UIWidgetType::Image: defaultSize=Vec2(180.0f,180.0f); break;
     case UIWidgetType::Button: defaultSize=Vec2(220.0f,48.0f); break;
