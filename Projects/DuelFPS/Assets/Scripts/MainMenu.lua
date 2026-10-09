@@ -1,5 +1,6 @@
 local Profiles = require("Scripts.Weapons.LoadoutProfiles")
 local joining=false
+local joinElapsed=0
 local browserOpen=false
 local browserRows={}
 local browserRefreshElapsed=0
@@ -151,7 +152,6 @@ function OnLoadoutBack()
     pendingScreen="main"
 end
 
-local joinElapsed=0
 function OnCreate()
     restoreLoadout()
     UI.Load("Assets/UI/MainMenu.ui")
@@ -215,10 +215,10 @@ end
 function OnBrowserRefresh()
     if joining then return end
     browserLastSignature=""
-    if not Network.SearchServers(7777) then
+    local started=Network.SearchServers(7777)
+    showBrowserRows()
+    if not started then
         UI.SetText("BrowserStatus","SEARCH FAILED / "..Network.GetLastError())
-    else
-        showBrowserRows()
     end
 end
 
