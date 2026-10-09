@@ -19,6 +19,7 @@ public:
 
     float GetMouseDeltaX() const;
     float GetMouseDeltaY() const;
+    float GetMouseWheelY() const { return m_MouseWheelY; }
 
     bool IsMouseButtonDown(Uint8 button) const;
     bool IsMouseButtonPressed(Uint8 button) const;
@@ -43,6 +44,8 @@ private:
     SDL_MouseButtonFlags m_PreviousMouseButtons;
     float m_MouseX;
     float m_MouseY;
+    float m_MouseWheelY = 0.0f;
+    float m_PendingMouseWheelY = 0.0f;
 
     bool m_MouseCaptured;
     std::string m_PendingTextInput, m_TextInput;
