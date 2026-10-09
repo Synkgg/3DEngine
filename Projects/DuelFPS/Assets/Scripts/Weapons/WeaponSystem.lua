@@ -1,3 +1,5 @@
+local ShotPattern = require("Scripts.Weapons.ShotPattern")
+local WeaponVFX = require("Scripts.Weapons.WeaponVFX")
 local WeaponSystem = {}
 WeaponSystem.__index = WeaponSystem
 
@@ -14,7 +16,9 @@ function WeaponSystem.new(api)
         recoilTarget = 0.0,
         recoilApplied = 0.0,
         aiming = false,
-        animationTime=0
+        animationTime=0,
+        triggerHeld=false,
+        fx=WeaponVFX.new(api.Scene)
     }, WeaponSystem)
 end
 
@@ -40,6 +44,26 @@ function WeaponSystem:Give(weaponID, reserveOverride)
         item.reserve = reserveOverride
     end
     return self:Equip(weaponID)
+end
+
+-- Equip exactly two chosen guns. Each round restores ammunition, not
+-- the original default loadout, so players keep their armory selection.
+function WeaponSystem:SetLoadout(primary,secondary,practice)
+    if not self.definitions[primary] or not self.definitions[secondary] or primary==secondary then
+        return false
+    end
+    if self.viewmodel~=0 then self.api.Scene.DestroyEntity(self.viewmodel) end
+    self.viewmodel=0
+    self.equipped=nil
+    self.inventory={}
+    for _,id in ipairs({primary,secondary}) do
+        local def=self.definitions[id]
+        self.inventory[id]={ammo=def.magSize,reserve=practice and def.practiceReserve or def.startingReserve}
+    end
+    self.primary=primary
+    self.secondary=secondary
+    self.triggerHeld=false
+    return self:Equip(primary)
 end
 
 function WeaponSystem:Equip(weaponID)
@@ -99,6 +123,8 @@ function WeaponSystem:Reload()
 end
 
 function WeaponSystem:Update(dt, cameraEntity)
+    self.fx:Update(dt)
+    if not self.api.Input.IsMouseButtonDown(1) then self.triggerHeld=false end
     self.animationTime=self.animationTime+dt
     self.cooldown = math.max(0.0, self.cooldown - dt)
 
@@ -157,28 +183,49 @@ function WeaponSystem:Update(dt, cameraEntity)
     self.api.Scene.SetRotation(self.viewmodel, -pitch+reloadPose*16, yaw, reloadPose*-24)
 end
 
+function WeaponSystem:SpawnRemoteShot(ownerEntity,weaponID,ox,oy,oz,dx,dy,dz)
+    local def=self.definitions[weaponID]
+    if not def then return end
+    local hit=self.api.Physics.Raycast(ox,oy,oz,dx,dy,dz,def.range,ownerEntity or 0)
+    self.fx:Emit(ox,oy,oz,dx,dy,dz,def.range,hit.hit,hit.x,hit.y,hit.z,.05,.48)
+    self.api.Audio.PlaySFX(def.fireSound,.43)
+end
+
 function WeaponSystem:Fire(ownerEntity, cameraEntity)
-    local def, item = self:GetDefinition(), self:GetItem()
-    if not def or not item or self.cooldown > 0.0 or self.reloadTimer > 0.0 or item.ammo <= 0 then
-        return nil
+    local def,item=self:GetDefinition(),self:GetItem()
+    if not def or not item or self.cooldown>0 or self.reloadTimer>0 or item.ammo<=0 then return nil end
+    if not def.automatic and self.triggerHeld then return nil end
+    self.triggerHeld=true
+    item.ammo=item.ammo-1
+    self.cooldown=def.fireInterval
+    self.kick=math.min(def.viewKick*1.35,self.kick+def.viewKick)
+    self.recoilTarget=math.min(def.cameraKick*1.5,self.recoilTarget+def.cameraKick)
+    self.api.Audio.PlaySFX(def.fireSound,def.id=="shotgun" and 1.0 or .9)
+    if def.id=="shotgun" then self.api.Audio.PlaySFX("Assets/Audio/Breakbulk/sidearm.wav",.38) end
+
+    local c,f=self.api.Camera.GetPosition(),self.api.Camera.GetForward()
+    local dirs=ShotPattern.Directions(f.x,f.y,f.z,def.pellets or 1,def.spread or 0)
+    local hits={}
+    local first=nil
+    for _,dir in ipairs(dirs) do
+        local hit=self.api.Physics.Raycast(c.x,c.y,c.z,dir.x,dir.y,dir.z,def.range,ownerEntity)
+        if hit.hit then
+            hits[#hits+1]={entityID=hit.entityID,x=hit.x,y=hit.y,z=hit.z}
+            if not first then first=hit end
+        end
     end
+    self.fx:Emit(c.x,c.y,c.z,f.x,f.y,f.z,def.range,
+        first~=nil,first and first.x or 0,first and first.y or 0,first and first.z or 0,
+        def.muzzleSide,def.muzzleDistance)
 
-    item.ammo = item.ammo - 1
-    self.cooldown = def.fireInterval
-    self.kick = math.min(def.viewKick * 1.35, self.kick + def.viewKick)
-    self.recoilTarget = math.min(def.cameraKick * 1.5, self.recoilTarget + def.cameraKick)
-    self.api.Audio.PlaySFX(def.fireSound, 0.9)
-
-    local c, f = self.api.Camera.GetPosition(), self.api.Camera.GetForward()
-    local hit = self.api.Physics.Raycast(c.x, c.y, c.z, f.x, f.y, f.z, def.range, ownerEntity)
     return {
-        hit = hit.hit,
-        entityID = hit.entityID,
-        x = hit.x, y = hit.y, z = hit.z,
-        originX = c.x, originY = c.y, originZ = c.z,
-        forwardX = f.x, forwardY = f.y, forwardZ = f.z,
-        damage = def.damage,
-        range = def.range
+        hit=first~=nil,
+        entityID=first and first.entityID or 0,
+        x=first and first.x or 0,y=first and first.y or 0,z=first and first.z or 0,
+        hits=hits,
+        originX=c.x,originY=c.y,originZ=c.z,
+        forwardX=f.x,forwardY=f.y,forwardZ=f.z,
+        damage=def.damage,range=def.range
     }
 end
 
