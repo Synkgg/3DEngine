@@ -1,4 +1,69 @@
 local joining=false
+local loadoutSlot="primary"
+local loadoutPrimary="rifle"
+local loadoutSecondary="pistol"
+local valid={pistol=true,rifle=true,shotgun=true,smg=true}
+local guns={
+    pistol={name="MAKO P12",role="PRECISION SIDEARM",stats="12 ROUNDS  /  HIGH CONTROL"},
+    rifle={name="KESTREL AR4",role="ASSAULT RIFLE",stats="30 ROUNDS  /  BALANCED RANGE"},
+    shotgun={name="BREACH S8",role="PUMP SHOTGUN",stats="8 SHELLS  /  CLOSE RANGE"},
+    smg={name="VECTOR K9",role="SUBMACHINE GUN",stats="36 ROUNDS  /  HIGH RATE"}
+}
+local function restoreLoadout()
+    local primary=Preferences.LoadString("breakbulk_primary","rifle")
+    local secondary=Preferences.LoadString("breakbulk_secondary","pistol")
+    loadoutPrimary=valid[primary] and primary or "rifle"
+    loadoutSecondary=valid[secondary] and secondary or "pistol"
+    if loadoutPrimary==loadoutSecondary then loadoutSecondary=loadoutPrimary=="pistol" and "rifle" or "pistol" end
+end
+local function refreshLoadout()
+    UI.SetText("PrimaryValue",guns[loadoutPrimary].name)
+    UI.SetText("SecondaryValue",guns[loadoutSecondary].name)
+    UI.SetText("SlotHint",loadoutSlot=="primary" and "SELECT YOUR PRIMARY WEAPON" or "SELECT YOUR SECONDARY WEAPON")
+    UI.SetText("PrimaryTabText",(loadoutSlot=="primary" and "> " or "").."01  PRIMARY")
+    UI.SetText("SecondaryTabText",(loadoutSlot=="secondary" and "> " or "").."02  SECONDARY")
+    for _,id in ipairs({"pistol","rifle","shotgun","smg"}) do
+        local equipped=loadoutPrimary==id or loadoutSecondary==id
+        local selected=(loadoutSlot=="primary" and loadoutPrimary==id) or (loadoutSlot=="secondary" and loadoutSecondary==id)
+        UI.SetText(id.."Status",selected and "SELECTED IN THIS SLOT" or (equipped and "EQUIPPED IN OTHER SLOT" or "CLICK TO EQUIP"))
+        UI.SetColor(id.."Status",selected and 0.97 or 0.54,selected and 0.66 or 0.64,selected and 0.28 or 0.65,1)
+    end
+end
+local function openLoadout()
+    loadoutSlot="primary"
+    UI.Load("Assets/UI/Loadout.ui")
+    refreshLoadout()
+end
+local function selectGun(id)
+    if loadoutSlot=="primary" then
+        if id==loadoutSecondary then loadoutSecondary=loadoutPrimary end
+        loadoutPrimary=id
+    else
+        if id==loadoutPrimary then loadoutPrimary=loadoutSecondary end
+        loadoutSecondary=id
+    end
+    refreshLoadout()
+end
+function OnLoadoutClicked() openLoadout() end
+function OnPrimarySlotClicked() loadoutSlot="primary";refreshLoadout() end
+function OnSecondarySlotClicked() loadoutSlot="secondary";refreshLoadout() end
+function OnPistolSelected() selectGun("pistol") end
+function OnRifleSelected() selectGun("rifle") end
+function OnShotgunSelected() selectGun("shotgun") end
+function OnSMGSelected() selectGun("smg") end
+function OnLoadoutSaved()
+    Preferences.SaveString("breakbulk_primary",loadoutPrimary)
+    Preferences.SaveString("breakbulk_secondary",loadoutSecondary)
+    restoreLoadout()
+    UI.Load("Assets/UI/MainMenu.ui")
+    UI.SetText("NetworkStatus","LOADOUT SAVED / "..guns[loadoutPrimary].name.." + "..guns[loadoutSecondary].name)
+end
+function OnLoadoutBack()
+    UI.Load("Assets/UI/MainMenu.ui")
+    UI.SetText("NetworkStatus","LOADOUT CHANGES NOT SAVED")
+    restoreLoadout()
+end
+
 local joinElapsed=0
 function OnCreate()
     UI.Load("Assets/UI/MainMenu.ui")
