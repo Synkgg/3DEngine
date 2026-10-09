@@ -1091,7 +1091,10 @@ void LuaScript::BindEngineAPI()
      * health, weapons, teams and game state belong to project scripts.
      */
     sol::table network = m_Lua->create_table();
-    network.set_function("Host", [this](int port,sol::optional<std::uint32_t> maxPlayers){return m_Runtime&&port>0&&port<=65535&&m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port),maxPlayers.value_or(8));});
+    network.set_function("Host", [this](int port,sol::optional<std::uint32_t> maxPlayers,sol::optional<std::string> name){
+        return m_Runtime&&port>0&&port<=65535&&
+            m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port),maxPlayers.value_or(8),name.value_or("Velcryn Server"));
+    });
     network.set_function("Join", [this](const std::string& address,int port){return m_Runtime&&m_Runtime->GetNetwork().Join(address,static_cast<std::uint16_t>(port));});
     network.set_function("SearchServers", [this](sol::optional<int> port){
         if(!m_Runtime)return false;
