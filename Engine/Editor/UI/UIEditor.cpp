@@ -9,6 +9,7 @@
 #include "../../UI/UITextInput.h"
 #include "../../UI/UISlider.h"
 #include "../../UI/UIProgressBar.h"
+#include "../../UI/UIScrollBox.h"
 #include "../../UI/UISerializer.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
@@ -179,7 +180,10 @@ void UIEditor::Draw(
             paletteItem("Slider", UIWidgetType::Slider);
         }
         if (ImGui::CollapsingHeader("Panel##PalettePanel", ImGuiTreeNodeFlags_DefaultOpen))
+        {
             paletteItem("Panel", UIWidgetType::Panel);
+            paletteItem("Scroll Box", UIWidgetType::ScrollBox);
+        }
         ImGui::Spacing();
         ImGui::TextDisabled("Click to add, or drag into the Designer");
         ImGui::End();
@@ -311,7 +315,8 @@ void UIEditor::DrawHierarchy(
         widget.GetType()==UIWidgetType::Image ? "[Image]" :
         widget.GetType()==UIWidgetType::Button ? "[Button]" :
         widget.GetType()==UIWidgetType::TextInput ? "[TextInput]" :
-        widget.GetType()==UIWidgetType::Slider ? "[Slider]" : "[Progress]";
+        widget.GetType()==UIWidgetType::Slider ? "[Slider]" :
+        widget.GetType()==UIWidgetType::ScrollBox ? "[ScrollBox]" : "[Progress]";
     const bool open =
         ImGui::TreeNodeEx(
             &widget,
@@ -365,7 +370,8 @@ void UIEditor::DrawHierarchy(
             {
                 UIWidget* draggedWidget = *static_cast<UIWidget* const*>(payload->Data);
                 const bool targetCanContainChildren =
-                    widget.GetType() == UIWidgetType::Panel;
+                    widget.GetType() == UIWidgetType::Panel ||
+                    widget.GetType() == UIWidgetType::ScrollBox;
                 if (draggedWidget && draggedWidget != &widget &&
                     draggedWidget->GetParent() != &widget &&
                     targetCanContainChildren &&
@@ -420,6 +426,7 @@ void UIEditor::DrawInspector(
         case UIWidgetType::TextInput: return "Text Input";
         case UIWidgetType::Slider: return "Slider";
         case UIWidgetType::ProgressBar: return "Progress Bar";
+        case UIWidgetType::ScrollBox: return "Scroll Box";
         }
         return "Widget";
     };
@@ -642,6 +649,23 @@ void UIEditor::DrawInspector(
             row("Gradient Direction","vertical horizontal",[&]{int v=(int)widget.GetGradientDirection();const char* values[]={"Vertical","Horizontal"};if(ImGui::Combo("##Value",&v,values,2))widget.SetGradientDirection((UIGradientDirection)v);});
         }
     });
+
+    if(auto* scroll=dynamic_cast<UIScrollBox*>(&widget))
+    {
+        category("Scrolling","scroll box viewport content height offset mouse wheel",true,[&](auto& row)
+        {
+            row("Content Height","vertical scroll extent",[&]{
+                float v=scroll->GetContentHeight();
+                if(ImGui::DragFloat("##Value",&v,2.0f,0.0f,100000.0f))
+                    scroll->SetContentHeight(v);
+            });
+            row("Scroll Offset","vertical position",[&]{
+                float v=scroll->GetScrollOffset();
+                if(ImGui::DragFloat("##Value",&v,2.0f,0.0f,100000.0f))
+                    scroll->SetScrollOffset(v);
+            });
+        });
+    }
 
     if(auto* text=dynamic_cast<UIText*>(&widget))
     {
@@ -1534,20 +1558,16 @@ void UIEditor::DrawWidget(
         drawList->AddText(ImVec2(labelMin.x+6.0f,labelMin.y+3.0f),IM_COL32(240,247,255,255),selectionLabel);
     }
 
-    for (const auto& child :
-        widget.GetChildren())
+    UIRect childRect = rect;
+    const auto* scroll = dynamic_cast<const UIScrollBox*>(&widget);
+    if (scroll)
     {
-        if (child)
-        {
-            DrawWidget(
-                *child,
-                rect,
-                canvasPosition,
-                scale,
-                drawList
-            );
-        }
+        childRect.y -= scroll->GetScrollOffset();
+        drawList->PushClipRect(min,max,true);
     }
+    for (const auto& child : widget.GetChildren())
+        if (child) DrawWidget(*child,childRect,canvasPosition,scale,drawList);
+    if (scroll) drawList->PopClipRect();
 }
 
 void UIEditor::SelectWidget(
