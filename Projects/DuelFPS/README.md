@@ -22,14 +22,16 @@ NAT traversal. **Explore Terminal** runs the map and target drill offline.
 | WASD / mouse | Move / look |
 | Left Shift / Space | Sprint / jump |
 | Left mouse / right mouse | Fire / aim |
-| R / 1 / 2 | Reload / Mako sidearm / Kestrel carbine |
+| R / 1 / 2 | Reload / equipped primary / equipped secondary |
 | Escape | Session menu; online simulation continues |
 
 ## Match rules
 
 - Exactly two players; a third connection is rejected.
 - First to five rounds. Three-second deployment countdown and round break.
-- Equal sidearm/carbine loadouts; both weapons replenish every round.
+- Four selectable weapons (pistol, assault rifle, shotgun and SMG). Each
+  player saves two distinct loadout slots in the armory; both replenish
+  ammunition every round.
 - Ninety-second rounds. On timeout, higher health wins; equal health is a draw.
 - Damage and round scores are decided by the host, with host-side raycasts,
   weapon-defined damage, origin/rate checks and duplicate-shot suppression.
@@ -43,8 +45,11 @@ cuts, staggered crate cover, distinct opposing insertions, lane markings, a cran
 freight stacks and industrial lamps. Collider dimensions match the static map;
 the two insertion points cannot shoot directly through the central cover.
 
-The dispatch menu, map diagram, HUD, countdown, death/round/match results and
-pause screen are newly authored. The game also includes original procedural
+The dispatch menu, tactical armory loadout, map diagram, HUD, countdown,
+death/round/match results and pause screen are newly authored. The armory
+includes two editable slots, four weapon rows, live platform details and
+performance ratings. The platform display uses schematic silhouettes until
+model-pack thumbnails are provided. The game also includes original procedural
 Kestrel/Mako weapon models, an armored remote operator, synthesized firing/UI/
 reload/hit/footstep audio, aim/recoil/reload motion and damage feedback.
 
@@ -72,3 +77,16 @@ multi-machine internet latency and long play sessions still need playtesting.
 Movement remains client-reported and there is no lag compensation or production
 anti-cheat. Assets are deliberately stylized procedural geometry, not a AAA art
 library. Audio playback itself has not been assessed by an automated test.
+
+## Weapon presentation and sound
+
+Each viewmodel prefab contains an editable `MuzzleSocket` transform at the
+barrel exit. Gunfire uses the transformed world position to spawn short-lived
+**3D muzzle flashes, tracers and impacts**. The muzzle follows aim/recoil
+rather than being drawn as a fake UI element. Older prefabs without a socket
+fall back to the camera-relative offset. See [WEAPON_ASSET_PACKS.md](WEAPON_ASSET_PACKS.md)
+for importing licensed OBJ/glTF/GLB weapon models and repositioning sockets.
+
+Footsteps now raycast the actual ground surface and select distinct
+metal/concrete/wood procedural boot sounds, with separate sprint/walk cadence
+and randomized pitch/texture. No external footstep audio assets are required.
