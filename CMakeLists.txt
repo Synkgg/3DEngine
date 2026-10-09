@@ -443,6 +443,13 @@ if(BUILD_TESTING)
         "-DEDITOR=$<TARGET_FILE:VelcrynEditor>" "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
         "-DLOG_DIR=${CMAKE_CURRENT_BINARY_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunRHISmokeTest.cmake")
     set_tests_properties(RHI.Smoke PROPERTIES TIMEOUT 45 LABELS "gpu;vulkan")
+    if(WIN32)
+        add_test(NAME Game.Export COMMAND ${CMAKE_COMMAND}
+            "-DEDITOR=$<TARGET_FILE:VelcrynEditor>"
+            "-DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/GameExportSmoke"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunGameExportTest.cmake")
+        set_tests_properties(Game.Export PROPERTIES TIMEOUT 120 LABELS "export;packaging")
+    endif()
 endif()
 
 #
