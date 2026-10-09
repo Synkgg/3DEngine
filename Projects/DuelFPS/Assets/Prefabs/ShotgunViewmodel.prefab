@@ -7,6 +7,7 @@ Rotation 0 0 0
 Scale 1 1 1
 Parent 0
 PrefabSource ""
+HierarchyGroup 0
 Mesh 0
 Color 0
 Texture 0
@@ -16,16 +17,18 @@ Player 0
 PlayerStart 0
 CharacterController 0
 Light 0
+Camera 0
 Collider 0
 Scripts 0
 Entity 2
 Name BREACH S8
-Position 0 -0.02 0.214
-Rotation 0 90 0
+Position 0 -0.02 0
+Rotation 0 1.5708 0
 Scale 0.38 0.38 0.38
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/GunPack/Shotgun_1.obj" 0
+HierarchyGroup 0
+Mesh 1 0 "Assets/Models/GunPack/Shotgun_1.obj" 0 1 1 0 0 1
 Color 1 1 1 1 1
 Texture 0
 Material 0
@@ -34,15 +37,17 @@ Player 0
 PlayerStart 0
 CharacterController 0
 Light 0
+Camera 0
 Collider 0
 Scripts 0
 Entity 3
 Name MuzzleSocket
-Position 3.80057 0.15 0
-Rotation 0 0 0
+Position 0 0.0772445 -1.42912
+Rotation 0 -0 0
 Scale 1 1 1
 Parent 2
 PrefabSource ""
+HierarchyGroup 0
 Mesh 0
 Color 0
 Texture 0
@@ -52,6 +57,7 @@ Player 0
 PlayerStart 0
 CharacterController 0
 Light 0
+Camera 0
 Collider 0
 Scripts 0
 HierarchyFolders 0
