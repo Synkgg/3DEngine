@@ -274,7 +274,7 @@ function OnUpdate(dt)
         local nextScreen=pendingScreen
         pendingScreen=nil
         if nextScreen=="loadout" then
-            UI.Load("Assets/UI/Loadout.ui")
+            UI.Load("Assets/UI/LoadoutLobby.ui")
             refreshLoadout()
         elseif nextScreen=="browser" then
             UI.Load("Assets/UI/ServerBrowser.ui")
