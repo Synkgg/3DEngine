@@ -5,6 +5,16 @@ import json
 
 ROOT = Path(__file__).resolve().parents[1] / 'Projects/DuelFPS'
 A = ROOT / 'Assets'
+# This legacy map/sound authoring script predates the four-gun armory.
+# Preserve hand-authored gameplay UI and Arsenal prefab upgrades when
+# regenerating the terminal geometry; never silently revert them.
+_preserve_paths = [
+    A / 'UI/MainMenu.ui',
+    A / 'UI/Duel.ui',
+    A / 'Prefabs/PistolViewmodel.prefab',
+    A / 'Prefabs/RifleViewmodel.prefab',
+]
+_preserved = {p: p.read_bytes() for p in _preserve_paths if p.is_file()}
 MODEL = A / 'Models/Breakbulk'
 MODEL.mkdir(parents=True, exist_ok=True)
 
@@ -319,3 +329,9 @@ for effect,duration in [('carbine',.24),('sidearm',.30),('hit',.10),('interface'
         frames.append(struct.pack('<h',int(max(-1,min(1,value)) * 27000)))
     with wave.open(str(sound_dir/(effect+'.wav')),'wb') as out:
         out.setnchannels(1);out.setsampwidth(2);out.setframerate(rate);out.writeframes(b''.join(frames))
+
+# Restore the upgraded armory/UI files after the legacy generator runs.
+for _path, _bytes in _preserved.items():
+    if _path.read_bytes() != _bytes:
+        _path.write_bytes(_bytes)
+print('Preserved current four-gun loadout UI and first-person Arsenal prefabs.')
