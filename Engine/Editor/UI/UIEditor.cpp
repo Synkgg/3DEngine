@@ -170,7 +170,7 @@ void UIEditor::Draw(
             ImGui::PushID(static_cast<int>(type));
             if (ImGui::Selectable(label))
                 AddWidget(canvas, type);
-            if (!IsLinkedWidgetChild(&widget) && ImGui::BeginDragDropSource())
+            if (ImGui::BeginDragDropSource())
             {
                 const int payloadType = static_cast<int>(type);
                 ImGui::SetDragDropPayload("UI_PALETTE_WIDGET", &payloadType, sizeof(payloadType));
