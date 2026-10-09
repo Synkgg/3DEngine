@@ -576,8 +576,10 @@ local function closeFieldArmory(apply)
     if not loadoutMenuOpen then return end
     if apply and Profiles.Save(editingProfile,editingPrimary,editingSecondary) then
         Profiles.Select(editingProfile)
+        local changed=loadoutPrimary~=editingPrimary or loadoutSecondary~=editingSecondary
         loadoutPrimary,loadoutSecondary=editingPrimary,editingSecondary
-        weapons:SetLoadout(loadoutPrimary,loadoutSecondary,practiceMode)
+        -- Re-selecting an unchanged preset must not refill ammo mid-round.
+        if changed then weapons:SetLoadout(loadoutPrimary,loadoutSecondary,practiceMode) end
         playerLoadouts[Controller.GetLocalID()]={loadoutPrimary,loadoutSecondary}
         loadoutSent=false -- resend validated IDs to the host
     end
