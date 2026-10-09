@@ -1,3 +1,4 @@
+local Profiles = require("Scripts.Weapons.LoadoutProfiles")
 local WeaponSystem = require("Scripts.Weapons.WeaponSystem")
 local Pistol = require("Scripts.Weapons.Pistol")
 local Rifle = require("Scripts.Weapons.Rifle")
@@ -7,6 +8,17 @@ local ShotPattern = require("Scripts.Weapons.ShotPattern")
 local gunDefs={pistol=Pistol,rifle=Rifle,shotgun=Shotgun,smg=SMG}
 local loadoutPrimary,loadoutSecondary="rifle","pistol"
 local loadoutSent=false
+local loadoutMenuOpen=false
+local editingSlot="primary"
+local editingProfile=1
+local editingPrimary,editingSecondary="rifle","pistol"
+local editingCategory="rifle"
+local armoryStats={
+    rifle={damage=7,range=8,control=7,mobility=6},
+    smg={damage=5,range=5,control=6,mobility=9},
+    shotgun={damage=10,range=3,control=4,mobility=5},
+    pistol={damage=7,range=4,control=8,mobility=10}
+}
 local playerLoadouts={}
 
 local walkSpeed, sprintSpeed = 5.0, 8.0
@@ -488,11 +500,8 @@ function OnCreate()
     weapons:Register(Rifle)
     weapons:Register(Shotgun)
     weapons:Register(SMG)
-    local primary=Preferences.LoadString("breakbulk_primary","rifle")
-    local secondary=Preferences.LoadString("breakbulk_secondary","pistol")
-    loadoutPrimary=gunDefs[primary] and primary or "rifle"
-    loadoutSecondary=gunDefs[secondary] and secondary or "pistol"
-    if loadoutPrimary==loadoutSecondary then loadoutSecondary=loadoutPrimary=="pistol" and "rifle" or "pistol" end
+    local _,primary,secondary=Profiles.GetActive()
+    loadoutPrimary,loadoutSecondary=primary,secondary
     weapons:SetLoadout(loadoutPrimary,loadoutSecondary,practiceMode)
     playerLoadouts[Controller.GetLocalID()]={loadoutPrimary,loadoutSecondary}
     loadoutSent=false
@@ -509,6 +518,111 @@ function OnCreate()
         if Network.IsHost() then beginMatch() end
     end
 end
+
+-- The field armory reuses the editor-authored menu UI, but callbacks run
+-- in this Player script so it can return to the HUD without changing scenes.
+local function refreshFieldArmory()
+    if not loadoutMenuOpen then return end
+    local selected=editingSlot=="primary" and editingPrimary or editingSecondary
+    UI.SetText("SlotsTitle","CUSTOM LOADOUT "..editingProfile)
+    UI.SetText("PrimaryValue",gunDefs[editingPrimary].shortName)
+    UI.SetText("SecondaryValue",gunDefs[editingSecondary].shortName)
+    UI.SetText("SlotHint",editingSlot=="primary" and "CHOOSE PRIMARY" or "CHOOSE SECONDARY")
+    UI.SetText("PrimaryTabLabel",editingSlot=="primary" and "01  PRIMARY / EDITING" or "01  PRIMARY")
+    UI.SetText("SecondaryTabLabel",editingSlot=="secondary" and "02  SECONDARY / EDITING" or "02  SECONDARY")
+    for i=1,Profiles.count do
+        local active=i==editingProfile
+        UI.SetColor("Profile"..i.."Plate",active and .62 or .11,active and .41 or .14,active and .17 or .15,1)
+        UI.SetText("Profile"..i.."ButtonLabel",(active and "> " or "")..string.format("%02d",i))
+    end
+    for _,id in ipairs(Profiles.order) do
+        local active=id==editingCategory
+        UI.SetVisible("WeaponCategory_"..id,active)
+        UI.SetColor("Category_"..id.."_Plate",active and .55 or .10,active and .38 or .13,active and .19 or .14,1)
+        UI.SetVisible("PreviewGun_"..id,active)
+        UI.SetColor(id.."CardBack",selected==id and .19 or .075,selected==id and .22 or .093,selected==id and .22 or .105,1)
+        UI.SetText(id.."Status",selected==id and "SELECTED" or
+            ((editingPrimary==id or editingSecondary==id) and "EQUIPPED" or "AVAILABLE"))
+    end
+    local def=gunDefs[editingCategory]
+    UI.SetText("PreviewName",def.shortName)
+    UI.SetText("PreviewClass",Profiles.categories[editingCategory])
+    UI.SetText("PreviewIndex","CUSTOM "..editingProfile.." / "..Profiles.count)
+    UI.SetText("PreviewDesc",def.displayName)
+    UI.SetText("PreviewTrait","EQUIP IN PRIMARY OR SECONDARY")
+    local values=armoryStats[editingCategory]
+    for _,stat in ipairs({"Damage","Range","Control","Mobility"}) do
+        for i=1,10 do
+            UI.SetVisible("Stat"..stat.."Segment"..i,i<=values[string.lower(stat)])
+        end
+    end
+end
+
+local function openFieldArmory()
+    if loadoutMenuOpen then return end
+    loadoutMenuOpen=true
+    paused=true
+    editingProfile,editingPrimary,editingSecondary=Profiles.GetActive()
+    editingSlot="primary"
+    editingCategory=editingPrimary
+    CharacterController.Move(0,0)
+    Input.SetCursorVisible(true)
+    UI.Load("Assets/UI/LoadoutInGame.ui")
+    refreshFieldArmory()
+end
+
+local function closeFieldArmory(apply)
+    if not loadoutMenuOpen then return end
+    if apply and Profiles.Save(editingProfile,editingPrimary,editingSecondary) then
+        Profiles.Select(editingProfile)
+        loadoutPrimary,loadoutSecondary=editingPrimary,editingSecondary
+        weapons:SetLoadout(loadoutPrimary,loadoutSecondary,practiceMode)
+        playerLoadouts[Controller.GetLocalID()]={loadoutPrimary,loadoutSecondary}
+        loadoutSent=false -- resend validated IDs to the host
+    end
+    loadoutMenuOpen=false
+    UI.Load("Assets/UI/Duel.ui")
+    setPaused(false)
+    Input.SetCursorVisible(false)
+end
+
+local function selectFieldProfile(index)
+    -- Commit edits to the slot being left, then load the next preset.
+    Profiles.Save(editingProfile,editingPrimary,editingSecondary)
+    editingProfile=index
+    editingPrimary,editingSecondary=Profiles.Get(index)
+    editingCategory=editingPrimary
+    refreshFieldArmory()
+end
+local function selectFieldGun(id)
+    if editingSlot=="primary" then
+        if editingSecondary==id then editingSecondary=editingPrimary end
+        editingPrimary=id
+    else
+        if editingPrimary==id then editingPrimary=editingSecondary end
+        editingSecondary=id
+    end
+    editingCategory=id
+    refreshFieldArmory()
+end
+function OnLoadoutClicked() openFieldArmory() end
+function OnPrimarySlotClicked() editingSlot="primary";refreshFieldArmory() end
+function OnSecondarySlotClicked() editingSlot="secondary";refreshFieldArmory() end
+function OnProfile1Clicked() selectFieldProfile(1) end
+function OnProfile2Clicked() selectFieldProfile(2) end
+function OnProfile3Clicked() selectFieldProfile(3) end
+function OnProfile4Clicked() selectFieldProfile(4) end
+function OnProfile5Clicked() selectFieldProfile(5) end
+function OnCategoryRifle() editingCategory="rifle";refreshFieldArmory() end
+function OnCategorySMG() editingCategory="smg";refreshFieldArmory() end
+function OnCategoryShotgun() editingCategory="shotgun";refreshFieldArmory() end
+function OnCategoryPistol() editingCategory="pistol";refreshFieldArmory() end
+function OnRifleSelected() selectFieldGun("rifle") end
+function OnSMGSelected() selectFieldGun("smg") end
+function OnShotgunSelected() selectFieldGun("shotgun") end
+function OnPistolSelected() selectFieldGun("pistol") end
+function OnLoadoutSaved() closeFieldArmory(true) end
+function OnLoadoutBack() closeFieldArmory(false) end
 
 function OnResumeClicked()
     if paused then setPaused(false) end
@@ -570,6 +684,15 @@ function OnUpdate(dt)
 
     consumeWeaponPickup()
     if weapons then weapons:Update(dt,playerCamera) end
+    if loadoutMenuOpen then
+        CharacterController.Move(0,0)
+        if Input.IsKeyPressed("Escape") then closeFieldArmory(false) end
+        return
+    end
+    if Input.IsKeyPressed("L") then
+        openFieldArmory()
+        return
+    end
     updateHUD()
     if practiceMode then
         UI.SetText("MatchStatus","PRACTICE RANGE // HITS "..practiceHits)
