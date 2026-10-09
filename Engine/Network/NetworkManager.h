@@ -33,7 +33,8 @@ class NetworkManager
 {
 public:
     ~NetworkManager();
-    bool Host(std::uint16_t port = 7777, std::uint32_t maxPlayers = 8);
+    bool Host(std::uint16_t port = 7777, std::uint32_t maxPlayers = 8,
+              const std::string& serverName = "Velcryn Server");
     std::uint16_t GetBoundPort() const { return m_BoundPort; }
     bool Join(const std::string& address, std::uint16_t port = 7777);
     void Update();
@@ -73,6 +74,7 @@ private:
 
     Mode m_Mode=Mode::Offline;
     std::uint32_t m_MaxPlayers=8;
+    std::string m_HostName="Velcryn Server";
     std::uint16_t m_BoundPort=0;
     std::uint64_t m_LastSend=0,m_LastReceive=0;
 #ifdef _WIN32
