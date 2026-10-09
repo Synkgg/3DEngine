@@ -2,6 +2,7 @@
 
 #include "UIPanel.h"
 #include "UIScrollBox.h"
+#include "UIUserWidget.h"
 #include "UIText.h"
 #include "UIImage.h"
 #include "UIButton.h"
@@ -37,6 +38,9 @@ UIWidgetFactory::Create(UIWidgetType type)
 
     case UIWidgetType::ScrollBox:
         return std::make_unique<UIScrollBox>();
+
+    case UIWidgetType::UserWidget:
+        return std::make_unique<UIUserWidget>();
     }
 
     return nullptr;
