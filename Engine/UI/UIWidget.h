@@ -51,7 +51,8 @@ enum class UIWidgetType
     TextInput,
     Slider,
     ProgressBar,
-    ScrollBox
+    ScrollBox,
+    UserWidget
 };
 
 class UIWidget
