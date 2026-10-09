@@ -68,7 +68,7 @@ bool RunUIInteractionTests(Renderer& renderer)
             std::ifstream snapshotStream(snapshot, std::ios::binary);
             const std::string snapshotText((std::istreambuf_iterator<char>(snapshotStream)),
                                            std::istreambuf_iterator<char>());
-            check(snapshotText.find("\\"SaveButton\\"") == std::string::npos,
+            check(snapshotText.find("\"SaveButton\"") == std::string::npos,
                 "linked children are not duplicated in the host UI file");
             UICanvas restored;
             check(UISerializer::Load(restored, snapshot,
