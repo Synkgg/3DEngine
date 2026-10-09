@@ -10,6 +10,7 @@ function WeaponSystem.new(api)
         inventory = {},
         equipped = nil,
         viewmodel = 0,
+        muzzleSocket = 0,
         cooldown = 0.0,
         reloadTimer = 0.0,
         kick = 0.0,
@@ -54,6 +55,7 @@ function WeaponSystem:SetLoadout(primary,secondary,practice)
     end
     if self.viewmodel~=0 then self.api.Scene.DestroyEntity(self.viewmodel) end
     self.viewmodel=0
+    self.muzzleSocket=0
     self.equipped=nil
     self.inventory={}
     for _,id in ipairs({primary,secondary}) do
@@ -80,12 +82,16 @@ function WeaponSystem:Equip(weaponID)
         self.api.Scene.DestroyEntity(self.viewmodel)
         self.viewmodel = 0
     end
+    self.muzzleSocket = 0
     self.equipped = weaponID
     self.reloadTimer = 0.0
     self.kick = 0.0
     self.recoilTarget = 0.0
     self.recoilApplied = 0.0
     self.viewmodel = self.api.Scene.InstantiatePrefab(def.viewmodelPrefab, 0)
+    if self.viewmodel and self.viewmodel ~= 0 then
+        self.muzzleSocket = self.api.Scene.FindChild(self.viewmodel, "MuzzleSocket")
+    end
     return true
 end
 
@@ -214,11 +220,16 @@ function WeaponSystem:Fire(ownerEntity, cameraEntity)
             if not first then first=hit end
         end
     end
+    local muzzle=nil
+    if self.muzzleSocket and self.muzzleSocket~=0 then
+        muzzle=self.api.Scene.GetWorldPosition(self.muzzleSocket)
+    end
     self.fx:Emit(c.x,c.y,c.z,f.x,f.y,f.z,def.range,
         first~=nil,first and first.x or 0,first and first.y or 0,first and first.z or 0,
         self.aiming and def.adsSide or def.hipSide,
         (self.aiming and def.adsForward or def.hipForward)+(def.muzzleLocalDistance or .6),
-        (self.aiming and def.adsDown or def.hipDown)+(def.muzzleLocalY or 0))
+        (self.aiming and def.adsDown or def.hipDown)+(def.muzzleLocalY or 0),
+        muzzle and muzzle.x,muzzle and muzzle.y,muzzle and muzzle.z)
 
     return {
         hit=first~=nil,
