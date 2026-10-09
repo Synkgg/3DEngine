@@ -1,7 +1,7 @@
 MyEngineScene
 Entities 2
 Entity 1
-Name Mako Viewmodel
+Name MAKO P12 Viewmodel
 Position 0 0 0
 Rotation 0 0 0
 Scale 1 1 1
@@ -19,16 +19,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 2
-Name Mako
+Name MAKO P12
 Position 0 0 0
 Rotation 0 0 0
 Scale 1 1 1
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Breakbulk/Mako.obj" 0
+Mesh 1 0 "Assets/Models/Arsenal/MakoP12.obj" 0
 Color 1 1 1 1 1
 Texture 0
-Material 0
+Material 1 0.75 0.28 1 0
 Interactable 0
 Player 0
 PlayerStart 0
