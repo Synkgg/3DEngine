@@ -29,12 +29,12 @@ function WeaponVFX:Spawn(path,x,y,z,life,size,kind,extra)
     self.active[#self.active+1]={id=id,life=life,total=life,size=size,kind=kind,extra=extra}
 end
 
-function WeaponVFX:Emit(ox,oy,oz,dx,dy,dz,range,hit,hitX,hitY,hitZ,muzzleSide,muzzleDistance)
+function WeaponVFX:Emit(ox,oy,oz,dx,dy,dz,range,hit,hitX,hitY,hitZ,muzzleSide,muzzleDistance,muzzleDown)
     local rightX,rightZ=-dz,dx
     local rl=math.sqrt(rightX*rightX+rightZ*rightZ)
     if rl>0.001 then rightX,rightZ=rightX/rl,rightZ/rl end
     local mx=ox+dx*(muzzleDistance or .75)+rightX*(muzzleSide or .12)
-    local my=oy+dy*(muzzleDistance or .75)-.07
+    local my=oy+dy*(muzzleDistance or .75)+(muzzleDown or -.07)
     local mz=oz+dz*(muzzleDistance or .75)+rightZ*(muzzleSide or .12)
 
     self:Spawn(FLASH,mx,my,mz,.072,.15,"flash")
