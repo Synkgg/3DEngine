@@ -6,11 +6,53 @@ local loadoutPrimary="rifle"
 local loadoutSecondary="pistol"
 local valid={pistol=true,rifle=true,shotgun=true,smg=true}
 local guns={
-    pistol={name="MAKO P12",role="PRECISION SIDEARM",stats="12 ROUNDS  /  HIGH CONTROL"},
-    rifle={name="KESTREL AR4",role="ASSAULT RIFLE",stats="30 ROUNDS  /  BALANCED RANGE"},
-    shotgun={name="BREACH S8",role="PUMP SHOTGUN",stats="8 SHELLS  /  CLOSE RANGE"},
-    smg={name="VECTOR K9",role="SUBMACHINE GUN",stats="36 ROUNDS  /  HIGH RATE"}
+    pistol={
+        name="MAKO P12",role="HANDGUN  /  SEMI-AUTOMATIC",
+        desc="Fast handling and clean follow-up shots. Built for the clutch.",
+        trait="PRECISION / QUICK DRAW / RELIABLE",index="04 / 04",
+        damage=7,range=4,control=8,mobility=10
+    },
+    rifle={
+        name="KESTREL AR4",role="ASSAULT RIFLE  /  AUTOMATIC",
+        desc="Adaptable modular carbine for medium-range control.",
+        trait="STABLE / VERSATILE / MODULAR",index="01 / 04",
+        damage=7,range=8,control=7,mobility=6
+    },
+    shotgun={
+        name="BREACH S8",role="SHOTGUN  /  PUMP ACTION",
+        desc="Close-quarters stopping power. Own the doorway.",
+        trait="BREACH / CLOSE RANGE / HIGH IMPACT",index="03 / 04",
+        damage=10,range=3,control=4,mobility=5
+    },
+    smg={
+        name="VECTOR K9",role="SUBMACHINE GUN  /  AUTOMATIC",
+        desc="Aggressive mobility with blistering close-range fire.",
+        trait="RUSH / HIP FIRE / FAST HANDLING",index="02 / 04",
+        damage=5,range=5,control=6,mobility=9
+    }
 }
+local gunOrder={"rifle","smg","shotgun","pistol"}
+local function setPlate(name,active)
+    UI.SetColor(name,active and .19 or .075,active and .22 or .093,active and .22 or .105,1)
+end
+local function previewWeapon(id)
+    local gun=guns[id]
+    UI.SetText("PreviewName",gun.name)
+    UI.SetText("PreviewClass",gun.role)
+    UI.SetText("PreviewDesc",gun.desc)
+    UI.SetText("PreviewTrait",gun.trait)
+    UI.SetText("PreviewIndex",gun.index)
+    for _,other in ipairs(gunOrder) do
+        UI.SetVisible("PreviewGun_"..other,other==id)
+    end
+    for _,stat in ipairs({"Damage","Range","Control","Mobility"}) do
+        local value=gun[string.lower(stat)]
+        for segment=1,10 do
+            UI.SetVisible("Stat"..stat.."Segment"..segment,segment<=value)
+        end
+    end
+end
+
 local function restoreLoadout()
     local primary=Preferences.LoadString("breakbulk_primary","rifle")
     local secondary=Preferences.LoadString("breakbulk_secondary","pistol")
@@ -19,18 +61,27 @@ local function restoreLoadout()
     if loadoutPrimary==loadoutSecondary then loadoutSecondary=loadoutPrimary=="pistol" and "rifle" or "pistol" end
 end
 local function refreshLoadout()
+    local selectedID=loadoutSlot=="primary" and loadoutPrimary or loadoutSecondary
     UI.SetText("PrimaryValue",guns[loadoutPrimary].name)
     UI.SetText("SecondaryValue",guns[loadoutSecondary].name)
-    UI.SetText("SlotHint",loadoutSlot=="primary" and "SELECT YOUR PRIMARY WEAPON" or "SELECT YOUR SECONDARY WEAPON")
-    UI.SetText("PrimaryTabLabel",(loadoutSlot=="primary" and "> " or "").."01  PRIMARY")
-    UI.SetText("SecondaryTabLabel",(loadoutSlot=="secondary" and "> " or "").."02  SECONDARY")
-    for _,id in ipairs({"pistol","rifle","shotgun","smg"}) do
+    UI.SetText("SlotHint",loadoutSlot=="primary" and "CHOOSE A PRIMARY WEAPON" or "CHOOSE A SECONDARY WEAPON")
+    UI.SetText("PrimaryTabLabel",loadoutSlot=="primary" and "01  PRIMARY / EDITING" or "01  PRIMARY")
+    UI.SetText("SecondaryTabLabel",loadoutSlot=="secondary" and "02  SECONDARY / EDITING" or "02  SECONDARY")
+    setPlate("PrimaryPlate",loadoutSlot=="primary")
+    setPlate("SecondaryPlate",loadoutSlot=="secondary")
+    UI.SetColor("PrimaryPlateAccent",loadoutSlot=="primary" and .96 or .31,loadoutSlot=="primary" and .72 or .37,loadoutSlot=="primary" and .32 or .4,1)
+    UI.SetColor("SecondaryPlateAccent",loadoutSlot=="secondary" and .96 or .31,loadoutSlot=="secondary" and .72 or .37,loadoutSlot=="secondary" and .32 or .4,1)
+    for _,id in ipairs(gunOrder) do
+        local selected=selectedID==id
         local equipped=loadoutPrimary==id or loadoutSecondary==id
-        local selected=(loadoutSlot=="primary" and loadoutPrimary==id) or (loadoutSlot=="secondary" and loadoutSecondary==id)
-        UI.SetText(id.."Status",selected and "SELECTED IN THIS SLOT" or (equipped and "EQUIPPED IN OTHER SLOT" or "CLICK TO EQUIP"))
-        UI.SetColor(id.."Status",selected and 0.97 or 0.54,selected and 0.66 or 0.64,selected and 0.28 or 0.65,1)
+        setPlate(id.."CardBack",selected)
+        UI.SetColor(id.."CardAccent",selected and .96 or .28,selected and .72 or .36,selected and .32 or .39,1)
+        UI.SetText(id.."Status",selected and "SELECTED" or (equipped and "EQUIPPED" or "AVAILABLE"))
+        UI.SetColor(id.."Status",selected and .96 or .52,selected and .72 or .59,selected and .32 or .62,1)
     end
+    previewWeapon(selectedID)
 end
+
 local function openLoadout()
     loadoutSlot="primary"
     restoreLoadout()
