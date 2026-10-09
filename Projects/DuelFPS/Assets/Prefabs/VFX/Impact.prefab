@@ -1,0 +1,57 @@
+MyEngineScene
+Entities 3
+Entity 1
+Name World Bullet Impact
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 2 ""
+Color 1 1 0.76 0.40 1
+Texture 0
+Material 1 0 0.65 1 0.9
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 2
+Name Impact Spark A
+Position 0.3 0.12 0
+Rotation 0 0 35
+Scale 1.2 0.15 0.14
+Parent 1
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 1 0.95 0.56 1
+Texture 0
+Material 1 0 0.5 1 0.8
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 3
+Name Impact Spark B
+Position -0.25 -0.12 0
+Rotation 0 0 -42
+Scale 1.1 0.12 0.14
+Parent 1
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 1 0.62 0.22 1
+Texture 0
+Material 1 0 0.5 1 0.8
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+HierarchyFolders 0
