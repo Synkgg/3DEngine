@@ -1093,6 +1093,30 @@ void LuaScript::BindEngineAPI()
     sol::table network = m_Lua->create_table();
     network.set_function("Host", [this](int port,sol::optional<std::uint32_t> maxPlayers){return m_Runtime&&port>0&&port<=65535&&m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port),maxPlayers.value_or(8));});
     network.set_function("Join", [this](const std::string& address,int port){return m_Runtime&&m_Runtime->GetNetwork().Join(address,static_cast<std::uint16_t>(port));});
+    network.set_function("SearchServers", [this](sol::optional<int> port){
+        if(!m_Runtime)return false;
+        const int value=port.value_or(7777);
+        return value>0 && value<=65535 &&
+            m_Runtime->GetNetwork().SearchServers(static_cast<std::uint16_t>(value));
+    });
+    network.set_function("StopServerSearch", [this](){if(m_Runtime)m_Runtime->GetNetwork().StopServerSearch();});
+    network.set_function("IsSearchingServers", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsSearchingServers();});
+    network.set_function("GetServers", [this](){
+        sol::table out=m_Lua->create_table();
+        if(!m_Runtime)return out;
+        int index=1;
+        for(const auto& server:m_Runtime->GetNetwork().GetServers()){
+            sol::table item=m_Lua->create_table();
+            item["name"]=server.name;
+            item["address"]=server.address;
+            item["port"]=server.port;
+            item["players"]=server.players;
+            item["maxPlayers"]=server.maxPlayers;
+            item["full"]=server.players>=server.maxPlayers;
+            out[index++]=item;
+        }
+        return out;
+    });
     network.set_function("Disconnect", [this](){if(m_Runtime)m_Runtime->GetNetwork().Disconnect();});
     network.set_function("IsHost", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsHost();});
     network.set_function("IsConnected", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsConnected();});
