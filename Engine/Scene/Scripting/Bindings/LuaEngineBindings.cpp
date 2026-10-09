@@ -940,6 +940,15 @@ void LuaScript::BindEngineAPI()
         return std::uint32_t(0);
     });
 
+    sceneApi.set_function("GetName", [this](std::uint32_t entityID)
+    {
+        if (!m_Scene) return std::string();
+        const Entity entity = m_Scene->FindEntityByID(entityID);
+        const NameComponent* named = entity.IsValid()
+            ? m_Scene->GetComponent<NameComponent>(entity) : nullptr;
+        return named ? named->name : std::string();
+    });
+
     sceneApi.set_function("GetWorldPosition", [this](std::uint32_t entityID)
     {
         sol::table result = m_Lua->create_table();
