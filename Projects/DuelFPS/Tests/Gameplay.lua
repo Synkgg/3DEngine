@@ -13,7 +13,9 @@ local function peer(host)
     e.transform={SetPosition=function(x,y,z)t.pos[1]={x=x,y=y,z=z}end,GetPosition=function()return t.pos[1]end}
     e.Scene={FindEntity=function(name)return {id=name=='FirstPersonCamera' and 2 or 0,IsValid=function()return false end}end,
         InstantiatePrefab=function(path)t.nextEntity=t.nextEntity+1;t.pos[t.nextEntity]={x=0,y=1,z=0};if path:find("RemotePawn") then t.remotePawn=t.nextEntity end;return t.nextEntity end,
-        DestroyEntity=nop,SetPosition=function(id,x,y,z)t.pos[id]={x=x,y=y,z=z}end,GetPosition=function(id)return t.pos[id] or {x=0,y=1,z=0}end,
+        DestroyEntity=nop,FindChild=function(root,name)return name=="MuzzleSocket" and (root+1000) or 0 end,
+        GetWorldPosition=function(id)return t.pos[id-1000] or {x=0,y=1,z=-1}end,
+        SetPosition=function(id,x,y,z)t.pos[id]={x=x,y=y,z=z}end,GetPosition=function(id)return t.pos[id] or {x=0,y=1,z=0}end,
         SetRotation=nop,SetScale=nop,Load=function(path)t.loaded=path end}
     e.Controller={GetLocalID=function()return host and 1 or 2 end,Possess=nop,IsLocallyControlled=function()return true end,
         GetPlayerStart=function()return {valid=true,x=0,y=1,z=0}end}
@@ -92,3 +94,16 @@ assert(gun:Equip('smg'))
 assert(gun:GetDefinition().id=='smg')
 assert(not gun:SetLoadout('rifle','rifle',false),'duplicate weapon slots rejected')
 print('PASS: four-gun inventory, shotgun spread, semi-auto and weapon swapping')
+
+-- Socket contract: every first-person weapon prefab declares a muzzle anchor.
+-- The gameplay adapter resolves it per-instance and the weapon system uses
+-- its world position rather than a HUD-space fake muzzle flash.
+for _,def in ipairs(defs) do
+    local path='Projects/DuelFPS/'..def.viewmodelPrefab
+    local file=assert(io.open(path,'r'),path)
+    local content=file:read('*a')
+    file:close()
+    assert(content:find('Name MuzzleSocket',1,true),path..' is missing a muzzle anchor')
+end
+assert(gun.muzzleSocket and gun.muzzleSocket~=0,'equipped weapon must resolve muzzle socket')
+print('PASS: all four gun prefabs have an editable muzzle socket')
