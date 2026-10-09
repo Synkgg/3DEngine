@@ -14,6 +14,7 @@
 #include <cstring>
 #include <fstream>
 #include <filesystem>
+#include <iterator>
 #include <algorithm>
 
 bool RunUIInteractionTests(Renderer& renderer)
@@ -62,6 +63,19 @@ bool RunUIInteractionTests(Renderer& renderer)
                 "in-game instance uses shared layout and gameplay callbacks");
             check(button && composed.GetRoot()->Find("LoadoutPage.SaveButton") == button,
                 "qualified widget names resolve inside reused UI pages");
+            const std::string snapshot = "out/build/reusable-roundtrip.ui";
+            check(UISerializer::Save(composed, snapshot), "save composed widget reference");
+            std::ifstream snapshotStream(snapshot, std::ios::binary);
+            const std::string snapshotText((std::istreambuf_iterator<char>(snapshotStream)),
+                                           std::istreambuf_iterator<char>());
+            check(snapshotText.find("\\"SaveButton\\"") == std::string::npos,
+                "linked children are not duplicated in the host UI file");
+            UICanvas restored;
+            check(UISerializer::Load(restored, snapshot,
+                "Projects/DuelFPS/Assets/UI/LoadoutInGame.ui"),
+                "restore composed widget from an editor history snapshot");
+            std::error_code ignored;
+            std::filesystem::remove(snapshot, ignored);
         }
     }
     check(UISerializer::Load(canvas, "Projects/DuelFPS/Assets/UI/MainMenu.ui"), "load real menu asset");
