@@ -8,5 +8,5 @@ return {
     hipFov=90, adsFov=72, hipSide=0.31, adsSide=0.030,
     hipForward=0.57, adsForward=0.66, hipDown=-0.22, adsDown=-0.17,
     cameraKick=0.012, viewKick=0.045, kickRecovery=9.5,
-    muzzleDistance=0.82, muzzleSide=0.012, muzzleDown=-0.02
+    muzzleLocalDistance=0.87, muzzleLocalY=0.005
 }
