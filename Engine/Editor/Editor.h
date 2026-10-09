@@ -45,6 +45,7 @@ public:
 
     void ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath);
     bool OpenScene(Scene& scene, const std::filesystem::path& path);
+    bool SaveCurrentScene(Scene& scene);
 
     std::string ConsumeOpenedUIAsset();
     const std::string& GetSceneFilePath() const { return m_SceneFilePath; }
