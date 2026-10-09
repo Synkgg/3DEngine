@@ -1,0 +1,93 @@
+MyEngineScene
+Entities 5
+Entity 1
+Name World Muzzle Flash
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 2 ""
+Color 1 1 0.83 0.31 1
+Texture 0
+Material 1 0 0.32 1 1
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 2
+Name Flash Core
+Position 0 0 -0.12
+Rotation 0 0 0
+Scale 0.45 0.45 2.2
+Parent 1
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 1 0.96 0.55 1
+Texture 0
+Material 1 0 0.3 1 1
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 3
+Name Flash Star Horizontal
+Position 0 0 -0.04
+Rotation 0 0 45
+Scale 2.0 0.17 0.25
+Parent 1
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 1 0.57 0.15 1
+Texture 0
+Material 1 0 0.5 1 1
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 4
+Name Flash Star Vertical
+Position 0 0 -0.04
+Rotation 0 0 -45
+Scale 2.0 0.17 0.25
+Parent 1
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 1 0.57 0.15 1
+Texture 0
+Material 1 0 0.5 1 1
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 5
+Name Flash Spark
+Position 0 0 -0.30
+Rotation 0 0 0
+Scale 0.28 0.28 1.8
+Parent 1
+PrefabSource ""
+Mesh 1 1 ""
+Color 1 1 0.96 0.75 1
+Texture 0
+Material 1 0 0.4 1 1
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+HierarchyFolders 0
