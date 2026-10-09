@@ -1,5 +1,5 @@
 return {
-    id="rifle", displayName="KESTREL AR4 / ASSAULT",
+    id="rifle", shortName="KESTREL", displayName="KESTREL AR4 / ASSAULT",
     viewmodelPrefab="Assets/Prefabs/RifleViewmodel.prefab",
     fireSound="Assets/Audio/Breakbulk/carbine.wav",
     magSize=30, startingReserve=90, practiceReserve=999,
