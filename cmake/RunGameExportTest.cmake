@@ -31,6 +31,18 @@ foreach(FILE Game.exe Game.project VelcrynGame.cfg README.txt
         message(FATAL_ERROR "Export is missing: ${FILE}")
     endif()
 endforeach()
+# Verify that the copied Game.exe finds its package beside itself even when
+# launched from an unrelated current working directory, without starting Vulkan.
+file(MAKE_DIRECTORY "${TEST_DIR}/UnrelatedWorkingDirectory")
+execute_process(
+    COMMAND "${PACKAGE}/Game.exe" --verify-game-package
+    WORKING_DIRECTORY "${TEST_DIR}/UnrelatedWorkingDirectory"
+    RESULT_VARIABLE VERIFY_RESULT OUTPUT_VARIABLE VERIFY_OUT ERROR_VARIABLE VERIFY_ERR
+    TIMEOUT 30)
+if(NOT VERIFY_RESULT EQUAL 0)
+    message(FATAL_ERROR "Exported Game.exe cannot verify its package: ${VERIFY_OUT} ${VERIFY_ERR}")
+endif()
+
 file(READ "${PACKAGE}/Game.project" MANIFEST)
 if(NOT MANIFEST MATCHES "StartupScene \"Assets/Scenes/Main.scene\"")
     message(FATAL_ERROR "Export manifest has the wrong startup scene.")
