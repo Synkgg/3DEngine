@@ -1,0 +1,113 @@
+ENGINE_UI 10
+1920 1080
+0 0 "Background" 0 0 1920 1080 0 0 0 0 0 0 0.12 0.17 0.23 1 1 1 0 0 0 0 0 0 0 0 0 1
+0 1 "Title" 100 60 1600 85 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Settings" 54 0 1
+0 1 "Subtitle" 104 153 1650 45 0 0 0 0 0 0 0.7 0.79 0.87 1 1 1 0 2 0 0 0 0 0 0 0 1 "Make it yours." 24 0 1
+0 3 "TabControlsButton" 104 220 290 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsControls" "" "" "" ""
+1 1 "TabControlsLabel" 24 0 242 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "CONTROLS" 22 0 1
+0 0 "TabIndicatorControls" 104 288 290 3 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 0 0 0 0 0 0 0 0 1
+0 3 "TabAudioButton" 424 220 290 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsAudio" "" "" "" ""
+1 1 "TabAudioLabel" 24 0 242 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "AUDIO" 22 0 1
+0 0 "TabIndicatorAudio" 424 288 290 3 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 0 0 0 0 0 0 0 0 1
+0 3 "TabGraphicsButton" 744 220 290 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsGraphics" "" "" "" ""
+1 1 "TabGraphicsLabel" 24 0 242 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "GRAPHICS" 22 0 1
+0 0 "TabIndicatorGraphics" 744 288 290 3 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 0 0 0 0 0 0 0 0 1
+0 0 "SettingsControls" 104 315 1706 560 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1
+1 1 "Label_sensitivity" 0 0 620 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Mouse sensitivity" 25 0 1
+1 5 "Setting_sensitivity" 0 48 505 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_sensitivity" 515 40 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 1 "Label_ads" 0 110 620 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Aim sensitivity multiplier" 25 0 1
+1 5 "Setting_ads" 0 158 505 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_ads" 515 150 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 1 "Label_fov" 0 220 620 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Field of view" 25 0 1
+1 5 "Setting_fov" 0 268 505 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_fov" 515 260 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 1 "Label_invert" 0 355 400 45 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Invert mouse Y" 25 0 1
+1 3 "Toggle_invertButton" 420 345 200 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnToggle_invert" "" "" "" ""
+2 1 "Toggle_invertLabel" 24 0 152 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindingHelp" 770 0 936 40 0 0 0 0 0 0 0.7 0.79 0.87 1 1 1 0 2 0 0 0 0 0 0 0 1 "Select a binding, then press a key or mouse button." 23 0 1
+1 1 "BindName_forward" 770 70 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Forward" 22 0 1
+1 3 "Bind_forwardButton" 980 60 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_forward" "" "" "" ""
+2 1 "Bind_forwardLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_back" 770 136 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Backward" 22 0 1
+1 3 "Bind_backButton" 980 126 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_back" "" "" "" ""
+2 1 "Bind_backLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_left" 770 202 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Strafe left" 22 0 1
+1 3 "Bind_leftButton" 980 192 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_left" "" "" "" ""
+2 1 "Bind_leftLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_right" 770 268 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Strafe right" 22 0 1
+1 3 "Bind_rightButton" 980 258 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_right" "" "" "" ""
+2 1 "Bind_rightLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_sprint" 770 334 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Sprint" 22 0 1
+1 3 "Bind_sprintButton" 980 324 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_sprint" "" "" "" ""
+2 1 "Bind_sprintLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_jump" 770 400 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Jump" 22 0 1
+1 3 "Bind_jumpButton" 980 390 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_jump" "" "" "" ""
+2 1 "Bind_jumpLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_fire" 770 466 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Fire" 22 0 1
+1 3 "Bind_fireButton" 980 456 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_fire" "" "" "" ""
+2 1 "Bind_fireLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_aim" 1240 70 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Aim" 22 0 1
+1 3 "Bind_aimButton" 1450 60 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_aim" "" "" "" ""
+2 1 "Bind_aimLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_reload" 1240 136 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Reload" 22 0 1
+1 3 "Bind_reloadButton" 1450 126 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_reload" "" "" "" ""
+2 1 "Bind_reloadLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_primary" 1240 202 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Primary" 22 0 1
+1 3 "Bind_primaryButton" 1450 192 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_primary" "" "" "" ""
+2 1 "Bind_primaryLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_secondary" 1240 268 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Secondary" 22 0 1
+1 3 "Bind_secondaryButton" 1450 258 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_secondary" "" "" "" ""
+2 1 "Bind_secondaryLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_interact" 1240 334 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Interact" 22 0 1
+1 3 "Bind_interactButton" 1450 324 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_interact" "" "" "" ""
+2 1 "Bind_interactLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_loadout" 1240 400 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Loadout" 22 0 1
+1 3 "Bind_loadoutButton" 1450 390 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_loadout" "" "" "" ""
+2 1 "Bind_loadoutLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "BindName_crouch" 1240 466 210 44 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Crouch" 22 0 1
+1 3 "Bind_crouchButton" 1450 456 230 54 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnBind_crouch" "" "" "" ""
+2 1 "Bind_crouchLabel" 24 0 182 54 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "Reserved" 770 530 936 35 0 0 0 0 0 0 0.7 0.79 0.87 1 1 1 0 2 0 0 0 0 0 0 0 1 "Escape always opens/closes menus. Conflicts swap bindings." 21 0 1
+0 0 "SettingsAudio" 104 315 1706 560 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1
+1 1 "Label_master" 0 0 1000 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Master volume" 25 0 1
+1 5 "Setting_master" 0 48 885 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_master" 895 40 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 1 "Label_sfx" 0 135 1000 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Game sounds" 25 0 1
+1 5 "Setting_sfx" 0 183 885 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_sfx" 895 175 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 1 "Label_ui" 0 270 1000 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Menu sounds" 25 0 1
+1 5 "Setting_ui" 0 318 885 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_ui" 895 310 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 3 "AudioTestButton" 0 435 550 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsAudioTest" "" "" "" ""
+2 1 "AudioTestLabel" 24 0 502 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "TEST GAME SOUND" 22 0 1
+0 0 "SettingsGraphics" 104 315 1706 560 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1
+1 1 "Label_quality" 0 10 540 45 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Quality preset" 25 0 1
+1 3 "Toggle_qualityButton" 560 0 200 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnToggle_quality" "" "" "" ""
+2 1 "Toggle_qualityLabel" 24 0 152 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "Label_shadow" 0 110 540 45 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Shadows" 25 0 1
+1 3 "Toggle_shadowButton" 560 100 200 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnToggle_shadow" "" "" "" ""
+2 1 "Toggle_shadowLabel" 24 0 152 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "Label_aa" 0 210 540 45 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Anti-aliasing" 25 0 1
+1 3 "Toggle_aaButton" 560 200 200 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnToggle_aa" "" "" "" ""
+2 1 "Toggle_aaLabel" 24 0 152 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "Label_bloom" 0 310 540 45 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Bloom" 25 0 1
+1 3 "Toggle_bloomButton" 560 300 200 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnToggle_bloom" "" "" "" ""
+2 1 "Toggle_bloomLabel" 24 0 152 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "Label_fog" 0 410 540 45 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Fog" 25 0 1
+1 3 "Toggle_fogButton" 560 400 200 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnToggle_fog" "" "" "" ""
+2 1 "Toggle_fogLabel" 24 0 152 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "" 22 0 1
+1 1 "Label_distance" 920 0 760 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "View distance" 25 0 1
+1 5 "Setting_distance" 920 48 645 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_distance" 1575 40 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 1 "Label_brightness" 920 145 760 36 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 2 0 0 0 0 0 0 0 1 "Brightness" 25 0 1
+1 5 "Setting_brightness" 920 193 645 28 0 0 0 0 0 0 0.14 0.17 0.2 1 1 1 1 5 0 0 0 0 0 0 0 1 0.5 0.60 0.72 0.61 1 0.94 0.96 0.94 1
+1 1 "Value_brightness" 1575 185 105 45 0 0 0 0 0 0 0.32 0.72 1 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 24 2 1
+1 1 "QualityHint" 920 320 760 80 0 0 0 0 0 0 0.7 0.79 0.87 1 1 1 0 2 0 0 0 0 0 0 0 1 "Presets adjust shadows, reflections and lighting." 24 0 1
+0 1 "SettingsStatus" 104 895 1706 45 0 0 0 0 0 0 0.7 0.79 0.87 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 23 0 1
+0 3 "SettingsCancelButton" 104 970 300 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsCancel" "" "" "" ""
+1 1 "SettingsCancelLabel" 24 0 252 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "CANCEL" 22 0 1
+0 3 "SettingsResetButton" 435 970 380 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 5 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsReset" "" "" "" ""
+1 1 "SettingsResetLabel" 24 0 332 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 6 0 0 0 0 0 0 0 1 "RESET DEFAULTS" 22 0 1
+0 3 "SettingsApplyButton" 1380 970 430 64 0 0 0 0 0 0 0.32 0.72 1 1 1 1 1 5 0 0 0 0 0 0 0 1 0.32 0.72 1 1 0.56 0.84 1 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.12 0.17 0.23 1 0.12 0.17 0.23 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsApply" "" "" "" ""
+1 1 "SettingsApplyLabel" 24 0 382 64 0 0 0 0 0 0 0.12 0.17 0.23 1 1 1 0 6 0 0 0 0 0 0 0 1 "APPLY & BACK" 22 0 1

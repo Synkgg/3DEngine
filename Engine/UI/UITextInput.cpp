@@ -25,6 +25,7 @@ void UITextInput::SetCursor(std::size_t value)
 }
 void UITextInput::Insert(const std::string& value)
 {
+    if (value.empty()) return;
     if (m_SelectAll) { m_Text.clear(); m_Cursor = 0; m_SelectAll = false; }
     const std::size_t room = m_MaxLength > m_Text.size() ? m_MaxLength - m_Text.size() : 0;
     if (!room) return;

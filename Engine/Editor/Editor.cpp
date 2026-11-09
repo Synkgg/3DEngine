@@ -253,6 +253,8 @@ void Editor::Render(
 
             ImGui::Separator();
 
+            if (ImGui::MenuItem("Export Game (Windows)...")) m_ExportRequested = true;
+
             if (ImGui::MenuItem("Back to Project Hub"))
             {
                 m_ProjectHubRequested = true;
@@ -351,7 +353,7 @@ void Editor::Render(
                 {
                     m_ProjectSettings.SetRenderSettings(settings);
                     renderer.SetRenderSettings(settings);
-                    if (!m_ProjectSettings.Save())
+                    if (!m_ProjectSettings.Save(m_ProjectSettingsPath.string()))
                         Logger::Error("Failed to save project rendering settings.");
                 }
             }
@@ -490,8 +492,12 @@ void Editor::StopPlaying()
 void Editor::ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath)
 {
     m_AssetRoot = std::filesystem::absolute(assetRoot).lexically_normal();
+    m_ProjectSettingsPath = std::filesystem::absolute(settingsPath).lexically_normal();
     m_ContentBrowserPath = m_AssetRoot.string();
     m_SelectedAssetPath.clear();
+    // Do not offer a scene from a previous project as the export startup scene.
+    m_SceneFilePath.clear();
+    m_HierarchyFolders.clear();
 
     if (!m_ProjectSettings.Load(settingsPath.string()))
     {
@@ -519,5 +525,22 @@ bool Editor::OpenScene(Scene& scene, const std::filesystem::path& path)
     m_NameEditEntityID = 0;
     m_NameEditBuffer[0] = '\0';
     Logger::Info("Loaded scene: " + path.filename().string());
+    return true;
+}
+
+bool Editor::SaveCurrentScene(Scene& scene)
+{
+    if (m_SceneFilePath.empty())
+    {
+        Logger::Error("Save the current scene before exporting it.");
+        return false;
+    }
+    SceneSerializer serializer(scene);
+    if (!serializer.Save(m_SceneFilePath, m_HierarchyFolders))
+    {
+        Logger::Error("Failed to save scene: " + m_SceneFilePath);
+        return false;
+    }
+    Logger::Info("Scene saved: " + m_SceneFilePath);
     return true;
 }

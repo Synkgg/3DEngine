@@ -34,6 +34,7 @@ void Application::StartRuntime()
 
 void Application::StopRuntime()
 {
+    SDL_StopTextInput(m_Window.GetNativeWindow());
     m_Renderer.GetUIRenderer().Clear();
 
     m_Runtime.Stop(

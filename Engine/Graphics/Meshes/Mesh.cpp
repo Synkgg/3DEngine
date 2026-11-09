@@ -1,96 +1,22 @@
 #include "Mesh.h"
-
-#include <glad/gl.h>
-#include <cstddef>
-
-Mesh::Mesh(
-    const std::vector<Vertex>& vertices,
-    const std::vector<std::uint32_t>& indices)
-    : m_Vertices(vertices),
-    m_Indices(indices)
+#include "../ModelAsset.h"
+#include "../RHI/RHI.h"
+Mesh::Mesh(const std::vector<Vertex>& vertices,const std::vector<std::uint32_t>& indices):m_Vertices(vertices),m_Indices(indices)
 {
-    m_VertexArray.Initialize();
-    m_VertexArray.Bind();
-
-    m_VertexBuffer.Initialize(
-        m_Vertices.data(),
-        static_cast<unsigned int>(
-            m_Vertices.size() * sizeof(Vertex)
-            )
-    );
-
-    m_IndexBuffer.Initialize(
-        m_Indices.data(),
-        static_cast<std::uint32_t>(
-            m_Indices.size()
-            )
-    );
-
-    m_VertexBuffer.Bind();
-
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(Vertex),
-        reinterpret_cast<void*>(
-            offsetof(Vertex, position)
-            )
-    );
-
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(
-        1,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(Vertex),
-        reinterpret_cast<void*>(
-            offsetof(Vertex, normal)
-            )
-    );
-
-    glEnableVertexAttribArray(2);
-
-    glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(Vertex),
-        reinterpret_cast<void*>(
-            offsetof(Vertex, uv)
-            )
-    );
-
-    m_VertexArray.Unbind();
+    std::vector<MeshVertex> gpu(vertices.size());
+    for(size_t i=0;i<vertices.size();++i)gpu[i].vertex=vertices[i];
+    m_VertexBuffer.Initialize(gpu.data(),unsigned(gpu.size()*sizeof(MeshVertex)));
+    m_IndexBuffer.Initialize(indices.data(),uint32_t(indices.size()));
 }
-
-void Mesh::Bind()
+Mesh::~Mesh()=default;
+void Mesh::Bind(){} void Mesh::Unbind(){}
+std::uint32_t Mesh::GetIndexCount()const{return m_IndexBuffer.GetCount();}
+const std::vector<Vertex>& Mesh::GetVertices()const{return m_Vertices;}
+const std::vector<uint32_t>& Mesh::GetIndices()const{return m_Indices;}
+void Mesh::SetSkinWeights(const std::vector<BoneWeight>& weights)
 {
-    m_VertexArray.Bind();
-}
-
-void Mesh::Unbind()
-{
-    m_VertexArray.Unbind();
-}
-
-std::uint32_t Mesh::GetIndexCount() const
-{
-    return m_IndexBuffer.GetCount();
-}
-
-const std::vector<Vertex>& Mesh::GetVertices() const
-{
-    return m_Vertices;
-}
-
-const std::vector<std::uint32_t>& Mesh::GetIndices() const
-{
-    return m_Indices;
+    if(weights.size()!=m_Vertices.size())return;
+    std::vector<MeshVertex> gpu(weights.size());
+    for(size_t i=0;i<weights.size();++i){gpu[i].vertex=m_Vertices[i];for(int j=0;j<4;++j){gpu[i].joints[j]=float(weights[i].joints[j]);gpu[i].weights[j]=weights[i].weights[j];}}
+    m_VertexBuffer.Initialize(gpu.data(),unsigned(gpu.size()*sizeof(MeshVertex)));
 }

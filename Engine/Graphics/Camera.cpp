@@ -99,17 +99,10 @@ Vec3 Camera::GetRayDirection(
             forward
         ).Normalized();
 
-    const float tanHalfFov =
-        std::tan(m_Fov * 0.5f);
-
-    const float x =
-        ndcX *
-        tanHalfFov *
-        m_AspectRatio;
-
-    const float y =
-        ndcY *
-        tanHalfFov;
+    // Match the horizontal-FOV projection used for drawing and gizmos.
+    const Mat4 projection = GetProjectionMatrix();
+    const float x = ndcX / projection.elements[0];
+    const float y = ndcY / projection.elements[5];
 
     Vec3 ray =
         forward +

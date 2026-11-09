@@ -2,6 +2,8 @@
 #include "../HierarchyFolder.h"
 
 #include "../../Graphics/Renderer.h"
+#include "../../Graphics/ModelAsset.h"
+#include "../../Graphics/ModelLoader.h"
 #include "../../Graphics/Texture2D.h"
 #include "../../Core/Logger.h"
 #include "../../Scene/Scene.h"
@@ -16,6 +18,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -376,7 +379,10 @@ void Editor::RenderContentBrowser(
 
             const bool isMesh =
                 !entry.directory &&
-                extension == ".obj";
+                extension == ".obj" ||
+                extension == ".gltf" ||
+                extension == ".glb" ||
+                extension == ".modelasset";
 
             const bool isPrefab =
                 !entry.directory &&
@@ -448,9 +454,9 @@ void Editor::RenderContentBrowser(
             {
                 std::error_code previewError;
                 const std::string modelPath =
-                    fs::relative(entry.path, fs::current_path(), previewError).generic_string();
-                const unsigned int previewTexture =
-                    previewError ? 0 : renderer.RenderModelPreview(modelPath, 144, 144);
+                    entry.path.lexically_normal().string();
+                const std::uint64_t previewTexture =
+                    renderer.RenderModelPreview(modelPath, 144, 144);
 
                 if (previewTexture != 0)
                 {
@@ -656,7 +662,8 @@ void Editor::RenderContentBrowser(
                 ImGui::IsItemHovered() &&
                 ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
-                m_MeshPreviewPath = fs::relative(entry.path, fs::current_path(), error).generic_string();
+                m_MeshPreviewPath = entry.path.lexically_normal().string();
+                m_MeshPreviewClip = 0; m_MeshPreviewTime = 0.0f; m_MeshPreviewLastTick = ImGui::GetTime(); m_MeshPreviewPlaying = true;
             }
 
             /*
@@ -1010,17 +1017,22 @@ void Editor::RenderContentBrowser(
         bool previewOpen = true;
         if (ImGui::Begin("Mesh Preview", &previewOpen))
         {
-            ImGui::TextDisabled("STATIC MESH");
-            ImGui::SameLine();
-            ImGui::Text("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
+            ModelAsset* previewAsset = renderer.GetModelAsset(m_MeshPreviewPath);
+            const bool skeletal = previewAsset && previewAsset->IsSkeletal();
+            ImGui::TextDisabled(skeletal ? "SKELETAL MESH" : "STATIC MESH");
+            ImGui::SameLine(); ImGui::Text("%s", fs::path(m_MeshPreviewPath).filename().string().c_str());
+            if (previewAsset) { ImGui::SameLine(); ImGui::TextDisabled("  %zu sections  %zu bones  %zu animations", previewAsset->sections.size(), previewAsset->skeleton.bones.size(), previewAsset->animations.size()); }
             ImGui::Separator();
-
+            if (skeletal && !previewAsset->animations.empty()) {
+                m_MeshPreviewClip = std::clamp(m_MeshPreviewClip, 0, (int)previewAsset->animations.size()-1);
+                const char* currentClip = previewAsset->animations[m_MeshPreviewClip].name.c_str();
+                ImGui::SetNextItemWidth(220.0f); if(ImGui::BeginCombo("Animation", currentClip)){for(int i=0;i<(int)previewAsset->animations.size();++i){bool selected=i==m_MeshPreviewClip;if(ImGui::Selectable(previewAsset->animations[i].name.c_str(),selected)){m_MeshPreviewClip=i;m_MeshPreviewTime=0.0f;}if(selected)ImGui::SetItemDefaultFocus();}ImGui::EndCombo();}
+                ImGui::SameLine(); if(ImGui::Button(m_MeshPreviewPlaying ? "Pause" : "Play"))m_MeshPreviewPlaying=!m_MeshPreviewPlaying; ImGui::SameLine(); if(ImGui::Button("Restart"))m_MeshPreviewTime=0.0f;
+                const float duration=previewAsset->animations[m_MeshPreviewClip].duration; const double now=ImGui::GetTime(); if(m_MeshPreviewPlaying)m_MeshPreviewTime+=(float)(now-m_MeshPreviewLastTick);m_MeshPreviewLastTick=now;if(duration>0.0f&&m_MeshPreviewTime>duration)m_MeshPreviewTime=std::fmod(m_MeshPreviewTime,duration);ImGui::SetNextItemWidth(-1.0f);ImGui::SliderFloat("##AnimationTime",&m_MeshPreviewTime,0.0f,std::max(duration,0.001f),"%.2f s");
+            }
             const ImVec2 available = ImGui::GetContentRegionAvail();
             const float side = std::max(180.0f, std::min(available.x, available.y - 70.0f));
-            const unsigned int texture = renderer.RenderModelPreview(
-                m_MeshPreviewPath,
-                (unsigned int)std::max(1.0f, side * 2.0f),
-                (unsigned int)std::max(1.0f, side * 2.0f));
+            const std::uint64_t texture = skeletal && previewAsset && !previewAsset->animations.empty() ? renderer.RenderAnimatedModelPreview(m_MeshPreviewPath,(std::size_t)m_MeshPreviewClip,m_MeshPreviewTime,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f)) : renderer.RenderModelPreview(m_MeshPreviewPath,(unsigned int)std::max(1.0f,side*2.0f),(unsigned int)std::max(1.0f,side*2.0f));
 
             if (texture != 0)
             {
@@ -1034,6 +1046,46 @@ void Editor::RenderContentBrowser(
                 ImGui::TextDisabled("Unable to render this model.");
             }
 
+            ImGui::Separator();
+            if (ImGui::CollapsingHeader("Import Settings", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Checkbox("Generate normals when missing", &m_ModelImportGenerateNormals);
+                ImGui::Checkbox("Import materials", &m_ModelImportMaterials);
+                ImGui::BeginDisabled(!m_ModelImportMaterials);
+                ImGui::Checkbox("Import textures", &m_ModelImportTextures);
+                ImGui::EndDisabled();
+                ImGui::Checkbox("Merge material sections", &m_ModelImportMergeSections);
+                if (previewAsset)
+                {
+                    ImGui::TextDisabled("Detected: %s", skeletal ? "Skeletal Mesh" : "Static Mesh");
+                    if (!previewAsset->materials.empty()) ImGui::TextDisabled("Materials: %zu", previewAsset->materials.size() > 0 ? previewAsset->materials.size() - 1 : 0);
+                    if (skeletal) ImGui::TextDisabled("Skeleton: %zu bones   Animation clips: %zu", previewAsset->skeleton.bones.size(), previewAsset->animations.size());
+                }
+                if (ImGui::Button("Reimport With Settings"))
+                {
+                    ModelImportSettings settings;
+                    settings.generateNormals = m_ModelImportGenerateNormals;
+                    settings.importMaterials = m_ModelImportMaterials;
+                    settings.importTextures = m_ModelImportTextures && m_ModelImportMaterials;
+                    settings.mergeMaterialSections = m_ModelImportMergeSections;
+                    std::string importSource=m_MeshPreviewPath;fs::path output=fs::path(m_MeshPreviewPath);if(output.extension()==".modelasset"){ModelImportSettings stored;std::string storedSource;if(ModelLoader::ReadImportedAssetSettings(m_MeshPreviewPath,stored,&storedSource)&&!storedSource.empty())importSource=storedSource;else{Logger::Error("Imported model has no valid source metadata: "+m_MeshPreviewPath);importSource.clear();}}
+                    std::unique_ptr<ModelAsset> imported = importSource.empty()?nullptr:ModelLoader::LoadModel(importSource, settings);
+                    if (imported)
+                    {
+                        output=fs::path(importSource); output.replace_extension(".modelasset");
+                        if (ModelLoader::SaveImportedAsset(output.string(), *imported, settings))
+                        {
+                            renderer.InvalidateModelAsset(output.string());
+                            renderer.InvalidateModelAsset(m_MeshPreviewPath);
+                            Logger::Info("Imported " + fs::path(importSource).filename().string() + " -> " + output.filename().string() + ": " + std::to_string(imported->sections.size()) + " sections, " + std::to_string(imported->materials.size()) + " materials, " + std::to_string(imported->skeleton.bones.size()) + " bones, " + std::to_string(imported->animations.size()) + " animations");
+                        }
+                    }
+                    else
+                        Logger::Error("Model import validation failed: " + m_MeshPreviewPath);
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("Reimport writes a persistent .modelasset beside the source.");
+            }
             ImGui::Separator();
             ImGui::TextDisabled("%s", m_MeshPreviewPath.c_str());
         }

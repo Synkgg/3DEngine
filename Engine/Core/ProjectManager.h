@@ -5,7 +5,7 @@
 class ProjectManager
 {
 public:
-    bool Load(const std::string& descriptorPath);
+    bool Load(const std::string& descriptorPath, bool createAssetDirectories = true);
     bool Create(const std::string& directory, const std::string& name);
     bool Save();
     bool SetStartupScene(const std::string& scenePath);

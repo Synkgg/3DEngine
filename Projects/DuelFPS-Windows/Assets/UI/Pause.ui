@@ -1,0 +1,13 @@
+ENGINE_UI 10
+1920 1080
+0 0 "PauseMenu" 0 0 1920 1080 0 0 0 0 0 0 0.12 0.17 0.23 0.97 0 1 0 50 0 0 0 0 0 0 0 1
+1 1 "PauseTitle" 550 190 820 85 0 0 0 0 0 0 0.9 0.92 0.88 1 1 1 0 51 0 0 0 0 0 0 0 1 "Paused" 52 0 1
+1 1 "PauseHint" 550 290 850 65 0 0 0 0 0 0 0.7 0.79 0.87 1 1 1 0 51 0 0 0 0 0 0 0 1 "Online matches continue while this menu is open." 25 0 1
+1 3 "ResumeButton" 550 400 820 64 0 0 0 0 0 0 0.32 0.72 1 1 1 1 1 53 0 0 0 0 0 0 0 1 0.32 0.72 1 1 0.56 0.84 1 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.12 0.17 0.23 1 0.12 0.17 0.23 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnResumeClicked" "" "" "" ""
+2 1 "ResumeLabel" 24 0 772 64 0 0 0 0 0 0 0.12 0.17 0.23 1 1 1 0 54 0 0 0 0 0 0 0 1 "RESUME" 22 0 1
+1 3 "OpenArmoryButton" 550 500 820 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 53 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnLoadoutClicked" "" "" "" ""
+2 1 "OpenArmoryLabel" 24 0 772 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 54 0 0 0 0 0 0 0 1 "LOADOUT" 22 0 1
+1 3 "SettingsButton" 550 600 820 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 53 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSettingsClicked" "" "" "" ""
+2 1 "SettingsLabel" 24 0 772 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 54 0 0 0 0 0 0 0 1 "SETTINGS" 22 0 1
+1 3 "DisconnectButton" 550 700 820 64 0 0 0 0 0 0 0.22 0.3 0.39 1 1 1 1 53 0 0 0 0 0 0 0 1 0.22 0.3 0.39 1 0.3 0.43 0.55 1 0.1 0.4 0.4 1 0.07 0.08 0.09 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.95 0.97 1 1 0.7 0.79 0.87 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnDisconnectClicked" "" "" "" ""
+2 1 "DisconnectLabel" 24 0 772 64 0 0 0 0 0 0 0.95 0.97 1 1 1 1 0 54 0 0 0 0 0 0 0 1 "LEAVE MATCH" 22 0 1

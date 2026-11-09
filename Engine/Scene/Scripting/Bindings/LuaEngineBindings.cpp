@@ -13,11 +13,13 @@
 #include "../../../UI/UIButton.h"
 #include "../../../UI/UITextInput.h"
 #include "../../../UI/UISlider.h"
+#include "../../../UI/UIProgressBar.h"
 #include "../../../UI/UISerializer.h"
 
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
+#include <vector>
 
 #include "../../Scene.h"
 #include "../../PrefabSerializer.h"
@@ -26,7 +28,10 @@
 #include "../../Components/CharacterControllerComponent.h"
 #include "../../Components/PawnComponent.h"
 #include "../../Components/PlayerStartComponent.h"
+#include "../../../Network/PlayerAccount.h"
+#include "../../Components/ColorComponent.h"
 #include "../../Components/MeshComponent.h"
+#include "../../Components/NameComponent.h"
 #include "../../Components/ColliderComponent.h"
 #include "../../Components/InteractableComponent.h"
 #include "../../Components/LightComponent.h"
@@ -471,6 +476,24 @@ void LuaScript::BindEngineAPI()
         }
     );
 
+    input.set_function("GetPressedBinding", [this]() {
+        if (!m_Input) return std::string();
+        for (int i=1;i<SDL_SCANCODE_COUNT;++i)
+            if (m_Input->IsKeyPressed(static_cast<SDL_Scancode>(i))) {
+                const char* name=SDL_GetScancodeName(static_cast<SDL_Scancode>(i));
+                if(name && *name)return std::string(name);
+            }
+        for(int i=1;i<=5;++i)if(m_Input->IsMouseButtonPressed(static_cast<Uint8>(i)))return "Mouse "+std::to_string(i);
+        return std::string();
+    });
+    input.set_function("IsMouseButtonPressed", [this](int button) {
+        return m_Input && button>=1 && button<=5 && m_Input->IsMouseButtonPressed(static_cast<Uint8>(button));
+    });
+    input.set_function("IsValidBinding", [](const std::string& binding) {
+        return SDL_GetScancodeFromName(binding.c_str())!=SDL_SCANCODE_UNKNOWN ||
+            (binding.size()==7 && binding.substr(0,6)=="Mouse " && binding[6]>='1' && binding[6]<='5');
+    });
+    input.set_function("SetInteractionBinding", [this](const std::string& binding) { if(m_Runtime)m_Runtime->SetInteractionBinding(binding); });
     (*m_Environment)["Input"] =
         input;
 
@@ -925,6 +948,48 @@ void LuaScript::BindEngineAPI()
         if (m_Scene) m_Scene->ClearParent(Entity(childID), keepWorld);
     });
 
+    // Resolve a named attachment point belonging to a specific prefab
+    // instance. Unlike global FindEntity, this remains unambiguous when
+    // multiple actors carry the same weapon.
+    sceneApi.set_function("FindChild", [this](std::uint32_t parentID, const std::string& name)
+    {
+        if (!m_Scene || parentID == 0 || name.empty()) return std::uint32_t(0);
+        // Search the whole prefab subtree: authored attachment sockets
+        // normally live under the rotated/scaled mesh child.
+        std::vector<Entity> pending = m_Scene->GetChildren(Entity(parentID));
+        while (!pending.empty())
+        {
+            const Entity child = pending.back();
+            pending.pop_back();
+            const NameComponent* named = m_Scene->GetComponent<NameComponent>(child);
+            if (named && named->name == name) return child.GetID();
+            const auto grandchildren = m_Scene->GetChildren(child);
+            pending.insert(pending.end(), grandchildren.begin(), grandchildren.end());
+        }
+        return std::uint32_t(0);
+    });
+
+    sceneApi.set_function("GetName", [this](std::uint32_t entityID)
+    {
+        if (!m_Scene) return std::string();
+        const Entity entity = m_Scene->FindEntityByID(entityID);
+        const NameComponent* named = entity.IsValid()
+            ? m_Scene->GetComponent<NameComponent>(entity) : nullptr;
+        return named ? named->name : std::string();
+    });
+
+    sceneApi.set_function("GetWorldPosition", [this](std::uint32_t entityID)
+    {
+        sol::table result = m_Lua->create_table();
+        const Entity entity = m_Scene ? m_Scene->FindEntityByID(entityID) : Entity();
+        const Vec3 value = entity.IsValid()
+            ? m_Scene->GetWorldTransform(entity).position : Vec3(0.0f, 0.0f, 0.0f);
+        result["x"] = value.x;
+        result["y"] = value.y;
+        result["z"] = value.z;
+        return result;
+    });
+
     sceneApi.set_function("GetPosition", [this](std::uint32_t entityID)
     {
         sol::table result = m_Lua->create_table();
@@ -979,6 +1044,13 @@ void LuaScript::BindEngineAPI()
         if (!component) return false;
         component->prompt=prompt;
         return true;
+    });
+
+    sceneApi.set_function("SetTint", [this](std::uint32_t id, float r, float g, float b){
+        if (!m_Scene) return;
+        if (auto* color=m_Scene->GetComponent<ColorComponent>(Entity(id))) {
+            color->r=r; color->g=g; color->b=b;
+        }
     });
 
     sceneApi.set_function("SetLightIntensity", [this](std::uint32_t entityID, float intensity)
@@ -1047,8 +1119,45 @@ void LuaScript::BindEngineAPI()
      * health, weapons, teams and game state belong to project scripts.
      */
     sol::table network = m_Lua->create_table();
-    network.set_function("Host", [this](int port){return m_Runtime&&m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port));});
-    network.set_function("Join", [this](const std::string& address,int port){return m_Runtime&&m_Runtime->GetNetwork().Join(address,static_cast<std::uint16_t>(port));});
+    network.set_function("AccountPublicKey",&PlayerAccount::PublicKey);
+    network.set_function("SignAccountChallenge",&PlayerAccount::Sign);
+    sceneApi.set_function("QuitGame", [](){ SDL_Event event{};event.type=SDL_EVENT_QUIT;SDL_PushEvent(&event); });
+    sceneApi.set_function("TryActorHeight", [this](float height){return m_Scene && CollisionSystem::ResizeStandingCollider(*m_Scene,m_Entity,height);});
+    sceneApi.set_function("SetReplicaHeight", [this](std::uint32_t id,float height){
+        if(m_Scene && height>=1.f && height<=2.f)if(auto* c=m_Scene->GetComponent<ColliderComponent>(Entity(id)))c->height=height;
+    });
+    network.set_function("Host", [this](int port,sol::optional<std::uint32_t> maxPlayers,sol::optional<std::string> name){
+        return m_Runtime&&port>0&&port<=65535&&
+            m_Runtime->GetNetwork().Host(static_cast<std::uint16_t>(port),maxPlayers.value_or(8),name.value_or("Velcryn Server"));
+    });
+    network.set_function("Join", [this](const std::string& address,int port,sol::optional<std::string> ticket){
+        return m_Runtime && port>0 && port<=65535 &&
+            m_Runtime->GetNetwork().Join(address,static_cast<std::uint16_t>(port),ticket.value_or(""));
+    });
+    network.set_function("SearchServers", [this](sol::optional<int> port){
+        if(!m_Runtime)return false;
+        const int value=port.value_or(7777);
+        return value>0 && value<=65535 &&
+            m_Runtime->GetNetwork().SearchServers(static_cast<std::uint16_t>(value));
+    });
+    network.set_function("StopServerSearch", [this](){if(m_Runtime)m_Runtime->GetNetwork().StopServerSearch();});
+    network.set_function("IsSearchingServers", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsSearchingServers();});
+    network.set_function("GetServers", [this](){
+        sol::table out=m_Lua->create_table();
+        if(!m_Runtime)return out;
+        int index=1;
+        for(const auto& server:m_Runtime->GetNetwork().GetServers()){
+            sol::table item=m_Lua->create_table();
+            item["name"]=server.name;
+            item["address"]=server.address;
+            item["port"]=server.port;
+            item["players"]=server.players;
+            item["maxPlayers"]=server.maxPlayers;
+            item["full"]=server.players>=server.maxPlayers;
+            out[index++]=item;
+        }
+        return out;
+    });
     network.set_function("Disconnect", [this](){if(m_Runtime)m_Runtime->GetNetwork().Disconnect();});
     network.set_function("IsHost", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsHost();});
     network.set_function("IsConnected", [this](){return m_Runtime&&m_Runtime->GetNetwork().IsConnected();});
@@ -1086,6 +1195,17 @@ void LuaScript::BindEngineAPI()
      * runtime menus do not need to know about OpenGL implementation details.
      */
     sol::table graphics = m_Lua->create_table();
+    graphics.set_function("SetQualityPreset", [this](int quality) {
+        if(!m_Renderer)return;
+        quality=std::clamp(quality,1,3);
+        auto settings=m_Renderer->GetRenderSettings();
+        settings.shadowQuality=quality==1?0:(quality==2?1:2);
+        settings.shadows=quality>1;settings.shadowDistance=quality==1?25.f:(quality==2?50.f:80.f);
+        settings.screenSpaceReflections=quality==3;
+        settings.giStrength=quality==1?0.f:(quality==2?.18f:.35f);
+        settings.contactShadowStrength=quality==1?0.f:1.f;
+        m_Renderer->SetRenderSettings(settings);
+    });
 
     graphics.set_function("SetAntiAliasing", [this](bool enabled)
     {
@@ -1229,10 +1349,14 @@ void LuaScript::BindEngineAPI()
     audioApi.set_function("GetMasterVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetMasterVolume():1.0f;});
     audioApi.set_function("SetSFXVolume",[this](float v){if(m_Runtime&&m_Runtime->GetAudioEngine())m_Runtime->GetAudioEngine()->SetSFXVolume(v);});
     audioApi.set_function("GetSFXVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetSFXVolume():1.0f;});
+    audioApi.set_function("PlayFootstep",[this](const std::string& surface,bool sprint){
+        return m_Runtime && m_Runtime->GetAudioEngine() &&
+               m_Runtime->GetAudioEngine()->PlayFootstep(surface,sprint);
+    });
     audioApi.set_function("PlaySFX",[this](const std::string& path,float volume){
         if(!m_Runtime||!m_Runtime->GetAudioEngine()) return false;
         AudioEngine* audio=m_Runtime->GetAudioEngine();
-        return audio->PlaySound(path,volume*audio->GetSFXVolume());
+        return audio->PlaySound(path,volume,AudioEngine::Bus::Effects);
     });
     audioApi.set_function("SetUIVolume",[this](float v){if(m_Runtime&&m_Runtime->GetAudioEngine())m_Runtime->GetAudioEngine()->SetUIVolume(v);});
     audioApi.set_function("GetUIVolume",[this](){return (m_Runtime&&m_Runtime->GetAudioEngine())?m_Runtime->GetAudioEngine()->GetUIVolume():1.0f;});
@@ -1329,6 +1453,7 @@ void LuaScript::BindEngineAPI()
     ui.set_function("SetValue", [this](const std::string& name, float value)
     {
         if(!m_UICanvas||!m_UICanvas->GetRoot())return false;
+        if(auto* bar=dynamic_cast<UIProgressBar*>(m_UICanvas->GetRoot()->Find(name))){bar->SetPercent(value);return true;}
         UISlider* slider=dynamic_cast<UISlider*>(m_UICanvas->GetRoot()->Find(name));
         if(!slider)return false; slider->SetValue(value); return true;
     });

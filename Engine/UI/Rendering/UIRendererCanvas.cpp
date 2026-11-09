@@ -4,11 +4,12 @@
 #include "../UIButton.h"
 #include "../UITextInput.h"
 #include "../UISlider.h"
+#include "../UIProgressBar.h"
+#include "../UIScrollBox.h"
 #include "../../Platform/SDL/Input.h"
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
 #include "../../Audio/AudioEngine.h"
-#include <glad/gl.h>
 #include <algorithm>
 #include <cmath>
 #include <string>
@@ -39,6 +40,29 @@ void UIRenderer::RenderCanvas(
         m_LogicalHeight
     };
 
+    // A full-canvas opaque background also covers letterbox margins. Keep
+    // controls in logical coordinates, but don't expose the 3D sky around menus.
+    if (!root->GetChildren().empty() && m_UIScale > 0) {
+        const UIWidget* background = root->GetChildren().front().get();
+        // A full-screen reusable UI may contain the full-canvas backdrop.
+        // Follow only full-screen transparent instance containers.
+        while (background && background->GetType() == UIWidgetType::UserWidget &&
+               background->IsVisible() && !background->GetChildren().empty() &&
+               background->GetPosition().x == 0 && background->GetPosition().y == 0 &&
+               background->GetSize().x == m_LogicalWidth &&
+               background->GetSize().y == m_LogicalHeight)
+            background = background->GetChildren().front().get();
+        if (background && background->GetType() == UIWidgetType::Panel && background->IsVisible() &&
+            background->GetPosition().x == 0 && background->GetPosition().y == 0 &&
+            background->GetSize().x == m_LogicalWidth && background->GetSize().y == m_LogicalHeight &&
+            background->GetColor().w >= 1 && background->GetRenderOpacity() >= 1 && !background->HasGradient()) {
+            const auto clip = m_ClipRect;
+            m_ClipRect = {-m_UIOffsetX/m_UIScale,-m_UIOffsetY/m_UIScale,float(m_Width)/m_UIScale,float(m_Height)/m_UIScale};
+            DrawQuad(m_ClipRect.x,m_ClipRect.y,m_ClipRect.width,m_ClipRect.height,0,0,1,1,background->GetColor(),m_WhiteTexture);
+            m_ClipRect = clip;
+        }
+    }
+
     for (const auto& child :
         root->GetChildren())
     {
@@ -50,6 +74,17 @@ void UIRenderer::RenderCanvas(
                 renderer
             );
         }
+    }
+}
+
+namespace
+{
+    float InheritedOpacity(const UIWidget& widget)
+    {
+        float opacity = 1.0f;
+        for (const UIWidget* current = &widget; current; current = current->GetParent())
+            opacity *= current->GetRenderOpacity();
+        return std::clamp(opacity, 0.0f, 1.0f);
     }
 }
 
@@ -69,7 +104,11 @@ void UIRenderer::RenderCanvasWidget(
             parentRect
         );
 
-    if (widget.GetType() == UIWidgetType::Slider)
+    if (widget.GetType() == UIWidgetType::ProgressBar)
+    {
+        if(const UIProgressBar* progress=dynamic_cast<const UIProgressBar*>(&widget)) DrawProgressBar(*progress,rect);
+    }
+    else if (widget.GetType() == UIWidgetType::Slider)
     {
         if(const UISlider* slider=dynamic_cast<const UISlider*>(&widget)) DrawSlider(*slider,rect);
     }
@@ -103,162 +142,120 @@ void UIRenderer::RenderCanvasWidget(
         );
     }
 
-    for (const auto& child :
-        widget.GetChildren())
+    UIRect childRect = rect;
+    const UIRect previousClip = m_ClipRect;
+    if (const auto* scroll = dynamic_cast<const UIScrollBox*>(&widget))
     {
-        if (child)
-        {
-            RenderCanvasWidget(
-                *child,
-                rect,
-                renderer
-            );
-        }
+        const float left = std::max(previousClip.x, rect.x);
+        const float top = std::max(previousClip.y, rect.y);
+        const float right = std::min(previousClip.x + previousClip.width, rect.x + rect.width);
+        const float bottom = std::min(previousClip.y + previousClip.height, rect.y + rect.height);
+        m_ClipRect = {left, top, std::max(0.0f, right-left), std::max(0.0f, bottom-top)};
+        childRect.y -= scroll->GetScrollOffset();
     }
+    if (m_ClipRect.width > 0.0f && m_ClipRect.height > 0.0f)
+    {
+        for (const auto& child : widget.GetChildren())
+            if (child) RenderCanvasWidget(*child, childRect, renderer);
+    }
+    m_ClipRect = previousClip;
 }
 
-void UIRenderer::DrawCanvasWidget(
-    const UIWidget& widget,
-    const UIRect& rect,
-    Renderer* renderer)
+void UIRenderer::DrawCanvasWidget(const UIWidget& widget, const UIRect& rect, Renderer* renderer)
 {
-    const float vertices[24] =
-    {
-        rect.x,
-        rect.y,
-        0.0f,
-        1.0f,
-
-        rect.x + rect.width,
-        rect.y,
-        1.0f,
-        1.0f,
-
-        rect.x + rect.width,
-        rect.y + rect.height,
-        1.0f,
-        0.0f,
-
-        rect.x,
-        rect.y,
-        0.0f,
-        1.0f,
-
-        rect.x + rect.width,
-        rect.y + rect.height,
-        1.0f,
-        0.0f,
-
-        rect.x,
-        rect.y + rect.height,
-        0.0f,
-        0.0f
-    };
-
-    glBindVertexArray(m_VAO);
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        m_VBO
-    );
-
-    glBufferSubData(
-        GL_ARRAY_BUFFER,
-        0,
-        sizeof(vertices),
-        vertices
-    );
-
+    // A user widget is a transparent container; its linked children draw below.
+    if (widget.GetType() == UIWidgetType::UserWidget) return;
     Vec4 color = widget.GetColor();
-
-    if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
+    std::string texturePath;
+    if (const auto* button = dynamic_cast<const UIButton*>(&widget))
+    {
         color = button->GetCurrentColor();
-
-    m_Shader.SetVec4(
-        "u_Color",
-        color.x,
-        color.y,
-        color.z,
-        color.w
-    );
-
-    const Vec4 gradientColor = widget.GetGradientColor();
-    m_Shader.SetVec4("u_GradientColor", gradientColor.x, gradientColor.y, gradientColor.z, gradientColor.w);
-    m_Shader.SetInt("u_UseGradient", widget.HasGradient() ? 1 : 0);
-    m_Shader.SetInt("u_GradientDirection", widget.GetGradientDirection() == UIGradientDirection::Horizontal ? 1 : 0);
-
-    const float radius = widget.GetCornerRadius() <= 0.0f
-        ? 0.0f
-        : std::min(widget.GetCornerRadius(), std::min(rect.width, rect.height) * 0.5f);
-    m_Shader.SetVec2("u_RectSize", std::max(0.0f, rect.width), std::max(0.0f, rect.height));
-    m_Shader.SetFloat("u_CornerRadius", radius);
-
-    Texture2D* texture = nullptr;
-
-    if (renderer != nullptr)
-    {
-        if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
-        {
-            if (!image->GetTexturePath().empty())
-                texture = renderer->LoadTexture(image->GetTexturePath());
-        }
-        else if (const UIButton* button = dynamic_cast<const UIButton*>(&widget))
-        {
-            const std::string& imagePath = button->GetCurrentImage();
-            if (!imagePath.empty())
-                texture = renderer->LoadTexture(imagePath);
-        }
+        texturePath = button->GetCurrentImage();
     }
+    else if (const auto* image = dynamic_cast<const UIImage*>(&widget))
+        texturePath = image->GetTexturePath();
 
-    if (texture != nullptr)
-    {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture->GetID());
-        m_Shader.SetInt("u_Texture", 0);
-        m_Shader.SetInt("u_UseTexture", 1);
-    }
-    else
-    {
-        m_Shader.SetInt("u_UseTexture", 0);
-    }
+    color.w *= InheritedOpacity(widget);
+    Velcryn::RHI::TextureHandle texture = m_WhiteTexture;
+    if (renderer && !texturePath.empty())
+        if (Texture2D* loaded = renderer->LoadTexture(texturePath); loaded && loaded->IsLoaded())
+            texture = loaded->GetHandle();
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    if (texture != nullptr)
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-    glBindVertexArray(0);
+    Vec4 gradient = widget.GetGradientColor(); gradient.w *= InheritedOpacity(widget);
+    DrawQuad(rect.x, rect.y, rect.width, rect.height, 0.0f, 1.0f, 1.0f, 0.0f,
+        color, texture, gradient, widget.HasGradient(),
+        widget.GetGradientDirection() == UIGradientDirection::Horizontal, widget.GetCornerRadius());
 }
 
 void UIRenderer::DrawSlider(const UISlider& slider,const UIRect& rect)
 {
     DrawCanvasWidget(slider,rect,nullptr);
-    UIWidget fill(UIWidgetType::Panel); fill.SetColor(slider.GetFillColor());
+    const float opacity=InheritedOpacity(slider);
+    UIWidget fill(UIWidgetType::Panel); fill.SetColor(slider.GetFillColor()); fill.SetRenderOpacity(opacity);
     DrawCanvasWidget(fill,UIRect{rect.x,rect.y,rect.width*slider.GetValue(),rect.height},nullptr);
-    UIWidget handle(UIWidgetType::Panel); handle.SetColor(slider.GetHandleColor());
+    UIWidget handle(UIWidgetType::Panel); handle.SetColor(slider.GetHandleColor()); handle.SetRenderOpacity(opacity);
     const float w=10.0f; DrawCanvasWidget(handle,UIRect{rect.x+rect.width*slider.GetValue()-w*0.5f,rect.y-3.0f,w,rect.height+6.0f},nullptr);
+}
+
+void UIRenderer::DrawProgressBar(const UIProgressBar& progress,const UIRect& rect)
+{
+    DrawCanvasWidget(progress,rect,nullptr);
+    const float value=std::clamp(progress.GetPercent(),0.0f,1.0f);
+    UIRect fillRect=rect;
+    switch(progress.GetFillDirection())
+    {
+    case UIProgressBarFillDirection::LeftToRight: fillRect.width*=value; break;
+    case UIProgressBarFillDirection::RightToLeft: fillRect.x+=fillRect.width*(1.0f-value); fillRect.width*=value; break;
+    case UIProgressBarFillDirection::TopToBottom: fillRect.height*=value; break;
+    case UIProgressBarFillDirection::BottomToTop: fillRect.y+=fillRect.height*(1.0f-value); fillRect.height*=value; break;
+    }
+    UIWidget fill(UIWidgetType::Panel); fill.SetColor(progress.GetFillColor()); fill.SetCornerRadius(progress.GetCornerRadius()); fill.SetRenderOpacity(InheritedOpacity(progress));
+    DrawCanvasWidget(fill,fillRect,nullptr);
 }
 
 void UIRenderer::DrawTextInput(const UITextInput& input, const UIRect& rect)
 {
-    // Background is drawn by the normal widget path before this text overlay.
     DrawCanvasWidget(input, rect, nullptr);
+    const UIRect previousClip = m_ClipRect;
+    const float left = std::max(previousClip.x, rect.x+12);
+    const float top = std::max(previousClip.y, rect.y+4);
+    m_ClipRect = {left, top,
+        std::max(0.0f, std::min(previousClip.x+previousClip.width, rect.x+rect.width-12)-left),
+        std::max(0.0f, std::min(previousClip.y+previousClip.height, rect.y+rect.height-4)-top)};
+    const float opacity = InheritedOpacity(input);
+    const float scale = input.GetFontSize()/FontBakeSize;
+    const std::string display = input.GetDisplayText();
+    auto measure = [&](std::size_t end) {
+        float width = 0;
+        for (std::size_t i=0; i<std::min(end, display.size()); ++i) {
+            unsigned char ch = display[i]; if (ch < 32 || ch > 126) ch = '?';
+            width += m_FontGlyphs[ch-32].xadvance*scale;
+        }
+        return width;
+    };
+    const float caret = input.GetText().empty() ? 0 : measure(input.GetCursor());
+    const float scroll = input.IsFocused() ? std::max(0.0f, caret-m_ClipRect.width+2) : 0;
+    const float x = rect.x+12-scroll;
+    if (input.IsFocused() && input.HasSelection())
+        DrawQuad(x, rect.y+8, measure(display.size()), input.GetFontSize()*1.2f, 0,0,1,1,
+            Vec4(0.18f,0.38f,0.65f,0.7f*opacity), m_WhiteTexture);
     UIText text;
-    text.SetPosition(Vec2(rect.x + 12.0f, rect.y + 8.0f));
-    text.SetSize(Vec2(std::max(0.0f, rect.width - 24.0f), rect.height - 16.0f));
     text.SetFontSize(input.GetFontSize());
-    text.SetColor(input.GetText().empty() ? Vec4(0.45f,0.48f,0.52f,1.0f) : Vec4(0.92f,0.94f,0.97f,1.0f));
-    std::string display = input.GetDisplayText();
-    if (input.IsFocused()) display += "|";
-    text.SetText(display);
-    DrawCanvasText(text, UIRect{rect.x + 12.0f, rect.y + 8.0f, std::max(0.0f, rect.width - 24.0f), rect.height - 16.0f});
+    text.SetColor(input.GetText().empty() ? Vec4(0.45f,0.48f,0.52f,1) : Vec4(0.92f,0.94f,0.97f,1));
+    text.SetText(display); text.SetRenderOpacity(opacity);
+    DrawCanvasText(text, {x, rect.y+8, std::max(0.0f, rect.width-24), rect.height-16});
+    if (input.IsFocused())
+        DrawQuad(x+caret, rect.y+8, 1.5f, input.GetFontSize()*1.2f, 0,0,1,1,
+            Vec4(0.95f,0.97f,1,opacity), m_WhiteTexture);
+    m_ClipRect = previousClip;
+
 }
 
 void UIRenderer::DrawCanvasText(
     const UIText& text,
     const UIRect& rect)
 {
-    if (m_FontTexture == 0 || text.GetText().empty()) return;
+    if (!m_FontTexture || text.GetText().empty()) return;
 
     const float requestedSize = std::max(1.0f, text.GetFontSize());
     const float scale = requestedSize / FontBakeSize;
@@ -273,6 +270,7 @@ void UIRenderer::DrawCanvasText(
             break;
         }
     }
+    color.w *= InheritedOpacity(text);
 
     std::vector<std::string> lines;
     std::string current;
@@ -317,36 +315,7 @@ void UIRenderer::DrawCanvasText(
     }
 }
 
-void UIRenderer::DrawFontGlyph(
-    float x, float y, float width, float height,
-    float u0, float v0, float u1, float v1,
-    const Vec4& color)
+void UIRenderer::DrawFontGlyph(float x,float y,float width,float height,float u0,float v0,float u1,float v1,const Vec4& color)
 {
-    const float vertices[24] = {
-        x, y, u0, v0,
-        x + width, y, u1, v0,
-        x + width, y + height, u1, v1,
-        x, y, u0, v0,
-        x + width, y + height, u1, v1,
-        x, y + height, u0, v1
-    };
-
-    glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-    m_Shader.SetVec4(
-        "u_Color", color.x, color.y, color.z, color.w);
-    m_Shader.SetVec2("u_RectSize", width, height);
-    m_Shader.SetFloat("u_CornerRadius", 0.0f);
-    m_Shader.SetInt("u_UseGradient", 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_FontTexture);
-    m_Shader.SetInt("u_Texture", 0);
-    m_Shader.SetInt("u_UseTexture", 1);
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
+    DrawQuad(x, y, width, height, u0, v0, u1, v1, color, m_FontTexture);
 }

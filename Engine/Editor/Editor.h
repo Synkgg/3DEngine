@@ -41,9 +41,11 @@ public:
     bool IsPlaying() const;
     void StopPlaying();
     bool ConsumeProjectHubRequest();
+    bool ConsumeExportRequest() { bool result = m_ExportRequested; m_ExportRequested = false; return result; }
 
     void ConfigureProject(const std::filesystem::path& assetRoot, const std::filesystem::path& settingsPath);
     bool OpenScene(Scene& scene, const std::filesystem::path& path);
+    bool SaveCurrentScene(Scene& scene);
 
     std::string ConsumeOpenedUIAsset();
     const std::string& GetSceneFilePath() const { return m_SceneFilePath; }
@@ -52,6 +54,7 @@ public:
     const ProjectSettings& GetProjectSettings() const { return m_ProjectSettings; }
 
 private:
+    bool m_ExportRequested = false;
     Entity CreatePrimitiveEntity(
         Scene& scene,
         PrimitiveType primitive,
@@ -119,9 +122,18 @@ private:
 
     std::string m_ContentBrowserPath;
     std::filesystem::path m_AssetRoot;
+    std::filesystem::path m_ProjectSettingsPath;
     std::string m_SelectedAssetPath;
     std::string m_PendingUIAssetPath;
     std::string m_MeshPreviewPath;
+    int m_MeshPreviewClip = 0;
+    float m_MeshPreviewTime = 0.0f;
+    double m_MeshPreviewLastTick = 0.0;
+    bool m_MeshPreviewPlaying = true;
+    bool m_ModelImportGenerateNormals = true;
+    bool m_ModelImportMaterials = true;
+    bool m_ModelImportTextures = true;
+    bool m_ModelImportMergeSections = true;
     unsigned int m_MeshPreviewFramebuffer = 0;
     unsigned int m_MeshPreviewTexture = 0;
     unsigned int m_MeshPreviewDepth = 0;

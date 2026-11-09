@@ -47,7 +47,7 @@ void UIButton::SetDisabledColor(const Vec4& color) { m_DisabledColor = color; }
 
 Vec4 UIButton::GetCurrentColor() const
 {
-    if (!IsEnabled()) return m_DisabledColor;
+    if (!IsEnabledInHierarchy()) return m_DisabledColor;
     if (m_Pressed) return m_PressedColor;
     if (m_Hovered) return m_HoveredColor;
     return m_NormalColor;
@@ -55,7 +55,7 @@ Vec4 UIButton::GetCurrentColor() const
 
 Vec4 UIButton::GetCurrentTextColor() const
 {
-    if (!IsEnabled()) return m_DisabledTextColor;
+    if (!IsEnabledInHierarchy()) return m_DisabledTextColor;
     if (m_Pressed) return m_PressedTextColor;
     if (m_Hovered) return m_HoveredTextColor;
     return m_NormalTextColor;

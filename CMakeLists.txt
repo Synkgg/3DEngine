@@ -1,10 +1,59 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.30)
 
-project(3DEngine)
+project(VelcrynEngine)
+
+# Compile engine-owned HLSL to Vulkan SPIR-V and embed it in the executable.
+# VELCRYN_DXC can be set explicitly on hosts without dxc in PATH or a Windows SDK.
+file(GLOB DXC_SDK_DIRS "C:/Program Files (x86)/Windows Kits/10/bin/*/x64")
+list(SORT DXC_SDK_DIRS ORDER DESCENDING)
+find_program(VELCRYN_DXC NAMES dxc HINTS "${CMAKE_CURRENT_SOURCE_DIR}/out/tools/dxc/bin/x64" "$ENV{VULKAN_SDK}/Bin" ${DXC_SDK_DIRS} REQUIRED)
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Generated")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/Generated/CompilerProbe.hlsl" "float4 main() : SV_Target { return 1; }\n")
+execute_process(COMMAND "${VELCRYN_DXC}" -spirv -T ps_6_0 -E main
+    -Fo "${CMAKE_CURRENT_BINARY_DIR}/Generated/CompilerProbe.spv"
+    "${CMAKE_CURRENT_BINARY_DIR}/Generated/CompilerProbe.hlsl"
+    RESULT_VARIABLE DXC_PROBE_RESULT ERROR_VARIABLE DXC_PROBE_ERROR)
+if(NOT DXC_PROBE_RESULT EQUAL 0)
+    message(FATAL_ERROR "DXC must support SPIR-V. Set VELCRYN_DXC to the standalone DXC or Vulkan SDK compiler. ${DXC_PROBE_ERROR}")
+endif()
+set(VELCRYN_SHADER_HEADERS)
+foreach(SHADER_NAME Mesh UI Grid Post TAA BloomExtract BloomBlur Sky Copy Debug Preview)
+    foreach(STAGE vert frag)
+        if(STAGE STREQUAL "vert")
+            set(PROFILE vs_6_0)
+        else()
+            set(PROFILE ps_6_0)
+        endif()
+        set(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/${SHADER_NAME}.${STAGE}.hlsl")
+        set(SPIRV "${CMAKE_CURRENT_BINARY_DIR}/Generated/${SHADER_NAME}.${STAGE}.spv")
+        set(HEADER "${CMAKE_CURRENT_BINARY_DIR}/Generated/${SHADER_NAME}.${STAGE}.h")
+        add_custom_command(OUTPUT "${HEADER}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/Generated"
+            COMMAND "${VELCRYN_DXC}" -spirv -fspv-target-env=vulkan1.2 -T ${PROFILE} -E main
+                "$<IF:$<CONFIG:Debug>,-Od,-O3>" -Fo "${SPIRV}" "${SOURCE}"
+            COMMAND ${CMAKE_COMMAND} "-DINPUT=${SPIRV}" "-DOUTPUT=${HEADER}" "-DSYMBOL=${SHADER_NAME}_${STAGE}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/Mesh.vert.hlsl" "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/PostData.hlsli" "${SOURCE}" "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Graphics/Shaders/MeshData.hlsli" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EmbedSpirv.cmake"
+            VERBATIM)
+        list(APPEND VELCRYN_SHADER_HEADERS "${HEADER}")
+    endforeach()
+endforeach()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Use one MSVC runtime consistently across Velcryn and every dependency created
+# below (SDL, Lua, NRI, etc.). This must be set before FetchContent adds targets.
+# A cache variable is used because several dependencies configure nested targets.
+if (MSVC)
+    set(
+        CMAKE_MSVC_RUNTIME_LIBRARY
+        "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        CACHE STRING "MSVC runtime used by Velcryn and dependencies"
+        FORCE
+    )
+endif()
 
 # Keep single-config generators useful too. Visual Studio remains multi-config
 # and can switch Debug/Release from the IDE normally.
@@ -37,6 +86,8 @@ FetchContent_Declare(
 # SDL's CMake project exposes SDL3::SDL3-static when SDL_STATIC is enabled.
 set(SDL_SHARED OFF CACHE BOOL "Build SDL shared library" FORCE)
 set(SDL_STATIC ON CACHE BOOL "Build SDL static library" FORCE)
+set(SDL_OPENGL OFF CACHE BOOL "Vulkan renderer does not use SDL OpenGL" FORCE)
+set(SDL_OPENGLES OFF CACHE BOOL "Vulkan renderer does not use SDL OpenGL ES" FORCE)
 FetchContent_MakeAvailable(SDL3)
 
 #
@@ -101,6 +152,99 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(sol2)
 
+#
+# cgltf - lightweight glTF 2.0 / GLB parser
+#
+FetchContent_Declare(
+    cgltf
+    GIT_REPOSITORY https://github.com/jkuhlmann/cgltf.git
+    GIT_TAG v1.15
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(cgltf)
+
+#
+# NRI - Velcryn's explicit low-level rendering backend
+#
+# Keep NRI behind the engine-owned RHI. Vulkan is the first explicit backend;
+# D3D12 stays disabled until the Vulkan path is established and tested.
+set(NRI_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
+set(NRI_ENABLE_VK_SUPPORT ON CACHE BOOL "" FORCE)
+set(NRI_ENABLE_D3D11_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_D3D12_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NONE_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_VALIDATION_SUPPORT ON CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NVTX_SUPPORT OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_IMGUI_EXTENSION ON CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NIS_SDK OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_NGX_SDK OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_FFX_SDK OFF CACHE BOOL "" FORCE)
+set(NRI_ENABLE_XESS_SDK OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    NRI
+    GIT_REPOSITORY https://github.com/NVIDIA-RTX/NRI.git
+    GIT_TAG v180
+    GIT_SHALLOW TRUE
+)
+# NRI v180 mirrors ImGui's renderer-facing texture structs internally. Velcryn
+# currently vendors ImGui 1.93 WIP, which added QueueUserData to ImTextureData.
+# Patch the fetched NRI mirror before compiling it so both sides have the same
+# ABI. Without this, NRI reads Width/Height at the old offsets and sees width=0.
+FetchContent_GetProperties(NRI)
+if (NOT nri_POPULATED)
+    # Populate before add_subdirectory so the ImGui ABI patch is applied first.
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0169 OLD)
+    FetchContent_Populate(NRI)
+    cmake_policy(POP)
+endif()
+
+set(NRI_IMGUI_IMPL "${nri_SOURCE_DIR}/Source/Shared/ImguiInterface.hpp")
+file(READ "${NRI_IMGUI_IMPL}" NRI_IMGUI_IMPL_CONTENT)
+
+# Use real newlines here. The previous patch searched for the two-character
+# sequence "\\n", so it never matched NRI's source and silently wrote it back
+# unchanged.
+set(NRI_IMGUI_OLD [=[    void* BackendUserData;
+    ImTextureID TexID;]=])
+set(NRI_IMGUI_NEW [=[    void* BackendUserData;
+    void* QueueUserData;
+    ImTextureID TexID;]=])
+
+string(FIND "${NRI_IMGUI_IMPL_CONTENT}" "${NRI_IMGUI_NEW}" NRI_IMGUI_ALREADY_PATCHED)
+if (NRI_IMGUI_ALREADY_PATCHED EQUAL -1)
+    string(FIND "${NRI_IMGUI_IMPL_CONTENT}" "${NRI_IMGUI_OLD}" NRI_IMGUI_PATCH_POINT)
+    if (NRI_IMGUI_PATCH_POINT EQUAL -1)
+        message(FATAL_ERROR "NRI v180 ImGui ABI patch point was not found; refusing to build an ABI-mismatched NRIImgui extension.")
+    endif()
+    string(REPLACE "${NRI_IMGUI_OLD}" "${NRI_IMGUI_NEW}" NRI_IMGUI_IMPL_CONTENT "${NRI_IMGUI_IMPL_CONTENT}")
+    file(WRITE "${NRI_IMGUI_IMPL}" "${NRI_IMGUI_IMPL_CONTENT}")
+endif()
+
+# ImGui 1.93 also extended ImDrawCmd with TexRef before VtxOffset. NRI v180
+# already has TexRef, but its mirrored ImTextureData is the only layout that
+# changed in this revision. Patch NRI's font-texture lookup to use the texture
+# pointer key it owns instead of the ImGui TexID value. This avoids operator[]
+# inserting a null descriptor when ImGui 1.93's TexID lifecycle differs.
+set(NRI_IMGUI_FONT_LOOKUP_OLD [=[                    ImTextureID key = drawCmd.TexRef.TexData->TexID;
+                    descriptor = m_Textures[key].descriptor;]=])
+set(NRI_IMGUI_FONT_LOOKUP_NEW [=[                    ImTextureData* textureData = drawCmd.TexRef.TexData;
+                    uint64_t key = (uint64_t)textureData | ((uint64_t)textureData->UniqueID << 54ull);
+                    auto textureIt = m_Textures.find(key);
+                    descriptor = textureIt != m_Textures.end() ? textureIt->second.descriptor : nullptr;]=])
+string(REPLACE "${NRI_IMGUI_FONT_LOOKUP_OLD}" "${NRI_IMGUI_FONT_LOOKUP_NEW}" NRI_IMGUI_IMPL_CONTENT "${NRI_IMGUI_IMPL_CONTENT}")
+file(WRITE "${NRI_IMGUI_IMPL}" "${NRI_IMGUI_IMPL_CONTENT}")
+
+# Verify the fetched source actually contains the ABI field before NRI compiles.
+file(READ "${NRI_IMGUI_IMPL}" NRI_IMGUI_IMPL_VERIFIED)
+string(FIND "${NRI_IMGUI_IMPL_VERIFIED}" "void* QueueUserData;" NRI_IMGUI_QUEUE_USER_DATA)
+if (NRI_IMGUI_QUEUE_USER_DATA EQUAL -1)
+    message(FATAL_ERROR "NRI v180 ImGui ABI patch failed: QueueUserData is missing.")
+endif()
+
+add_subdirectory("${nri_SOURCE_DIR}" "${nri_BINARY_DIR}")
+
 add_library(
     sol2_headers
     INTERFACE
@@ -154,15 +298,13 @@ source_group(
 # Main executable
 #
 add_executable(
-    3DEngine
+    VelcrynEditor
 
     ${ENGINE_SOURCES}
     ${INTER_FONT_CPP}
+    ${VELCRYN_SHADER_HEADERS}
 
-    #
-    # GLAD
-    #
-    vendor/glad/src/gl.c
+    $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/Engine/Branding/Velcryn.rc>
 
     #
     # ImGuizmo
@@ -179,83 +321,60 @@ add_executable(
     vendor/imgui/imgui_demo.cpp
 
     #
-    # Dear ImGui SDL3/OpenGL backends
+    # Dear ImGui SDL3 platform backend; NRI owns GPU rendering.
     #
     vendor/imgui/backends/imgui_impl_sdl3.cpp
-    vendor/imgui/backends/imgui_impl_opengl3.cpp
 )
 
 #
 # Include directories
 #
 target_include_directories(
-    3DEngine
+    VelcrynEditor
     PRIVATE
 
-    vendor/glad/include
-
     vendor/imgui
+    "${CMAKE_CURRENT_BINARY_DIR}/Generated"
     vendor/imgui/backends
 
     vendor/ImGuizmo/src
 
     "${lua54_SOURCE_DIR}"
+    "${cgltf_SOURCE_DIR}"
 )
 
 #
 # Link libraries
 #
 target_link_libraries(
-    3DEngine
+    VelcrynEditor
     PRIVATE
 
     SDL3::SDL3-static
     lua54
     sol2_headers
+    NRI
 )
 
 #
 # ImGui / build configuration
 #
 target_compile_definitions(
-    3DEngine
+    VelcrynEditor
     PRIVATE
 
-    IMGUI_IMPL_OPENGL_LOADER_GLAD2
     $<$<CONFIG:Debug>:ENGINE_DEBUG=1>
     $<$<CONFIG:Release>:ENGINE_RELEASE=1>
     $<$<CONFIG:RelWithDebInfo>:ENGINE_RELEASE=1>
 )
 
-# Link the Microsoft C/C++ runtime statically as well, so the portable
-# package does not depend on the VC runtime DLLs being installed beside it.
 if (MSVC)
-    set_property(TARGET 3DEngine PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_property(TARGET lua54 PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    if (TARGET SDL3-static)
-        set_property(TARGET SDL3-static PROPERTY
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
-
-
     target_compile_options(
-        3DEngine
+        VelcrynEditor
         PRIVATE
         $<$<CONFIG:Debug>:/Od;/Zi>
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:RelWithDebInfo>:/O2;/Zi>
-    )
-
-    # Some Ninja/MSVC environments suppress the CRT default-library directives
-    # from object files. The engine intentionally uses the static MSVC runtime,
-    # so link the matching runtime libraries explicitly for a standalone EXE.
-    target_link_libraries(
-        3DEngine
-        PRIVATE
-        $<$<CONFIG:Debug>:libcmtd;libcpmtd;libvcruntimed;libucrtd>
-        $<$<NOT:$<CONFIG:Debug>>:libcmt;libcpmt;libvcruntime;libucrt>
     )
 endif()
 
@@ -264,12 +383,14 @@ endif()
 #
 if (WIN32)
     target_link_libraries(
-        3DEngine
+        VelcrynEditor
         PRIVATE
 
         ole32
         shell32
         ws2_32
+        bcrypt
+        ncrypt
     )
 endif()
 
@@ -278,7 +399,7 @@ endif()
 #
 #if (WIN32 AND MSVC)
 #    target_link_options(
-#        3DEngine
+#        VelcrynEditor
 #        PRIVATE
 #        "/SUBSYSTEM:WINDOWS"
 #        "/ENTRY:mainCRTStartup"
@@ -293,29 +414,47 @@ endif()
 # Release, while also copying Assets beside the executable for direct launches.
 #
 set_target_properties(
-    3DEngine
+    VelcrynEditor
     PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-# SDL3, Lua, GLAD, ImGui and ImGuizmo are statically linked, so no
-# project-owned runtime DLL needs to be copied beside the executable.
-
+# Keep runtime branding available when launching the executable outside the
+# repository working directory. The native .ico remains compiled into the EXE.
 add_custom_command(
-    TARGET 3DEngine
+    TARGET VelcrynEditor
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_FILE_DIR:3DEngine>/Assets"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
-            "$<TARGET_FILE_DIR:3DEngine>/Assets"
-    COMMENT "Syncing Assets for $<CONFIG> runtime"
-    VERBATIM
+            "$<TARGET_FILE_DIR:VelcrynEditor>/Engine/Branding"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Branding/VelcrynLogo.png"
+            "$<TARGET_FILE_DIR:VelcrynEditor>/Engine/Branding/VelcrynLogo.png"
 )
 
+# SDL3, Lua, NRI, ImGui and ImGuizmo are statically linked, so no
+# project-owned runtime DLL needs to be copied beside the executable.
 
 # Make the engine executable the startup target for Visual Studio generators.
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3DEngine)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VelcrynEditor)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_test(NAME Scene.MuzzleSocket COMMAND VelcrynEditor --scene-transform-smoke-test)
+    set_tests_properties(Scene.MuzzleSocket PROPERTIES TIMEOUT 20 LABELS "scene;transform;gameplay")
+    add_test(NAME Game.Network COMMAND VelcrynEditor --network-smoke-test)
+    set_tests_properties(Game.Network PROPERTIES TIMEOUT 20 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" LABELS "network;gameplay")
+    add_test(NAME RHI.Smoke COMMAND ${CMAKE_COMMAND}
+        "-DEDITOR=$<TARGET_FILE:VelcrynEditor>" "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+        "-DLOG_DIR=${CMAKE_CURRENT_BINARY_DIR}" -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunRHISmokeTest.cmake")
+    set_tests_properties(RHI.Smoke PROPERTIES TIMEOUT 45 LABELS "gpu;vulkan")
+    if(WIN32)
+        add_test(NAME Game.Export COMMAND ${CMAKE_COMMAND}
+            "-DEDITOR=$<TARGET_FILE:VelcrynEditor>"
+            "-DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/GameExportSmoke"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunGameExportTest.cmake")
+        set_tests_properties(Game.Export PROPERTIES TIMEOUT 120 LABELS "export;packaging")
+    endif()
+endif()
 
 #
 # Portable distribution
@@ -328,7 +467,7 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT 3
 # Produces a self-contained editor executable plus external project folders:
 #
 #   portable/
-#     3DEngine.exe
+#     VelcrynEditor.exe
 #     Projects/
 #       <ProjectName>/
 #
@@ -341,12 +480,12 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PORTABLE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PORTABLE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E copy
-            "$<TARGET_FILE:3DEngine>"
-            "${PORTABLE_DIR}/3DEngine.exe"
+            "$<TARGET_FILE:VelcrynEditor>"
+            "${PORTABLE_DIR}/VelcrynEditor.exe"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_CURRENT_SOURCE_DIR}/Projects"
             "${PORTABLE_DIR}/Projects"
-    DEPENDS 3DEngine
-    COMMENT "Creating portable 3DEngine.exe + Projects package"
+    DEPENDS VelcrynEditor
+    COMMENT "Creating portable Velcryn Editor + Projects package"
     VERBATIM
 )

@@ -1,5 +1,5 @@
 Version 1
-Name "Duel FPS"
+Name "BREAKBULK"
 AssetDirectory "Assets"
 StartupScene "Assets/Scenes/MainMenu.scene"
 Settings "ProjectSettings.cfg"

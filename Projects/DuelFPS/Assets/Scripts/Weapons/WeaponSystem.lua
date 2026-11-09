@@ -1,3 +1,6 @@
+local ShotPattern = require("Scripts.Weapons.ShotPattern")
+local WeaponVFX = require("Scripts.Weapons.WeaponVFX")
+local sampleClip=require('Scripts.Weapons.HandlingClips')
 local WeaponSystem = {}
 WeaponSystem.__index = WeaponSystem
 
@@ -8,12 +11,18 @@ function WeaponSystem.new(api)
         inventory = {},
         equipped = nil,
         viewmodel = 0,
+        muzzleSocket = 0,
+        viewmodelBaseOffset = {x=0,y=0,z=0},
         cooldown = 0.0,
         reloadTimer = 0.0,
         kick = 0.0,
         recoilTarget = 0.0,
         recoilApplied = 0.0,
-        aiming = false
+        aiming = false,
+        aimAlpha=0, boltTimer=0,
+        animationTime=0,
+        triggerHeld=false,
+        fx=WeaponVFX.new(api.Scene)
     }, WeaponSystem)
 end
 
@@ -41,6 +50,28 @@ function WeaponSystem:Give(weaponID, reserveOverride)
     return self:Equip(weaponID)
 end
 
+-- Equip exactly two chosen guns. Each round restores ammunition, not
+-- the original default loadout, so players keep their armory selection.
+function WeaponSystem:SetLoadout(primary,secondary,practice)
+    if not self.definitions[primary] or not self.definitions[secondary] or primary==secondary then
+        return false
+    end
+    if self.viewmodel~=0 then self.api.Scene.DestroyEntity(self.viewmodel) end
+    self.viewmodel=0
+    self.muzzleSocket=0
+    self.equipped=nil
+    self.inventory={}
+    self.cooldown=0
+    for _,id in ipairs({primary,secondary}) do
+        local def=self.definitions[id]
+        self.inventory[id]={ammo=def.magSize,reserve=practice and def.practiceReserve or def.startingReserve}
+    end
+    self.primary=primary
+    self.secondary=secondary
+    self.triggerHeld=false
+    return self:Equip(primary)
+end
+
 function WeaponSystem:Equip(weaponID)
     local def = self.definitions[weaponID]
     if not def or not self.inventory[weaponID] then return false end
@@ -55,12 +86,21 @@ function WeaponSystem:Equip(weaponID)
         self.api.Scene.DestroyEntity(self.viewmodel)
         self.viewmodel = 0
     end
+    self.muzzleSocket = 0
     self.equipped = weaponID
     self.reloadTimer = 0.0
+    self.aimAlpha=0;self.aiming=false;self.boltTimer=0
     self.kick = 0.0
     self.recoilTarget = 0.0
     self.recoilApplied = 0.0
     self.viewmodel = self.api.Scene.InstantiatePrefab(def.viewmodelPrefab, 0)
+    if self.viewmodel and self.viewmodel ~= 0 then
+        -- The prefab root is a camera-relative pose offset, not a world
+        -- position. Preserve authored offsets instead of overwriting them.
+        self.viewmodelBaseOffset = self.api.Scene.GetPosition(self.viewmodel)
+        self.muzzleSocket = self.api.Scene.FindChild(self.viewmodel, "MuzzleSocket")
+        self.supportHand=self.api.Scene.FindChild(self.viewmodel,'SupportHand');self.drawTime=.30
+    end
     return true
 end
 
@@ -77,16 +117,21 @@ function WeaponSystem:GetAmmo()
     return item and item.ammo or 0, item and item.reserve or 0
 end
 
+function WeaponSystem:IsScoped()
+    local def=self:GetDefinition()
+    return def and def.scoped and self.aimAlpha>.9 and self.aiming or false
+end
+
 function WeaponSystem:IsReloading()
     return self.reloadTimer > 0.0
 end
 
 function WeaponSystem:ResetAmmo(practice)
-    local def, item = self:GetDefinition(), self:GetItem()
-    if not def or not item then return end
-    item.ammo = def.magSize
-    item.reserve = practice and def.practiceReserve or def.startingReserve
-    self.reloadTimer = 0.0
+    for id,item in pairs(self.inventory) do
+        local def=self.definitions[id]
+        item.ammo=def.magSize;item.reserve=practice and def.practiceReserve or def.startingReserve
+    end
+    self.reloadTimer=0;self.cooldown=0;self.kick=0;self.recoilTarget=0;self.recoilApplied=0
 end
 
 function WeaponSystem:Reload()
@@ -98,12 +143,15 @@ function WeaponSystem:Reload()
 end
 
 function WeaponSystem:Update(dt, cameraEntity)
+    self.fx:Update(dt)
+    if not self.api.Input.IsMouseButtonDown(1) then self.triggerHeld=false end
+    self.animationTime=self.animationTime+dt
     self.cooldown = math.max(0.0, self.cooldown - dt)
 
     local def, item = self:GetDefinition(), self:GetItem()
     if not def or not item then return end
 
-    self.kick = math.max(0.0, self.kick - dt * (def.kickRecovery or 6.0))
+    self.kick = self.kick * math.exp(-dt*(def.kickRecovery or 6.0)*2)
 
     -- Smooth camera recoil: ease upward toward the accumulated shot impulse,
     -- then ease the exact applied offset back to zero.
@@ -128,51 +176,113 @@ function WeaponSystem:Update(dt, cameraEntity)
         end
     end
 
-    self.aiming = self.api.Input.IsMouseButtonDown(3) and self.reloadTimer <= 0.0
+    self.boltTimer=math.max(0,self.boltTimer-dt)
+    self.aiming = self.api.Input.IsMouseButtonDown(3) and self.reloadTimer <= 0.0 and self.boltTimer<=0
+    self.aimAlpha=self.aimAlpha+((self.aiming and 1 or 0)-self.aimAlpha)*(1-math.exp(-dt*14))
     if cameraEntity ~= 0 then
-        self.api.Camera.SetEntityFOV(cameraEntity, self.aiming and def.adsFov or def.hipFov)
+        local baseFov=self.api.GetBaseFOV and self.api.GetBaseFOV() or def.hipFov
+        self.api.Camera.SetEntityFOV(cameraEntity, baseFov+(baseFov*(def.adsFov/def.hipFov)-baseFov)*self.aimAlpha)
     end
 
     if self.viewmodel == 0 then return end
     local c, f, r = self.api.Camera.GetPosition(), self.api.Camera.GetForward(), self.api.Camera.GetRight()
-    local side = self.aiming and def.adsSide or def.hipSide
-    local forwardOffset = self.aiming and def.adsForward or def.hipForward
-    local down = self.aiming and def.adsDown or def.hipDown
+    local side = def.hipSide+(def.adsSide-def.hipSide)*self.aimAlpha
+    local forwardOffset = def.hipForward+(def.adsForward-def.hipForward)*self.aimAlpha
+    local down = def.hipDown+(def.adsDown-def.hipDown)*self.aimAlpha
 
-    -- Recoil moves the carried weapon visibly UP and BACK, then settles.
-    local x = c.x + r.x * side + f.x * (forwardOffset - self.kick)
-    local y = c.y + r.y * side + f.y * (forwardOffset - self.kick) + down + self.kick * 1.6
-    local z = c.z + r.z * side + f.z * (forwardOffset - self.kick)
-    self.api.Scene.SetPosition(self.viewmodel, x, y, z)
+    -- Camera-relative position keeps the gun in the same part of the screen
+    -- while looking up/down. Right x Forward gives camera Up; the previous
+    -- world-Y offset drifted as the camera pitched.
+    local upX = r.y*f.z-r.z*f.y
+    local upY = r.z*f.x-r.x*f.z
+    local upZ = r.x*f.y-r.y*f.x
+    local upLength = math.max(0.0001, math.sqrt(upX*upX+upY*upY+upZ*upZ))
+    upX,upY,upZ = upX/upLength,upY/upLength,upZ/upLength
+
+    -- Mesh axes are baked into the asset, so the root follows camera pitch and yaw.
+    local base = self.viewmodelBaseOffset
+    local rightAmount = side + base.x
+    local forwardAmount = forwardOffset - self.kick + base.z
+    local upAmount = down + base.y + self.kick * .24
+    local moving = self.api.Input.IsKeyDown("W") or self.api.Input.IsKeyDown("S")
+        or self.api.Input.IsKeyDown("A") or self.api.Input.IsKeyDown("D")
+    local carry=1-self.aimAlpha
+    self.carryWeight=(self.carryWeight or 0)+((moving and 1 or 0)-(self.carryWeight or 0))*(1-math.exp(-dt*10))
+    rightAmount=rightAmount+math.sin(self.animationTime*6.5)*.012*self.carryWeight*carry
+    upAmount=upAmount+(math.cos(self.animationTime*13)*.009*self.carryWeight+math.sin(self.animationTime*2)*.002)*carry
+    local reloadPose = self.reloadTimer>0 and math.sin(math.pi*self.reloadTimer/def.reloadTime) or 0
+    upAmount=upAmount-reloadPose*.12
+
+    self.api.Scene.SetPosition(self.viewmodel,
+        c.x+r.x*rightAmount+f.x*forwardAmount+upX*upAmount,
+        c.y+r.y*rightAmount+f.y*forwardAmount+upY*upAmount,
+        c.z+r.z*rightAmount+f.z*forwardAmount+upZ*upAmount)
 
     local yaw = math.deg(math.atan(-f.x, -f.z))
-    local horizontal = math.sqrt(f.x * f.x + f.z * f.z)
-    local pitch = math.deg(math.atan(f.y, horizontal))
-    self.api.Scene.SetRotation(self.viewmodel, -pitch, yaw, 0.0)
+    local pitch=math.deg(math.asin(math.max(-1,math.min(1,f.y))))
+    self.drawTime=math.max(0,(self.drawTime or 0)-dt)
+    local x,y,z,wrist,tilt,roll=0,0,0,0,0,0
+    if self.reloadTimer>0 then x,y,z,wrist,tilt,roll=sampleClip('reload',1-self.reloadTimer/def.reloadTime)
+    elseif self.boltTimer>0 then x,y,z,wrist,tilt,roll=sampleClip('bolt',1-self.boltTimer/def.boltTime)
+    elseif self.drawTime>0 then x,y,z,wrist,tilt,roll=sampleClip('draw',1-self.drawTime/.30) end
+    if self.supportHand and self.supportHand~=0 then self.api.Scene.SetPosition(self.supportHand,x,y,z);self.api.Scene.SetRotation(self.supportHand,wrist,0,0) end
+    -- Rotate the cant about the camera's forward axis, independent of world heading.
+    self.api.Scene.SetRotation(self.viewmodel,pitch+tilt+roll*f.x,yaw,roll*f.z)
+    local scale=self:IsScoped() and 0 or 1
+    self.api.Scene.SetScale(self.viewmodel,scale,scale,scale)
+end
+
+function WeaponSystem:SpawnRemoteShot(ownerEntity,weaponID,ox,oy,oz,dx,dy,dz)
+    local def=self.definitions[weaponID]
+    if not def then return end
+    local hit=self.api.Physics.Raycast(ox,oy,oz,dx,dy,dz,def.range,ownerEntity or 0)
+    self.fx:Emit(ox,oy,oz,dx,dy,dz,def.range,hit.hit,hit.x,hit.y,hit.z,.05,.48)
+    self.api.Audio.PlaySFX(def.fireSound,.43)
 end
 
 function WeaponSystem:Fire(ownerEntity, cameraEntity)
-    local def, item = self:GetDefinition(), self:GetItem()
-    if not def or not item or self.cooldown > 0.0 or self.reloadTimer > 0.0 or item.ammo <= 0 then
-        return nil
+    local def,item=self:GetDefinition(),self:GetItem()
+    if not def or not item or self.cooldown>0 or self.reloadTimer>0 or item.ammo<=0 then return nil end
+    if not def.automatic and self.triggerHeld then return nil end
+    self.triggerHeld=true
+    item.ammo=item.ammo-1
+    self.cooldown=def.fireInterval
+    self.boltTimer=def.boltTime or 0
+    self.kick=math.min(def.viewKick*1.35,self.kick+def.viewKick)
+    self.recoilTarget=math.min(def.cameraKick*1.5,self.recoilTarget+def.cameraKick)
+    self.api.Audio.PlaySFX(def.fireSound,def.id=="shotgun" and 1.0 or .9)
+    if def.id=="shotgun" then self.api.Audio.PlaySFX("Assets/Audio/Breakbulk/sidearm.wav",.38) end
+
+    local c,f=self.api.Camera.GetPosition(),self.api.Camera.GetForward()
+    local dirs=ShotPattern.Directions(f.x,f.y,f.z,def.pellets or 1,def.spread or 0)
+    local hits={}
+    local first=nil
+    for _,dir in ipairs(dirs) do
+        local hit=self.api.Physics.Raycast(c.x,c.y,c.z,dir.x,dir.y,dir.z,def.range,ownerEntity)
+        if hit.hit then
+            hits[#hits+1]={entityID=hit.entityID,x=hit.x,y=hit.y,z=hit.z}
+            if not first then first=hit end
+        end
     end
+    local muzzle=nil
+    if self.muzzleSocket and self.muzzleSocket~=0 then
+        muzzle=self.api.Scene.GetWorldPosition(self.muzzleSocket)
+    end
+    self.fx:Emit(c.x,c.y,c.z,f.x,f.y,f.z,def.range,
+        first~=nil,first and first.x or 0,first and first.y or 0,first and first.z or 0,
+        self.aiming and def.adsSide or def.hipSide,
+        (self.aiming and def.adsForward or def.hipForward)+(def.muzzleLocalDistance or .6),
+        (self.aiming and def.adsDown or def.hipDown)+(def.muzzleLocalY or 0),
+        muzzle and muzzle.x,muzzle and muzzle.y,muzzle and muzzle.z)
 
-    item.ammo = item.ammo - 1
-    self.cooldown = def.fireInterval
-    self.kick = math.min(def.viewKick * 1.35, self.kick + def.viewKick)
-    self.recoilTarget = math.min(def.cameraKick * 1.5, self.recoilTarget + def.cameraKick)
-    self.api.Audio.PlaySFX(def.fireSound, 0.9)
-
-    local c, f = self.api.Camera.GetPosition(), self.api.Camera.GetForward()
-    local hit = self.api.Physics.Raycast(c.x, c.y, c.z, f.x, f.y, f.z, def.range, ownerEntity)
     return {
-        hit = hit.hit,
-        entityID = hit.entityID,
-        x = hit.x, y = hit.y, z = hit.z,
-        originX = c.x, originY = c.y, originZ = c.z,
-        forwardX = f.x, forwardY = f.y, forwardZ = f.z,
-        damage = def.damage,
-        range = def.range
+        hit=first~=nil,
+        entityID=first and first.entityID or 0,
+        x=first and first.x or 0,y=first and first.y or 0,z=first and first.z or 0,
+        hits=hits,
+        originX=c.x,originY=c.y,originZ=c.z,
+        forwardX=f.x,forwardY=f.y,forwardZ=f.z,
+        damage=def.damage,range=def.range
     }
 end
 

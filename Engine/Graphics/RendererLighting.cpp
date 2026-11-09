@@ -5,7 +5,7 @@
 #include "Texture2D.h"
 #include "../Scene/Components/TextureComponent.h"
 #include "../Core/Logger.h"
-#include <glad/gl.h>
+#include "RHI/RHI.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -29,6 +29,7 @@ void Renderer::DrawDirectionalLight(
 	const Vec3& position,
 	const Vec3& direction)
 {
+if(auto* d=Velcryn::RHI::GetDevice()){d->EndRendering();BeginSceneRendering(false,false);}
 	m_DebugRenderer.DrawDirectionalLight(
 		m_Camera.GetViewMatrix(),
 		m_Camera.GetProjectionMatrix(),
@@ -49,6 +50,7 @@ void Renderer::DrawCollider(
 		depth * 0.5f
 	);
 
+if(auto* d=Velcryn::RHI::GetDevice()){d->EndRendering();BeginSceneRendering(false,false);}
 	m_DebugRenderer.DrawBox(
 		GetCameraViewMatrix(),
 		GetCameraProjectionMatrix(),
@@ -88,18 +90,17 @@ void Renderer::SetRenderSettings(const RenderSettings& settings)
     if (desiredSizes != m_ShadowMapSizes) { m_ShadowMapSizes = desiredSizes; if (!CreateShadowTarget()) Logger::Error("Failed to resize cascaded shadow maps."); }
     m_Camera.SetFarPlane(m_RenderSettings.viewDistance);
 
-    const unsigned int samples = m_RenderSettings.antiAliasing
-        ? static_cast<unsigned int>(m_RenderSettings.antiAliasingSamples) : 1u;
-    if (m_Framebuffer.GetSamples() != samples &&
-        !m_Framebuffer.SetSamples(samples))
-    {
-        Logger::Error("Failed to apply anti-aliasing sample count.");
-        m_RenderSettings.antiAliasing = m_Framebuffer.GetSamples() > 1;
-        m_RenderSettings.antiAliasingSamples = static_cast<int>(m_Framebuffer.GetSamples());
+    const unsigned int requested=m_RenderSettings.antiAliasing?static_cast<unsigned int>(m_RenderSettings.antiAliasingSamples):1u;
+    const unsigned int samples=requested>=8?8:requested>=4?4:requested>=2?2:1;
+    if(m_Framebuffer.GetSamples()!=samples) {
+        if(!m_Framebuffer.SetSamples(samples)) {Logger::Error("Failed to apply MSAA targets.");return;}
+        DestroyFullscreenPipelines();m_Grid.Shutdown();m_DebugRenderer.Shutdown();
+        if(!CreateMeshPipelines()||!CreateFullscreenPipelines()||!m_Grid.Initialize(samples)||!m_DebugRenderer.Initialize(samples))
+            Logger::Error("Failed to apply MSAA pipelines.");
+        m_HistoryValid=false;
     }
 
-    if (samples > 1) glEnable(GL_MULTISAMPLE);
-    else glDisable(GL_MULTISAMPLE);
+
 }
 
 const RenderSettings& Renderer::GetRenderSettings() const
@@ -136,84 +137,68 @@ void Renderer::UpdateLightSpaceMatrices()
 bool Renderer::CreateShadowTarget()
 {
     DestroyShadowTarget();
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device)
+        return false;
+
     for (int i = 0; i < ShadowCascadeCount; ++i)
     {
-        glGenFramebuffers(1, &m_ShadowFramebuffers[i]);
-        glGenTextures(1, &m_ShadowDepthTextures[i]);
-        glBindTexture(GL_TEXTURE_2D, m_ShadowDepthTextures[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_ShadowMapSizes[i], m_ShadowMapSizes[i], 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        const float border[] = { 1,1,1,1 }; glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffers[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowDepthTextures[i], 0);
-        glDrawBuffer(GL_NONE); glReadBuffer(GL_NONE);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) { glBindFramebuffer(GL_FRAMEBUFFER, 0); DestroyShadowTarget(); return false; }
+        Velcryn::RHI::TextureDesc desc{};
+        desc.width = m_ShadowMapSizes[i];
+        desc.height = m_ShadowMapSizes[i];
+        desc.format = Velcryn::RHI::TextureFormat::D32_Float;
+        desc.usage = Velcryn::RHI::TextureUsage::DepthStencil |
+                     Velcryn::RHI::TextureUsage::Sampled;
+        desc.debugName = "CascadedShadowDepth";
+        m_ShadowDepthTextures[i] = device->CreateTexture(desc);
+        if (!m_ShadowDepthTextures[i])
+        {
+            DestroyShadowTarget();
+            return false;
+        }
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0); return true;
+    return true;
 }
 
 void Renderer::DestroyShadowTarget()
 {
-    for (int i = 0; i < ShadowCascadeCount; ++i) {
-        if (m_ShadowDepthTextures[i]) glDeleteTextures(1, &m_ShadowDepthTextures[i]);
-        if (m_ShadowFramebuffers[i]) glDeleteFramebuffers(1, &m_ShadowFramebuffers[i]);
-        m_ShadowDepthTextures[i] = 0; m_ShadowFramebuffers[i] = 0;
-    }
+    if (auto* device = Velcryn::RHI::GetDevice())
+        for (auto& texture : m_ShadowDepthTextures)
+        {
+            if (texture) device->DestroyTexture(texture);
+            texture = {};
+        }
     m_ShadowMapReady = false;
 }
 
-void Renderer::BeginShadowPass(int cascadeIndex)
+bool Renderer::BeginShadowPass(int cascadeIndex)
 {
-    if (cascadeIndex == 0) { m_ShadowMapReady = false; UpdateLightSpaceMatrices(); }
-    if (!m_RenderSettings.shadows || cascadeIndex < 0 || cascadeIndex >= ShadowCascadeCount || !m_ShadowFramebuffers[cascadeIndex]) return;
-    m_ActiveShadowCascade = cascadeIndex;
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowFramebuffers[cascadeIndex]);
-    glViewport(0, 0, static_cast<int>(m_ShadowMapSizes[cascadeIndex]), static_cast<int>(m_ShadowMapSizes[cascadeIndex]));
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-    m_ShadowShader.Bind();
-    m_ShadowShader.SetMat4("u_LightSpaceMatrix", m_LightSpaceMatrices[cascadeIndex]);
+    if(cascadeIndex==0){m_ShadowMapReady=false;UpdateLightSpaceMatrices();}
+    if(!m_RenderSettings.shadows||cascadeIndex<0||cascadeIndex>=ShadowCascadeCount||!m_ShadowDepthTextures[cascadeIndex])return false;
+    auto* device=Velcryn::RHI::GetDevice();if(!device)return false;
+    device->EndRendering();m_ActiveShadowCascade=cascadeIndex;
+    m_InShadowPass=device->BeginRendering({},m_ShadowDepthTextures[cascadeIndex],m_ClearColor);
+    return m_InShadowPass;
 }
-
-void Renderer::DrawShadowMesh(const Transform& transform, PrimitiveType primitive)
+void Renderer::DrawShadowMesh(const Transform& transform,PrimitiveType primitive)
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade])
-        return;
-
-    Mesh* mesh = GetPrimitiveMesh(primitive);
-    if (!mesh) return;
-
-    mesh->Bind();
-    m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
-    mesh->Unbind();
+    if(m_InShadowPass)DrawMesh(transform,primitive,1,1,1,1);
 }
-
-void Renderer::DrawShadowModel(const Transform& transform, const std::string& modelPath)
+void Renderer::DrawShadowModel(const Transform& transform,const std::string& path)
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade]) return;
-    Mesh* mesh = GetModelMesh(modelPath);
-    if (!mesh) return;
-    mesh->Bind();
-    m_ShadowShader.SetMat4("u_Model", transform.GetMatrix());
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->GetIndexCount()), GL_UNSIGNED_INT, nullptr);
-    mesh->Unbind();
+    if(m_InShadowPass)DrawModel(transform,path,1,1,1,1);
 }
-
+void Renderer::DrawAnimatedShadowModel(const Transform& transform,const std::string& path,std::size_t clip,float time,bool loop)
+{
+    if(m_InShadowPass)DrawAnimatedModel(transform,path,clip,time,loop,1,1,1,1);
+}
 void Renderer::EndShadowPass()
 {
-    if (!m_RenderSettings.shadows || !m_ShadowFramebuffers[m_ActiveShadowCascade]) return;
-    m_ShadowShader.Unbind();
-    glCullFace(GL_BACK);
-    glDisable(GL_CULL_FACE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (m_ActiveShadowCascade == ShadowCascadeCount - 1) m_ShadowMapReady = true;
+    if(!m_InShadowPass)return;
+    auto* device=Velcryn::RHI::GetDevice();device->EndRendering();m_InShadowPass=false;
+    if(m_ActiveShadowCascade==ShadowCascadeCount-1)m_ShadowMapReady=true;
+    BeginSceneRendering();
 }
 
 void Renderer::AddDebugLine(const Vec3& start,const Vec3& end,const Vec3& color,float duration){m_DebugLines.push_back({start,end,color,duration});}
-void Renderer::DrawDebugLines(float deltaTime){for(const DebugLine& line:m_DebugLines)m_DebugRenderer.DrawLine(GetCameraViewMatrix(),GetCameraProjectionMatrix(),line.start,line.end,line.color);for(auto it=m_DebugLines.begin();it!=m_DebugLines.end();){if(it->remaining<=0.0f||(it->remaining-=deltaTime)<=0.0f)it=m_DebugLines.erase(it);else ++it;}}
+void Renderer::DrawDebugLines(float deltaTime){if(auto* d=Velcryn::RHI::GetDevice()){d->EndRendering();BeginSceneRendering(false,false);}for(const DebugLine& line:m_DebugLines)m_DebugRenderer.DrawLine(GetCameraViewMatrix(),GetCameraProjectionMatrix(),line.start,line.end,line.color);for(auto it=m_DebugLines.begin();it!=m_DebugLines.end();){if(it->remaining<=0.0f||(it->remaining-=deltaTime)<=0.0f)it=m_DebugLines.erase(it);else ++it;}}

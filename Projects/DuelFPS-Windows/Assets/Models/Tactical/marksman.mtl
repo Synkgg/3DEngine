@@ -1,0 +1,30 @@
+# VelcrynLinear
+newmtl Black
+Kd 0.018 0.022 0.027
+Pm 0.03
+Pr 0.78
+d 1
+map_Kd Parkerized.png
+newmtl DarkMetal
+Kd 0.27 0.16 0.085
+Pm 0.35
+Pr 0.48
+d 1
+map_Kd Parkerized.png
+newmtl Glass
+Kd 0.015 0.08 0.1
+Pm 0.35
+Pr 0.15
+d 1
+newmtl Green
+Kd 0.27 0.16 0.085
+Pm 0.15
+Pr 0.64
+d 1
+map_Kd Parkerized.png
+newmtl Grey
+Kd 0.27 0.16 0.085
+Pm 0.15
+Pr 0.64
+d 1
+map_Kd Parkerized.png

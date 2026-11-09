@@ -1,195 +1,103 @@
 #include "Renderer.h"
-#include "../Platform/SDL/Window.h"
-#include "PrimitiveMesh.h"
-#include "ModelLoader.h"
-#include "Texture2D.h"
-#include "../Scene/Components/TextureComponent.h"
-#include "../Core/Logger.h"
-#include <glad/gl.h>
+#include "RHI/RHI.h"
+#include <Post.vert.h>
+#include <Post.frag.h>
+#include <TAA.frag.h>
+#include <BloomExtract.frag.h>
+#include <BloomBlur.frag.h>
+#include <Sky.frag.h>
+#include <Copy.frag.h>
 #include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <cstring>
+using namespace Velcryn::RHI;
 
-bool Renderer::CreatePostProcessTarget()
+bool Renderer::CreateFullscreenPipelines()
 {
-    if (m_ViewportWidth == 0 || m_ViewportHeight == 0) return false;
-    glGenFramebuffers(1, &m_PostFramebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
-    glGenTextures(1, &m_PostColorTexture);
-    glBindTexture(GL_TEXTURE_2D, m_PostColorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_PostColorTexture, 0);
-    const bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (!complete) { DestroyPostProcessTarget(); return false; }
-
-    glGenFramebuffers(2, m_BloomFramebuffer);
-    glGenTextures(2, m_BloomTexture);
-    for (int i = 0; i < 2; ++i)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_BloomFramebuffer[i]);
-        glBindTexture(GL_TEXTURE_2D, m_BloomTexture[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_ViewportWidth, m_ViewportHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_BloomTexture[i], 0);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            DestroyPostProcessTarget();
-            return false;
-        }
+    auto* device=GetDevice();
+    const float vertices[]={-1,-1, 3,-1, -1,3};const uint32_t indices[]={0,1,2};
+    BufferDesc buffer{};buffer.size=sizeof(vertices);buffer.usage=BufferUsage::Vertex;
+    m_FullscreenVertices=device->CreateBuffer(buffer,vertices);buffer.size=sizeof(indices);buffer.usage=BufferUsage::Index;
+    m_FullscreenIndices=device->CreateBuffer(buffer,indices);
+    const VertexAttribute attribute{0,0,VertexFormat::Float2};
+    GraphicsPipelineDesc desc{};desc.vertexShader=Post_vert;desc.attributes=std::span(&attribute,1);desc.vertexStride=sizeof(float)*2;
+    desc.depthFormat=TextureFormat::Unknown;desc.depthTest=false;desc.depthWrite=false;desc.cullBackFaces=false;
+    desc.sampledTexture=true;desc.textureCount=4;desc.uniformSize=sizeof(PostDrawData);desc.clampSampler=true;
+    auto make=[&](std::span<const uint32_t> shader,const char* name){desc.fragmentShader=shader;desc.debugName=name;return device->CreateGraphicsPipeline(desc);};
+    m_PostPipeline=make(Post_frag,"HDRPostProcess");m_TAAPipeline=make(TAA_frag,"TemporalResolve");
+    m_BloomExtractPipeline=make(BloomExtract_frag,"BloomExtract");m_BloomBlurPipeline=make(BloomBlur_frag,"BloomBlur");m_CopyPipeline=make(Copy_frag,"CopyResolvedColor");
+    desc.sampleCount=m_Framebuffer.GetSamples();
+    desc.depthFormat=TextureFormat::D32_Float;desc.depthTest=true;desc.depthLessEqual=true;desc.secondColor=true;
+    m_SkyPipeline=make(Sky_frag,"ProceduralSky");
+    return m_FullscreenVertices&&m_FullscreenIndices&&m_PostPipeline&&m_TAAPipeline&&m_BloomExtractPipeline&&m_BloomBlurPipeline&&m_CopyPipeline&&m_SkyPipeline;
+}
+void Renderer::DestroyFullscreenPipelines()
+{
+    if(auto* device=GetDevice()) {
+        for(auto pipeline:{m_PostPipeline,m_TAAPipeline,m_BloomExtractPipeline,m_BloomBlurPipeline,m_CopyPipeline,m_SkyPipeline})device->DestroyPipeline(pipeline);
+        device->DestroyBuffer(m_FullscreenVertices);device->DestroyBuffer(m_FullscreenIndices);
     }
-    glGenFramebuffers(2, m_HistoryFramebuffer);
-    glGenTextures(2, m_HistoryTexture);
-    for(int i=0;i<2;++i){glBindFramebuffer(GL_FRAMEBUFFER,m_HistoryFramebuffer[i]);glBindTexture(GL_TEXTURE_2D,m_HistoryTexture[i]);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA16F,m_ViewportWidth,m_ViewportHeight,0,GL_RGBA,GL_FLOAT,nullptr);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,m_HistoryTexture[i],0);if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE){glBindFramebuffer(GL_FRAMEBUFFER,0);DestroyPostProcessTarget();return false;}}
-    m_HistoryReadIndex=0;
-    m_HistoryValid = false;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    return true;
+    m_PostPipeline={};m_TAAPipeline={};m_BloomExtractPipeline={};m_BloomBlurPipeline={};m_CopyPipeline={};m_SkyPipeline={};
+    m_FullscreenVertices={};m_FullscreenIndices={};
 }
-
-void Renderer::DestroyPostProcessTarget()
+PostDrawData Renderer::GetPostDrawData() const
 {
-    if (m_BloomTexture[0] || m_BloomTexture[1]) glDeleteTextures(2, m_BloomTexture);
-    if (m_BloomFramebuffer[0] || m_BloomFramebuffer[1]) glDeleteFramebuffers(2, m_BloomFramebuffer);
-    m_BloomTexture[0] = m_BloomTexture[1] = 0;
-    m_BloomFramebuffer[0] = m_BloomFramebuffer[1] = 0;
-    if (m_HistoryTexture[0] || m_HistoryTexture[1]) glDeleteTextures(2, m_HistoryTexture);
-    if (m_HistoryFramebuffer[0] || m_HistoryFramebuffer[1]) glDeleteFramebuffers(2, m_HistoryFramebuffer);
-    m_HistoryTexture[0]=m_HistoryTexture[1]=0; m_HistoryFramebuffer[0]=m_HistoryFramebuffer[1]=0; m_HistoryReadIndex=0;
-    m_HistoryValid = false;
-    if (m_PostColorTexture) glDeleteTextures(1, &m_PostColorTexture);
-    if (m_PostFramebuffer) glDeleteFramebuffers(1, &m_PostFramebuffer);
-    m_PostColorTexture = 0;
-    m_PostFramebuffer = 0;
+    PostDrawData data{};
+    auto vector=[](float* target,Vec3 value){target[0]=value.x;target[1]=value.y;target[2]=value.z;};
+    vector(data.cameraForward,m_Camera.GetForward());vector(data.cameraRight,m_Camera.GetRight());
+    vector(data.cameraUp,Vec3::Cross(m_Camera.GetRight(),m_Camera.GetForward()).Normalized());vector(data.cameraPosition,m_Camera.GetPosition());
+    vector(data.sunDirection,m_LightDirection);vector(data.sunColor,m_LightColor);data.sunColor[3]=m_LightIntensity;
+    data.params0[0]=m_RenderSettings.exposure;data.params0[1]=m_RenderSettings.bloom?m_RenderSettings.bloomStrength:0;
+    data.params0[2]=m_RenderSettings.atmosphereStrength;data.params0[3]=m_RenderSettings.skyIntensity;
+    data.params1[0]=m_RenderSettings.colorSaturation;data.params1[1]=m_RenderSettings.contrast;
+    data.params1[2]=m_RenderSettings.screenSpaceReflections?m_RenderSettings.screenSpaceReflectionStrength:0;data.params1[3]=m_RenderSettings.giStrength;
+    data.params2[0]=1/m_Camera.GetProjectionMatrix().elements[5];data.params2[1]=float(m_ViewportWidth)/std::max(m_ViewportHeight,1u);
+    data.params2[2]=m_Camera.GetNearPlane();data.params2[3]=m_Camera.GetFarPlane();
+    data.params3[0]=float(m_DebugView);data.params3[1]=m_HistoryValid?1.f:0.f;
+    std::memcpy(data.previousForward,m_PreviousPostData.cameraForward,16);std::memcpy(data.previousRight,m_PreviousPostData.cameraRight,16);
+    std::memcpy(data.previousUp,m_PreviousPostData.cameraUp,16);std::memcpy(data.previousPosition,m_PreviousPostData.cameraPosition,16);
+    std::memcpy(data.previousParams,m_PreviousPostData.params2,16);
+    return data;
 }
-
-unsigned int Renderer::RenderBloom()
+void Renderer::DrawFullscreen(PipelineHandle pipeline,const PostDrawData& data,TextureHandle first,std::span<const TextureHandle> others)
 {
-    if (!m_RenderSettings.bloom || m_RenderSettings.bloomStrength <= 0.0f ||
-        !m_BloomFramebuffer[0] || !m_BloomFramebuffer[1])
-        return 0;
+    if(auto* device=GetDevice())device->DrawIndexed(pipeline,m_FullscreenVertices,m_FullscreenIndices,3,nullptr,0,1,first,std::as_bytes(std::span{&data,1}),others);
+}
+bool Renderer::CreatePostProcessTarget(){DestroyPostProcessTarget();auto*d=Velcryn::RHI::GetDevice();if(!d||!m_ViewportWidth||!m_ViewportHeight)return false;auto mk=[&](const char*n){Velcryn::RHI::TextureDesc x{};x.width=m_ViewportWidth;x.height=m_ViewportHeight;x.format=Velcryn::RHI::TextureFormat::RGBA16_Float;x.usage=Velcryn::RHI::TextureUsage::RenderTarget|Velcryn::RHI::TextureUsage::Sampled|Velcryn::RHI::TextureUsage::TransferSource|Velcryn::RHI::TextureUsage::TransferDestination;x.debugName=n;return d->CreateTexture(x);};m_PostColorTexture=mk("PostColor");m_BloomTexture[0]=mk("BloomPing");m_BloomTexture[1]=mk("BloomPong");m_HistoryTexture[0]=mk("TAA0");m_HistoryTexture[1]=mk("TAA1");m_HistoryReadIndex=0;m_HistoryValid=false;return m_PostColorTexture&&m_BloomTexture[0]&&m_BloomTexture[1]&&m_HistoryTexture[0]&&m_HistoryTexture[1];}
+void Renderer::DestroyPostProcessTarget(){if(auto*d=Velcryn::RHI::GetDevice()){if(m_PostColorTexture)d->DestroyTexture(m_PostColorTexture);for(auto&t:m_BloomTexture)if(t)d->DestroyTexture(t);for(auto&t:m_HistoryTexture)if(t)d->DestroyTexture(t);}m_PostColorTexture={};for(auto&t:m_BloomTexture)t={};for(auto&t:m_HistoryTexture)t={};m_HistoryReadIndex=0;m_HistoryValid=false;}
 
-    glDisable(GL_DEPTH_TEST);
-    glBindVertexArray(m_PostVAO);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, m_BloomFramebuffer[0]);
-    glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
-    m_BloomExtractShader.Bind();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetColorTexture());
-    m_BloomExtractShader.SetInt("u_Scene", 0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    m_BloomExtractShader.Unbind();
-
-    bool horizontal = true;
-    unsigned int sourceTexture = m_BloomTexture[0];
-    for (int pass = 0; pass < 8; ++pass)
-    {
-        const int target = horizontal ? 1 : 0;
-        glBindFramebuffer(GL_FRAMEBUFFER, m_BloomFramebuffer[target]);
-        m_BloomBlurShader.Bind();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, sourceTexture);
-        m_BloomBlurShader.SetInt("u_Image", 0);
-        m_BloomBlurShader.SetInt("u_Horizontal", horizontal ? 1 : 0);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        m_BloomBlurShader.Unbind();
-        sourceTexture = m_BloomTexture[target];
-        horizontal = !horizontal;
+TextureHandle Renderer::RenderBloom()
+{
+    if(!m_RenderSettings.bloom)return m_WhiteTexture;
+    auto* device=GetDevice();PostDrawData data=GetPostDrawData();
+    const TextureHandle fallback[]={m_WhiteTexture,m_WhiteTexture,m_WhiteTexture};
+    device->BeginRendering(m_BloomTexture[0],{},m_ClearColor);
+    DrawFullscreen(m_BloomExtractPipeline,data,m_Framebuffer.GetColorTexture(),fallback);device->EndRendering();
+    TextureHandle source=m_BloomTexture[0];
+    for(int pass=0;pass<6;++pass) {
+        const int target=(pass+1)%2;data.params3[2]=(pass%2)==0?1.f:0.f;
+        device->BeginRendering(m_BloomTexture[target],{},m_ClearColor);
+        DrawFullscreen(m_BloomBlurPipeline,data,source,fallback);device->EndRendering();source=m_BloomTexture[target];
     }
-
-    glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    return sourceTexture;
+    return source;
 }
-
 void Renderer::RenderPostProcess()
 {
-    if (!m_PostFramebuffer || !m_PostColorTexture || !m_PostVAO) return;
-    glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
-    glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
-    glDisable(GL_DEPTH_TEST);
-    const unsigned int bloomTexture = RenderBloom();
-    glBindFramebuffer(GL_FRAMEBUFFER, m_PostFramebuffer);
-    glViewport(0, 0, static_cast<int>(m_ViewportWidth), static_cast<int>(m_ViewportHeight));
-    m_PostShader.Bind();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetColorTexture());
-    m_PostShader.SetInt("u_Scene", 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, bloomTexture);
-    m_PostShader.SetInt("u_Bloom", 1);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetDepthTexture());
-    m_PostShader.SetInt("u_Depth", 2);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, m_Framebuffer.GetNormalTexture());
-    m_PostShader.SetInt("u_NormalRoughness", 3);
-    m_PostShader.SetFloat("u_BloomStrength", bloomTexture ? m_RenderSettings.bloomStrength : 0.0f);
-    m_PostShader.SetFloat("u_Exposure", m_RenderSettings.exposure);
-    const Vec3 postForward = m_Camera.GetForward();
-    const Vec3 postRight = m_Camera.GetRight();
-    const Vec3 postUp = Vec3::Cross(postRight, postForward).Normalized();
-    const float postTanHalfFov = std::tan(m_Camera.GetFovDegrees() * 0.5f * 0.017453292519943295f);
-    const float postAspect = m_ViewportHeight > 0 ? static_cast<float>(m_ViewportWidth) / static_cast<float>(m_ViewportHeight) : 1.0f;
-    m_PostShader.SetVec3("u_CameraForward", postForward.x, postForward.y, postForward.z);
-    m_PostShader.SetVec3("u_CameraRight", postRight.x, postRight.y, postRight.z);
-    m_PostShader.SetVec3("u_CameraUp", postUp.x, postUp.y, postUp.z);
-    m_PostShader.SetVec3("u_SunDirection", m_LightDirection.x, m_LightDirection.y, m_LightDirection.z);
-    m_PostShader.SetVec3("u_SunColor", m_LightColor.x, m_LightColor.y, m_LightColor.z);
-    m_PostShader.SetFloat("u_SunIntensity", m_LightIntensity);
-    m_PostShader.SetFloat("u_TanHalfFov", postTanHalfFov);
-    m_PostShader.SetFloat("u_Aspect", postAspect);
-    m_PostShader.SetFloat("u_AtmosphereStrength", m_RenderSettings.atmosphereStrength);
-    m_PostShader.SetFloat("u_ColorSaturation", m_RenderSettings.colorSaturation);
-    m_PostShader.SetFloat("u_Contrast", m_RenderSettings.contrast);
-    m_PostShader.SetFloat("u_SSRStrength", m_RenderSettings.screenSpaceReflections ? m_RenderSettings.screenSpaceReflectionStrength : 0.0f);
-    m_PostShader.SetFloat("u_GIStrength", m_RenderSettings.giStrength);
-    m_PostShader.SetInt("u_DebugView", static_cast<int>(m_DebugView));
-    glBindVertexArray(m_PostVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    m_PostShader.Unbind();
-
-    glActiveTexture(GL_TEXTURE0);
-    if (m_DebugView == RenderDebugView::Lit)
-        ResolveTAA();
-    else
-        m_HistoryValid = false;
-    glEnable(GL_DEPTH_TEST); 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    auto* device=GetDevice();if(!device||!m_PostPipeline)return;
+    const TextureHandle bloom=RenderBloom();const auto data=GetPostDrawData();
+    const TextureHandle textures[]={bloom,m_Framebuffer.GetDepthTexture(),m_Framebuffer.GetNormalTexture()};
+    device->BeginRendering(m_PostColorTexture,{},m_ClearColor);
+    DrawFullscreen(m_PostPipeline,data,m_Framebuffer.GetColorTexture(),textures);device->EndRendering();
+    if(m_RenderSettings.antiAliasing&&m_DebugView==RenderDebugView::Lit)ResolveTAA();else m_HistoryValid=false;
 }
-
 void Renderer::ResolveTAA()
 {
-    if (!m_HistoryFramebuffer[0] || !m_HistoryFramebuffer[1] || !m_HistoryTexture[0] || !m_HistoryTexture[1] || !m_PostColorTexture || !m_PostVAO) return;
-    const Vec3 forward=m_Camera.GetForward(), right=m_Camera.GetRight(), up=Vec3::Cross(right,forward).Normalized(), position=m_Camera.GetPosition();
-    const float tanHalf=std::tan(m_Camera.GetFovDegrees()*0.5f*0.017453292519943295f);
-    const float aspect=m_ViewportHeight?static_cast<float>(m_ViewportWidth)/static_cast<float>(m_ViewportHeight):1.0f;
-    // Resolve into history using camera reprojection and neighborhood clipping.
-    const int writeIndex=1-m_HistoryReadIndex;
-    glBindFramebuffer(GL_FRAMEBUFFER,m_HistoryFramebuffer[writeIndex]); glViewport(0,0,(int)m_ViewportWidth,(int)m_ViewportHeight); glDisable(GL_DEPTH_TEST);
-    m_TAAShader.Bind();
-    glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,m_PostColorTexture);m_TAAShader.SetInt("u_Current",0);
-    glActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D,m_HistoryTexture[m_HistoryReadIndex]);m_TAAShader.SetInt("u_History",1);
-    glActiveTexture(GL_TEXTURE2);glBindTexture(GL_TEXTURE_2D,m_Framebuffer.GetDepthTexture());m_TAAShader.SetInt("u_Depth",2);
-    glActiveTexture(GL_TEXTURE3);glBindTexture(GL_TEXTURE_2D,m_Framebuffer.GetNormalTexture());m_TAAShader.SetInt("u_NormalRoughness",3);
-    m_TAAShader.SetVec3("u_CameraForward",forward.x,forward.y,forward.z);m_TAAShader.SetVec3("u_CameraRight",right.x,right.y,right.z);m_TAAShader.SetVec3("u_CameraUp",up.x,up.y,up.z);m_TAAShader.SetVec3("u_CameraPosition",position.x,position.y,position.z);
-    m_TAAShader.SetVec3("u_PreviousForward",m_PreviousCameraForward.x,m_PreviousCameraForward.y,m_PreviousCameraForward.z);m_TAAShader.SetVec3("u_PreviousRight",m_PreviousCameraRight.x,m_PreviousCameraRight.y,m_PreviousCameraRight.z);m_TAAShader.SetVec3("u_PreviousUp",m_PreviousCameraUp.x,m_PreviousCameraUp.y,m_PreviousCameraUp.z);m_TAAShader.SetVec3("u_PreviousPosition",m_PreviousCameraPosition.x,m_PreviousCameraPosition.y,m_PreviousCameraPosition.z);
-    m_TAAShader.SetFloat("u_TanHalfFov",tanHalf);m_TAAShader.SetFloat("u_Aspect",aspect);m_TAAShader.SetFloat("u_PreviousTanHalfFov",m_PreviousTanHalfFov);m_TAAShader.SetFloat("u_PreviousAspect",m_PreviousAspect);m_TAAShader.SetInt("u_HistoryValid",m_HistoryValid?1:0);
-    glBindVertexArray(m_PostVAO);glDrawArrays(GL_TRIANGLES,0,3);glBindVertexArray(0);m_TAAShader.Unbind();
-    // Copy resolved history back to the viewport target without sampling and rendering the same texture.
-    glBindFramebuffer(GL_READ_FRAMEBUFFER,m_HistoryFramebuffer[writeIndex]);glBindFramebuffer(GL_DRAW_FRAMEBUFFER,m_PostFramebuffer);glBlitFramebuffer(0,0,m_ViewportWidth,m_ViewportHeight,0,0,m_ViewportWidth,m_ViewportHeight,GL_COLOR_BUFFER_BIT,GL_NEAREST);
-    m_HistoryReadIndex=writeIndex;
-    m_PreviousCameraPosition=position;m_PreviousCameraForward=forward;m_PreviousCameraRight=right;m_PreviousCameraUp=up;m_PreviousTanHalfFov=tanHalf;m_PreviousAspect=aspect;m_HistoryValid=true;
-    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    auto* device=GetDevice();const int writeIndex=1-m_HistoryReadIndex;auto data=GetPostDrawData();
+    const TextureHandle textures[]={m_HistoryValid?m_HistoryTexture[m_HistoryReadIndex]:m_PostColorTexture,m_Framebuffer.GetDepthTexture(),m_Framebuffer.GetNormalTexture()};
+    device->BeginRendering(m_HistoryTexture[writeIndex],{},m_ClearColor);
+    DrawFullscreen(m_TAAPipeline,data,m_PostColorTexture,textures);device->EndRendering();
+    const TextureHandle fallback[]={m_WhiteTexture,m_WhiteTexture,m_WhiteTexture};
+    device->BeginRendering(m_PostColorTexture,{},m_ClearColor);
+    DrawFullscreen(m_CopyPipeline,data,m_HistoryTexture[writeIndex],fallback);device->EndRendering();
+    m_HistoryReadIndex=writeIndex;m_PreviousPostData=data;m_HistoryValid=true;
 }

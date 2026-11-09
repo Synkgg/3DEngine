@@ -52,6 +52,7 @@ public:
     bool RequestSceneLoad(const std::string& path);
     const std::string& GetCurrentScenePath() const;
     bool WantsCursor() const;
+    void SetInteractionBinding(const std::string& binding) { m_InteractionBinding = binding; }
     void SetWantsCursor(bool wantsCursor);
     bool IsPaused() const;
     void SetPaused(bool paused);
@@ -81,6 +82,7 @@ public:
 
 private:
     bool m_Running = false;
+    std::string m_InteractionBinding = "E";
 
     CharacterControllerSystem m_CharacterControllerSystem;
     CollisionSystem m_CollisionSystem;

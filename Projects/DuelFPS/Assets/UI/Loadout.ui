@@ -1,0 +1,169 @@
+ENGINE_UI 10
+1920 1080
+0 0 "Canvas" 0 0 1920 1080 0 0 0 0 0 0 0.12 0.17 0.22 1 1 1 0 0 0 0 0 0 0 0 0 1
+0 0 "Overview" 0 0 1920 1080 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1
+1 1 "Title" 110 80 1600 100 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Your loadouts" 55 0 1
+1 1 "PresetHeading" 114 236 400 50 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "Presets" 26 0 1
+1 3 "Profile1Button" 110 316 360 72 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnProfile1Clicked" "" "" "" ""
+2 1 "Profile1Label" 20 0 320 72 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Loadout 1" 23 0 1
+1 0 "Profile1Plate" 110 316 6 72 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 3 "Profile2Button" 110 411 360 72 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnProfile2Clicked" "" "" "" ""
+2 1 "Profile2Label" 20 0 320 72 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Loadout 2" 23 0 1
+1 0 "Profile2Plate" 110 411 6 72 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 3 "Profile3Button" 110 506 360 72 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnProfile3Clicked" "" "" "" ""
+2 1 "Profile3Label" 20 0 320 72 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Loadout 3" 23 0 1
+1 0 "Profile3Plate" 110 506 6 72 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 3 "Profile4Button" 110 601 360 72 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnProfile4Clicked" "" "" "" ""
+2 1 "Profile4Label" 20 0 320 72 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Loadout 4" 23 0 1
+1 0 "Profile4Plate" 110 601 6 72 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 3 "Profile5Button" 110 696 360 72 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnProfile5Clicked" "" "" "" ""
+2 1 "Profile5Label" 20 0 320 72 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Loadout 5" 23 0 1
+1 0 "Profile5Plate" 110 696 6 72 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 1 "SlotsTitle" 550 219 1180 78 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Loadout 1" 39 0 1
+1 0 "PrimaryCard" 550 316 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+2 1 "PrimaryHeading" 30 25 530 42 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "Primary weapon" 23 0 1
+2 1 "PrimaryValue" 30 80 530 59 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 32 0 1
+2 2 "PrimaryIcon_rifle" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/rifle.png"
+2 2 "PrimaryIcon_smg" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/smg.png"
+2 2 "PrimaryIcon_shotgun" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/shotgun.png"
+2 2 "PrimaryIcon_pistol" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/pistol.png"
+2 2 "PrimaryIcon_sniper" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/sniper.png"
+2 2 "PrimaryIcon_marksman" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/marksman.png"
+2 2 "PrimaryIcon_rifle2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/rifle2.png"
+2 2 "PrimaryIcon_smg2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/smg2.png"
+2 2 "PrimaryIcon_shotgun2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/shotgun2.png"
+2 2 "PrimaryIcon_pistol2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/pistol2.png"
+2 2 "PrimaryIcon_sniper2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/sniper2.png"
+2 2 "PrimaryIcon_marksman2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/marksman2.png"
+2 3 "PrimaryTab" 30 341 535 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnPrimarySlotClicked" "" "" "" ""
+3 1 "PrimaryTabLabel" 20 0 495 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Change weapon" 23 0 1
+1 0 "SecondaryCard" 1175 316 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+2 1 "SecondaryHeading" 30 25 530 42 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "Secondary weapon" 23 0 1
+2 1 "SecondaryValue" 30 80 530 59 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 32 0 1
+2 2 "SecondaryIcon_rifle" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/rifle.png"
+2 2 "SecondaryIcon_smg" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/smg.png"
+2 2 "SecondaryIcon_shotgun" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/shotgun.png"
+2 2 "SecondaryIcon_pistol" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/pistol.png"
+2 2 "SecondaryIcon_sniper" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/sniper.png"
+2 2 "SecondaryIcon_marksman" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/marksman.png"
+2 2 "SecondaryIcon_rifle2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/rifle2.png"
+2 2 "SecondaryIcon_smg2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/smg2.png"
+2 2 "SecondaryIcon_shotgun2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/shotgun2.png"
+2 2 "SecondaryIcon_pistol2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/pistol2.png"
+2 2 "SecondaryIcon_sniper2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/sniper2.png"
+2 2 "SecondaryIcon_marksman2" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/marksman2.png"
+2 3 "SecondaryTab" 30 341 535 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSecondarySlotClicked" "" "" "" ""
+3 1 "SecondaryTabLabel" 20 0 495 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Change weapon" 23 0 1
+1 0 "FooterLine" 110 884 1680 2 0 0 0 0 0 0 0.28 0.35 0.41 1 1 1 0 0 0 0 0 0 0 0 0 1
+1 3 "BackButton" 110 927 230 72 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnLoadoutBack" "" "" "" ""
+2 1 "BackLabel" 20 0 190 72 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Cancel" 23 0 1
+1 3 "SaveButton" 1470 927 320 72 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnLoadoutSaved" "" "" "" ""
+2 1 "SaveLabel" 20 0 280 72 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Save loadout" 23 0 1
+0 0 "Picker" 0 0 1920 1080 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1
+1 1 "PickerTitle" 110 80 1700 100 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Choose a weapon" 55 0 1
+1 1 "TypeHeading" 114 236 400 50 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "Weapon type" 26 0 1
+1 3 "Category_rifle_Button" 110 316 360 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnCategoryRifle" "" "" "" ""
+2 1 "Category_rifle_Label" 20 0 320 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Assault Rifles" 23 0 1
+1 0 "Category_rifle_Plate" 110 316 6 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 0 "Choices_rifle" 550 219 1220 580 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 1
+2 1 "Heading_rifle" 0 0 1100 78 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Assault Rifles" 39 0 1
+2 0 "rifleCard" 0 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "rifleName" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "KESTREL AR4" 30 0 1
+3 1 "rifleDetails" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "riflePic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/rifle.png"
+3 3 "rifleButton" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnRifleSelected" "" "" "" ""
+4 1 "rifleLabel" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+2 0 "rifle2Card" 625 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "rifle2Name" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "FALCON AR7" 30 0 1
+3 1 "rifle2Details" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "rifle2Pic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/rifle2.png"
+3 3 "rifle2Button" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnFalconSelected" "" "" "" ""
+4 1 "rifle2Label" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+1 3 "Category_smg_Button" 110 395 360 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnCategorySMG" "" "" "" ""
+2 1 "Category_smg_Label" 20 0 320 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Submachine Guns" 23 0 1
+1 0 "Category_smg_Plate" 110 395 6 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 0 "Choices_smg" 550 219 1220 580 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1
+2 1 "Heading_smg" 0 0 1100 78 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Submachine Guns" 39 0 1
+2 0 "smgCard" 0 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "smgName" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "VECTOR K9" 30 0 1
+3 1 "smgDetails" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "smgPic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/smg.png"
+3 3 "smgButton" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSMGSelected" "" "" "" ""
+4 1 "smgLabel" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+2 0 "smg2Card" 625 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "smg2Name" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "WASP M9" 30 0 1
+3 1 "smg2Details" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "smg2Pic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/smg2.png"
+3 3 "smg2Button" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnWaspSelected" "" "" "" ""
+4 1 "smg2Label" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+1 3 "Category_shotgun_Button" 110 474 360 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnCategoryShotgun" "" "" "" ""
+2 1 "Category_shotgun_Label" 20 0 320 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Shotguns" 23 0 1
+1 0 "Category_shotgun_Plate" 110 474 6 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 0 "Choices_shotgun" 550 219 1220 580 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1
+2 1 "Heading_shotgun" 0 0 1100 78 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Shotguns" 39 0 1
+2 0 "shotgunCard" 0 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "shotgunName" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "BREACH S8" 30 0 1
+3 1 "shotgunDetails" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "shotgunPic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/shotgun.png"
+3 3 "shotgunButton" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnShotgunSelected" "" "" "" ""
+4 1 "shotgunLabel" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+2 0 "shotgun2Card" 625 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "shotgun2Name" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "HAMMER S12" 30 0 1
+3 1 "shotgun2Details" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "shotgun2Pic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/shotgun2.png"
+3 3 "shotgun2Button" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnHammerSelected" "" "" "" ""
+4 1 "shotgun2Label" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+1 3 "Category_pistol_Button" 110 553 360 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnCategoryPistol" "" "" "" ""
+2 1 "Category_pistol_Label" 20 0 320 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Handguns" 23 0 1
+1 0 "Category_pistol_Plate" 110 553 6 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 0 "Choices_pistol" 550 219 1220 580 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1
+2 1 "Heading_pistol" 0 0 1100 78 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Handguns" 39 0 1
+2 0 "pistolCard" 0 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "pistolName" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "MAKO P12" 30 0 1
+3 1 "pistolDetails" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "pistolPic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/pistol.png"
+3 3 "pistolButton" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnPistolSelected" "" "" "" ""
+4 1 "pistolLabel" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+2 0 "pistol2Card" 625 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "pistol2Name" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "VIPER R6" 30 0 1
+3 1 "pistol2Details" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "pistol2Pic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/pistol2.png"
+3 3 "pistol2Button" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnViperSelected" "" "" "" ""
+4 1 "pistol2Label" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+1 3 "Category_sniper_Button" 110 632 360 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnCategorySniper" "" "" "" ""
+2 1 "Category_sniper_Label" 20 0 320 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Sniper Rifles" 23 0 1
+1 0 "Category_sniper_Plate" 110 632 6 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 0 "Choices_sniper" 550 219 1220 580 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1
+2 1 "Heading_sniper" 0 0 1100 78 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Sniper Rifles" 39 0 1
+2 0 "sniperCard" 0 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "sniperName" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "SENTINEL S98" 30 0 1
+3 1 "sniperDetails" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "sniperPic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/sniper.png"
+3 3 "sniperButton" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnSniperSelected" "" "" "" ""
+4 1 "sniperLabel" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+2 0 "sniper2Card" 625 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "sniper2Name" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "LONGBOW X50" 30 0 1
+3 1 "sniper2Details" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "sniper2Pic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/sniper2.png"
+3 3 "sniper2Button" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnLongbowSelected" "" "" "" ""
+4 1 "sniper2Label" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+1 3 "Category_marksman_Button" 110 711 360 62 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnCategoryMarksman" "" "" "" ""
+2 1 "Category_marksman_Label" 20 0 320 62 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Marksman Rifles" 23 0 1
+1 0 "Category_marksman_Plate" 110 711 6 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 0 8 0 0 0 0 0 0 0 1
+1 0 "Choices_marksman" 550 219 1220 580 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1
+2 1 "Heading_marksman" 0 0 1100 78 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "Marksman Rifles" 39 0 1
+2 0 "marksmanCard" 0 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "marksmanName" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "REVENANT M14" 30 0 1
+3 1 "marksmanDetails" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "marksmanPic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/marksman.png"
+3 3 "marksmanButton" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnMarksmanSelected" "" "" "" ""
+4 1 "marksmanLabel" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+2 0 "marksman2Card" 625 97 595 430 0 0 0 0 0 0 0.18 0.245 0.3 1 1 1 0 0 0 0 0 0 0 0 0 1
+3 1 "marksman2Name" 30 30 535 52 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 2 0 0 0 0 0 0 0 1 "SCOUT DMR" 30 0 1
+3 1 "marksman2Details" 30 94 535 45 0 0 0 0 0 0 0.7 0.78 0.79 1 1 1 0 2 0 0 0 0 0 0 0 1 "" 22 0 1
+3 2 "marksman2Pic" 42 154 510 182 0 0 0 0 0 0 1 1 1 1 1 1 0 3 0 0 0 0 0 0 0 1 "Assets/UI/Art/marksman2.png"
+3 3 "marksman2Button" 30 341 535 62 0 0 0 0 0 0 0.4 0.83 0.68 1 1 1 1 5 0 0 0 0 0 0 0 1 0.4 0.83 0.68 1 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.04 0.095 0.09 1 0.04 0.095 0.09 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnScoutSelected" "" "" "" ""
+4 1 "marksman2Label" 20 0 495 62 0 0 0 0 0 0 0.04 0.095 0.09 1 1 1 0 6 0 0 0 0 0 0 0 1 "Equip weapon" 23 0 1
+1 0 "PickerLine" 110 884 1680 2 0 0 0 0 0 0 0.28 0.35 0.41 1 1 1 0 0 0 0 0 0 0 0 0 1
+1 3 "PickerBackButton" 110 927 325 72 0 0 0 0 0 0 0.13 0.21 0.25 0.93 1 1 1 5 0 0 0 0 0 0 0 1 0.13 0.21 0.25 0.93 0.39 0.61 0.6 1 0.19 0.42 0.42 1 0.08 0.11 0.13 1 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.94 0.97 0.95 1 0.7 0.78 0.79 1 "Assets/Audio/Breakbulk/interface.wav" "Assets/Scripts/Player.lua" "OnPickerBack" "" "" "" ""
+2 1 "PickerBackLabel" 20 0 285 72 0 0 0 0 0 0 0.94 0.97 0.95 1 1 1 0 6 0 0 0 0 0 0 0 1 "Back to loadout" 23 0 1

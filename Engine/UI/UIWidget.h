@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 struct Vec2
 {
@@ -48,7 +49,10 @@ enum class UIWidgetType
     Image,
     Button,
     TextInput,
-    Slider
+    Slider,
+    ProgressBar,
+    ScrollBox,
+    UserWidget
 };
 
 class UIWidget
@@ -58,6 +62,7 @@ public:
     virtual ~UIWidget() = default;
 
     UIWidgetType GetType() const;
+    std::uint64_t GetInstanceId() const { return m_InstanceId; }
 
     const std::string& GetName() const;
     void SetName(const std::string& name);
@@ -94,6 +99,7 @@ public:
     void SetVisible(bool visible);
 
     bool IsEnabled() const;
+    bool IsEnabledInHierarchy() const;
     void SetEnabled(bool enabled);
 
     bool IsHitTestVisible() const;
@@ -101,6 +107,9 @@ public:
 
     int GetZOrder() const;
     void SetZOrder(int zOrder);
+
+    float GetRenderOpacity() const;
+    void SetRenderOpacity(float opacity);
 
     UIWidget* GetParent() const;
     const std::vector<std::unique_ptr<UIWidget>>& GetChildren() const;
@@ -114,6 +123,7 @@ public:
 
 private:
     UIWidgetType m_Type;
+    std::uint64_t m_InstanceId;
     std::string m_Name;
 
     UIAnchors m_Anchors;
@@ -129,6 +139,7 @@ private:
     bool m_Enabled = true;
     bool m_HitTestVisible = true;
     int m_ZOrder = 0;
+    float m_RenderOpacity = 1.0f;
 
     UIWidget* m_Parent = nullptr;
     std::vector<std::unique_ptr<UIWidget>> m_Children;

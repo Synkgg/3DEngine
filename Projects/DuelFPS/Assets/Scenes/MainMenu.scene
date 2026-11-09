@@ -7,6 +7,7 @@ Rotation 0 0 0
 Scale 1 1 1
 Parent 0
 PrefabSource ""
+HierarchyGroup 0
 Mesh 0
 Color 0
 Texture 0
@@ -16,6 +17,7 @@ Player 0
 PlayerStart 0
 CharacterController 0
 Light 0
+Camera 0
 Collider 0
 Scripts 1
 Script Assets/Scripts/MainMenu.lua

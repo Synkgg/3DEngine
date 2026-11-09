@@ -1,0 +1,2238 @@
+MyEngineScene
+Environment 1 4 1 0 1 220 0.9 0.001 0.13 1 90
+Entities 124
+Entity 1
+Name Survivor
+Position 0 1.2 5
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 1 0 0
+PlayerStart 0
+CharacterController 1 18 6.5 0 1
+Light 0
+Collider 1 0.65 1.8 0.65
+Scripts 1
+Script Assets/Scripts/Survival.lua
+Entity 2
+Name FirstPersonCamera
+Position 0 0.65 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 1
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Camera 1 85 0.08 180 1
+Collider 0
+Scripts 0
+Entity 3
+Name Forest
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/Forest.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 4
+Name Forest floor
+Position 0 -0.4 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 100 0.8 100
+Scripts 0
+Entity 5
+Name Cliff
+Position -49 3 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 2 6 100
+Scripts 0
+Entity 6
+Name Cliff
+Position 49 3 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 2 6 100
+Scripts 0
+Entity 7
+Name Cliff
+Position 0 3 -49
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 100 6 2
+Scripts 0
+Entity 8
+Name Cliff
+Position 0 3 49
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 100 6 2
+Scripts 0
+Entity 9
+Name Pine trunk
+Position -10.9461 2.33207 -24.77383
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.66415 0.65
+Scripts 0
+Entity 10
+Name Pine trunk
+Position 38.07268 3.38027 7.17039
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.76053 0.65
+Scripts 0
+Entity 11
+Name Pine trunk
+Position 4.88147 3.46325 -10.71395
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.9265 0.65
+Scripts 0
+Entity 12
+Name Pine trunk
+Position 7.03137 3.32316 25.87128
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.64632 0.65
+Scripts 0
+Entity 13
+Name Pine trunk
+Position 31.21542 2.3101 -5.5757
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.6202 0.65
+Scripts 0
+Entity 14
+Name Pine trunk
+Position -32.21517 2.33502 20.53161
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.67004 0.65
+Scripts 0
+Entity 15
+Name Pine trunk
+Position 14.22828 2.119 11.11116
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.238 0.65
+Scripts 0
+Entity 16
+Name Pine trunk
+Position 26.15692 3.73378 -42.96343
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.46757 0.65
+Scripts 0
+Entity 17
+Name Pine trunk
+Position 31.37622 3.45248 -26.13965
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.90495 0.65
+Scripts 0
+Entity 18
+Name Pine trunk
+Position 21.37529 3.3399 -34.49965
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.67981 0.65
+Scripts 0
+Entity 19
+Name Pine trunk
+Position -34.61338 3.3777 38.01638
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.75541 0.65
+Scripts 0
+Entity 20
+Name Pine trunk
+Position 44.16045 2.6356 -41.07528
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.2712 0.65
+Scripts 0
+Entity 21
+Name Pine trunk
+Position 11.03079 2.36418 9.95502
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.72836 0.65
+Scripts 0
+Entity 22
+Name Pine trunk
+Position 35.67579 2.60283 31.88052
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.20567 0.65
+Scripts 0
+Entity 23
+Name Pine trunk
+Position -32.5765 2.81438 15.42465
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.62876 0.65
+Scripts 0
+Entity 24
+Name Pine trunk
+Position -9.67615 2.2699 -44.00684
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.5398 0.65
+Scripts 0
+Entity 25
+Name Pine trunk
+Position -3.82561 2.85133 20.99553
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.70266 0.65
+Scripts 0
+Entity 26
+Name Pine trunk
+Position 22.48863 3.76071 3.66043
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.52141 0.65
+Scripts 0
+Entity 27
+Name Pine trunk
+Position 14.27092 2.27762 -16.38791
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.55525 0.65
+Scripts 0
+Entity 28
+Name Pine trunk
+Position -39.95283 3.72497 -42.35714
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.44994 0.65
+Scripts 0
+Entity 29
+Name Pine trunk
+Position 34.46241 2.21866 23.126
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.43732 0.65
+Scripts 0
+Entity 30
+Name Pine trunk
+Position 14.7665 3.77814 -34.25571
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.55627 0.65
+Scripts 0
+Entity 31
+Name Pine trunk
+Position 14.30037 3.21811 22.96483
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.43623 0.65
+Scripts 0
+Entity 32
+Name Pine trunk
+Position -7.50896 3.92336 32.05308
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.84671 0.65
+Scripts 0
+Entity 33
+Name Pine trunk
+Position -23.75868 3.46684 -5.76033
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.93369 0.65
+Scripts 0
+Entity 34
+Name Pine trunk
+Position 16.55573 2.90003 -8.22362
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.80006 0.65
+Scripts 0
+Entity 35
+Name Pine trunk
+Position 43.022 2.42306 -20.61334
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.84613 0.65
+Scripts 0
+Entity 36
+Name Pine trunk
+Position 17.12394 3.7949 -20.51954
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.5898 0.65
+Scripts 0
+Entity 37
+Name Pine trunk
+Position -16.032 2.75963 39.06539
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.51925 0.65
+Scripts 0
+Entity 38
+Name Pine trunk
+Position 35.43089 3.46403 23.10334
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.92807 0.65
+Scripts 0
+Entity 39
+Name Pine trunk
+Position -26.28289 2.06205 -30.88875
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.1241 0.65
+Scripts 0
+Entity 40
+Name Pine trunk
+Position -29.38245 2.12873 15.32296
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.25746 0.65
+Scripts 0
+Entity 41
+Name Pine trunk
+Position -24.17685 2.3103 6.16728
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.6206 0.65
+Scripts 0
+Entity 42
+Name Pine trunk
+Position -15.72555 3.35218 -24.98962
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.70435 0.65
+Scripts 0
+Entity 43
+Name Pine trunk
+Position -35.09652 3.19747 45.77208
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.39495 0.65
+Scripts 0
+Entity 44
+Name Pine trunk
+Position 19.60032 2.99564 4.83499
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.99127 0.65
+Scripts 0
+Entity 45
+Name Pine trunk
+Position 43.30315 3.64389 36.22225
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.28778 0.65
+Scripts 0
+Entity 46
+Name Pine trunk
+Position -43.25436 3.88341 8.23529
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.76681 0.65
+Scripts 0
+Entity 47
+Name Pine trunk
+Position 13.77247 3.45539 -29.7152
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.91078 0.65
+Scripts 0
+Entity 48
+Name Pine trunk
+Position 26.10099 3.01959 -39.40181
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.03918 0.65
+Scripts 0
+Entity 49
+Name Pine trunk
+Position 8.76123 3.36339 -13.61442
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.72679 0.65
+Scripts 0
+Entity 50
+Name Pine trunk
+Position 38.81774 2.61554 37.37011
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.23108 0.65
+Scripts 0
+Entity 51
+Name Pine trunk
+Position -32.03836 3.22393 32.56183
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.44786 0.65
+Scripts 0
+Entity 52
+Name Pine trunk
+Position 30.31559 2.55889 33.94123
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.11778 0.65
+Scripts 0
+Entity 53
+Name Pine trunk
+Position 8.03981 3.59498 -18.10324
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.18997 0.65
+Scripts 0
+Entity 54
+Name Pine trunk
+Position 17.62352 3.00026 -24.00763
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.00053 0.65
+Scripts 0
+Entity 55
+Name Pine trunk
+Position 8.66141 2.36498 -24.56094
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.72997 0.65
+Scripts 0
+Entity 56
+Name Pine trunk
+Position -2.37017 2.99032 -39.36759
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.98064 0.65
+Scripts 0
+Entity 57
+Name Pine trunk
+Position 40.47816 2.10863 29.99092
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.21727 0.65
+Scripts 0
+Entity 58
+Name Pine trunk
+Position 29.96917 3.41635 19.91377
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.8327 0.65
+Scripts 0
+Entity 59
+Name Pine trunk
+Position -43.53424 2.39087 23.9106
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.78173 0.65
+Scripts 0
+Entity 60
+Name Pine trunk
+Position 27.87999 2.73329 -16.3347
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.46658 0.65
+Scripts 0
+Entity 61
+Name Pine trunk
+Position -30.15214 2.44363 33.818
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.88726 0.65
+Scripts 0
+Entity 62
+Name Pine trunk
+Position 34.29913 2.29699 1.27048
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.59398 0.65
+Scripts 0
+Entity 63
+Name Pine trunk
+Position -43.51265 2.54184 29.77025
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.08368 0.65
+Scripts 0
+Entity 64
+Name Pine trunk
+Position -43.80367 3.45411 24.50532
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.90821 0.65
+Scripts 0
+Entity 65
+Name Pine trunk
+Position -10.5086 3.05388 -28.86826
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.10776 0.65
+Scripts 0
+Entity 66
+Name Pine trunk
+Position 7.95132 2.97915 17.43266
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.9583 0.65
+Scripts 0
+Entity 67
+Name Pine trunk
+Position 6.24122 2.37936 20.31189
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.75871 0.65
+Scripts 0
+Entity 68
+Name Pine trunk
+Position -29.38601 3.50827 -1.43002
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.01654 0.65
+Scripts 0
+Entity 69
+Name Pine trunk
+Position 27.85769 2.87789 32.50709
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.75577 0.65
+Scripts 0
+Entity 70
+Name Pine trunk
+Position 19.65953 2.77739 -36.23435
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.55478 0.65
+Scripts 0
+Entity 71
+Name Pine trunk
+Position -39.85488 3.99955 30.84694
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.99909 0.65
+Scripts 0
+Entity 72
+Name Pine trunk
+Position 15.6093 2.74446 23.22578
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.48892 0.65
+Scripts 0
+Entity 73
+Name Pine trunk
+Position 27.13176 2.74124 -38.17802
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.48249 0.65
+Scripts 0
+Entity 74
+Name Pine trunk
+Position -13.72493 2.34597 33.48187
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.69194 0.65
+Scripts 0
+Entity 75
+Name Pine trunk
+Position -31.35953 3.68571 -37.77616
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.37143 0.65
+Scripts 0
+Entity 76
+Name Pine trunk
+Position -16.98235 2.626 37.08396
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.25199 0.65
+Scripts 0
+Entity 77
+Name Pine trunk
+Position 30.97728 3.80499 -28.06525
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.60997 0.65
+Scripts 0
+Entity 78
+Name Pine trunk
+Position 43.57675 3.38374 34.81081
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.76749 0.65
+Scripts 0
+Entity 79
+Name Pine trunk
+Position 36.46474 3.9276 38.11802
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.85521 0.65
+Scripts 0
+Entity 80
+Name Pine trunk
+Position -20.66143 3.55933 32.18963
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.11867 0.65
+Scripts 0
+Entity 81
+Name Pine trunk
+Position -14.17999 3.79928 -30.52679
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.59857 0.65
+Scripts 0
+Entity 82
+Name Pine trunk
+Position 35.56288 2.505 -1.48633
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.01 0.65
+Scripts 0
+Entity 83
+Name Pine trunk
+Position -20.93945 3.80806 17.66824
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.61612 0.65
+Scripts 0
+Entity 84
+Name Pine trunk
+Position -23.37226 3.50733 28.77257
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.01466 0.65
+Scripts 0
+Entity 85
+Name Pine trunk
+Position 2.06647 3.32985 -28.21842
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.6597 0.65
+Scripts 0
+Entity 86
+Name Pine trunk
+Position -20.1103 3.70685 -22.92843
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.41369 0.65
+Scripts 0
+Entity 87
+Name Pine trunk
+Position -21.10517 3.69097 -37.49271
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.38194 0.65
+Scripts 0
+Entity 88
+Name Pine trunk
+Position 45.52762 2.80994 -17.90631
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.61989 0.65
+Scripts 0
+Entity 89
+Name Pine trunk
+Position 4.09637 2.02442 23.26098
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.04885 0.65
+Scripts 0
+Entity 90
+Name Pine trunk
+Position 13.61167 3.85813 -24.50307
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.71625 0.65
+Scripts 0
+Entity 91
+Name Pine trunk
+Position -7.85245 2.90031 40.87105
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 5.80061 0.65
+Scripts 0
+Entity 92
+Name Pine trunk
+Position 14.26436 2.40537 -42.51478
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.81074 0.65
+Scripts 0
+Entity 93
+Name Pine trunk
+Position -18.74577 2.34614 -12.02305
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 4.69229 0.65
+Scripts 0
+Entity 94
+Name Pine trunk
+Position -7.26171 3.13254 -37.89305
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.26509 0.65
+Scripts 0
+Entity 95
+Name Pine trunk
+Position 42.59025 3.2439 32.86147
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.4878 0.65
+Scripts 0
+Entity 96
+Name Pine trunk
+Position 44.32063 3.26844 21.02399
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.53689 0.65
+Scripts 0
+Entity 97
+Name Pine trunk
+Position -3.9272 3.78641 -38.42497
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 7.57282 0.65
+Scripts 0
+Entity 98
+Name Pine trunk
+Position 36.45024 3.37791 28.04502
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.65 6.75582 0.65
+Scripts 0
+Entity 99
+Name Beacon mast
+Position -5 3 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.25 6 0.25
+Scripts 0
+Entity 100
+Name Shelter post
+Position -4 1.6 5
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.2 3.2 0.2
+Scripts 0
+Entity 101
+Name Shelter post
+Position 0 1.6 5
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 0.2 3.2 0.2
+Scripts 0
+Entity 102
+Name Node1
+Position -7 0 4
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 103
+Name Node2
+Position 7 0 7
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 104
+Name Node3
+Position -10 0 -6
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 105
+Name Node4
+Position 8 0 -12
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 106
+Name Node5
+Position -18 0 10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 107
+Name Node6
+Position 21 0 14
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 108
+Name Node7
+Position -27 0 -20
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 109
+Name Node8
+Position 30 0 -25
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/wood.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 110
+Name Node9
+Position 6 0 2
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/stone.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 111
+Name Node10
+Position -8 0 -3
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/stone.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 112
+Name Node11
+Position 16 0 -8
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/stone.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 113
+Name Node12
+Position -16 0 17
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/stone.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 114
+Name Node13
+Position 28 0 10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/stone.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 115
+Name Node14
+Position -26 0 -11
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/stone.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 116
+Name Node15
+Position 4 0 9
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/food.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 117
+Name Node16
+Position -6 0 11
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/food.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 118
+Name Node17
+Position 13 0 10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/food.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 119
+Name Node18
+Position -12 0 -10
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/food.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 120
+Name Node19
+Position 21 0 -18
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/food.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 121
+Name Node20
+Position -20 0 2
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/food.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 122
+Name Forest sunlight
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 1 1 0.88 0.70 -0.48 -0.78 -0.38 2.0 0 90 23 35 1
+Collider 0
+Scripts 0
+Entity 123
+Name FireGlow
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/Flame.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 124
+Name RescueFlag
+Position -4.3 5 0
+Rotation 0 0 0
+Scale 0 0 0
+Parent 0
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Emberwild/Flag.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+HierarchyFolders 0

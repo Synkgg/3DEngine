@@ -1,0 +1,60 @@
+newmtl asphalt
+Kd 0.055 0.068 0.075
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl concrete
+Kd 0.24 0.26 0.25
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl teal
+Kd 0.045 0.23 0.25
+Ks 0.32 0.32 0.32
+Ns 85
+d 1
+newmtl rust
+Kd 0.42 0.105 0.045
+Ks 0.32 0.32 0.32
+Ns 85
+d 1
+newmtl ivory
+Kd 0.65 0.61 0.45
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl steel
+Kd 0.11 0.14 0.15
+Ks 0.32 0.32 0.32
+Ns 85
+d 1
+newmtl rubber
+Kd 0.018 0.025 0.028
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl yellow
+Kd 0.75 0.42 0.045
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl white
+Kd 0.72 0.78 0.76
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl wood
+Kd 0.24 0.15 0.07
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl lamp
+Kd 1 0.62 0.22
+Ks 0.04 0.04 0.04
+Ns 8
+d 1
+newmtl gun
+Kd 0.065 0.083 0.095
+Ks 0.32 0.32 0.32
+Ns 85
+d 1

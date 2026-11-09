@@ -1,18 +1,14 @@
 #pragma once
-
-class Grid
-{
+#include "RHI/RHITypes.h"
+#include "../Math/Mat4.h"
+#include "../Math/Vec3.h"
+class Grid {
 public:
-    Grid();
-    ~Grid();
-
-    bool Initialize();
+    ~Grid() { Shutdown(); }
+    bool Initialize(unsigned int samples=1);
     void Shutdown();
-
-    void Draw();
-
+    void Draw(const Mat4& viewProjection, const Vec3& camera);
 private:
-    unsigned int m_VertexArray;
-    unsigned int m_VertexBuffer;
-    unsigned int m_VertexCount;
+    Velcryn::RHI::BufferHandle m_Vertices{}, m_Indices{};
+    Velcryn::RHI::PipelineHandle m_Pipeline{};
 };

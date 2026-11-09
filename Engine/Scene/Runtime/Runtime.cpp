@@ -42,6 +42,7 @@ void Runtime::Start(
     m_PendingScenePath.clear();
     m_WantsCursor = false;
     m_Paused = false;
+    m_InteractionBinding = "E";
 
     m_LuaScriptSystem.Start(
         scene,
@@ -163,7 +164,7 @@ void Runtime::Update(
             renderer,
             input,
             m_LuaScriptSystem,
-            m_Audio
+            m_Audio, m_InteractionBinding, !m_WantsCursor
         );
 
         m_CollisionSystem.Update(

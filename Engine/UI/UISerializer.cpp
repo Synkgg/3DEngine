@@ -5,9 +5,13 @@
 #include "UIText.h"
 #include "UITextInput.h"
 #include "UISlider.h"
+#include "UIProgressBar.h"
+#include "UIScrollBox.h"
+#include "UIUserWidget.h"
 #include "UIWidgetFactory.h"
 
 #include <filesystem>
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -62,9 +66,14 @@ namespace
             << color.x << ' ' << color.y << ' ' << color.z << ' ' << color.w << ' '
             << widget.IsVisible() << ' ' << widget.IsEnabled() << ' '
             << widget.IsHitTestVisible() << ' ' << widget.GetZOrder()
-            << ' ' << widget.HasGradient() << ' ' << widget.GetGradientColor().x << ' ' << widget.GetGradientColor().y << ' ' << widget.GetGradientColor().z << ' ' << widget.GetGradientColor().w << ' ' << static_cast<int>(widget.GetGradientDirection()) << ' ' << widget.GetCornerRadius();
+            << ' ' << widget.HasGradient() << ' ' << widget.GetGradientColor().x << ' ' << widget.GetGradientColor().y << ' ' << widget.GetGradientColor().z << ' ' << widget.GetGradientColor().w << ' ' << static_cast<int>(widget.GetGradientDirection()) << ' ' << widget.GetCornerRadius()
+            << ' ' << widget.GetRenderOpacity();
 
-        if (const UIText* text = dynamic_cast<const UIText*>(&widget))
+        if (const UIUserWidget* reusable = dynamic_cast<const UIUserWidget*>(&widget))
+            out << ' ' << std::quoted(reusable->GetSourcePath()) << ' ' << std::quoted(reusable->GetEventScriptOverride());
+        else if (const UIScrollBox* scroll = dynamic_cast<const UIScrollBox*>(&widget))
+            out << ' ' << scroll->GetContentHeight() << ' ' << scroll->GetScrollOffset();
+        else if (const UIText* text = dynamic_cast<const UIText*>(&widget))
             out << ' ' << std::quoted(EncodeText(text->GetText())) << ' ' << text->GetFontSize() << ' ' << static_cast<int>(text->GetHorizontalAlignment()) << ' ' << static_cast<int>(text->GetVerticalAlignment());
         else if (const UITextInput* input = dynamic_cast<const UITextInput*>(&widget))
             out << ' ' << std::quoted(input->GetText()) << ' ' << std::quoted(input->GetPlaceholder())
@@ -75,6 +84,13 @@ namespace
             out << ' ' << slider->GetValue()
                 << ' ' << fill.x << ' ' << fill.y << ' ' << fill.z << ' ' << fill.w
                 << ' ' << handle.x << ' ' << handle.y << ' ' << handle.z << ' ' << handle.w;
+        }
+        else if (const UIProgressBar* progress = dynamic_cast<const UIProgressBar*>(&widget))
+        {
+            const Vec4 fill=progress->GetFillColor();
+            out << ' ' << progress->GetPercent()
+                << ' ' << fill.x << ' ' << fill.y << ' ' << fill.z << ' ' << fill.w
+                << ' ' << static_cast<int>(progress->GetFillDirection());
         }
         else if (const UIImage* image = dynamic_cast<const UIImage*>(&widget))
             out << ' ' << std::quoted(image->GetTexturePath());
@@ -103,8 +119,11 @@ namespace
 
         out << '\n';
 
-        for (const auto& child : widget.GetChildren())
-            if (child) WriteWidget(out, *child, depth + 1);
+        // Linked children are generated from the referenced asset at load time.
+        // Do not flatten them into the owning screen when saving.
+        if (widget.GetType() != UIWidgetType::UserWidget)
+            for (const auto& child : widget.GetChildren())
+                if (child) WriteWidget(out, *child, depth + 1);
     }
 }
 
@@ -122,7 +141,7 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     if (!out) return false;
 
     const Vec2 canvasSize = canvas.GetSize();
-    out << "VORTEK_UI 9\n";
+    out << "ENGINE_UI 12\n";
     out << canvasSize.x << ' ' << canvasSize.y << '\n';
 
     const UIWidget* root = canvas.GetRoot();
@@ -133,8 +152,25 @@ bool UISerializer::Save(const UICanvas& canvas, const std::string& filepath)
     return static_cast<bool>(out);
 }
 
-bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
+bool UISerializer::Load(UICanvas& canvas, const std::string& filepath,
+                        const std::string& referenceHost)
 {
+    // Reject circular Widget Blueprint references (A -> B -> A), including
+    // indirect cycles. This also bounds nesting to avoid stack exhaustion.
+    namespace fs = std::filesystem;
+    static thread_local std::vector<fs::path> loading;
+    std::error_code pathError;
+    const fs::path canonicalPath = fs::weakly_canonical(fs::absolute(filepath), pathError);
+    if (pathError || loading.size() >= 16 ||
+        std::find(loading.begin(), loading.end(), canonicalPath) != loading.end())
+        return false;
+    loading.push_back(canonicalPath);
+    struct PopLoading
+    {
+        std::vector<fs::path>& paths;
+        ~PopLoading() { paths.pop_back(); }
+    } pop{loading};
+
     std::ifstream in(filepath);
     if (!in) return false;
 
@@ -143,7 +179,7 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
     in >> magic >> version;
     // Read the old marker for existing assets, but all newly saved UI files use
     // the engine-neutral marker.
-    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 9) return false;
+    if ((magic != "ENGINE_UI" && magic != "VORTEK_UI") || version < 1 || version > 12) return false;
 
     Vec2 canvasSize;
     in >> canvasSize.x >> canvasSize.y;
@@ -178,8 +214,12 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
             >> visible >> enabled >> hitTest >> zOrder;
         if(version>=3) row >> gradient >> gradientColor.x >> gradientColor.y >> gradientColor.z >> gradientColor.w >> gradientDirection;
         float cornerRadius=0.0f; if(version>=9) row >> cornerRadius;
+        float renderOpacity=1.0f; if(version>=10) row >> renderOpacity;
 
-        if (!row || typeValue < 0 || typeValue > static_cast<int>(UIWidgetType::Slider))
+        const int maxType = version >= 12 ? static_cast<int>(UIWidgetType::UserWidget) :
+            version >= 11 ? static_cast<int>(UIWidgetType::ScrollBox) :
+            (version >= 10 ? static_cast<int>(UIWidgetType::ProgressBar) : static_cast<int>(UIWidgetType::Slider));
+        if (!row || typeValue < 0 || typeValue > maxType)
             return false;
 
         std::unique_ptr<UIWidget> widget =
@@ -198,8 +238,26 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         widget->SetZOrder(zOrder);
         if(version>=3){widget->SetGradientEnabled(gradient);widget->SetGradientColor(gradientColor);widget->SetGradientDirection(static_cast<UIGradientDirection>(gradientDirection));}
         widget->SetCornerRadius(cornerRadius);
+        widget->SetRenderOpacity(renderOpacity);
 
-        if (UIText* text = dynamic_cast<UIText*>(widget.get()))
+        if (UIUserWidget* reusable = dynamic_cast<UIUserWidget*>(widget.get()))
+        {
+            std::string source;
+            std::string eventScript;
+            row >> std::quoted(source) >> std::quoted(eventScript);
+            if (!row) return false;
+            reusable->SetSourcePath(source);
+            reusable->SetEventScriptOverride(eventScript);
+        }
+        else if (UIScrollBox* scroll = dynamic_cast<UIScrollBox*>(widget.get()))
+        {
+            float contentHeight = 0.0f, scrollOffset = 0.0f;
+            row >> contentHeight >> scrollOffset;
+            if (!row) return false;
+            scroll->SetContentHeight(contentHeight);
+            scroll->SetScrollOffset(scrollOffset);
+        }
+        else if (UIText* text = dynamic_cast<UIText*>(widget.get()))
         {
             std::string value;
             float fontSize = 24.0f;
@@ -233,6 +291,15 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
                 >> handle.x >> handle.y >> handle.z >> handle.w;
             if (!row) return false;
             slider->SetValue(value); slider->SetFillColor(fill); slider->SetHandleColor(handle);
+        }
+        else if (UIProgressBar* progress = dynamic_cast<UIProgressBar*>(widget.get()))
+        {
+            if (version < 10) return false;
+            float percent=0.5f; Vec4 fill; int direction=0;
+            row >> percent >> fill.x >> fill.y >> fill.z >> fill.w >> direction;
+            if (!row || direction < 0 || direction > 3) return false;
+            progress->SetPercent(percent); progress->SetFillColor(fill);
+            progress->SetFillDirection(static_cast<UIProgressBarFillDirection>(direction));
         }
         else if (UIImage* image = dynamic_cast<UIImage*>(widget.get()))
         {
@@ -297,5 +364,75 @@ bool UISerializer::Load(UICanvas& canvas, const std::string& filepath)
         parents.resize(depth + 1);
     }
 
+    // Expand instances after the parent hierarchy has been parsed. Embedded
+    // content stays editable in its own source .ui asset, not this screen.
+    auto populate = [&](auto&& self, UIWidget& parent) -> bool
+    {
+        for (const auto& child : parent.GetChildren())
+        {
+            if (auto* reusable = dynamic_cast<UIUserWidget*>(child.get()))
+            {
+                if (!PopulateUserWidget(*reusable,
+                    referenceHost.empty() ? filepath : referenceHost)) return false;
+            }
+            else if (!self(self, *child)) return false;
+        }
+        return true;
+    };
+    return populate(populate, *canvas.GetRoot());
+}
+
+bool UISerializer::PopulateUserWidget(UIUserWidget& widget, const std::string& hostPath)
+{
+    namespace fs = std::filesystem;
+    const fs::path source(widget.GetSourcePath());
+    if (source.empty()) return true;
+    if (source.is_absolute() || source.extension() != ".ui") return false;
+    for (const auto& part : source)
+        if (part == "..") return false;
+
+    const fs::path host = fs::absolute(hostPath).lexically_normal();
+    fs::path resolved = host.parent_path() / source;
+    // "Assets/UI/Foo.ui" resolves from the owning project's root even
+    // when the editor or exported game was launched elsewhere.
+    if (*source.begin() == "Assets")
+    {
+        for (fs::path directory = host.parent_path(); !directory.empty(); directory = directory.parent_path())
+        {
+            if (fs::is_directory(directory / "Assets"))
+            {
+                resolved = directory / source;
+                break;
+            }
+            if (directory == directory.root_path()) break;
+        }
+    }
+
+    UICanvas imported;
+    if (!Load(imported, resolved.string())) return false;
+
+    // Only replace live children once the referenced asset loaded fully.
+    while (!widget.GetChildren().empty())
+        widget.RemoveChild(widget.GetChildren().front().get());
+    UIWidget* root = imported.GetRoot();
+    while (!root->GetChildren().empty())
+    {
+        std::unique_ptr<UIWidget> child = root->DetachChild(root->GetChildren().front().get());
+        widget.AddChild(std::move(child));
+    }
+    // Controller script is an instance-level choice, not a visual property.
+    // The same Loadout.ui can therefore dispatch to MainMenu.lua in the
+    // lobby and Player.lua while in-game.
+    if (!widget.GetEventScriptOverride().empty())
+    {
+        const auto overrideEvents = [&](auto&& self, UIWidget& node) -> void
+        {
+            if (auto* button = dynamic_cast<UIButton*>(&node))
+                button->SetOnClickScript(widget.GetEventScriptOverride());
+            for (const auto& child : node.GetChildren())
+                self(self, *child);
+        };
+        overrideEvents(overrideEvents, widget);
+    }
     return true;
 }

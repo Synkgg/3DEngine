@@ -96,8 +96,9 @@ std::unique_ptr<Mesh> PrimitiveMesh::CreatePlane()
 
     std::vector<std::uint32_t> indices =
     {
-        0, 1, 2,
-        2, 3, 0
+        // Counter-clockwise when viewed from the +Y normal side.
+        0, 2, 1,
+        2, 0, 3
     };
 
     return std::make_unique<Mesh>(

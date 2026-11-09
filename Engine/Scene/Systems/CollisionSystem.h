@@ -17,5 +17,6 @@ class CollisionSystem
 {
 public:
     void Update(Scene& scene);
+    static bool ResizeStandingCollider(Scene& scene, Entity actor, float height);
     static RaycastHit Raycast(const Scene& scene, const Vec3& origin, const Vec3& direction, float maxDistance, Entity ignore = Entity());
 };

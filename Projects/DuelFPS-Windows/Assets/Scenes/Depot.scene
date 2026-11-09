@@ -1,0 +1,1896 @@
+MyEngineScene
+Environment 1 4 1 0 1 220 0.9 0.001 0.13 1 90
+Entities 105
+Entity 1
+Name Operator
+Position 0 1.2 14
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 1 0 0
+PlayerStart 0
+CharacterController 1 18 6.5 0 1
+Light 0
+Collider 1 0.65 1.8 0.65
+Scripts 1
+Script Assets/Scripts/Player.lua
+Entity 2
+Name FirstPersonCamera
+Position 0 0.65 0
+Rotation 0 -1.5708 0
+Scale 1 1 1
+Parent 1
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Camera 1 90 0.08 220 1
+Collider 0
+Scripts 0
+Entity 3
+Name South insertion
+Position -7 1.1 14
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 1 1
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 4
+Name North insertion
+Position 7 1.1 -14
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 1 2
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 5
+Name Late shift sun
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 1 1 0.82 0.64 -0.48 -0.78 -0.38 1.35 0 90 23 35 1
+Collider 0
+Scripts 0
+Entity 6
+Name Service apron
+Position 0 -0.35 0
+Rotation 0 0 0
+Scale 30 0.7 36
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.26 0.29 0.29 1
+Texture 1 Assets/Models/Tactical/Pavement.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 7
+Name Depot retaining wall
+Position -15 1.75 0
+Rotation 0 0 0
+Scale 0.5 3.5 36
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.26 0.29 0.29 1
+Texture 1 Assets/Models/Tactical/Pavement.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 8
+Name Depot retaining wall
+Position 15 1.75 0
+Rotation 0 0 0
+Scale 0.5 3.5 36
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.26 0.29 0.29 1
+Texture 1 Assets/Models/Tactical/Pavement.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 9
+Name Depot boundary
+Position 0 1.75 -18
+Rotation 0 0 0
+Scale 30 3.5 0.5
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.26 0.29 0.29 1
+Texture 1 Assets/Models/Tactical/Pavement.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 10
+Name Depot boundary
+Position 0 1.75 18
+Rotation 0 0 0
+Scale 30 3.5 0.5
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.26 0.29 0.29 1
+Texture 1 Assets/Models/Tactical/Pavement.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 11
+Name Loading dock
+Position -5 1.4 -9
+Rotation 0 0 0
+Scale 7 2.8 2
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 12
+Name Pump housing
+Position 7 1.2 -3
+Rotation 0 0 0
+Scale 3 2.4 6
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.32 0.18 0.1 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 13
+Name Jersey barrier
+Position -1 0.525 -3
+Rotation 0 0 0
+Scale 3 1.05 2
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.26 0.29 0.29 1
+Texture 1 Assets/Models/Tactical/Pavement.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 14
+Name Freight crate
+Position -10 0.725 5
+Rotation 0 0 0
+Scale 2.4 1.45 2.4
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.32 0.18 0.1 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 15
+Name Support pier
+Position 11 1.9 -11
+Rotation 0 0 0
+Scale 2 3.8 2
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 16
+Name Gantry column
+Position -10 3 0
+Rotation 0 0 0
+Scale 0.6 6 0.7
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 17
+Name Loading dock
+Position 5 1.4 9
+Rotation 0 0 0
+Scale 7 2.8 2
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 18
+Name Pump housing
+Position -7 1.2 3
+Rotation 0 0 0
+Scale 3 2.4 6
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.32 0.18 0.1 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 19
+Name Jersey barrier
+Position 1 0.525 3
+Rotation 0 0 0
+Scale 3 1.05 2
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.26 0.29 0.29 1
+Texture 1 Assets/Models/Tactical/Pavement.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 20
+Name Freight crate
+Position 10 0.725 -5
+Rotation 0 0 0
+Scale 2.4 1.45 2.4
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.32 0.18 0.1 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 21
+Name Support pier
+Position -11 1.9 11
+Rotation 0 0 0
+Scale 2 3.8 2
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 22
+Name Gantry column
+Position 10 3 0
+Rotation 0 0 0
+Scale 0.6 6 0.7
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 23
+Name Overhead gantry
+Position 0 6 0
+Rotation 0 0 0
+Scale 21 0.65 0.8
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 1 1 1 1
+Scripts 0
+Entity 24
+Name Bay shutter slat
+Position -5 0.25 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 25
+Name Bay shutter slat
+Position -5 0.5700000000000001 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 26
+Name Bay shutter slat
+Position -5 0.89 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 27
+Name Bay shutter slat
+Position -5 1.21 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 28
+Name Bay shutter slat
+Position -5 1.53 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 29
+Name Bay shutter slat
+Position -5 1.85 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 30
+Name Bay shutter slat
+Position -5 2.17 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 31
+Name Bay shutter slat
+Position -5 2.49 -7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 32
+Name Ribbed sheet
+Position 5.49 1.18 -0.3999999999999999
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 33
+Name Ribbed sheet
+Position 5.49 1.18 -1.0499999999999998
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 34
+Name Ribbed sheet
+Position 5.49 1.18 -1.7
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 35
+Name Ribbed sheet
+Position 5.49 1.18 -2.35
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 36
+Name Ribbed sheet
+Position 5.49 1.18 -3.0
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 37
+Name Ribbed sheet
+Position 5.49 1.18 -3.65
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 38
+Name Ribbed sheet
+Position 5.49 1.18 -4.3
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 39
+Name Ribbed sheet
+Position 5.49 1.18 -4.95
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 40
+Name Ribbed sheet
+Position 5.49 1.18 -5.6
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 41
+Name Truck lane stripe
+Position -8 0.01 12
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 42
+Name Truck lane stripe
+Position -8 0.01 7
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 43
+Name Truck lane stripe
+Position -8 0.01 2
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 44
+Name Truck lane stripe
+Position -8 0.01 -3
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 45
+Name Truck lane stripe
+Position -8 0.01 -8
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 46
+Name Truck lane stripe
+Position -8 0.01 -13
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 47
+Name Dock bumper
+Position -2.0 0.28 -7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 48
+Name Dock bumper
+Position -3.9 0.28 -7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 49
+Name Dock bumper
+Position -5.8 0.28 -7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 50
+Name Dock bumper
+Position -7.699999999999999 0.28 -7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 51
+Name Boundary joint
+Position -14.73 1.75 -15
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 52
+Name Boundary joint
+Position -14.73 1.75 -10
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 53
+Name Boundary joint
+Position -14.73 1.75 -5
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 54
+Name Boundary joint
+Position -14.73 1.75 0
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 55
+Name Boundary joint
+Position -14.73 1.75 5
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 56
+Name Boundary joint
+Position -14.73 1.75 10
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 57
+Name Boundary joint
+Position -14.73 1.75 15
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 58
+Name Crate brace
+Position -10 1.04 6.22
+Rotation 0 0 0
+Scale 2.38 0.12 0.04
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.17 0.104 0.057 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 59
+Name Bay shutter slat
+Position 5 0.25 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 60
+Name Bay shutter slat
+Position 5 0.5700000000000001 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 61
+Name Bay shutter slat
+Position 5 0.89 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 62
+Name Bay shutter slat
+Position 5 1.21 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 63
+Name Bay shutter slat
+Position 5 1.53 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 64
+Name Bay shutter slat
+Position 5 1.85 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 65
+Name Bay shutter slat
+Position 5 2.17 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 66
+Name Bay shutter slat
+Position 5 2.49 7.985
+Rotation 0 0 0
+Scale 6.68 0.047 0.035
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.09 0.14 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 67
+Name Ribbed sheet
+Position -5.49 1.18 0.3999999999999999
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 68
+Name Ribbed sheet
+Position -5.49 1.18 1.0499999999999998
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 69
+Name Ribbed sheet
+Position -5.49 1.18 1.7
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 70
+Name Ribbed sheet
+Position -5.49 1.18 2.35
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 71
+Name Ribbed sheet
+Position -5.49 1.18 3.0
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 72
+Name Ribbed sheet
+Position -5.49 1.18 3.65
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 73
+Name Ribbed sheet
+Position -5.49 1.18 4.3
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 74
+Name Ribbed sheet
+Position -5.49 1.18 4.95
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 75
+Name Ribbed sheet
+Position -5.49 1.18 5.6
+Rotation 0 0 0
+Scale 0.035 2.3 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.22 0.13 0.085 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 76
+Name Truck lane stripe
+Position 8 0.01 -12
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 77
+Name Truck lane stripe
+Position 8 0.01 -7
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 78
+Name Truck lane stripe
+Position 8 0.01 -2
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 79
+Name Truck lane stripe
+Position 8 0.01 3
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 80
+Name Truck lane stripe
+Position 8 0.01 8
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 81
+Name Truck lane stripe
+Position 8 0.01 13
+Rotation 0 0 0
+Scale 0.14 0.018 2.3
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.69 0.56 0.28 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 82
+Name Dock bumper
+Position 2.0 0.28 7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 83
+Name Dock bumper
+Position 3.9 0.28 7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 84
+Name Dock bumper
+Position 5.8 0.28 7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 85
+Name Dock bumper
+Position 7.699999999999999 0.28 7.93
+Rotation 0 0 0
+Scale 0.37 0.42 0.14
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.06 0.065 0.061 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 86
+Name Boundary joint
+Position 14.73 1.75 -15
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 87
+Name Boundary joint
+Position 14.73 1.75 -10
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 88
+Name Boundary joint
+Position 14.73 1.75 -5
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 89
+Name Boundary joint
+Position 14.73 1.75 0
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 90
+Name Boundary joint
+Position 14.73 1.75 5
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 91
+Name Boundary joint
+Position 14.73 1.75 10
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 92
+Name Boundary joint
+Position 14.73 1.75 15
+Rotation 0 0 0
+Scale 0.055 3.45 0.07
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.17 0.16 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 93
+Name Crate brace
+Position 10 1.04 -3.7800000000000002
+Rotation 0 0 0
+Scale 2.38 0.12 0.04
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.17 0.104 0.057 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 94
+Name Gantry web
+Position -10 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 95
+Name Gantry web
+Position -8 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 96
+Name Gantry web
+Position -6 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 97
+Name Gantry web
+Position -4 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 98
+Name Gantry web
+Position -2 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 99
+Name Gantry web
+Position 0 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 100
+Name Gantry web
+Position 2 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 101
+Name Gantry web
+Position 4 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 102
+Name Gantry web
+Position 6 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 103
+Name Gantry web
+Position 8 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 104
+Name Gantry web
+Position 10 6.46 0
+Rotation 0 0 0
+Scale 0.09 0.74 0.69
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 105
+Name Gantry cap
+Position 0 6.83 0
+Rotation 0 0 0
+Scale 21 0.1 0.8
+Parent 0
+PrefabSource ""
+Mesh 1 1 "" 0
+Color 1 0.16 0.23 0.25 1
+Texture 1 Assets/Models/Tactical/Sheet.png
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+HierarchyFolders 0

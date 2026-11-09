@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Graphics/Shader.h"
+#include "../Graphics/RHI/RHITypes.h"
 #include "UICanvas.h"
 #include "UILayout.h"
 
@@ -14,6 +14,7 @@ class UIText;
 class UIButton;
 class UITextInput;
 class UISlider;
+class UIProgressBar;
 class Renderer;
 class Input;
 class AudioEngine;
@@ -51,8 +52,10 @@ public:
         float viewportX,
         float viewportY,
         float viewportWidth,
-        float viewportHeight
+        float viewportHeight,
+        float deltaTime = 1.0f / 60.0f
     );
+    bool HasTextInputFocus() const { return m_FocusedTextInput != nullptr; }
 
     bool ViewportToCanvas(
         float mouseX,
@@ -160,6 +163,7 @@ private:
     );
     void DrawTextInput(const UITextInput& input, const UIRect& rect);
     void DrawSlider(const UISlider& slider, const UIRect& rect);
+    void DrawProgressBar(const UIProgressBar& progress, const UIRect& rect);
 
     bool InitializeFontAtlas();
     void DrawFontGlyph(
@@ -167,6 +171,11 @@ private:
         float u0, float v0, float u1, float v1,
         const Vec4& color
     );
+    void DrawQuad(float x, float y, float width, float height,
+        float u0, float v0, float u1, float v1,
+        const Vec4& color, Velcryn::RHI::TextureHandle texture,
+        const Vec4& gradientColor = Vec4(), bool useGradient = false,
+        bool horizontalGradient = false, float cornerRadius = 0.0f);
 
     struct FontGlyph
     {
@@ -228,9 +237,7 @@ private:
     );
 
     void ResetButtonInput(UIWidget& widget);
-    UIButton* FindTopButton(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
-    UITextInput* FindTopTextInput(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
-    UISlider* FindTopSlider(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
+    UIWidget* FindTopControl(UIWidget& widget, const UIRect& parentRect, const Vec2& mouse);
 
     bool GetAbsolutePosition(
         const std::string& id,
@@ -255,11 +262,11 @@ private:
     ) const;
 
 private:
-    Shader m_Shader;
-
-    unsigned int m_VAO = 0;
-    unsigned int m_VBO = 0;
-    unsigned int m_FontTexture = 0;
+    Velcryn::RHI::BufferHandle m_VertexBuffer{};
+    Velcryn::RHI::BufferHandle m_IndexBuffer{};
+    Velcryn::RHI::PipelineHandle m_Pipeline{};
+    Velcryn::RHI::TextureHandle m_FontTexture{};
+    Velcryn::RHI::TextureHandle m_WhiteTexture{};
     static constexpr int FontAtlasWidth = 1024;
     static constexpr int FontAtlasHeight = 1024;
     static constexpr float FontBakeSize = 48.0f;
@@ -282,11 +289,14 @@ private:
 
     float m_UIOffsetX = 0.0f;
     float m_UIOffsetY = 0.0f;
+    UIRect m_ClipRect{};
 
     std::unordered_map<
         std::string,
         Element
     > m_Elements;
+    // Preserve script creation order so backgrounds cannot randomly cover images.
+    std::vector<std::string> m_ElementOrder;
 
     std::unordered_map<
         std::string,
@@ -294,9 +304,12 @@ private:
     > m_TextElements;
 
     bool m_MouseInteractionEnabled = false;
+    const UICanvas* m_InputCanvas = nullptr;
+    std::uint64_t m_InputCanvasRevision = 0;
     UIButton* m_PressedCanvasButton = nullptr;
     UITextInput* m_FocusedTextInput = nullptr;
     UISlider* m_DraggedSlider = nullptr;
+    std::uint64_t m_PressedButtonId = 0, m_FocusedTextId = 0, m_DraggedSliderId = 0;
     float m_BackspaceHeldTime = 0.0f;
     float m_DeleteHeldTime = 0.0f;
     float m_BackspaceRepeatTime = 0.0f;

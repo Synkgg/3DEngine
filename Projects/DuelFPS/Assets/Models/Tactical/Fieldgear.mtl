@@ -1,0 +1,25 @@
+# VelcrynLinear
+newmtl cloth
+Kd 0.095 0.118 0.085
+Pr .74
+map_Kd Canvas.png
+newmtl vest
+Kd 0.155 0.145 0.093
+Pr .74
+map_Kd Canvas.png
+newmtl strap
+Kd 0.045 0.05 0.043
+Pr .74
+map_Kd Canvas.png
+newmtl leather
+Kd 0.067 0.055 0.041
+Pr .74
+newmtl lens
+Kd 0.028 0.05 0.058
+Pr .74
+newmtl steel
+Kd 0.082 0.087 0.084
+Pr .74
+newmtl skin
+Kd 0.22 0.14 0.09
+Pr .74

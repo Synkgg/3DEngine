@@ -11,7 +11,7 @@ public:
     ImGuiLayer();
     ~ImGuiLayer();
 
-    bool Initialize(Window& window, SDL_GLContext context);
+    bool Initialize(Window& window);
     void Shutdown();
 
     void BeginFrame();

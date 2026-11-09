@@ -6,6 +6,7 @@
 
 #include "../Editor/ImGuiLayer.h"
 #include "../Editor/Editor.h"
+#include "../Editor/ProjectHub.h"
 #include "../Editor/UI/UIEditor.h"
 
 #include "../UI/UICanvas.h"
@@ -25,7 +26,7 @@
 class Application
 {
 public:
-    explicit Application(const std::string& projectPath = {});
+    explicit Application(const std::string& projectPath = {}, bool gameMode = false, int frameLimit = 0);
 
     bool Initialize();
     void Run();
@@ -34,31 +35,22 @@ public:
     void StartRuntime();
     bool ActivateProject(const std::string& descriptorPath);
     bool CreateProject(const std::string& parentDirectory, const std::string& name);
-    void RenderProjectHub();
     void ReturnToProjectHub();
     void StopRuntime();
 
 private:
-    struct RecentProject
-    {
-        std::string name;
-        std::string descriptorPath;
-    };
-
     void UpdateLighting();
-    void LoadRecentProjects();
-    void SaveRecentProjects() const;
-    void AddRecentProject(const Project& project);
-    void RemoveRecentProject(std::size_t index);
-    std::string GetHubStatePath() const;
 
     bool m_Running;
+    bool m_GameMode = false;
+    int m_FrameLimit = 0;
     Window m_Window;
     Renderer m_Renderer;
     Input m_Input;
 
     ImGuiLayer m_ImGuiLayer;
     Editor m_Editor;
+    ProjectHub m_ProjectHub;
 
     Time m_Time;
     AudioEngine m_Audio;
@@ -67,10 +59,6 @@ private:
 
     std::string m_ProjectPath;
     bool m_ShowProjectHub = false;
-    char m_NewProjectName[128]{ "New Project" };
-    char m_NewProjectLocation[512]{};
-    std::string m_ProjectHubError;
-    std::vector<RecentProject> m_RecentProjects;
 
     bool m_CameraControlActive;
     bool m_RuntimeMouseCaptured;

@@ -1,84 +1,27 @@
 #include "IndexBuffer.h"
+#include "../RHI/RHI.h"
 
-#include <glad/gl.h>
+IndexBuffer::~IndexBuffer() { Shutdown(); }
 
-IndexBuffer::IndexBuffer()
-    : m_RendererID(0),
-    m_Count(0)
-{
-}
-
-IndexBuffer::~IndexBuffer()
+bool IndexBuffer::Initialize(const std::uint32_t* indices, std::uint32_t count)
 {
     Shutdown();
-}
-
-bool IndexBuffer::Initialize(
-    const std::uint32_t* indices,
-    std::uint32_t count)
-{
-    if (indices == nullptr || count == 0)
-    {
-        return false;
-    }
-
-    glGenBuffers(1, &m_RendererID);
-
-    if (m_RendererID == 0)
-    {
-        return false;
-    }
-
-    glBindBuffer(
-        GL_ELEMENT_ARRAY_BUFFER,
-        m_RendererID
-    );
-
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        static_cast<GLsizeiptr>(
-            count * sizeof(std::uint32_t)
-            ),
-        indices,
-        GL_STATIC_DRAW
-    );
-
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device || !indices || !count) return false;
+    Velcryn::RHI::BufferDesc desc{};
+    desc.size = static_cast<std::uint64_t>(count) * sizeof(std::uint32_t);
+    desc.usage = Velcryn::RHI::BufferUsage::Index;
+    desc.debugName = "IndexBuffer";
+    m_Handle = device->CreateBuffer(desc, indices);
+    if (!m_Handle) return false;
     m_Count = count;
-
     return true;
-}
-
-void IndexBuffer::Bind()
-{
-    glBindBuffer(
-        GL_ELEMENT_ARRAY_BUFFER,
-        m_RendererID
-    );
-}
-
-void IndexBuffer::Unbind()
-{
-    glBindBuffer(
-        GL_ELEMENT_ARRAY_BUFFER,
-        0
-    );
 }
 
 void IndexBuffer::Shutdown()
 {
-    if (m_RendererID != 0)
-    {
-        glDeleteBuffers(
-            1,
-            &m_RendererID
-        );
-
-        m_RendererID = 0;
-        m_Count = 0;
-    }
-}
-
-std::uint32_t IndexBuffer::GetCount() const
-{
-    return m_Count;
+    if (m_Handle && Velcryn::RHI::GetDevice())
+        Velcryn::RHI::GetDevice()->DestroyBuffer(m_Handle);
+    m_Handle = {};
+    m_Count = 0;
 }

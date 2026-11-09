@@ -1,11 +1,14 @@
 #include "UIWidgetFactory.h"
 
 #include "UIPanel.h"
+#include "UIScrollBox.h"
+#include "UIUserWidget.h"
 #include "UIText.h"
 #include "UIImage.h"
 #include "UIButton.h"
 #include "UITextInput.h"
 #include "UISlider.h"
+#include "UIProgressBar.h"
 
 std::unique_ptr<UIWidget>
 UIWidgetFactory::Create(UIWidgetType type)
@@ -29,6 +32,15 @@ UIWidgetFactory::Create(UIWidgetType type)
 
     case UIWidgetType::Slider:
         return std::make_unique<UISlider>();
+
+    case UIWidgetType::ProgressBar:
+        return std::make_unique<UIProgressBar>();
+
+    case UIWidgetType::ScrollBox:
+        return std::make_unique<UIScrollBox>();
+
+    case UIWidgetType::UserWidget:
+        return std::make_unique<UIUserWidget>();
     }
 
     return nullptr;

@@ -1,14 +1,3 @@
 #pragma once
-class EnvironmentSystem
-{
-public:
-    bool Initialize();
-    void Shutdown();
-    void Bind(unsigned int slot) const;
-    void BindIrradiance(unsigned int slot) const;
-    unsigned int GetEnvironmentMap() const { return m_EnvironmentMap; }
-    unsigned int GetIrradianceMap() const { return m_IrradianceMap; }
-private:
-    unsigned int m_EnvironmentMap = 0;
-    unsigned int m_IrradianceMap = 0;
-};
+#include "../RHI/RHITypes.h"
+class EnvironmentSystem{public:bool Initialize();void Shutdown();void Bind(unsigned int)const{}void BindIrradiance(unsigned int)const{}Velcryn::RHI::TextureHandle GetEnvironmentMap()const{return m_EnvironmentMap;}Velcryn::RHI::TextureHandle GetIrradianceMap()const{return m_IrradianceMap;}private:Velcryn::RHI::TextureHandle m_EnvironmentMap{},m_IrradianceMap{};};

@@ -1,7 +1,7 @@
 MyEngineScene
-Entities 7
+Entities 6
 Entity 1
-Name Remote Pawn
+Name Remote Operator
 Position 0 0 0
 Rotation 0 0 0
 Scale 1 1 1
@@ -16,19 +16,19 @@ Player 1 0 0
 PlayerStart 0
 CharacterController 0
 Light 0
-Collider 1 0.9 2 0.9
+Collider 1 0.65 1.8 0.65
 Scripts 0
 Entity 2
-Name Torso
-Position 0 0.05 0
+Name Operator armor
+Position 0 0 0
 Rotation 0 0 0
-Scale 0.62 0.78 0.34
+Scale 1 1 1
 Parent 1
 PrefabSource ""
-Mesh 1 1 ""
-Color 1 0.12 0.18 0.24 1
+Mesh 0
+Color 1 1 1 1 1
 Texture 0
-Material 1 0.12 0.48 1 0 "" "" "" "" ""
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0
@@ -37,16 +37,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 3
-Name Head
-Position 0 0.72 0
+Name Left leg
+Position 0 -0.08 0
 Rotation 0 0 0
-Scale 0.32 0.32 0.32
-Parent 1
+Scale 1 1 1
+Parent 2
 PrefabSource ""
-Mesh 1 2 ""
-Color 1 0.88 0.48 0.16 1
+Mesh 1 0 "Assets/Models/Tactical/FieldLegL.obj" 0
+Color 1 1 1 1 1
 Texture 0
-Material 1 0.08 0.55 1 0 "" "" "" "" ""
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0
@@ -55,16 +55,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 4
-Name LeftArm
-Position -0.48 0.02 -0.08
-Rotation 0 0 0.12
-Scale 0.18 0.68 0.18
-Parent 1
+Name Right leg
+Position 0 -0.08 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 2
 PrefabSource ""
-Mesh 1 4 ""
-Color 1 0.16 0.22 0.28 1
+Mesh 1 0 "Assets/Models/Tactical/FieldLegR.obj" 0
+Color 1 1 1 1 1
 Texture 0
-Material 1 0.12 0.5 1 0 "" "" "" "" ""
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0
@@ -73,16 +73,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 5
-Name RightArm
-Position 0.48 0.02 -0.08
-Rotation 0 0 -0.12
-Scale 0.18 0.68 0.18
-Parent 1
+Name Carried carbine
+Position 0 0.31 -0.14
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
 PrefabSource ""
-Mesh 1 4 ""
-Color 1 0.16 0.22 0.28 1
+Mesh 1 0 "Assets/Models/Tactical/rifle.obj" 0
+Color 1 1 1 1 1
 Texture 0
-Material 1 0.12 0.5 1 0 "" "" "" "" ""
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0
@@ -91,34 +91,16 @@ Light 0
 Collider 0
 Scripts 0
 Entity 6
-Name LeftLeg
-Position -0.22 -0.82 0
+Name Upper body
+Position 0 0 0
 Rotation 0 0 0
-Scale 0.22 0.78 0.22
-Parent 1
+Scale 1 1 1
+Parent 2
 PrefabSource ""
-Mesh 1 4 ""
-Color 1 0.07 0.09 0.12 1
+Mesh 1 0 "Assets/Models/Tactical/FieldOperator.obj" 0
+Color 1 1 1 1 1
 Texture 0
-Material 1 0.08 0.58 1 0 "" "" "" "" ""
-Interactable 0
-Player 0
-PlayerStart 0
-CharacterController 0
-Light 0
-Collider 0
-Scripts 0
-Entity 7
-Name RightLeg
-Position 0.22 -0.82 0
-Rotation 0 0 0
-Scale 0.22 0.78 0.22
-Parent 1
-PrefabSource ""
-Mesh 1 4 ""
-Color 1 0.07 0.09 0.12 1
-Texture 0
-Material 1 0.08 0.58 1 0 "" "" "" "" ""
+Material 0
 Interactable 0
 Player 0
 PlayerStart 0

@@ -8,7 +8,6 @@
 #include "../../Graphics/Renderer.h"
 #include "../../Graphics/Texture2D.h"
 #include "../../Audio/AudioEngine.h"
-#include <glad/gl.h>
 #include <algorithm>
 #include <cmath>
 #include <string>
@@ -45,6 +44,7 @@ void UIRenderer::DrawRect(
     element.texture = nullptr;
     element.visible = true;
 
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
     m_Elements[id] = element;
 }
 
@@ -59,6 +59,8 @@ void UIRenderer::SetRect(
     float blue,
     float alpha)
 {
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
+    m_TextElements.erase(id);
     Element& element =
         m_Elements[id];
 
@@ -88,6 +90,8 @@ void UIRenderer::SetText(
     float blue,
     float alpha)
 {
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
+    m_Elements.erase(id);
     TextElement& element =
         m_TextElements[id];
 
@@ -118,6 +122,8 @@ void UIRenderer::SetImage(
     float blue,
     float alpha)
 {
+    if (!m_Elements.contains(id) && !m_TextElements.contains(id)) m_ElementOrder.push_back(id);
+    m_TextElements.erase(id);
     Element& element =
         m_Elements[id];
 
@@ -191,17 +197,20 @@ void UIRenderer::Remove(
 {
     m_Elements.erase(id);
     m_TextElements.erase(id);
+    std::erase(m_ElementOrder, id);
 }
 
 void UIRenderer::Clear()
 {
+    m_ElementOrder.clear();
     m_Elements.clear();
     m_TextElements.clear();
     m_PressedCanvasButton = nullptr;
     m_BackspaceHeldTime = m_DeleteHeldTime = 0.0f;
     m_BackspaceRepeatTime = m_DeleteRepeatTime = 0.0f;
-    if (m_FocusedTextInput)
-        m_FocusedTextInput->SetFocused(false);
+    // The owning canvas may already have been replaced by UI.Load/Clear.
+    m_DraggedSlider = nullptr;
+    m_InputCanvas = nullptr;
     m_FocusedTextInput = nullptr;
 }
 
@@ -294,291 +303,32 @@ bool UIRenderer::GetAbsolutePosition(
     return false;
 }
 
-void UIRenderer::DrawElement(
-    const std::string& id,
-    const Element& element)
+void UIRenderer::DrawElement(const std::string& id, const Element& element)
 {
-    if (!element.visible)
-    {
-        return;
-    }
-
-    float x = 0.0f;
-    float y = 0.0f;
-
-    std::unordered_set<std::string>
-        resolving;
-
-    if (!GetAbsolutePosition(
-        id,
-        x,
-        y,
-        resolving))
-    {
-        return;
-    }
-
-    const float vertices[24] =
-    {
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + element.width,
-        y,
-        1.0f,
-        0.0f,
-
-        x + element.width,
-        y + element.height,
-        1.0f,
-        1.0f,
-
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + element.width,
-        y + element.height,
-        1.0f,
-        1.0f,
-
-        x,
-        y + element.height,
-        0.0f,
-        1.0f
-    };
-
-    glBindVertexArray(m_VAO);
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        m_VBO
-    );
-
-    glBufferSubData(
-        GL_ARRAY_BUFFER,
-        0,
-        sizeof(vertices),
-        vertices
-    );
-
-    m_Shader.SetVec4(
-        "u_Color",
-        element.red,
-        element.green,
-        element.blue,
-        element.alpha
-    );
-
-    // Legacy/scripted runtime elements do not expose corner radius yet.
-    // Explicitly clear the canvas-widget shader state so a previously drawn
-    // rounded widget cannot leak its radius into these rectangles.
-    m_Shader.SetVec2("u_RectSize", std::max(0.0f, element.width), std::max(0.0f, element.height));
-    m_Shader.SetFloat("u_CornerRadius", 0.0f);
-    m_Shader.SetInt("u_UseGradient", 0);
-
-    if (element.texture != nullptr)
-    {
-        glActiveTexture(GL_TEXTURE0);
-
-        glBindTexture(
-            GL_TEXTURE_2D,
-            element.texture->GetID()
-        );
-
-        m_Shader.SetInt(
-            "u_Texture",
-            0
-        );
-
-        m_Shader.SetInt(
-            "u_UseTexture",
-            1
-        );
-
-        glDrawArrays(
-            GL_TRIANGLES,
-            0,
-            6
-        );
-
-        glBindTexture(
-            GL_TEXTURE_2D,
-            0
-        );
-    }
-    else
-    {
-        m_Shader.SetInt(
-            "u_UseTexture",
-            0
-        );
-
-        glDrawArrays(
-            GL_TRIANGLES,
-            0,
-            6
-        );
-    }
-
-    glBindVertexArray(0);
+    float x = element.x, y = element.y;
+    std::unordered_set<std::string> resolving;
+    GetAbsolutePosition(id, x, y, resolving);
+    Velcryn::RHI::TextureHandle texture = m_WhiteTexture;
+    if (element.texture && element.texture->IsLoaded()) texture = element.texture->GetHandle();
+    DrawQuad(x, y, element.width, element.height, 0.0f, 1.0f, 1.0f, 0.0f,
+        Vec4(element.red, element.green, element.blue, element.alpha), texture);
 }
 
-void UIRenderer::DrawTextElement(
-    const std::string& id,
-    const TextElement& element)
+void UIRenderer::DrawTextElement(const std::string& id, const TextElement& element)
 {
-    if (!element.visible ||
-        element.text.empty())
-    {
-        return;
-    }
-
-    float x = 0.0f;
-    float y = 0.0f;
-
-    std::unordered_set<std::string>
-        resolving;
-
-    if (!GetAbsolutePosition(
-        id,
-        x,
-        y,
-        resolving))
-    {
-        return;
-    }
-
-    float cursorX = x;
-    float cursorY = y;
-
-    for (char character :
-    element.text)
-    {
-        if (character == '\n')
-        {
-            cursorX = x;
-            cursorY +=
-                element.scale * 8.0f;
-
-            continue;
-        }
-
-        for (int row = 0; row < 7; ++row)
-        {
-            for (int column = 0; column < 5; ++column)
-            {
-                const unsigned char pixel =
-                    GetGlyphRow(
-                        character,
-                        row
-                    );
-
-                if ((pixel &
-                    (1 << (4 - column))) == 0)
-                {
-                    continue;
-                }
-
-                DrawTextPixel(
-                    cursorX +
-                    column * element.scale,
-                    cursorY +
-                    row * element.scale,
-                    element.scale,
-                    element.red,
-                    element.green,
-                    element.blue,
-                    element.alpha
-                );
-            }
-        }
-
-        cursorX +=
-            element.scale * 6.0f;
-    }
+    float originX = element.x, originY = element.y;
+    std::unordered_set<std::string> resolving;
+    GetAbsolutePosition(id, originX, originY, resolving);
+    UIText text;
+    text.SetText(element.text);
+    text.SetFontSize(std::max(1.0f, element.scale) * 8.0f);
+    text.SetColor(Vec4(element.red, element.green, element.blue, element.alpha));
+    DrawCanvasText(text, UIRect{originX, originY, m_LogicalWidth - originX, m_LogicalHeight - originY});
 }
-
-void UIRenderer::DrawTextPixel(
-    float x,
-    float y,
-    float size,
-    float red,
-    float green,
-    float blue,
-    float alpha)
+void UIRenderer::DrawTextPixel(float x,float y,float size,float red,float green,float blue,float alpha)
 {
-    const float vertices[24] =
-    {
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + size,
-        y,
-        1.0f,
-        0.0f,
-
-        x + size,
-        y + size,
-        1.0f,
-        1.0f,
-
-        x,
-        y,
-        0.0f,
-        0.0f,
-
-        x + size,
-        y + size,
-        1.0f,
-        1.0f,
-
-        x,
-        y + size,
-        0.0f,
-        1.0f
-    };
-
-    glBindVertexArray(m_VAO);
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        m_VBO
-    );
-
-    glBufferSubData(
-        GL_ARRAY_BUFFER,
-        0,
-        sizeof(vertices),
-        vertices
-    );
-
-    m_Shader.SetVec4(
-        "u_Color",
-        red,
-        green,
-        blue,
-        alpha
-    );
-    m_Shader.SetVec2("u_RectSize", size, size);
-    m_Shader.SetFloat("u_CornerRadius", 0.0f);
-    m_Shader.SetInt("u_UseGradient", 0);
-
-    m_Shader.SetInt(
-        "u_UseTexture",
-        0
-    );
-
-    glDrawArrays(
-        GL_TRIANGLES,
-        0,
-        6
-    );
+    DrawQuad(x, y, size, size, 0.0f, 0.0f, 1.0f, 1.0f,
+        Vec4(red, green, blue, alpha), m_WhiteTexture);
 }
 
 unsigned char UIRenderer::GetGlyphRow(

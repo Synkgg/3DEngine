@@ -5,109 +5,23 @@
 #include "UIButton.h"
 #include "UITextInput.h"
 #include "UISlider.h"
-#include "UISlider.h"
 #include "../Platform/SDL/Input.h"
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Texture2D.h"
+#include "../Graphics/RHI/RHI.h"
 #include "../Core/Logger.h"
 #include "../Audio/AudioEngine.h"
 #include "../Editor/Fonts/InterFont.h"
 
-#include <glad/gl.h>
 
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <UI.vert.h>
+#include <UI.frag.h>
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <imstb_truetype.h>
-
-namespace
-{
-    const char* UI_VERTEX_SHADER = R"(
-        #version 450 core
-
-        layout(location = 0) in vec2 a_Position;
-        layout(location = 1) in vec2 a_UV;
-
-        uniform float u_ScreenWidth;
-        uniform float u_ScreenHeight;
-
-        uniform float u_UIScale;
-        uniform float u_UIOffsetX;
-        uniform float u_UIOffsetY;
-
-        out vec2 v_UV;
-
-        void main()
-        {
-            float screenX =
-                a_Position.x * u_UIScale +
-                u_UIOffsetX;
-
-            float screenY =
-                a_Position.y * u_UIScale +
-                u_UIOffsetY;
-
-            float ndcX =
-                (screenX / u_ScreenWidth) * 2.0 - 1.0;
-
-            float ndcY =
-                1.0 -
-                (screenY / u_ScreenHeight) * 2.0;
-
-            gl_Position =
-                vec4(ndcX, ndcY, 0.0, 1.0);
-
-            v_UV = a_UV;
-        }
-    )";
-
-    const char* UI_FRAGMENT_SHADER = R"(
-        #version 450 core
-
-        in vec2 v_UV;
-
-        uniform vec4 u_Color;
-        uniform vec4 u_GradientColor;
-        uniform int u_UseGradient;
-        uniform int u_GradientDirection;
-        uniform sampler2D u_Texture;
-        uniform int u_UseTexture;
-        uniform vec2 u_RectSize;
-        uniform float u_CornerRadius;
-
-        out vec4 FragColor;
-
-        void main()
-        {
-            // UI quads use a flipped V for texture sampling, but rounding only
-            // needs a stable 0..1 local coordinate inside the rectangle.
-            if (u_CornerRadius > 0.001)
-            {
-                vec2 localUV = vec2(v_UV.x, 1.0 - v_UV.y);
-                vec2 p = localUV * u_RectSize;
-                vec2 halfSize = u_RectSize * 0.5;
-                float radius = min(u_CornerRadius, min(halfSize.x, halfSize.y));
-                vec2 q = abs(p - halfSize) - (halfSize - vec2(radius));
-                float sd = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - radius;
-                if (sd > 0.0) discard;
-            }
-            float gradientT = u_GradientDirection == 1 ? v_UV.x : v_UV.y;
-            vec4 baseColor = u_UseGradient != 0 ? mix(u_Color, u_GradientColor, gradientT) : u_Color;
-            if (u_UseTexture != 0)
-            {
-                FragColor =
-                    texture(u_Texture, v_UV) *
-                    baseColor;
-            }
-            else
-            {
-                FragColor = baseColor;
-            }
-        }
-    )";
-}
 
 UIRenderer::UIRenderer()
 {
@@ -120,129 +34,73 @@ UIRenderer::~UIRenderer()
 
 bool UIRenderer::Initialize()
 {
-    if (m_VAO != 0)
-    {
-        return true;
-    }
-
-    if (!m_Shader.Initialize(
-        UI_VERTEX_SHADER,
-        UI_FRAGMENT_SHADER))
-    {
-        return false;
-    }
-
-    glGenVertexArrays(
-        1,
-        &m_VAO
-    );
-
-    glGenBuffers(
-        1,
-        &m_VBO
-    );
-
-    glBindVertexArray(m_VAO);
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        m_VBO
-    );
-
-    const float vertices[24] =
-    {
-        // Position      UV
-        0.0f, 0.0f,      0.0f, 0.0f,
-        1.0f, 0.0f,      1.0f, 0.0f,
-        1.0f, 1.0f,      1.0f, 1.0f,
-
-        0.0f, 0.0f,      0.0f, 0.0f,
-        1.0f, 1.0f,      1.0f, 1.0f,
-        0.0f, 1.0f,      0.0f, 1.0f
+    if (m_VertexBuffer) return true;
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device) return false;
+    struct UIVertex { float x, y, u, v; };
+    const UIVertex unitQuad[4] = {
+        {0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 1.0f, 0.0f},
+        {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}
     };
+    Velcryn::RHI::BufferDesc desc{};
+    desc.size = sizeof(unitQuad);
+    desc.usage = Velcryn::RHI::BufferUsage::Vertex;
+    desc.debugName = "UIUnitQuadVertices";
+    m_VertexBuffer = device->CreateBuffer(desc, unitQuad);
+    if (!m_VertexBuffer) return false;
 
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(vertices),
-        vertices,
-        GL_DYNAMIC_DRAW
-    );
+    const std::uint32_t indices[6] = {0, 1, 2, 2, 3, 0};
+    Velcryn::RHI::BufferDesc indexDesc{};
+    indexDesc.size = sizeof(indices); indexDesc.usage = Velcryn::RHI::BufferUsage::Index;
+    indexDesc.debugName = "UIQuadIndices";
+    m_IndexBuffer = device->CreateBuffer(indexDesc, indices);
+    if (!m_IndexBuffer) { Shutdown(); return false; }
 
-    glEnableVertexAttribArray(0);
+    const Velcryn::RHI::VertexAttribute attributes[] = {
+        {0, 0, Velcryn::RHI::VertexFormat::Float2},
+        {1, sizeof(float) * 2, Velcryn::RHI::VertexFormat::Float2}
+    };
+    Velcryn::RHI::GraphicsPipelineDesc pipeline{};
+    pipeline.vertexShader = UI_vert; pipeline.fragmentShader = UI_frag;
+    pipeline.attributes = attributes; pipeline.vertexStride = sizeof(float) * 4;
+    pipeline.constantSize = sizeof(float) * 32;
+    pipeline.colorFormat = Velcryn::RHI::TextureFormat::RGBA16_Float;
+    pipeline.depthFormat = Velcryn::RHI::TextureFormat::D32_Float;
+    pipeline.depthTest = false; pipeline.depthWrite = false; pipeline.cullBackFaces = false;
+    pipeline.sampledTexture = true; pipeline.displayEncodedTexture = true; pipeline.clampSampler = true; pipeline.alphaBlend = true; pipeline.debugName = "RuntimeUI";
+    m_Pipeline = device->CreateGraphicsPipeline(pipeline);
+    if (!m_Pipeline) { Shutdown(); return false; }
 
-    glVertexAttribPointer(
-        0,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(float) * 4,
-        reinterpret_cast<void*>(0)
-    );
+    const std::uint8_t white[4] = {255,255,255,255};
+    Velcryn::RHI::TextureDesc whiteDesc{};
+    whiteDesc.width = whiteDesc.height = 1;
+    whiteDesc.format = Velcryn::RHI::TextureFormat::RGBA8_UNorm;
+    whiteDesc.usage = Velcryn::RHI::TextureUsage::Sampled | Velcryn::RHI::TextureUsage::TransferDestination;
+    whiteDesc.debugName = "UIWhiteTexture";
+    m_WhiteTexture = device->CreateTexture(whiteDesc, white, sizeof(white));
+    if (!m_WhiteTexture) { Shutdown(); return false; }
 
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(
-        1,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(float) * 4,
-        reinterpret_cast<void*>(
-            sizeof(float) * 2
-            )
-    );
-
-    glBindBuffer(
-        GL_ARRAY_BUFFER,
-        0
-    );
-
-    glBindVertexArray(0);
-
-    // The runtime font is optional at renderer startup. Visual UI must still
-    // initialize even when the editor is launched from a build directory
-    // where the source-tree font path is unavailable.
-    if (!InitializeFontAtlas())
-    {
-        Logger::Warning(
-            "Inter runtime font could not be loaded; UI renderer will continue without canvas text.");
-    }
-
+    if (!InitializeFontAtlas()) Logger::Warning("Inter runtime font could not be loaded; UI renderer will continue without canvas text.");
     return true;
 }
 
 void UIRenderer::Shutdown()
 {
-    if (m_FontTexture != 0)
-    {
-        glDeleteTextures(1, &m_FontTexture);
-        m_FontTexture = 0;
+    if (auto* device = Velcryn::RHI::GetDevice()) {
+        if (m_FontTexture) device->DestroyTexture(m_FontTexture);
+        if (m_WhiteTexture) device->DestroyTexture(m_WhiteTexture);
+        if (m_Pipeline) device->DestroyPipeline(m_Pipeline);
+        if (m_IndexBuffer) device->DestroyBuffer(m_IndexBuffer);
+        if (m_VertexBuffer) device->DestroyBuffer(m_VertexBuffer);
     }
-
-    if (m_VBO != 0)
-    {
-        glDeleteBuffers(
-            1,
-            &m_VBO
-        );
-
-        m_VBO = 0;
-    }
-
-    if (m_VAO != 0)
-    {
-        glDeleteVertexArrays(
-            1,
-            &m_VAO
-        );
-
-        m_VAO = 0;
-    }
-
-    m_Shader.Shutdown();
-
+    m_FontTexture = {};
+    m_WhiteTexture = {};
+    m_Pipeline = {};
+    m_IndexBuffer = {};
+    m_VertexBuffer = {};
     m_Elements.clear();
     m_TextElements.clear();
+    m_ElementOrder.clear();
 }
 
 void UIRenderer::Resize(
@@ -278,117 +136,65 @@ void UIRenderer::SetLogicalSize(
 
 void UIRenderer::Begin()
 {
-    if (m_VAO == 0)
-    {
-        return;
-    }
-
-    glDisable(GL_DEPTH_TEST);
-
-    glEnable(GL_BLEND);
-
-    glBlendFunc(
-        GL_SRC_ALPHA,
-        GL_ONE_MINUS_SRC_ALPHA
-    );
-
-    const float scaleX =
-        static_cast<float>(m_Width) /
-        m_LogicalWidth;
-
-    const float scaleY =
-        static_cast<float>(m_Height) /
-        m_LogicalHeight;
-
-    m_UIScale =
-        std::min(
-            scaleX,
-            scaleY
-        );
-
-    m_UIOffsetX =
-        (
-            static_cast<float>(m_Width) -
-            m_LogicalWidth * m_UIScale
-            ) * 0.5f;
-
-    m_UIOffsetY =
-        (
-            static_cast<float>(m_Height) -
-            m_LogicalHeight * m_UIScale
-            ) * 0.5f;
-
-    m_Shader.Bind();
-
-    m_Shader.SetFloat(
-        "u_ScreenWidth",
-        static_cast<float>(m_Width)
-    );
-
-    m_Shader.SetFloat(
-        "u_ScreenHeight",
-        static_cast<float>(m_Height)
-    );
-
-    m_Shader.SetFloat(
-        "u_UIScale",
-        m_UIScale
-    );
-
-    m_Shader.SetFloat(
-        "u_UIOffsetX",
-        m_UIOffsetX
-    );
-
-    m_Shader.SetFloat(
-        "u_UIOffsetY",
-        m_UIOffsetY
-    );
+    m_ClipRect = {0, 0, m_LogicalWidth, m_LogicalHeight};
+    const float scaleX = static_cast<float>(m_Width) / m_LogicalWidth;
+    const float scaleY = static_cast<float>(m_Height) / m_LogicalHeight;
+    m_UIScale = std::min(scaleX, scaleY);
+    m_UIOffsetX = (static_cast<float>(m_Width) - m_LogicalWidth * m_UIScale) * 0.5f;
+    m_UIOffsetY = (static_cast<float>(m_Height) - m_LogicalHeight * m_UIScale) * 0.5f;
 }
 
 void UIRenderer::End()
 {
-    if (m_VAO == 0)
+    for (const auto& id : m_ElementOrder)
     {
-        return;
+        std::string ancestor = id;
+        std::unordered_set<std::string> visited;
+        bool visible = true;
+        while (!ancestor.empty()) {
+            if (!visited.insert(ancestor).second) { visible = false; break; }
+            if (auto it = m_Elements.find(ancestor); it != m_Elements.end()) {
+                if (!it->second.visible) { visible = false; break; }
+                ancestor = it->second.parent;
+            } else if (auto it = m_TextElements.find(ancestor); it != m_TextElements.end()) {
+                if (!it->second.visible) { visible = false; break; }
+                ancestor = it->second.parent;
+            } else break;
+        }
+        if (!visible) continue;
+        if (auto it = m_Elements.find(id); it != m_Elements.end()) DrawElement(id, it->second);
+        else if (auto it = m_TextElements.find(id); it != m_TextElements.end()) DrawTextElement(id, it->second);
     }
-
-    for (const auto& element :
-        m_Elements)
-    {
-        DrawElement(
-            element.first,
-            element.second
-        );
-    }
-
-    for (const auto& text :
-        m_TextElements)
-    {
-        DrawTextElement(
-            text.first,
-            text.second
-        );
-    }
-
-    m_Shader.Unbind();
-
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
 }
 
-
-
-
-
-
-
-// =============================================================
-// Canvas UI
-// =============================================================
-
-
-
+void UIRenderer::DrawQuad(float x, float y, float width, float height,
+    float u0, float v0, float u1, float v1, const Vec4& color,
+    Velcryn::RHI::TextureHandle texture, const Vec4& gradientColor,
+    bool useGradient, bool horizontalGradient, float cornerRadius)
+{
+    if (!m_Pipeline || !m_VertexBuffer || !m_IndexBuffer || width <= 0.0f || height <= 0.0f)
+        return;
+    struct Constants {
+        float color[4]; float viewport[4]; float offset[4];
+        float gradient[4]; float style[4]; float rect[4]; float uvRect[4]; float clip[4];
+    };
+    Constants constants{{color.x,color.y,color.z,color.w},
+        {static_cast<float>(m_Width),static_cast<float>(m_Height),m_UIScale,0.0f},
+        {m_UIOffsetX,m_UIOffsetY,0.0f,0.0f},
+        {gradientColor.x,gradientColor.y,gradientColor.z,gradientColor.w},
+        {useGradient ? 1.0f : 0.0f, horizontalGradient ? 1.0f : 0.0f,
+         width * m_UIScale, cornerRadius * m_UIScale},
+        {x, y, width, height},
+        {u0, v0, u1, v1},
+        {m_ClipRect.x*m_UIScale+m_UIOffsetX, m_ClipRect.y*m_UIScale+m_UIOffsetY,
+         (m_ClipRect.x+m_ClipRect.width)*m_UIScale+m_UIOffsetX,
+         (m_ClipRect.y+m_ClipRect.height)*m_UIScale+m_UIOffsetY}};
+    if (auto* device = Velcryn::RHI::GetDevice())
+    {
+        device->DrawIndexed(m_Pipeline, m_VertexBuffer, m_IndexBuffer, 6,
+            &constants, sizeof(constants), 1, texture ? texture : m_WhiteTexture);
+    }
+}
 
 bool UIRenderer::InitializeFontAtlas()
 {
@@ -410,17 +216,16 @@ bool UIRenderer::InitializeFontAtlas()
     for (int i = 0; i < FontAtlasWidth * FontAtlasHeight; ++i)
         rgba[i * 4 + 3] = bitmap[i];
 
-    glGenTextures(1, &m_FontTexture);
-    glBindTexture(GL_TEXTURE_2D, m_FontTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA8,
-        FontAtlasWidth, FontAtlasHeight, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
-    glBindTexture(GL_TEXTURE_2D, 0);
+    auto* device = Velcryn::RHI::GetDevice();
+    if (!device) return false;
+    Velcryn::RHI::TextureDesc textureDesc{};
+    textureDesc.width = FontAtlasWidth;
+    textureDesc.height = FontAtlasHeight;
+    textureDesc.format = Velcryn::RHI::TextureFormat::RGBA8_UNorm;
+    textureDesc.usage = Velcryn::RHI::TextureUsage::Sampled | Velcryn::RHI::TextureUsage::TransferDestination;
+    textureDesc.debugName = "UIFontAtlas";
+    m_FontTexture = device->CreateTexture(textureDesc, rgba.data(), rgba.size());
+    if (!m_FontTexture) return false;
 
     for (int i = 0; i < 95; ++i)
     {

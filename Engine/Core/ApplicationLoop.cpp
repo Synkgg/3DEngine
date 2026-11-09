@@ -1,6 +1,10 @@
 #include "Application.h"
+#include "GameExporter.h"
+#include "../Platform/Windows/FileDialog.h"
 #include <SDL3/SDL.h>
 #include <imgui.h>
+#include <cstdio>
+#include <cstring>
 #include "../Scene/Entity.h"
 #include "../Scene/Components/TransformComponent.h"
 #include "../Scene/Components/MeshComponent.h"
@@ -9,6 +13,7 @@
 #include "../Scene/Components/ColliderComponent.h"
 #include "../Scene/Components/TextureComponent.h"
 #include "../Scene/Components/MaterialComponent.h"
+#include "../Graphics/ModelAsset.h"
 #include "../Graphics/PrimitiveType.h"
 #include "../Core/Logger.h"
 #include "../UI/UISerializer.h"
@@ -38,6 +43,7 @@ void Application::Run()
 
         while (SDL_PollEvent(&event))
         {
+            m_Input.ProcessEvent(event);
             // While gameplay owns relative mouse input, do not feed mouse
             // motion/buttons/wheel into Dear ImGui. SDL relative mode hides
             // the OS cursor, but ImGui otherwise keeps integrating those
@@ -104,7 +110,8 @@ void Application::Run()
         const bool runtimeEscapePressed =
             m_Runtime.IsRunning() &&
             m_Input.IsKeyPressed(SDL_SCANCODE_ESCAPE);
-         const bool stopRuntimeBeforeUpdate =
+        const bool stopRuntimeBeforeUpdate =
+            !m_GameMode &&
             runtimeEscapePressed &&
             m_Scene.GetEntities().empty();
 
@@ -119,7 +126,14 @@ void Application::Run()
         {
             ImGuiIO& hubIO = ImGui::GetIO();
             hubIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-            RenderProjectHub();
+            m_ProjectHub.Render(
+                [this](const std::string& path) { return ActivateProject(path); },
+                [this](const std::string& location, const std::string& name) { return CreateProject(location, name); },
+                [this]()
+                {
+                    m_ShowProjectHub = false;
+                    SDL_SetWindowTitle(m_Window.GetNativeWindow(), "Velcryn Editor - Legacy Workspace");
+                });
             m_ImGuiLayer.EndFrame();
             m_Renderer.EndFrame();
             finishFrame();
@@ -140,6 +154,8 @@ void Application::Run()
             imguiIO.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         }
 
+        if (!m_GameMode)
+        {
         // Persistent editor shell: scenes and asset editors are documents.
         // Scene rendering stays alive regardless of which document is active.
         m_Editor.Render(
@@ -147,6 +163,160 @@ void Application::Run()
             m_Scene,
             m_ImGuiLayer.GetIconFont(),
             m_ActiveUIDocument < 0);
+
+        // File > Export Game: choose a destination parent, inspect the saved
+        // project, and build a standalone folder without overwriting anything.
+        static std::string exportStatus;
+        static char exportParent[2048]{};
+        static char exportFolder[256]{};
+        static bool preferReleaseBuild = true;
+        static bool saveSceneBeforeExport = true;
+        static bool exportSucceeded = false;
+        static GameExportSummary exportSummary;
+        static std::string exportPreflightError;
+        const auto refreshExportPreflight = [&]()
+        {
+            exportSummary = {};
+            exportPreflightError.clear();
+            if (m_ProjectManager.HasProject())
+                InspectGameExport(m_ProjectManager.GetActiveProject().descriptorPath,
+                                  exportSummary, exportPreflightError);
+        };
+        if (m_Editor.ConsumeExportRequest())
+        {
+            exportStatus.clear();
+            exportSucceeded = false;
+            if (m_ProjectManager.HasProject())
+            {
+                const Project& project = m_ProjectManager.GetActiveProject();
+                std::snprintf(exportParent, sizeof(exportParent), "%s",
+                              project.rootDirectory.parent_path().string().c_str());
+                std::snprintf(exportFolder, sizeof(exportFolder), "%s-Windows",
+                              project.descriptorPath.stem().string().c_str());
+            }
+            refreshExportPreflight();
+            ImGui::OpenPopup("Export Windows game");
+        }
+        ImGui::SetNextWindowSize(ImVec2(650.0f, 440.0f), ImGuiCond_Appearing);
+        if (ImGui::BeginPopupModal("Export Windows game", nullptr, ImGuiWindowFlags_NoResize))
+        {
+            ImGui::TextUnformatted("STANDALONE WINDOWS GAME");
+            ImGui::TextDisabled("Vulkan / x64 - exports saved project assets and a playable executable");
+            ImGui::Separator();
+            if (!m_ProjectManager.HasProject())
+            {
+                ImGui::TextWrapped("Open a .project workspace before exporting.");
+            }
+            else
+            {
+                const Project& project = m_ProjectManager.GetActiveProject();
+                ImGui::Text("Project: %s", project.name.c_str());
+                ImGui::TextWrapped("Startup scene: %s", project.startupScene.generic_string().c_str());
+                if (ImGui::Button("Use open scene as startup"))
+                {
+                    if (m_Editor.GetSceneFilePath().empty())
+                        exportStatus = "Save the open scene before making it the startup scene.";
+                    else if (m_Editor.IsPlaying())
+                        exportStatus = "Stop Play mode before saving or changing the startup scene.";
+                    else if (!m_Editor.SaveCurrentScene(m_Scene))
+                        exportStatus = "Could not save the current scene.";
+                    else if (!m_ProjectManager.SetStartupScene(m_Editor.GetSceneFilePath()))
+                        exportStatus = "The startup scene must be a saved .scene inside this project.";
+                    else
+                    {
+                        exportStatus = "Startup scene updated and saved.";
+                        refreshExportPreflight();
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Recheck project"))
+                    refreshExportPreflight();
+                if (!exportPreflightError.empty())
+                    ImGui::TextWrapped("Preflight: %s", exportPreflightError.c_str());
+                else
+                    ImGui::Text("Ready: %llu asset files (%.1f MiB)",
+                                static_cast<unsigned long long>(exportSummary.assetFileCount),
+                                static_cast<double>(exportSummary.assetBytes) / (1024.0 * 1024.0));
+
+                ImGui::Separator();
+                ImGui::TextUnformatted("Destination parent folder");
+                ImGui::SetNextItemWidth(510.0f);
+                ImGui::InputText("##ExportParent", exportParent, sizeof(exportParent));
+                ImGui::SameLine();
+                if (ImGui::Button("Browse..."))
+                {
+                    std::string folder;
+                    if (FileDialog::SelectFolder(folder, L"Choose Game Export Destination"))
+                        std::snprintf(exportParent, sizeof(exportParent), "%s", folder.c_str());
+                }
+                ImGui::TextUnformatted("New package folder name");
+                ImGui::SetNextItemWidth(350.0f);
+                ImGui::InputText("##ExportFolder", exportFolder, sizeof(exportFolder));
+
+                ImGui::Checkbox("Save the open scene before export", &saveSceneBeforeExport);
+                ImGui::Checkbox("Prefer a Release executable when available", &preferReleaseBuild);
+
+                const std::filesystem::path currentExe =
+                    std::filesystem::path(SDL_GetBasePath()) / "VelcrynEditor.exe";
+                const std::filesystem::path releaseExe =
+                    currentExe.parent_path().parent_path() / "x64-Release" / "VelcrynEditor.exe";
+                const bool releaseAvailable = std::filesystem::is_regular_file(releaseExe);
+                const bool runningRelease = currentExe.parent_path().filename() == "x64-Release";
+                const std::filesystem::path selectedExe =
+                    preferReleaseBuild && releaseAvailable ? releaseExe : currentExe;
+                ImGui::TextWrapped("Executable: %s", selectedExe.string().c_str());
+                if (!runningRelease && (!preferReleaseBuild || !releaseAvailable))
+                    ImGui::TextWrapped("Note: exporting the running build. Build x64-Release for a smaller, optimized distribution.");
+                ImGui::TextDisabled("Saved UI documents and other assets must be saved separately.");
+
+                const std::string folderName(exportFolder);
+                const bool validName = !folderName.empty() && folderName != "." && folderName != ".." &&
+                    folderName.find_first_of("<>:\"/\\|?*") == std::string::npos &&
+                    folderName.back() != '.' && folderName.back() != ' ';
+                const bool canExport = validName && exportParent[0] != '\0' &&
+                    !m_Editor.IsPlaying() && exportPreflightError.empty();
+                if (!validName)
+                    ImGui::TextUnformatted("Choose a valid Windows folder name.");
+                if (m_Editor.IsPlaying())
+                    ImGui::TextUnformatted("Stop Play mode before exporting.");
+
+                ImGui::BeginDisabled(!canExport);
+                if (ImGui::Button("Export Game", ImVec2(180.0f, 36.0f)))
+                {
+                    exportSucceeded = false;
+                    exportStatus.clear();
+                    if (saveSceneBeforeExport && !m_Editor.GetSceneFilePath().empty() &&
+                        !m_Editor.SaveCurrentScene(m_Scene))
+                        exportStatus = "Export canceled: the open scene could not be saved.";
+                    else if (!m_Editor.GetProjectSettings().Save(project.GetSettingsPath().string()))
+                        exportStatus = "Export canceled: project settings could not be saved.";
+                    else
+                    {
+                        const std::filesystem::path output =
+                            std::filesystem::path(exportParent) / folderName;
+                        std::string error;
+                        exportSucceeded = ExportGame(project.descriptorPath, output, selectedExe, error);
+                        exportStatus = exportSucceeded ? "Export complete: " + output.string()
+                                                       : "Export failed: " + error;
+                        refreshExportPreflight();
+                    }
+                }
+                ImGui::EndDisabled();
+                ImGui::SameLine();
+                if (ImGui::Button("Close", ImVec2(100.0f, 36.0f)))
+                    ImGui::CloseCurrentPopup();
+                if (!exportStatus.empty())
+                {
+                    ImGui::Separator();
+                    ImGui::TextWrapped("%s", exportStatus.c_str());
+                }
+                if (exportSucceeded)
+                    ImGui::TextDisabled("Run Game.exe from the exported folder. Share the entire folder.");
+            }
+            if (!m_ProjectManager.HasProject() && ImGui::Button("Close"))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
 
         if (m_Editor.ConsumeProjectHubRequest())
         {
@@ -358,6 +528,14 @@ void Application::Run()
             StopRuntime();
         }
 
+        }
+        else
+        {
+            int width = 0, height = 0;
+            SDL_GetWindowSizeInPixels(m_Window.GetNativeWindow(), &width, &height);
+            if (width > 0 && height > 0) m_Renderer.ResizeViewport(width, height);
+        }
+
         if (!m_Runtime.IsRunning())
         {
             bool rightMouseDown =
@@ -518,9 +696,15 @@ void Application::Run()
             ui.SetMouseInteractionEnabled(m_Runtime.WantsCursor());
 
             const Vec2 canvasSize = m_UICanvas.GetSize();
-            const ImVec2 gameViewportPosition = m_Editor.GetViewportPosition();
-            const ImVec2 gameViewportSize = m_Editor.GetViewportSize();
+            int logicalWidth = 0, logicalHeight = 0;
+            SDL_GetWindowSize(m_Window.GetNativeWindow(), &logicalWidth, &logicalHeight);
+            const ImVec2 gameViewportPosition = m_GameMode ? ImVec2(0, 0) : m_Editor.GetViewportPosition();
+            const ImVec2 gameViewportSize = m_GameMode ? ImVec2(float(logicalWidth), float(logicalHeight)) : m_Editor.GetViewportSize();
 
+            // Viewport position/size and Input mouse coordinates are both in
+            // SDL/ImGui logical window coordinates here. UIRenderer performs
+            // the logical-canvas mapping itself, so do not scale this rectangle
+            // to the offscreen Vulkan render-target dimensions a second time.
             ui.SetLogicalSize(canvasSize.x, canvasSize.y);
             ui.UpdateInput(
                 m_UICanvas,
@@ -528,8 +712,12 @@ void Application::Run()
                 gameViewportPosition.x,
                 gameViewportPosition.y,
                 gameViewportSize.x,
-                gameViewportSize.y
+                gameViewportSize.y,
+                m_Time.GetDeltaTime()
             );
+            if (ui.HasTextInputFocus()) {
+                if (!SDL_TextInputActive(m_Window.GetNativeWindow())) SDL_StartTextInput(m_Window.GetNativeWindow());
+            } else if (SDL_TextInputActive(m_Window.GetNativeWindow())) SDL_StopTextInput(m_Window.GetNativeWindow());
 
             m_Runtime.Update(
                 m_Scene,
@@ -541,7 +729,7 @@ void Application::Run()
             // If nobody claimed Escape by opening a pause/menu state, treat it
             // as the editor's Stop shortcut. This makes Escape reliable in
             // arbitrary scenes instead of depending on game-specific Lua.
-            if (runtimeEscapePressed &&
+            if (!m_GameMode && runtimeEscapePressed &&
                 m_Runtime.IsRunning() &&
                 !m_Runtime.IsPaused() &&
                 !m_Runtime.WantsCursor())
@@ -552,18 +740,22 @@ void Application::Run()
         }
 
         // Apply a Stop requested during Runtime::Update in the same frame.
-        if (!m_Editor.IsPlaying() && m_Runtime.IsRunning())
+        if (!m_GameMode && !m_Editor.IsPlaying() && m_Runtime.IsRunning())
         {
             StopRuntime();
         }
 
         UpdateLighting();
 
+        // Acquire/reset the Vulkan frame before any scene, shadow, overlay, or
+        // ImGui GPU work is recorded for this frame.
+        m_Renderer.BeginFrame();
+
         // Directional shadow depth pass. Keep this separate from the color pass
         // so the material shader can sample a stable light-space depth map.
         for (int shadowCascade = 0; shadowCascade < Renderer::ShadowCascadeCount; ++shadowCascade)
         {
-            m_Renderer.BeginShadowPass(shadowCascade);
+            if (!m_Renderer.BeginShadowPass(shadowCascade)) continue;
         for (const Entity& entity : m_Scene.GetEntities())
         {
             TransformComponent* transform =
@@ -586,21 +778,19 @@ void Application::Run()
             shadowTransform.rotation.z += mesh->rotation.z;
 
             if (!mesh->modelPath.empty())
-                m_Renderer.DrawShadowModel(shadowTransform, m_ProjectManager.ResolveAssetPath(mesh->modelPath));
+            {
+                const std::string resolved=m_ProjectManager.ResolveAssetPath(mesh->modelPath);
+                ModelAsset* asset=m_Renderer.GetModelAsset(resolved);
+                if(asset&&asset->IsSkeletal()&&!asset->animations.empty())m_Renderer.DrawAnimatedShadowModel(shadowTransform,resolved,(std::size_t)std::max(mesh->animationClip,0),mesh->animationTime,mesh->animationLoop);
+                else m_Renderer.DrawShadowModel(shadowTransform,resolved);
+            }
             else
                 m_Renderer.DrawShadowMesh(shadowTransform, mesh->primitive);
         }
             m_Renderer.EndShadowPass();
         }
 
-        m_Renderer.BeginFrame();
-
         m_Renderer.DrawSky();
-
-        if (!m_Runtime.IsRunning() && m_Editor.IsGridVisible())
-        {
-            m_Renderer.DrawGrid();
-        }
 
         for (const Entity& entity : m_Scene.GetEntities())
         {
@@ -687,14 +877,25 @@ void Application::Run()
 
                 if (!mesh->modelPath.empty())
                 {
-                    m_Renderer.DrawModel(
-                        meshTransform, m_ProjectManager.ResolveAssetPath(mesh->modelPath),
+                    const std::string resolvedModel=m_ProjectManager.ResolveAssetPath(mesh->modelPath);
+                    ModelAsset* modelAsset=m_Renderer.GetModelAsset(resolvedModel);
+                    if(modelAsset&&modelAsset->IsSkeletal()&&!modelAsset->animations.empty())
+                    {
+                        if(mesh->animationPlaying)mesh->animationTime+=m_Time.GetDeltaTime()*mesh->animationSpeed;
+                        m_Renderer.DrawAnimatedModel(meshTransform, resolvedModel, (std::size_t)std::max(mesh->animationClip,0),
+                            mesh->animationTime, mesh->animationLoop, red, green, blue, alpha, texture,
+                            material ? material->metallic : 0.0f, material ? material->roughness : 0.65f,
+                            material ? material->ambientOcclusion : 1.0f, material ? material->emissive : 0.0f,
+                            normalMap, metallicMap, roughnessMap, aoMap, emissiveMap, material != nullptr);
+                    }
+                    else m_Renderer.DrawModel(
+                        meshTransform, resolvedModel,
                         red, green, blue, alpha, texture,
                         material ? material->metallic : 0.0f,
                         material ? material->roughness : 0.65f,
                         material ? material->ambientOcclusion : 1.0f,
                         material ? material->emissive : 0.0f,
-                        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap
+                        normalMap, metallicMap, roughnessMap, aoMap, emissiveMap, material != nullptr
                     );
                 }
                 else
@@ -711,6 +912,9 @@ void Application::Run()
                 }
             }
         }
+
+        if (!m_Runtime.IsRunning() && m_Editor.IsGridVisible())
+            m_Renderer.DrawGrid();
 
         Entity selectedEntity =
             m_Editor.GetSelectedEntity();
@@ -806,9 +1010,17 @@ void Application::Run()
             m_Renderer.EndOverlay();
         }
 
+        if (m_GameMode)
+        {
+            const auto* viewport = ImGui::GetMainViewport();
+            ImGui::GetBackgroundDrawList()->AddImage(
+                (ImTextureID)m_Renderer.GetViewportTexture(), viewport->Pos,
+                ImVec2(viewport->Pos.x + viewport->Size.x, viewport->Pos.y + viewport->Size.y));
+        }
         m_ImGuiLayer.EndFrame();
 
         m_Renderer.EndFrame();
+        if (m_FrameLimit > 0 && --m_FrameLimit == 0) m_Running = false;
         finishFrame();
     }
 }

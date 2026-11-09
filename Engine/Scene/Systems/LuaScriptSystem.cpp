@@ -64,8 +64,10 @@ void LuaScriptSystem::Start(
     packagePath += ";./?.lua;./?/init.lua";
     package["path"] = packagePath;
 
+    // OnCreate can instantiate prefabs and grow the scene entity vector.
+    const auto startupEntities = scene.GetEntities();
     for (const Entity& entity :
-        scene.GetEntities())
+        startupEntities)
     {
         ScriptComponent* scriptComponent =
             scene.GetComponent<
@@ -80,8 +82,9 @@ void LuaScriptSystem::Start(
         // Do not keep a reference into m_Instances while Lua OnCreate runs.
         // OnCreate is allowed to touch engine state, and retaining a reference
         // across callbacks makes this startup path unnecessarily fragile.
+        const auto startupScripts = scriptComponent->scriptNames;
         for (const std::string& scriptPath :
-            scriptComponent->scriptNames)
+            startupScripts)
         {
             if (scriptPath.empty())
             {

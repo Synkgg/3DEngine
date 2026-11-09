@@ -569,7 +569,7 @@ void Editor::RenderInspector(
             ImGui::Separator();
             ImGui::TextDisabled("External Model");
 
-            if (DrawAssetPicker("Model", mesh->modelPath, { ".obj" }))
+            if (DrawAssetPicker("Model", mesh->modelPath, { ".obj", ".gltf", ".glb", ".modelasset" }))
             {
                 if (!mesh->modelPath.empty())
                 {
@@ -579,6 +579,7 @@ void Editor::RenderInspector(
             }
 
             ImGui::Checkbox("Owner No See", &mesh->ownerNoSee);
+            ImGui::Separator();ImGui::TextDisabled("Skeletal Animation");ImGui::Checkbox("Play Animation",&mesh->animationPlaying);ImGui::SameLine();ImGui::Checkbox("Loop Animation",&mesh->animationLoop);ImGui::DragInt("Animation Clip",&mesh->animationClip,1,0,127);ImGui::DragFloat("Animation Speed",&mesh->animationSpeed,0.05f,0.0f,8.0f);ImGui::DragFloat("Animation Time",&mesh->animationTime,0.01f,0.0f,100000.0f);
             if (ImGui::IsItemHovered())
                 ImGui::SetTooltip("Hide this mesh for the local Player during runtime; remote players still see it.");
 

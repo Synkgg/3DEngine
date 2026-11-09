@@ -330,9 +330,12 @@ Transform Scene::GetWorldTransform(Entity entity) const
     auto rotateY=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x*c+v.z*q,v.y,-v.x*q+v.z*c); };
     auto rotateZ=[](Vec3 v,float a){ const float c=std::cos(a),q=std::sin(a); return Vec3(v.x*c-v.y*q,v.x*q+v.y*c,v.z); };
 
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it)
+    // Compose from the nearest parent outward. Applying the root first
+    // rotates a socket's local offset before its mesh transform, placing
+    // muzzle flashes away from the actual barrel on nested prefabs.
+    for (const Transform* parentTransform : chain)
     {
-        const Transform& p = **it;
+        const Transform& p = *parentTransform;
         Vec3 position(result.position.x*p.scale.x,result.position.y*p.scale.y,result.position.z*p.scale.z);
         position=rotateX(position,p.rotation.x);
         position=rotateY(position,p.rotation.y);
