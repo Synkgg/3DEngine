@@ -148,7 +148,7 @@ void InteractionSystem::Update(
     Renderer& renderer,
     Input& input,
     LuaScriptSystem& luaScriptSystem,
-    AudioEngine* audio)
+    AudioEngine* audio, const std::string& binding, bool enabled)
 {
     m_CurrentPrompt.clear();
 
@@ -251,7 +251,11 @@ void InteractionSystem::Update(
             interactable->prompt;
     }
 
-    if (!input.IsKeyPressed(SDL_SCANCODE_E))
+    const auto key = SDL_GetScancodeFromName(binding.c_str());
+    const bool mouse = binding.size()==7 && binding.substr(0,6)=="Mouse " && binding[6]>='1' && binding[6]<='5';
+    const bool pressed = mouse ? input.IsMouseButtonPressed(static_cast<Uint8>(binding[6]-'0')) :
+        (key!=SDL_SCANCODE_UNKNOWN && input.IsKeyPressed(key));
+    if (!enabled || !pressed)
         return;
 
     NameComponent* name =

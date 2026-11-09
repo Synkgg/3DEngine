@@ -256,7 +256,7 @@ void UIRenderer::UpdateInput(
         {
             m_PressedCanvasButton->SetClicked(true);
             if (m_Audio && !m_PressedCanvasButton->GetClickSoundPath().empty())
-                m_Audio->PlaySound(m_PressedCanvasButton->GetClickSoundPath(), 0.65f * m_Audio->GetUIVolume());
+                m_Audio->PlaySound(m_PressedCanvasButton->GetClickSoundPath(), 0.65f, AudioEngine::Bus::UI);
         }
         if (m_PressedCanvasButton)
             m_PressedCanvasButton->SetPressed(false);

@@ -36,7 +36,7 @@ public:
     bool Host(std::uint16_t port = 7777, std::uint32_t maxPlayers = 8,
               const std::string& serverName = "Velcryn Server");
     std::uint16_t GetBoundPort() const { return m_BoundPort; }
-    bool Join(const std::string& address, std::uint16_t port = 7777);
+    bool Join(const std::string& address, std::uint16_t port = 7777, const std::string& ticket = {});
     void Update();
     void Disconnect();
 
@@ -83,6 +83,7 @@ private:
     int m_Socket=-1;
 #endif
     Endpoint m_Server;
+    std::string m_JoinTicket;
     std::vector<Endpoint> m_Clients;
     std::unordered_map<std::uint32_t, NetworkTransformState> m_RemoteTransforms;
     std::unordered_map<std::uint32_t, std::uint32_t> m_LastRemoteTransformSequence;

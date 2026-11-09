@@ -1,0 +1,19 @@
+# VelcrynLinear
+newmtl Main
+Kd 0.055 0.12 0.11
+Pm 0.15
+Pr 0.64
+d 1
+map_Kd Parkerized.png
+newmtl MainDark
+Kd 0.055 0.12 0.11
+Pm 0.15
+Pr 0.64
+d 1
+map_Kd Parkerized.png
+newmtl MainLight
+Kd 0.055 0.12 0.11
+Pm 0.15
+Pr 0.64
+d 1
+map_Kd Parkerized.png

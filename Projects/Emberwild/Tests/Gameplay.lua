@@ -1,0 +1,21 @@
+package.path='Projects/Emberwild/Assets/?.lua;'..package.path
+local M=require('Scripts.Simulation')
+local s=M.new();M.add(s,1);M.add(s,2)
+local p={[1]={x=-7,z=4},[2]={x=-7,z=4}}
+assert(M.action(s,1,1,'use',p[1]) and s.wood==2)
+assert(not M.action(s,1,1,'use',p[1]) and s.wood==2,'duplicate denied')
+assert(not M.action(s,2,1,'use',p[2]),'depleted resource cannot be collected twice')
+M.tick(s,56,p);assert(M.action(s,1,2,'use',p[1]) and s.wood==4,'resource respawns')
+s.stone=2;s.time=s.time+1;assert(M.action(s,1,3,'axe',p[1]) and s.wood==1 and s.players[1].axe==1)
+s.time=s.time+60;assert(M.action(s,1,4,'use',p[1]) and s.wood==5,'axe doubles wood')
+s.time=s.time+1;assert(not M.action(s,1,5,'use',{x=40,z=40}),'out of range rejected')
+s.food=4;s.players[1].hunger=10;s.time=s.time+1;assert(M.action(s,1,6,'cook',{x=0,z=0}));assert(s.players[1].hunger==70)
+s.wood=12;s.stone=8;s.time=s.time+1;assert(M.action(s,1,7,'signal',{x=-5,z=0}));assert(s.signal==1 and s.wood==0)
+local encoded=M.encode(s);assert(#encoded<=192,'snapshot fits engine transport');local copy=assert(M.decode(encoded,0));assert(copy.signal==1 and copy.players[1].axe==1 and copy.cooldowns[1]==s.cooldowns[1])
+assert(not M.decode(encoded,copy.seq),'stale snapshots ignored');assert(not M.decode('nan,1',0),'bad snapshots rejected')
+s.players[2].health=0;s.food=2;s.positions=p;s.time=s.time+1;assert(M.action(s,1,8,'revive',p[1]) and s.players[2].health==45)
+s.time=540;s.fire=25;M.tick(s,.1,p);assert(s.result==1,'rescue win')
+local lost=M.new();M.add(lost,1);lost.players[1].health=.1;lost.players[1].water=0;M.tick(lost,1,{[1]={x=20,z=20}});assert(lost.result==2,'death loses expedition')
+print('PASS: Emberwild gathering, contention, cooldowns, crafting, cooking, range, snapshots, revive, win and loss')
+
+local stress=M.new();M.add(stress,1);M.add(stress,2);stress.seq=9999999;stress.time=9999999;stress.wood=999;stress.stone=999;stress.food=999;for i=1,20 do stress.cooldowns[i]=stress.time+55 end;assert(#M.encode(stress)<=192,'worst-case bounded snapshot fits UDP payload')

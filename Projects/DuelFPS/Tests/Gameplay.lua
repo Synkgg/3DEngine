@@ -14,13 +14,13 @@ local function peer(host)
     e.Scene={FindEntity=function(name)return {id=name=='FirstPersonCamera' and 2 or 0,IsValid=function()return false end}end,
         GetName=function()return "Concrete Floor" end,
         InstantiatePrefab=function(path)t.nextEntity=t.nextEntity+1;t.pos[t.nextEntity]={x=0,y=1,z=0};if path:find("RemotePawn") then t.remotePawn=t.nextEntity end;return t.nextEntity end,
-        DestroyEntity=nop,FindChild=function(root,name)return name=="MuzzleSocket" and (root+1000) or 0 end,
+        DestroyEntity=nop,FindChild=function(root,name)return name=="MuzzleSocket" and (root+1000) or (name=="SupportHand" and root+2000 or 0) end,
         GetWorldPosition=function(id)return t.pos[id-1000] or {x=0,y=1,z=-1}end,
         SetPosition=function(id,x,y,z)t.pos[id]={x=x,y=y,z=z}end,GetPosition=function(id)return t.pos[id] or {x=0,y=1,z=0}end,
         SetRotation=nop,SetScale=nop,Load=function(path)t.loaded=path end}
     e.Controller={GetLocalID=function()return host and 1 or 2 end,Possess=nop,IsLocallyControlled=function()return true end,
         GetPlayerStart=function()return {valid=true,x=0,y=1,z=0}end}
-    e.Physics={Raycast=function()return {hit=t.target~=0,entityID=t.target,x=0,y=1,z=-2}end}
+    e.Physics={Raycast=function(x,y,z,dx,dy,dz,range)return {hit=range>3 and t.target~=0,entityID=t.target,x=0,y=1,z=-2}end}
     e.Network={IsHost=function()return host end,IsConnected=function()return true end,IsReady=function()return true end,
         GetPlayerCount=function()return t.count end,GetLastError=function()return '' end,Disconnect=nop,SendTransform=nop,
         GetRemoteTransforms=function()return {{playerID=host and 2 or 1,x=0,y=1,z=-2,rx=0,ry=0,rz=0}}end,
@@ -59,7 +59,7 @@ assert(h.text.RoundResultTitle=='STALEMATE','draw round has correct presentation
 local W=require('Scripts.Weapons.WeaponSystem')
 local w=W.new(h.env);w:Register(require('Scripts.Weapons.Rifle'));w:Give('rifle',90)
 assert(w:Fire(1,2));assert(not w:Fire(1,2),'fire rate must be enforced')
-w:Reload();w:Update(2,2);local ammo,reserve=w:GetAmmo();assert(ammo==30 and reserve==89,'reload consumes reserve')
+w:Reload();w:Update(.82,2);local hand=h.pos[w.supportHand];assert(hand and hand.y<-.15 and hand.z>.1,'support hand leaves the fore-end mid reload');w:Update(1,2);local ammo,reserve=w:GetAmmo();assert(ammo==30 and reserve==89 and h.pos[w.supportHand].y==0,'reload consumes reserve and returns hand to grip')
 print('PASS: BREAKBULK two-peer gameplay, victory, rematch, timeout, loadout and reload')
 
 -- Client-originated fire is resolved by the host; duplicates cannot deal damage twice.
@@ -78,8 +78,13 @@ local defs={
     require('Scripts.Weapons.Pistol'),
     require('Scripts.Weapons.Rifle'),
     require('Scripts.Weapons.Shotgun'),
-    require('Scripts.Weapons.SMG')
+    require('Scripts.Weapons.SMG'),
+    require('Scripts.Weapons.Sniper'),
+    (require('Scripts.Weapons.Marksman'))
 }
+for _,v in ipairs(require('Scripts.Weapons.Variants').entries) do
+    defs[#defs+1]=require('Scripts.Weapons.'..v.module)
+end
 local gunIDs={}
 for _,def in ipairs(defs) do gunIDs[def.id]=true end
 assert(gunIDs.pistol and gunIDs.rifle and gunIDs.shotgun and gunIDs.smg)
@@ -87,6 +92,19 @@ local pattern=require('Scripts.Weapons.ShotPattern')
 assert(#pattern.Directions(0,0,-1,8,.055)==8)
 local gun=W.new(h.env)
 for _,def in ipairs(defs) do gun:Register(def) end
+local profiles=require('Scripts.Weapons.LoadoutProfiles')
+local saved={}
+local preferences={SaveString=function(k,v)saved[k]=v;return true end,LoadString=function(k,d)return saved[k] or d end}
+for _,v in ipairs(require('Scripts.Weapons.Variants').entries) do
+    assert(profiles.categoryOf[v.id]==v.base)
+    assert(gun:SetLoadout(v.id,v.base,true),'alternate must coexist with its category partner')
+    local before=gun:GetAmmo()
+    gun.cooldown=0;gun.triggerHeld=false
+    assert(gun:Fire(1,2) and gun:GetAmmo()==before-1,'alternate weapon must fire and consume ammo')
+    profiles.Save(1,v.id,v.base,preferences)
+    local primary,secondary=profiles.Get(1,preferences)
+    assert(primary==v.id and secondary==v.base,'alternate loadout must survive save/load')
+end
 assert(gun:SetLoadout('shotgun','smg',true))
 assert(gun.primary=='shotgun' and gun.secondary=='smg')
 assert(gun:Fire(1,2) and not gun:Fire(1,2))
@@ -105,6 +123,10 @@ for _,def in ipairs(defs) do
     local content=file:read('*a')
     file:close()
     assert(content:find('Name MuzzleSocket',1,true),path..' is missing a muzzle anchor')
+    local meshPath=assert(content:match('Mesh 1 %d+ "([^"]+)"'),path..' is missing its mesh reference')
+    local mesh=assert(io.open('Projects/DuelFPS/'..meshPath,'r'),path..' references a missing model: '..meshPath)
+    local geometry=mesh:read('*a');mesh:close()
+    assert(geometry:find('\nv ',1,true) and geometry:find('\nf ',1,true),meshPath..' has no renderable geometry')
 end
 assert(gun.muzzleSocket and gun.muzzleSocket~=0,'equipped weapon must resolve muzzle socket')
-print('PASS: all four gun prefabs have an editable muzzle socket')
+print('PASS: all twelve guns equip, fire, persist and resolve real mesh geometry and muzzle sockets')

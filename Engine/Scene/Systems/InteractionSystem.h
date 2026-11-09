@@ -18,7 +18,8 @@ public:
         Renderer& renderer,
         Input& input,
         LuaScriptSystem& luaScriptSystem,
-        AudioEngine* audio = nullptr
+        AudioEngine* audio = nullptr,
+        const std::string& binding = "E", bool enabled = true
     );
 
     const std::string& GetPrompt() const

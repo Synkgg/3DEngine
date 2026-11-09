@@ -42,7 +42,7 @@ function WeaponVFX:Emit(ox,oy,oz,dx,dy,dz,range,hit,hitX,hitY,hitZ,muzzleSide,mu
         mx,my,mz=socketX,socketY,socketZ
     end
 
-    self:Spawn(FLASH,mx,my,mz,.072,.15,"flash")
+    self:Spawn(FLASH,mx,my,mz,.032,.075,"flash")
     local flash=self.active[#self.active]
     if flash and flash.kind=="flash" then
         local pitch,yaw=orient(dx,dy,dz)
@@ -56,7 +56,8 @@ function WeaponVFX:Emit(ox,oy,oz,dx,dy,dz,range,hit,hitX,hitY,hitZ,muzzleSide,mu
     end
     -- A moving tracer slug rather than a static laser beam. Visible for only
     -- 55 ms and positioned in 3D, with no collider or input interception.
-    if distance>1.3 then
+    self.shotCount=(self.shotCount or 0)+1
+    if distance>1.3 and self.shotCount%4==0 then
         local length=math.min(1.6,distance*.12)
         self:Spawn(TRACER,mx+dx*.7,my+dy*.7,mz+dz*.7,.055,.025,"tracer",
             {x=mx,y=my,z=mz,dx=dx,dy=dy,dz=dz,distance=distance,length=length})
@@ -69,7 +70,7 @@ function WeaponVFX:Emit(ox,oy,oz,dx,dy,dz,range,hit,hitX,hitY,hitZ,muzzleSide,mu
     end
 
     if hit then
-        self:Spawn(IMPACT,hitX,hitY,hitZ,.17,.13,"impact")
+        self:Spawn(IMPACT,hitX,hitY,hitZ,.11,.055,"impact")
     end
 end
 

@@ -1,0 +1,19 @@
+[Unit]
+Description=DuelFPS matchmaking and dedicated duels
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+DynamicUser=yes
+StateDirectory=duelfps
+WorkingDirectory=/opt/duelfps
+ExecStart=/usr/bin/python3 -B /opt/duelfps/Server/lobby.py --bind 0.0.0.0 --max-matches 2
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

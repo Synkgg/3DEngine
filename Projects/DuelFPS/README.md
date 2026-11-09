@@ -1,9 +1,13 @@
 # BREAKBULK
 
-An original, compact 1v1 cargo-terminal shooter built in Velcryn. The existing
+An original, compact cargo-terminal elimination shooter built in Velcryn. The existing
 DuelFPS project descriptor now launches BREAKBULK.
 
 ## Play
+
+Choose **Mode** beside **Play** to cycle through **1v1**, **2v2**, and **3v3**. Play matches players who chose the same mode on the configured dedicated server. For a private team match, select **Custom game → DuelFPS server → Create server game**, choose a mode and share the lobby code. See the [Lightsail deployment instructions](Server/README.md) to set up the online endpoint.
+
+Choose **Custom game** to pick Terminal or Freight Depot, rounds to win (3/5/7), round duration (60/90/120 seconds), and connection type. Select **DuelFPS server** for an online lobby or **LAN** to host a 1v1 on your local network. Joining players receive the host's rules and map. **Training Range** offers a separate map picker. **Weapons** opens the workbench: choose a custom class, click its primary or secondary card, then browse, equip and save. Cancel discards unsaved edits. Hold **Left Ctrl** to crouch; rebind it in Settings → Controls. The minimap is north-up and marks your position, not hidden enemies. Match hitmarkers indicate damage confirmed by the host.
 
 From the repository root:
 
@@ -11,20 +15,7 @@ From the repository root:
 .\out\build\x64-Release\VelcrynEditor.exe .\Projects\DuelFPS\DuelFPS.project
 ```
 
-Press **Play** in the editor. Choose **Host a Duel** on one instance.
-On another PC on the same LAN, choose **Find LAN Servers**: the new server
-browser scans UDP port 7777 without blocking the game, lists discovered session
-names, IPv4 addresses and player counts, and lets you join with one click.
-Select **Refresh** to scan again; full sessions cannot be joined. You can also
-use the existing direct-IP **Connect** field (or `127.0.0.1` on the same PC).
-
-**LAN discovery is not an internet-wide public server directory.** It uses UDP
-broadcasts, so both computers must be on a reachable local network and Windows
-Firewall must allow the game/UDP 7777. For players on different public IPs,
-continue using direct IP and configure the host's port forwarding/firewall.
-A worldwide server browser requires a hosted master-server directory and
-public-server registration (plus NAT traversal or port forwarding). No such
-internet service is included. **Practice Range** runs the target drill offline.
+For a LAN match, both players select **Custom game**, then click **Host on** to switch from **DuelFPS server** to **LAN**. One player chooses **Create LAN game** and the other chooses **Find LAN games**. Both computers must be on the same local network with UDP 7777 allowed. For online play, leave the toggle on **DuelFPS server** and share the eight-digit lobby code. **Training range** runs offline.
 
 | Control | Action |
 |---|---|
@@ -100,3 +91,36 @@ for importing licensed OBJ/glTF/GLB weapon models and repositioning sockets.
 Footsteps now raycast the actual ground surface and select distinct
 metal/concrete/wood procedural boot sounds, with separate sprint/walk cadence
 and randomized pitch/texture. No external footstep audio assets are required.
+
+## Simplified UI and settings
+
+The main menu now has three choices: **Play**, **Loadout**, and **Settings**.
+Custom game offers LAN discovery and DuelFPS server lobbies. The loadout
+screen shows both slots and all four weapons together. The HUD keeps health,
+ammunition, score, and the clock; match feedback appears only when needed.
+
+Open **Settings** from the main menu or the in-game Escape menu:
+
+- **Controls:** mouse sensitivity, aim sensitivity multiplier, field of view,
+  invert Y, and bindings for movement, sprint, jump, fire, aim, reload, both
+  weapon slots, interaction, and loadout. Click a binding, then press a keyboard
+  key or mouse button (including side buttons). Conflicts swap the two actions.
+  Escape cancels capture and always remains available to close menus. Capture
+  times out after ten seconds. Mouse wheel bindings are not supported.
+- **Audio:** master, game sounds, and menu sounds, plus a test sound. Sliders
+  affect sounds already playing as well as new sounds.
+- **Graphics:** Low/Medium/High presets, shadows, anti-aliasing, bloom, fog, view
+  distance, and brightness. Presets also adjust reflections and indirect light.
+
+Changes preview immediately. **Apply & Back** saves them to
+`Saved/duel_settings_v1.txt`; **Cancel** restores the previous settings.
+**Reset Defaults** stays a preview until applied. Settings are shared between
+lobby and gameplay and load on the next launch. Online matches keep running
+while menus are open; menus block movement, fire, aiming and interaction.
+
+`Tools/build_duelfps_ui.py` regenerates these UI assets without changing saved
+preferences or gameplay. The settings pages reuse one visual asset with lobby
+and gameplay callback wrappers. The engine's network test includes settings
+persistence, conflict-swapping, reset/cancel and save-error tests. Its GPU test
+also opens the real settings UI, captures a side mouse binding, previews audio
+and graphics, applies/reopens/cancels, and returns from in-game settings.

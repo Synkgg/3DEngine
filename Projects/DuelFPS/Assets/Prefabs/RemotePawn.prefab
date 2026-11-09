@@ -1,5 +1,5 @@
 MyEngineScene
-Entities 2
+Entities 6
 Entity 1
 Name Remote Operator
 Position 0 0 0
@@ -16,7 +16,7 @@ Player 1 0 0
 PlayerStart 0
 CharacterController 0
 Light 0
-Collider 1 0.8 2 0.8
+Collider 1 0.65 1.8 0.65
 Scripts 0
 Entity 2
 Name Operator armor
@@ -25,7 +25,79 @@ Rotation 0 0 0
 Scale 1 1 1
 Parent 1
 PrefabSource ""
-Mesh 1 0 "Assets/Models/Breakbulk/Operator.obj" 0
+Mesh 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 3
+Name Left leg
+Position 0 -0.08 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 2
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Tactical/FieldLegL.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 4
+Name Right leg
+Position 0 -0.08 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 2
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Tactical/FieldLegR.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 5
+Name Carried carbine
+Position 0 0.31 -0.14
+Rotation 0 0 0
+Scale 1 1 1
+Parent 6
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Tactical/rifle.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 6
+Name Upper body
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 2
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Tactical/FieldOperator.obj" 0
 Color 1 1 1 1 1
 Texture 0
 Material 0

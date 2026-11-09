@@ -1,0 +1,93 @@
+MyEngineScene
+Entities 5
+Entity 1
+Name VIPER R6 Viewmodel
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 0
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 2
+Name VIPER R6
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 1
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Tactical/pistol2.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 3
+Name MuzzleSocket
+Position 0 -0.04302 -0.52197
+Rotation 0 0 0
+Scale 1 1 1
+Parent 2
+PrefabSource ""
+Mesh 0
+Color 0
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 4
+Name TriggerHand
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 1
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Tactical/TriggerHand.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+Entity 5
+Name SupportHand
+Position 0 0 0
+Rotation 0 0 0
+Scale 1 1 1
+Parent 1
+PrefabSource ""
+Mesh 1 0 "Assets/Models/Tactical/SupportHand.obj" 0
+Color 1 1 1 1 1
+Texture 0
+Material 0
+Interactable 0
+Player 0
+PlayerStart 0
+CharacterController 0
+Light 0
+Collider 0
+Scripts 0
+HierarchyFolders 0

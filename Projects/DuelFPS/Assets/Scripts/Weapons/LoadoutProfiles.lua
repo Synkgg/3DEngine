@@ -2,12 +2,20 @@
 -- Store only whitelisted weapon IDs: no code or asset paths are deserialized.
 local Profiles = {}
 Profiles.count = 5
-Profiles.weapons = {rifle=true,smg=true,shotgun=true,pistol=true}
-Profiles.order = {"rifle","smg","shotgun","pistol"}
+Profiles.weapons = {rifle=true,smg=true,shotgun=true,pistol=true,sniper=true,marksman=true}
+Profiles.order = {"rifle","smg","shotgun","pistol","sniper","marksman"}
 Profiles.categories = {
     rifle="ASSAULT RIFLES",smg="SUBMACHINE GUNS",
-    shotgun="SHOTGUNS",pistol="HANDGUNS"
+    shotgun="SHOTGUNS",pistol="HANDGUNS",sniper="SNIPER RIFLES",marksman="MARKSMAN RIFLES"
 }
+Profiles.categoryOf={}
+for _,id in ipairs(Profiles.order) do Profiles.categoryOf[id]=id end
+for _,v in ipairs(require("Scripts.Weapons.Variants").entries) do
+    Profiles.weapons[v.id]=true
+    Profiles.order[#Profiles.order+1]=v.id
+    Profiles.categoryOf[v.id]=v.base
+    Profiles.categories[v.id]=Profiles.categories[v.base]
+end
 local defaults = {
     {"rifle","pistol"},
     {"smg","pistol"},
@@ -60,5 +68,16 @@ function Profiles.GetActive(preferences)
     local slot=Profiles.Active(preferences)
     local primary,secondary=Profiles.Get(slot,preferences)
     return slot,primary,secondary
+end
+-- Switching cards edits a local working copy. Cancel never writes a preset.
+function Profiles.Browse(draft,current,primary,secondary,index,preferences)
+    draft[current]={primary,secondary}
+    if draft[index] then return draft[index][1],draft[index][2] end
+    return Profiles.Get(index,preferences)
+end
+function Profiles.Apply(draft,current,primary,secondary,preferences)
+    draft[current]={primary,secondary}
+    for index,pair in pairs(draft) do if not Profiles.Save(index,pair[1],pair[2],preferences) then return false end end
+    Profiles.Select(current,preferences);return true
 end
 return Profiles

@@ -12,19 +12,19 @@ return false;
 }SDL_ResumeAudioDevice(m_Device);
 return true;
 }
-void AudioEngine::Shutdown(){for(auto*s:m_Streams){SDL_UnbindAudioStream(s);
+void AudioEngine::Shutdown(){for(const auto& sound:m_Streams){auto* s=sound.stream;SDL_UnbindAudioStream(s);
 SDL_DestroyAudioStream(s);
 }m_Streams.clear();
 if(m_Device){SDL_CloseAudioDevice(m_Device);
 m_Device=0;
 }}
-void AudioEngine::Update(){for(auto i=m_Streams.begin();i!=m_Streams.end();){auto*s=*i;
+void AudioEngine::Update(){for(auto i=m_Streams.begin();i!=m_Streams.end();){auto*s=i->stream;
 if(SDL_GetAudioStreamQueued(s)==0&&SDL_GetAudioStreamAvailable(s)==0){SDL_UnbindAudioStream(s);
 SDL_DestroyAudioStream(s);
 i=m_Streams.erase(i);
 }else ++i;
 }}
-bool AudioEngine::PlaySound(const std::string&p,float v){if(!m_Device)return false;
+bool AudioEngine::PlaySound(const std::string&p,float v,Bus bus){if(!m_Device)return false;
 std::filesystem::path resolved(p);
 if(!resolved.is_absolute()&&!m_ProjectRoot.empty())resolved=(m_ProjectRoot/resolved).lexically_normal();
 SDL_AudioSpec src{},dst{};
@@ -39,20 +39,20 @@ return false;
 }if(!SDL_BindAudioStream(m_Device,s)){SDL_DestroyAudioStream(s);
 SDL_free(d);
 return false;
-}SDL_SetAudioStreamGain(s,std::clamp(v*m_MasterVolume,0.0f,1.0f));
+}SDL_SetAudioStreamGain(s,std::clamp(v*m_MasterVolume*(bus==Bus::Effects?m_SFXVolume:(bus==Bus::UI?m_UIVolume:1.f)),0.0f,1.0f));
 bool ok=SDL_PutAudioStreamData(s,d,(int)n);
 SDL_free(d);
 if(!ok){SDL_UnbindAudioStream(s);
 SDL_DestroyAudioStream(s);
 return false;
 }SDL_FlushAudioStream(s);
-m_Streams.push_back(s);
+m_Streams.push_back({s,v,bus});
 return true;
 }
 
-void AudioEngine::SetMasterVolume(float v){m_MasterVolume=std::clamp(v,0.0f,1.0f);}
-void AudioEngine::SetSFXVolume(float v){m_SFXVolume=std::clamp(v,0.0f,1.0f);}
-void AudioEngine::SetUIVolume(float v){m_UIVolume=std::clamp(v,0.0f,1.0f);}
+void AudioEngine::SetMasterVolume(float v){m_MasterVolume=std::clamp(v,0.0f,1.0f);ApplyVolumes();}
+void AudioEngine::SetSFXVolume(float v){m_SFXVolume=std::clamp(v,0.0f,1.0f);ApplyVolumes();}
+void AudioEngine::SetUIVolume(float v){m_UIVolume=std::clamp(v,0.0f,1.0f);ApplyVolumes();}
 
 bool AudioEngine::PlayFootstep(const std::string& surface, bool sprint)
 {
@@ -138,6 +138,14 @@ bool AudioEngine::PlayFootstep(const std::string& surface, bool sprint)
         SDL_DestroyAudioStream(stream);
         return false;
     }
-    m_Streams.push_back(stream);
+    m_Streams.push_back({stream,1.f,Bus::Effects});
     return true;
+}
+
+void AudioEngine::ApplyVolumes()
+{
+    for(const auto& sound:m_Streams) {
+        const float bus=sound.bus==Bus::Effects?m_SFXVolume:(sound.bus==Bus::UI?m_UIVolume:1.f);
+        SDL_SetAudioStreamGain(sound.stream,std::clamp(sound.volume*m_MasterVolume*bus,0.f,1.f));
+    }
 }

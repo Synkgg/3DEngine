@@ -19,6 +19,8 @@
 
 bool RunUIInteractionTests(Renderer& renderer)
 {
+    renderer.SetProjectRoot(std::filesystem::absolute("Projects/DuelFPS"));
+    struct RestoreRoot {Renderer& renderer;~RestoreRoot(){renderer.SetProjectRoot({});}} restore{renderer};
     auto& ui = renderer.GetUIRenderer();
     UICanvas canvas;
     Input input;
@@ -80,7 +82,7 @@ bool RunUIInteractionTests(Renderer& renderer)
     }
     check(UISerializer::Load(canvas, "Projects/DuelFPS/Assets/UI/MainMenu.ui"), "load real menu asset");
     ui.SetLogicalSize(1920,1080);
-    auto* host = dynamic_cast<UIButton*>(canvas.GetRoot()->Find("HostButton"));
+    auto* host = dynamic_cast<UIButton*>(canvas.GetRoot()->Find("PlayButton"));
     if (!host) return false;
     pointer(0,0,false);
     auto render = [&]() {
@@ -96,16 +98,16 @@ bool RunUIInteractionTests(Renderer& renderer)
       for(size_t i=0;i<normal.size();i+=8)for(int c=0;c<3;++c){uint16_t h;std::memcpy(&h,normal.data()+i+c*2,2);float value=std::ldexp(float((h&1023)+((h&0x7c00)?1024:0)),int((h>>10)&31)-25);image.put(char(std::clamp(value,0.f,1.f)*255));} }
 
     // Letterboxed 1920x1080 canvas in a 640x480 viewport at window offset 100,50.
-    pointer(100+1400.f/3, 50+60+454.f/3, false);
+    pointer(100+400.f/3, 50+60+520.f/3, false);
     check(host->IsHovered(), "hover uses viewport offset and letterbox scale");
     auto hovered = render();
     check(normal.size()==hovered.size() && normal!=hovered, "menu hover changes GPU pixels");
-    pointer(100+1400.f/3, 50+60+454.f/3, true);
+    pointer(100+400.f/3, 50+60+520.f/3, true);
     check(host->IsPressed(), "press state");
-    pointer(100+1400.f/3, 50+60+454.f/3, false);
+    pointer(100+400.f/3, 50+60+520.f/3, false);
     check(host->ConsumeClick() && !host->ConsumeClick(), "click consumed exactly once");
     check(host->ConsumeClickEvent() && !host->ConsumeClickEvent(), "script event queued exactly once");
-    pointer(100+1400.f/3, 50+60+454.f/3, true);
+    pointer(100+400.f/3, 50+60+520.f/3, true);
     pointer(0,0,true);
     check(!host->IsHovered() && !host->IsPressed(), "dragging off cancels pressed appearance");
     pointer(0,0,false);
@@ -189,9 +191,9 @@ bool RunUIInteractionTests(Renderer& renderer)
     check(UISerializer::Load(canvas,"Projects/DuelFPS/Assets/UI/Loadout.ui"),
         "load grouped main-menu armory");
     check(canvas.GetRoot()->Find("Profile5Button") &&
-        canvas.GetRoot()->Find("Category_rifle_Button") &&
-        canvas.GetRoot()->Find("WeaponCategory_smg"),
-        "loadout profiles, category tabs and parent groups exist");
+        canvas.GetRoot()->Find("PrimaryTab") &&
+        canvas.GetRoot()->Find("smgButton"),
+        "compact loadout profiles, slots and weapon choices exist");
     check(UISerializer::Load(canvas,"Projects/DuelFPS/Assets/UI/LoadoutInGame.ui"),
         "load grouped in-game armory");
     // A widget blueprint must never recursively include itself.

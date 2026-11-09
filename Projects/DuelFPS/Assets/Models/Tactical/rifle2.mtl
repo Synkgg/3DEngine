@@ -1,0 +1,31 @@
+# VelcrynLinear
+newmtl Black
+Kd 0.018 0.022 0.027
+Pm 0.03
+Pr 0.78
+d 1
+map_Kd Parkerized.png
+newmtl DarkMetal
+Kd 0.12 0.2 0.27
+Pm 0.35
+Pr 0.48
+d 1
+map_Kd Parkerized.png
+newmtl DarkWood
+Kd 0.12 0.2 0.27
+Pm 0
+Pr 0.8
+d 1
+map_Kd Parkerized.png
+newmtl Metal
+Kd 0.095 0.11 0.13
+Pm 0.75
+Pr 0.38
+d 1
+map_Kd Parkerized.png
+newmtl Wood
+Kd 0.12 0.2 0.27
+Pm 0
+Pr 0.8
+d 1
+map_Kd Parkerized.png

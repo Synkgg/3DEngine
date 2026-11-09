@@ -90,7 +90,20 @@ bool NetworkManager::Host(std::uint16_t port,std::uint32_t maxPlayers,const std:
  Logger::Info("Network: hosting "+m_HostName+" on UDP port "+std::to_string(m_BoundPort)+".");
  return true;
 }
-bool NetworkManager::Join(const std::string& address,std::uint16_t port){Disconnect();if(!OpenSocket(0))return false;in_addr a{};if(inet_pton(AF_INET,address.c_str(),&a)!=1){Disconnect();SetError("Join currently requires an IPv4 address.");return false;}m_Server={a.s_addr,port,1};m_Mode=Mode::Client;m_LastError.clear();SendHello();Logger::Info("Network: joining "+address+":"+std::to_string(port)+".");return true;}
+bool NetworkManager::Join(const std::string& address, std::uint16_t port, const std::string& ticket){
+ Disconnect();
+ if(ticket.size()>32){SetError("Invalid lobby ticket.");return false;}
+ in_addr ip{};
+ if(inet_pton(AF_INET,address.c_str(),&ip)!=1){SetError("Join currently requires an IPv4 address.");return false;}
+ if(!OpenSocket(0))return false;
+ m_Server={ip.s_addr,port,1};
+ m_JoinTicket=ticket;
+ m_Mode=Mode::Client;
+ m_LastError.clear();
+ SendHello();
+ Logger::Info("Network: joining "+address+":"+std::to_string(port)+".");
+ return true;
+}
 bool NetworkManager::SearchServers(std::uint16_t port)
 {
  StopServerSearch();
@@ -188,7 +201,19 @@ void NetworkManager::PollServerSearch()
  });
 }
 
-void NetworkManager::SendHello(){if(m_Mode!=Mode::Client)return;PacketHeader p{Magic,Hello};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=m_Server.address;to.sin_port=htons(m_Server.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
+void NetworkManager::SendHello(){
+ if(m_Mode!=Mode::Client)return;
+ PacketHeader header{Magic,Hello};
+ char bytes[sizeof(header)+32];
+ std::memcpy(bytes,&header,sizeof(header));
+ std::memcpy(bytes+sizeof(header),m_JoinTicket.data(),m_JoinTicket.size());
+ sockaddr_in to{};
+ to.sin_family=AF_INET;
+ to.sin_addr.s_addr=m_Server.address;
+ to.sin_port=htons(m_Server.port);
+ sendto(static_cast<SocketHandle>(m_Socket),bytes,static_cast<int>(sizeof(header)+m_JoinTicket.size()),
+        0,reinterpret_cast<sockaddr*>(&to),sizeof(to));
+}
 void NetworkManager::SendTransformTo(const Endpoint& e,const NetworkTransformState& s){TransformPacket p{{Magic,Transform},s.playerID,m_LocalTransformSequence,s.x,s.y,s.z,s.rx,s.ry,s.rz};sockaddr_in to{};to.sin_family=AF_INET;to.sin_addr.s_addr=e.address;to.sin_port=htons(e.port);sendto(static_cast<SocketHandle>(m_Socket),reinterpret_cast<const char*>(&p),sizeof(p),0,reinterpret_cast<sockaddr*>(&to),sizeof(to));}
 void NetworkManager::SendMessageTo(const Endpoint& e,std::uint32_t senderID,std::uint16_t channel,const std::string& payload){
  MessagePacket p{};p.header={Magic,Message};p.senderID=senderID;p.channel=channel;p.size=static_cast<std::uint16_t>(std::min(payload.size(),MaxMessagePayload));std::memcpy(p.payload,payload.data(),p.size);

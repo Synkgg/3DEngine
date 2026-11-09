@@ -7,15 +7,20 @@
 #include <imgui.h>
 #include "../Texture2D.h"
 #include <fstream>
+#include <map>
 #include <cmath>
 #include <algorithm>
 #include <cstring>
 #include "../../UI/UIText.h"
+#include "../../UI/UITextInput.h"
+#include "../../UI/UISlider.h"
+#include "../../Audio/AudioEngine.h"
 #include "../../UI/UISerializer.h"
 #include "../../Scene/Runtime/Runtime.h"
 #include "../../Core/ProjectManager.h"
 #include "../../Platform/SDL/Input.h"
 #include "../../Scene/Components/TransformComponent.h"
+#include "../../Scene/Components/ColliderComponent.h"
 #include "../../UI/UIButton.h"
 #include "../../UI/UIProgressBar.h"
 
@@ -40,14 +45,186 @@ namespace
         return std::ldexp(float((h & 1023) + ((h & 0x7c00) ? 1024 : 0)), int((h >> 10) & 31) - 25);
     }
 
+    bool CheckEmberwildRuntime(Renderer& renderer)
+    {
+        ProjectManager project;
+        if(!project.Load("Projects/Emberwild/Emberwild.project"))return false;
+        renderer.SetProjectRoot(std::filesystem::absolute("Projects/Emberwild"));
+        Scene hs,cs;std::vector<HierarchyFolder> folders;
+        SceneSerializer hl(hs),cl(cs);
+        if(!hl.Load(project.ResolveAssetPath("Assets/Scenes/MainMenu.scene"),folders)||
+           !cl.Load(project.ResolveAssetPath("Assets/Scenes/MainMenu.scene"),folders))return false;
+        Runtime h,c;Input hi,ci;UICanvas hu,cu;h.SetProjectManager(&project);c.SetProjectManager(&project);
+        h.Start(hs,renderer,hi,hu);c.Start(cs,renderer,ci,cu);
+        auto capture=[&](Scene& scene,UICanvas& canvas,const char* path,bool world){
+            ImGui::NewFrame();ImGui::Render();renderer.BeginFrame();
+            if(world){
+                renderer.SetDirectionalLight(Vec3(-.48f,-.78f,-.38f),Vec3(1,.88f,.7f),2.f);
+                renderer.DrawSky();
+                for(auto e:scene.GetEntities())if(auto* mesh=scene.GetComponent<MeshComponent>(e)) {
+                    auto transform=scene.GetWorldTransform(e);
+                    renderer.DrawModel(transform,mesh->modelPath,1,1,1,1);
+                }
+            }
+            renderer.EndScene();renderer.BeginOverlay();
+            auto& ui=renderer.GetUIRenderer();ui.SetLogicalSize(1920,1080);ui.Begin();ui.RenderCanvas(canvas,&renderer);ui.End();
+            renderer.EndOverlay();renderer.EndFrame();std::vector<uint8_t> pixels;
+            if(!Velcryn::RHI::GetDevice()->ReadTexture(renderer.GetSceneColorTexture(),pixels))return false;
+            std::ofstream image(path,std::ios::binary);image<<"P6\n640 480\n255\n";
+            for(int y=0;y<480;++y)for(int x=0;x<640;++x)for(int ch=0;ch<3;++ch)
+                image.put(char(std::clamp(Channel(pixels,x,y,ch),0.f,1.f)*255));
+            return true;
+        };
+        bool ok=capture(hs,hu,"out/build/emberwild-menu.ppm",false);
+        auto* host=dynamic_cast<UIButton*>(hu.GetRoot()->Find("HostButton"));
+        if(!host)ok=false;else host->SetClicked(true);
+        for(int i=0;i<10;++i)h.Update(hs,renderer,hi,1.f/60);
+        auto* join=dynamic_cast<UIButton*>(cu.GetRoot()->Find("JoinButton"));
+        if(!join)ok=false;else join->SetClicked(true);
+        for(int i=0;i<180;++i){h.Update(hs,renderer,hi,1.f/60);c.Update(cs,renderer,ci,1.f/60);SDL_Delay(1);}
+        auto* objective=dynamic_cast<UIText*>(cu.GetRoot()->Find("Objective"));
+        ok=ok&&hs.FindEntityByName("Survivor").IsValid()&&cs.FindEntityByName("Survivor").IsValid()&&
+            hs.FindEntityByName("Partner").IsValid()&&cs.FindEntityByName("Partner").IsValid()&&
+            objective&&objective->GetText().find("DAY 1")!=std::string::npos;
+        auto* survivor=cs.GetComponent<TransformComponent>(cs.FindEntityByName("Survivor"));
+        if(survivor)survivor->transform.position=Vec3(-7,1,4);else ok=false;
+        for(int i=0;i<30;++i){h.Update(hs,renderer,hi,1.f/60);c.Update(cs,renderer,ci,1.f/60);}
+        c.GetNetwork().SendNetworkMessage(41,"1:use");
+        c.GetNetwork().SendNetworkMessage(41,"1:use");
+        for(int i=0;i<30;++i){h.Update(hs,renderer,hi,1.f/60);c.Update(cs,renderer,ci,1.f/60);}
+        auto* inventory=dynamic_cast<UIText*>(cu.GetRoot()->Find("Inventory"));
+        if(inventory)Logger::Info("Emberwild client inventory: "+inventory->GetText());
+        ok=ok&&inventory&&inventory->GetText().find("WOOD 2")!=std::string::npos;
+        renderer.SetCameraPosition(Vec3(0,2,8));renderer.SetCameraRotation(-1.57f,-.1f);
+        ok=capture(hs,hu,"out/build/emberwild-forest.ppm",true)&&ok;
+        c.Stop(cs);h.Stop(hs);renderer.SetProjectRoot({});renderer.ResetCamera();
+        Logger::Info(ok?"PASS: Emberwild real menu, host/join, two live runtimes, partner replication and rendered HUD":"FAIL: Emberwild live runtime");
+        return ok;
+    }
+
+    bool CheckTeamMatch(Renderer& renderer, ProjectManager& project, int size, int matchCount=1)
+    {
+        struct TestClient {
+            Scene scene;
+            Runtime runtime;
+            Input input;
+            UICanvas ui;
+        };
+        std::vector<std::unique_ptr<TestClient>> clients;
+        const int rosterSize=2*size;
+        for(int i=0;i<rosterSize*matchCount;++i){
+            auto client=std::make_unique<TestClient>();
+            std::vector<HierarchyFolder> folders;
+            SceneSerializer loader(client->scene);
+            if(!loader.Load(project.ResolveAssetPath("Assets/Scenes/MainMenu.scene"),folders)) return false;
+            client->runtime.SetProjectManager(&project);
+            client->runtime.SetStateBool("duel_test_loopback",true);
+            client->runtime.Start(client->scene,renderer,client->input,client->ui);
+            clients.push_back(std::move(client));
+        }
+        auto tick=[&](int frames){
+            for(int i=0;i<frames;++i){
+                for(auto& c:clients) c->runtime.Update(c->scene,renderer,c->input,1.f/60);
+                SDL_Delay(16);
+            }
+        };
+        auto clickAll=[&](const char* name){
+            for(auto& c:clients){
+                auto* button=dynamic_cast<UIButton*>(c->ui.GetRoot()->Find(name));
+                if(!button) return false;
+                button->SetClicked(true);
+            }
+            tick(3);
+            return true;
+        };
+        bool ok=true;
+        for(int i=1;i<size;++i) ok=ok && clickAll("ModeButton");
+        ok=ok && clickAll("PlayButton");
+        tick(260);
+        std::map<int,std::vector<TestClient*>> rosters;
+        for(auto& c:clients){
+            const int code=static_cast<int>(c->runtime.GetStateNumber("duel_cloud_code"));
+            auto& slots=rosters.try_emplace(code,rosterSize+1,nullptr).first->second;
+            const auto slot=c->runtime.GetNetwork().GetLocalPlayerID();
+            if(slot==0 || slot>=slots.size() || slots[slot] ||
+               c->runtime.GetStateNumber("duel_team_size")!=size ||
+               c->runtime.GetNetwork().GetRemoteTransforms().size()!=static_cast<size_t>(rosterSize-1) ||
+               !c->scene.FindEntityByName("Remote Operator").IsValid()){
+                ok=false;
+                break;
+            }
+            slots[slot]=c.get();
+        }
+        auto position=[](TestClient& c,Vec3 p){
+            auto* transform=c.scene.GetComponent<TransformComponent>(c.scene.FindEntityByName("Operator"));
+            if(transform) transform->transform.position=p;
+            return transform!=nullptr;
+        };
+        // Slot one faces down the empty west lane. Move one opponent at a
+        // time into view and check that only the final elimination scores.
+        ok=ok && rosters.size()==static_cast<size_t>(matchCount);
+        for(auto& [code,slots]:rosters){
+            for(int slot=1;ok && slot<=rosterSize;++slot)
+                ok=slots[slot] && slots[slot]->runtime.GetStateNumber("duel_score")==0 &&
+                   slots[slot]->runtime.GetStateNumber("duel_opponent_score")==0 &&
+                   position(*slots[slot],slot==1 ? Vec3(-12.5f,1,5) : Vec3(2.f*slot,1,12));
+            for(int enemy=2;ok && enemy<=rosterSize;enemy+=2){
+                ok=position(*slots[enemy],Vec3(-12.5f,1,-5));
+                tick(30);
+                slots[1]->input.UpdateMouseState(0,0,SDL_BUTTON_LMASK);
+                tick(56);
+                slots[1]->input.UpdateMouseState(0,0,0);
+                tick(16);
+                ok=ok && slots[enemy]->runtime.GetStateNumber("duel_health")==0;
+                const int expected=enemy==rosterSize ? 1 : 0;
+                for(int slot=1;slot<=rosterSize;++slot){
+                    const char* key=slot%2 ? "duel_score" : "duel_opponent_score";
+                    ok=ok && slots[slot]->runtime.GetStateNumber(key)==expected;
+                }
+            }
+            // Release this worker before scoring in the next match.
+            for(auto* player:slots) if(player) player->runtime.Stop(player->scene);
+        }
+        for(auto& c:clients) c->runtime.Stop(c->scene);
+        renderer.SetProjectRoot({});renderer.ResetCamera();
+        Logger::Info(std::string(ok?"PASS: ":"FAIL: ")+std::to_string(size)+"v"+std::to_string(size)+" matchmaking, replication and team elimination");
+        return ok;
+    }
+
     bool CheckBreakbulkRuntime(Renderer& renderer)
     {
+        // UI tests apply preferences through the real game APIs. Preserve the
+        // player's files even on an early test failure and use default settings.
+        struct PreferencesGuard {
+            std::filesystem::path folder="Projects/DuelFPS/Saved";
+            std::map<std::filesystem::path,std::string> files;
+            PreferencesGuard() {
+                if(std::filesystem::exists(folder))for(const auto& entry:std::filesystem::directory_iterator(folder))
+                    if(entry.is_regular_file() && entry.path().extension()==".txt") {
+                        std::ifstream input(entry.path(),std::ios::binary);
+                        files[entry.path()]={std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+                    }
+                std::error_code error;
+                std::filesystem::remove(folder/"duel_settings_v1.txt",error);
+            }
+            ~PreferencesGuard() {
+                std::error_code error;
+                if(std::filesystem::exists(folder,error))for(const auto& entry:std::filesystem::directory_iterator(folder,error))
+                    if(entry.path().extension()==".txt" && !files.contains(entry.path()))std::filesystem::remove(entry.path(),error);
+                for(const auto& [path,data]:files){std::ofstream output(path,std::ios::binary);output<<data;}
+            }
+        } preferencesGuard;
         ProjectManager project;
         if(!project.Load("Projects/DuelFPS/DuelFPS.project"))return false;
         renderer.SetProjectRoot(std::filesystem::absolute("Projects/DuelFPS"));
-        // All four authored meshes must import as actual renderable geometry.
-        for(const char* weapon:{"MakoP12","KestrelAR4","BreachS8","VectorK9"}) {
-            if(!renderer.GetModelAsset(std::string("Assets/Models/Arsenal/")+weapon+".obj")) {
+        if(const char* mode=SDL_getenv("DUELFPS_TEST_CLOUD")){
+            if(std::strcmp(mode,"2v2")==0) return CheckTeamMatch(renderer,project,2);
+            if(std::strcmp(mode,"3v3")==0) return CheckTeamMatch(renderer,project,3);
+            if(std::strcmp(mode,"multi")==0) return CheckTeamMatch(renderer,project,3,2);
+        }
+        // Import the actual six meshes referenced by the shipping viewmodels.
+        for(const char* weapon:{"pistol","rifle","shotgun","smg","sniper","marksman","pistol2","rifle2","shotgun2","smg2","sniper2","marksman2"}) {
+            if(!renderer.GetModelAsset(std::string("Assets/Models/Tactical/")+weapon+".obj")) {
                 Logger::Error(std::string("BREAKBULK: cannot import weapon mesh: ")+weapon);
                 return false;
             }
@@ -56,30 +233,78 @@ namespace
         if(!menuLoader.Load(project.ResolveAssetPath("Assets/Scenes/MainMenu.scene"),folders))return false;
         Input menuInput;UICanvas menuUI;Runtime menuRuntime;menuRuntime.SetProjectManager(&project);
         menuRuntime.Start(menu,renderer,menuInput,menuUI);
+        auto captureUI=[&](const char* path){
+            ImGui::NewFrame();ImGui::Render();renderer.BeginFrame();
+            if(menu.FindEntityByName("PracticeMode").IsValid()){
+                renderer.SetDirectionalLight(Vec3(-.48f,-.78f,-.38f),Vec3(1,.82f,.64f),1.35f);
+                for(int i=0;i<Renderer::ShadowCascadeCount;++i)if(renderer.BeginShadowPass(i)){
+                    for(auto e:menu.GetEntities())if(auto* m=menu.GetComponent<MeshComponent>(e)){
+                        auto t=menu.GetWorldTransform(e);if(m->modelPath.empty())renderer.DrawShadowMesh(t,m->primitive);else renderer.DrawShadowModel(t,m->modelPath);}
+                    renderer.EndShadowPass();}
+                renderer.DrawSky();
+                for(auto e:menu.GetEntities())if(auto* mesh=menu.GetComponent<MeshComponent>(e)){
+                    auto t=menu.GetWorldTransform(e);auto* c=menu.GetComponent<ColorComponent>(e);ColorComponent white;if(!c)c=&white;
+                    auto* texture=menu.GetComponent<TextureComponent>(e);
+                    if(mesh->modelPath.empty())renderer.DrawMesh(t,mesh->primitive,c->r,c->g,c->b,c->a,texture?renderer.LoadTexture(texture->path):nullptr);
+                    else renderer.DrawModel(t,mesh->modelPath,c->r,c->g,c->b,c->a);
+                }
+            }
+            renderer.EndScene();renderer.BeginOverlay();
+            auto& ui=renderer.GetUIRenderer();ui.SetLogicalSize(1920,1080);ui.Begin();ui.RenderCanvas(menuUI,&renderer);ui.End();renderer.EndOverlay();renderer.EndFrame();
+            std::vector<uint8_t> pixels;if(!Velcryn::RHI::GetDevice()->ReadTexture(renderer.GetSceneColorTexture(),pixels))return;
+            std::ofstream image(path,std::ios::binary);image<<"P6\n640 480\n255\n";
+            for(int y=0;y<480;++y)for(int x=0;x<640;++x)for(int ch=0;ch<3;++ch)image.put(char(std::clamp(Channel(pixels,x,y,ch),0.f,1.f)*255));
+        };
+        auto stepMenu=[&](int count=3){for(int i=0;i<count;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);};
+        auto clickMenu=[&](const char* name){auto* b=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find(name));if(!b)return false;b->SetClicked(true);stepMenu();return true;};
+        AudioEngine settingsAudio;menuRuntime.SetAudioEngine(&settingsAudio);
+        if(!clickMenu("SettingsButton")){menuRuntime.Stop(menu);return false;}
+        auto* sensitivity=dynamic_cast<UISlider*>(menuUI.GetRoot()->Find("Setting_sensitivity"));
+        if(!sensitivity){Logger::Error("Settings canvas did not open");menuRuntime.Stop(menu);return false;}
+        sensitivity->SetValue(.25f);stepMenu();
+        if(std::abs(menuRuntime.GetStateNumber("mouse_sensitivity")-.007)>.0001){menuRuntime.Stop(menu);return false;}
+        if(!clickMenu("Bind_fireButton")){menuRuntime.Stop(menu);return false;}
+        stepMenu(15);menuInput.UpdateMouseState(0,0,SDL_BUTTON_X1MASK);stepMenu(1);menuInput.UpdateMouseState(0,0,0);stepMenu();
+        auto* binding=dynamic_cast<UIText*>(menuUI.GetRoot()->Find("Bind_fireLabel"));
+        if(!binding||binding->GetText()!="Mouse side 1"){Logger::Error("Settings mouse rebind failed");menuRuntime.Stop(menu);return false;}
+        captureUI("out/build/duel-settings-controls.ppm");
+        clickMenu("TabAudioButton");
+        auto* master=dynamic_cast<UISlider*>(menuUI.GetRoot()->Find("Setting_master"));
+        if(!master){menuRuntime.Stop(menu);return false;}
+        master->SetValue(.35f);stepMenu();
+        if(std::abs(settingsAudio.GetMasterVolume()-.35f)>.001f){menuRuntime.Stop(menu);return false;}
+        captureUI("out/build/duel-settings-audio.ppm");
+        clickMenu("TabGraphicsButton");clickMenu("Toggle_qualityButton");
+        if(renderer.GetRenderSettings().shadowQuality!=0){Logger::Error("Low quality preset did not apply");menuRuntime.Stop(menu);return false;}
+        captureUI("out/build/duel-settings-graphics.ppm");
+        clickMenu("SettingsApplyButton");clickMenu("SettingsButton");clickMenu("TabAudioButton");
+        master=dynamic_cast<UISlider*>(menuUI.GetRoot()->Find("Setting_master"));
+        if(!master||std::abs(master->GetValue()-.35f)>.001f){menuRuntime.Stop(menu);return false;}
+        master->SetValue(.9f);stepMenu();clickMenu("SettingsCancelButton");
+        if(std::abs(settingsAudio.GetMasterVolume()-.35f)>.001f){menuRuntime.Stop(menu);return false;}
+        // Restore defaults so later shooting regression uses the normal trigger.
+        clickMenu("SettingsButton");clickMenu("SettingsResetButton");clickMenu("SettingsApplyButton");
+        Logger::Info("PASS: real settings controls, mouse capture, audio preview, quality, apply, reopen and cancel");
         auto* armory=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("LoadoutButton"));
         if(!armory){menuRuntime.Stop(menu);return false;}
         armory->SetClicked(true);
         for(int i=0;i<10;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
-        if(!menuUI.GetRoot()->Find("PrimaryTab") || !menuUI.GetRoot()->Find("shotgunButton") ||
-           !menuUI.GetRoot()->Find("smgButton") || !menuUI.GetRoot()->Find("PreviewName") ||
-           !menuUI.GetRoot()->Find("StatDamageSegment10") ||
-           !menuUI.GetRoot()->Find("PreviewGun_shotgun")) {
-            Logger::Error("BREAKBULK: tactical four-weapon loadout UI failed to open");
-            menuRuntime.Stop(menu);return false;
-        }
-        // Exercise the real button->Lua->UI path, not just the asset parser.
-        auto* smgSelect=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("smgButton"));
-        smgSelect->SetClicked(true);
-        for(int i=0;i<3;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
-        auto* preview=dynamic_cast<UIText*>(menuUI.GetRoot()->Find("PreviewName"));
-        if(!preview || preview->GetText()!="VECTOR K9") {
-            Logger::Error("BREAKBULK: loadout selection did not refresh the weapon preview");
-            menuRuntime.Stop(menu);return false;
-        }
+        auto shown=[&](const char* id){auto* w=menuUI.GetRoot()->Find(id);return w&&w->IsVisible();};
+        if(!shown("Overview")||shown("Picker")){menuRuntime.Stop(menu);return false;}
+        captureUI("out/build/duel-loadout.ppm");
+        if(!clickMenu("SecondaryTab")||!clickMenu("Category_sniper_Button")||shown("Overview")||!shown("Picker")||!shown("Choices_sniper")){menuRuntime.Stop(menu);return false;}
+        captureUI("out/build/duel-picker.ppm");
+        if(!clickMenu("sniper2Button")||!shown("Overview")||shown("Picker")||!shown("SecondaryIcon_sniper2")){menuRuntime.Stop(menu);return false;}
+        if(!clickMenu("PrimaryTab")||!clickMenu("PickerBackButton")||!shown("Overview")){menuRuntime.Stop(menu);return false;}
         auto* back=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("BackButton"));
         if(!back){menuRuntime.Stop(menu);return false;}
         back->SetClicked(true);
         for(int i=0;i<10;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
+        auto* play=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("CustomButton"));
+        if(!play){menuRuntime.Stop(menu);return false;}
+        play->SetClicked(true);
+        for(int i=0;i<3;++i)menuRuntime.Update(menu,renderer,menuInput,1.f/60);
+        if(!clickMenu("BackButton") || !clickMenu("DrillButton") || !clickMenu("MapButton")){menuRuntime.Stop(menu);return false;}
         auto* practice=dynamic_cast<UIButton*>(menuUI.GetRoot()->Find("PracticeButton"));
         if(!practice){menuRuntime.Stop(menu);return false;}
         practice->SetClicked(true);
@@ -88,22 +313,77 @@ namespace
             menu.FindEntityByName("MAKO P12 Viewmodel").IsValid() ||
             menu.FindEntityByName("BREACH S8 Viewmodel").IsValid() ||
             menu.FindEntityByName("VECTOR K9 Viewmodel").IsValid();
-        const bool drill=menu.FindEntityByName("PracticeMode").IsValid()&&menuUI.GetRoot()->Find("AmmoText")&&hasWeapon;
+        const bool drill=menu.FindEntityByName("PracticeMode").IsValid()&&menu.FindEntityByName("Depot retaining wall").IsValid()&&menuUI.GetRoot()->Find("AmmoText")&&(hasWeapon||menu.FindEntityByName("MuzzleSocket").IsValid());
+        captureUI("out/build/duel-depot-hud.ppm");
+        if(!clickMenu("SettingsButton") || !menuUI.GetRoot()->Find("Setting_fov")) {
+            Logger::Error("In-game settings did not open");menuRuntime.Stop(menu);return false;
+        }
+        clickMenu("SettingsCancelButton");
+        auto* pause=menuUI.GetRoot()->Find("PauseMenu");
+        if(!pause || !pause->IsVisible()){Logger::Error("Settings did not return to pause");menuRuntime.Stop(menu);return false;}
+        clickMenu("ResumeButton");
+        auto actor=menu.FindEntityByName("Operator");
+        bool stance=CollisionSystem::ResizeStandingCollider(menu,actor,1.16f);
+        auto p=menu.GetWorldTransform(actor).position;
+        auto roof=menu.CreateEntity();
+        menu.GetComponent<TransformComponent>(roof)->transform.position=p+Vec3(0,.84f,0);
+        ColliderComponent obstacle;obstacle.width=2;obstacle.height=.1f;obstacle.depth=2;menu.AddComponent(roof,obstacle);
+        stance=stance && !CollisionSystem::ResizeStandingCollider(menu,actor,1.8f);
+        menu.DestroyEntity(roof);stance=stance&&CollisionSystem::ResizeStandingCollider(menu,actor,1.8f);
         menuRuntime.Stop(menu);
-        if(!drill){Logger::Error("BREAKBULK: actual menu-to-drill Lua flow failed");return false;}
+        if(!drill || !stance){Logger::Error("BREAKBULK: depot drill or crouch clearance failed");return false;}
         Scene hostScene,clientScene;SceneSerializer hl(hostScene),cl(clientScene);
-        if(!hl.Load(project.ResolveAssetPath("Assets/Scenes/Arena.scene"),folders)||!cl.Load(project.ResolveAssetPath("Assets/Scenes/Arena.scene"),folders))return false;
+        if(!hl.Load(project.ResolveAssetPath("Assets/Scenes/MainMenu.scene"),folders)||!cl.Load(project.ResolveAssetPath("Assets/Scenes/MainMenu.scene"),folders))return false;
         Runtime host,client;Input hi,ci;UICanvas hu,cu;host.SetProjectManager(&project);client.SetProjectManager(&project);
-        if(!host.GetNetwork().Host(0,2))return false;
+        const char* cloudMode = SDL_getenv("DUELFPS_TEST_CLOUD");
+        const bool cloud = cloudMode != nullptr;
+        const bool quick = cloud && std::strcmp(cloudMode,"quick")==0;
+        host.SetStateBool("duel_test_loopback",cloud);
+        client.SetStateBool("duel_test_loopback",cloud);
         host.Start(hostScene,renderer,hi,hu);
-        if(!client.GetNetwork().Join("127.0.0.1",host.GetNetwork().GetBoundPort())){host.Stop(hostScene);return false;}
-        for(int i=0;i<5;++i){host.GetNetwork().Update();client.GetNetwork().Update();SDL_Delay(1);}
         client.Start(clientScene,renderer,ci,cu);
-        auto tick=[&](){host.Update(hostScene,renderer,hi,1.f/60);client.Update(clientScene,renderer,ci,1.f/60);};
+        auto tick=[&](){
+            host.Update(hostScene,renderer,hi,1.f/60);
+            client.Update(clientScene,renderer,ci,1.f/60);
+            if(cloud) SDL_Delay(16);
+        };
+        auto hostMenu=[&](const char* name){auto* b=dynamic_cast<UIButton*>(hu.GetRoot()->Find(name));if(!b)return false;b->SetClicked(true);for(int i=0;i<4;++i)tick();return true;};
+        if(quick ? !hostMenu("PlayButton") :
+           !hostMenu("CustomButton")||hu.GetRoot()->Find("LimitButton")||
+           (!cloud && !hostMenu("TransportButton")) ||
+           !hostMenu("HostButton")||host.GetNetwork().IsConnected()||!hostMenu("MapButton")||!hostMenu("LimitButton")||!hostMenu("TimeButton")||
+           !hostMenu("StartButton")){client.Stop(clientScene);host.Stop(hostScene);return false;}
+        auto joinMenu=[&](const char* name){auto* b=dynamic_cast<UIButton*>(cu.GetRoot()->Find(name));if(!b)return false;b->SetClicked(true);for(int i=0;i<4;++i)tick();return true;};
+        if(!joinMenu(quick ? "PlayButton" : "CustomButton")){client.Stop(clientScene);host.Stop(hostScene);return false;}
+        if(cloud && !quick){
+            for(int i=0;i<480 && !hostScene.FindEntityByName("Operator").IsValid();++i) tick();
+            const int code = static_cast<int>(host.GetStateNumber("duel_cloud_code"));
+            auto* address = dynamic_cast<UITextInput*>(cu.GetRoot()->Find("AddressField"));
+            if(!address || code<10000000 || host.GetNetwork().IsHost()){
+                Logger::Error("Cloud creator did not enter its dedicated match");
+                client.Stop(clientScene);host.Stop(hostScene);return false;
+            }
+            address->SetText(std::to_string(code));
+        }
+        if(!quick && cloud && !joinMenu("JoinButton")){client.Stop(clientScene);host.Stop(hostScene);return false;}
+        if(!cloud){
+            bool found=joinMenu("TransportButton") && joinMenu("BrowseButton");
+            for(int i=0;found && i<180;++i){
+                auto* row=cu.GetRoot()->Find("ServerRow1");
+                if(row && row->IsVisible()) break;
+                tick(); SDL_Delay(2);
+            }
+            auto* row=cu.GetRoot()->Find("ServerRow1");
+            if(!found || !row || !row->IsVisible() || !joinMenu("Server1Button")){
+                client.Stop(clientScene);host.Stop(hostScene);return false;
+            }
+        }
         for(int i=0;i<240;++i)tick();
         auto* hp=hostScene.GetComponent<TransformComponent>(hostScene.FindEntityByName("Operator"));
         auto* cp=clientScene.GetComponent<TransformComponent>(clientScene.FindEntityByName("Operator"));
-        bool ok=hp&&cp&&hostScene.FindEntityByName("Remote Operator").IsValid()&&clientScene.FindEntityByName("Remote Operator").IsValid();
+        bool ok=hp&&cp&&client.GetStateNumber("duel_limit")==(quick?5:7)&&client.GetStateNumber("duel_seconds")==(quick?90:120)&&clientScene.FindEntityByName("Depot retaining wall").IsValid()&&hostScene.FindEntityByName("Remote Operator").IsValid()&&clientScene.FindEntityByName("Remote Operator").IsValid();
+        if(quick) ok=ok && !host.GetNetwork().IsHost() && !client.GetNetwork().IsHost() &&
+            host.GetStateBool("duel_public_match",false) && client.GetStateBool("duel_public_match",false);
         if(ok){
             hp->transform.position=Vec3(-12.5f,1,5);cp->transform.position=Vec3(-12.5f,1,-5);
             for(int i=0;i<45;++i)tick();
@@ -129,7 +409,7 @@ namespace
         for(auto entity:scene.GetEntities())if(auto* light=scene.GetComponent<LightComponent>(entity)) {
             if(light->type==LightType::Directional) {
                 renderer.SetDirectionalLight(light->direction,light->color,light->intensity);
-                foundLight=std::abs(light->intensity-(terminal?2.3f:1.4f))<.001f;
+                foundLight=std::abs(light->intensity-(terminal?1.35f:1.4f))<.001f;
             }
         }
         renderer.SetCameraPosition(terminal?Vec3(22,21,27):Vec3(4,3,14));renderer.SetCameraRotation(-2.28f,terminal?-.55f:-.41f);
@@ -436,6 +716,7 @@ int RunRHISmokeTest()
             if (!CheckPracticeRange(renderer)) result = 1;
             if (!CheckPracticeRange(renderer,true)) result = 1;
             if (!CheckBreakbulkRuntime(renderer)) result = 1;
+            if (!CheckEmberwildRuntime(renderer)) result = 1;
             Velcryn::RHI::GetDevice()->WaitIdle();
         }
         renderer.Shutdown();

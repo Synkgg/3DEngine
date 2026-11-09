@@ -8,11 +8,12 @@ public:
  bool Initialize();
  void Shutdown();
  void Update();
- bool PlaySound(const std::string& path,float volume=1.0f);
+ enum class Bus { Direct, Effects, UI };
+ bool PlaySound(const std::string& path,float volume=1.0f,Bus bus=Bus::Direct);
  // Layered, pitch-varied procedural contact audio, generated in memory.
  bool PlayFootstep(const std::string& surface, bool sprint=false);
  void SetProjectRoot(const std::filesystem::path& root){m_ProjectRoot=root;}
- void PlayInteractSound(){PlaySound("Assets/Audio/Interaction/interact.wav",0.85f*m_SFXVolume);}
+ void PlayInteractSound(){PlaySound("Assets/Audio/Interaction/interact.wav",0.85f,Bus::Effects);}
  void SetMasterVolume(float v);
  float GetMasterVolume() const { return m_MasterVolume;
  }
@@ -24,7 +25,9 @@ public:
  }
 private: std::filesystem::path m_ProjectRoot;
 SDL_AudioDeviceID m_Device=0;
-std::vector<SDL_AudioStream*> m_Streams;
+struct PlayingSound { SDL_AudioStream* stream; float volume; Bus bus; };
+std::vector<PlayingSound> m_Streams;
+void ApplyVolumes();
 float m_MasterVolume=1.0f,m_SFXVolume=1.0f,m_UIVolume=1.0f;
 unsigned int m_FootstepSequence=0;
 };

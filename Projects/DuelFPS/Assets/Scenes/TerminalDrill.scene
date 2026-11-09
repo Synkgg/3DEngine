@@ -594,7 +594,7 @@ Interactable 0
 Player 0
 PlayerStart 0
 CharacterController 0
-Light 1 1 0.84 0.64 -0.48 -0.78 -0.38 2.3 0 90 23 35 1
+Light 1 1 0.82 0.64 -0.48 -0.78 -0.38 1.35 0 90 23 35 1
 Collider 0
 Scripts 0
 Entity 34

@@ -497,6 +497,27 @@ namespace
     }
 }
 
+bool CollisionSystem::ResizeStandingCollider(Scene& scene,Entity actor,float height)
+{
+    auto* c=scene.GetComponent<ColliderComponent>(actor);
+    auto* t=scene.GetComponent<TransformComponent>(actor);
+    if(!c || !t || !(height>0 && height<4))return false;
+    if(std::abs(height-c->height)<.001f)return true;
+    auto proposed=*t;proposed.transform.position.y+=(height-c->height)*.5f;
+    auto shape=*c;shape.height=height;
+    if(height>c->height){
+        auto box=CreateOBB(proposed,shape);
+        for(auto e:scene.GetEntities()){
+            auto* other=scene.GetComponent<ColliderComponent>(e);
+            if(e.GetID()==actor.GetID() || !other || !other->enabled)continue;
+            TransformComponent world;world.transform=scene.GetWorldTransform(e);
+            auto overlap=GetOBBCollision(box,CreateOBB(world,*other));
+            if(overlap.collided && overlap.penetration>.003f)return false;
+        }
+    }
+    *t=proposed;c->height=height;return true;
+}
+
 void CollisionSystem::Update(
     Scene& scene)
 {

@@ -188,10 +188,12 @@ void LoadMTL(const std::filesystem::path& path,std::vector<ImportedMaterial>& ou
     if(!file){Logger::Warning("Could not open MTL: "+path.string());return;}
 
     ImportedMaterial* current=nullptr;
+    bool linearColor=false;
     std::string line;
     while(std::getline(file,line))
     {
         std::stringstream ss(line); std::string tag; ss>>tag;
+        if(line.find("# VelcrynLinear") == 0)linearColor=true;
         if(tag.empty()||tag[0]=='#') continue;
         if(tag=="newmtl")
         {
@@ -201,10 +203,12 @@ void LoadMTL(const std::filesystem::path& path,std::vector<ImportedMaterial>& ou
         else if(current&&tag=="Kd")
         {
             float r=1.0f,g=1.0f,b=1.0f;ss>>r>>g>>b;
-            current->diffuse[0]=LegacyMTLColor(r);
-            current->diffuse[1]=LegacyMTLColor(g);
-            current->diffuse[2]=LegacyMTLColor(b);
+            current->diffuse[0]=linearColor?std::clamp(r,0.f,1.f):LegacyMTLColor(r);
+            current->diffuse[1]=linearColor?std::clamp(g,0.f,1.f):LegacyMTLColor(g);
+            current->diffuse[2]=linearColor?std::clamp(b,0.f,1.f):LegacyMTLColor(b);
         }
+        else if(current&&tag=="Pm")ss>>current->metallicFactor;
+        else if(current&&tag=="Pr")ss>>current->roughnessFactor;
         else if(current&&tag=="Ks") ss>>current->specular[0]>>current->specular[1]>>current->specular[2];
         else if(current&&tag=="Ns") ss>>current->shininess;
         else if(current&&tag=="d") ss>>current->opacity;
@@ -213,7 +217,15 @@ void LoadMTL(const std::filesystem::path& path,std::vector<ImportedMaterial>& ou
         {
             std::string texture;std::getline(ss,texture);
             texture=Trim(texture);
-            if(importTextures && !texture.empty()) current->diffuseTexture=(path.parent_path()/texture).lexically_normal().string();
+            if(importTextures && !texture.empty()) {
+                auto image=(path.parent_path()/texture).lexically_normal();
+                // Store authored project textures relative to Assets so exported
+                // material caches can move to a different player's machine.
+                if(linearColor)for(auto parent=image.parent_path();!parent.empty() && parent!=parent.root_path();parent=parent.parent_path()){
+                    if(parent.filename()=="Assets"){image=std::filesystem::path("Assets")/image.lexically_relative(parent);break;}
+                }
+                current->diffuseTexture=image.string();
+            }
         }
     }
 }

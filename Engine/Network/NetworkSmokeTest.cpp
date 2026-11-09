@@ -44,6 +44,8 @@ int RunNetworkSmokeTest()
     host.Disconnect();pump();check(!client.IsConnected(),"host shutdown reaches client");
     lua_State* lua=luaL_newstate();luaL_openlibs(lua);
     if(luaL_dofile(lua,"Projects/DuelFPS/Tests/Gameplay.lua")!=LUA_OK){Logger::Error(lua_tostring(lua,-1));ok=false;}
+    if(luaL_dofile(lua,"Projects/DuelFPS/Tests/Settings.lua")!=LUA_OK){Logger::Error(lua_tostring(lua,-1));ok=false;}
+    if(luaL_dofile(lua,"Projects/Emberwild/Tests/Gameplay.lua")!=LUA_OK){Logger::Error(lua_tostring(lua,-1));ok=false;}
     lua_close(lua);
     return ok?0:1;
 }

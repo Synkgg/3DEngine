@@ -1,5 +1,6 @@
 local ShotPattern = require("Scripts.Weapons.ShotPattern")
 local WeaponVFX = require("Scripts.Weapons.WeaponVFX")
+local sampleClip=require('Scripts.Weapons.HandlingClips')
 local WeaponSystem = {}
 WeaponSystem.__index = WeaponSystem
 
@@ -18,6 +19,7 @@ function WeaponSystem.new(api)
         recoilTarget = 0.0,
         recoilApplied = 0.0,
         aiming = false,
+        aimAlpha=0, boltTimer=0,
         animationTime=0,
         triggerHeld=false,
         fx=WeaponVFX.new(api.Scene)
@@ -59,6 +61,7 @@ function WeaponSystem:SetLoadout(primary,secondary,practice)
     self.muzzleSocket=0
     self.equipped=nil
     self.inventory={}
+    self.cooldown=0
     for _,id in ipairs({primary,secondary}) do
         local def=self.definitions[id]
         self.inventory[id]={ammo=def.magSize,reserve=practice and def.practiceReserve or def.startingReserve}
@@ -86,6 +89,7 @@ function WeaponSystem:Equip(weaponID)
     self.muzzleSocket = 0
     self.equipped = weaponID
     self.reloadTimer = 0.0
+    self.aimAlpha=0;self.aiming=false;self.boltTimer=0
     self.kick = 0.0
     self.recoilTarget = 0.0
     self.recoilApplied = 0.0
@@ -95,6 +99,7 @@ function WeaponSystem:Equip(weaponID)
         -- position. Preserve authored offsets instead of overwriting them.
         self.viewmodelBaseOffset = self.api.Scene.GetPosition(self.viewmodel)
         self.muzzleSocket = self.api.Scene.FindChild(self.viewmodel, "MuzzleSocket")
+        self.supportHand=self.api.Scene.FindChild(self.viewmodel,'SupportHand');self.drawTime=.30
     end
     return true
 end
@@ -110,6 +115,11 @@ end
 function WeaponSystem:GetAmmo()
     local item = self:GetItem()
     return item and item.ammo or 0, item and item.reserve or 0
+end
+
+function WeaponSystem:IsScoped()
+    local def=self:GetDefinition()
+    return def and def.scoped and self.aimAlpha>.9 and self.aiming or false
 end
 
 function WeaponSystem:IsReloading()
@@ -141,7 +151,7 @@ function WeaponSystem:Update(dt, cameraEntity)
     local def, item = self:GetDefinition(), self:GetItem()
     if not def or not item then return end
 
-    self.kick = math.max(0.0, self.kick - dt * (def.kickRecovery or 6.0))
+    self.kick = self.kick * math.exp(-dt*(def.kickRecovery or 6.0)*2)
 
     -- Smooth camera recoil: ease upward toward the accumulated shot impulse,
     -- then ease the exact applied offset back to zero.
@@ -166,16 +176,19 @@ function WeaponSystem:Update(dt, cameraEntity)
         end
     end
 
-    self.aiming = self.api.Input.IsMouseButtonDown(3) and self.reloadTimer <= 0.0
+    self.boltTimer=math.max(0,self.boltTimer-dt)
+    self.aiming = self.api.Input.IsMouseButtonDown(3) and self.reloadTimer <= 0.0 and self.boltTimer<=0
+    self.aimAlpha=self.aimAlpha+((self.aiming and 1 or 0)-self.aimAlpha)*(1-math.exp(-dt*14))
     if cameraEntity ~= 0 then
-        self.api.Camera.SetEntityFOV(cameraEntity, self.aiming and def.adsFov or def.hipFov)
+        local baseFov=self.api.GetBaseFOV and self.api.GetBaseFOV() or def.hipFov
+        self.api.Camera.SetEntityFOV(cameraEntity, baseFov+(baseFov*(def.adsFov/def.hipFov)-baseFov)*self.aimAlpha)
     end
 
     if self.viewmodel == 0 then return end
     local c, f, r = self.api.Camera.GetPosition(), self.api.Camera.GetForward(), self.api.Camera.GetRight()
-    local side = self.aiming and def.adsSide or def.hipSide
-    local forwardOffset = self.aiming and def.adsForward or def.hipForward
-    local down = self.aiming and def.adsDown or def.hipDown
+    local side = def.hipSide+(def.adsSide-def.hipSide)*self.aimAlpha
+    local forwardOffset = def.hipForward+(def.adsForward-def.hipForward)*self.aimAlpha
+    local down = def.hipDown+(def.adsDown-def.hipDown)*self.aimAlpha
 
     -- Camera-relative position keeps the gun in the same part of the screen
     -- while looking up/down. Right x Forward gives camera Up; the previous
@@ -186,17 +199,17 @@ function WeaponSystem:Update(dt, cameraEntity)
     local upLength = math.max(0.0001, math.sqrt(upX*upX+upY*upY+upZ*upZ))
     upX,upY,upZ = upX/upLength,upY/upLength,upZ/upLength
 
-    -- The prefab root contains only the carried pose. The mesh child already
-    -- has its GunPack +90 degree Y correction. Pitching the parent with the
-    -- additive Euler hierarchy caused the barrel to bank onto its side.
-    -- Keep a level, yaw-only root and use the camera basis for screen anchoring.
+    -- Mesh axes are baked into the asset, so the root follows camera pitch and yaw.
     local base = self.viewmodelBaseOffset
     local rightAmount = side + base.x
     local forwardAmount = forwardOffset - self.kick + base.z
-    local upAmount = down + base.y + self.kick * 1.6
+    local upAmount = down + base.y + self.kick * .24
     local moving = self.api.Input.IsKeyDown("W") or self.api.Input.IsKeyDown("S")
         or self.api.Input.IsKeyDown("A") or self.api.Input.IsKeyDown("D")
-    if moving and not self.aiming then upAmount=upAmount+math.sin(self.animationTime*13)*.008 end
+    local carry=1-self.aimAlpha
+    self.carryWeight=(self.carryWeight or 0)+((moving and 1 or 0)-(self.carryWeight or 0))*(1-math.exp(-dt*10))
+    rightAmount=rightAmount+math.sin(self.animationTime*6.5)*.012*self.carryWeight*carry
+    upAmount=upAmount+(math.cos(self.animationTime*13)*.009*self.carryWeight+math.sin(self.animationTime*2)*.002)*carry
     local reloadPose = self.reloadTimer>0 and math.sin(math.pi*self.reloadTimer/def.reloadTime) or 0
     upAmount=upAmount-reloadPose*.12
 
@@ -205,10 +218,18 @@ function WeaponSystem:Update(dt, cameraEntity)
         c.y+r.y*rightAmount+f.y*forwardAmount+upY*upAmount,
         c.z+r.z*rightAmount+f.z*forwardAmount+upZ*upAmount)
 
-    -- Scene.SetRotation accepts DEGREES. The child mesh's Y=90deg is already
-    -- authored in the prefab; do not add camera pitch or any roll here.
     local yaw = math.deg(math.atan(-f.x, -f.z))
-    self.api.Scene.SetRotation(self.viewmodel, 0, yaw, 0)
+    local pitch=math.deg(math.asin(math.max(-1,math.min(1,f.y))))
+    self.drawTime=math.max(0,(self.drawTime or 0)-dt)
+    local x,y,z,wrist,tilt,roll=0,0,0,0,0,0
+    if self.reloadTimer>0 then x,y,z,wrist,tilt,roll=sampleClip('reload',1-self.reloadTimer/def.reloadTime)
+    elseif self.boltTimer>0 then x,y,z,wrist,tilt,roll=sampleClip('bolt',1-self.boltTimer/def.boltTime)
+    elseif self.drawTime>0 then x,y,z,wrist,tilt,roll=sampleClip('draw',1-self.drawTime/.30) end
+    if self.supportHand and self.supportHand~=0 then self.api.Scene.SetPosition(self.supportHand,x,y,z);self.api.Scene.SetRotation(self.supportHand,wrist,0,0) end
+    -- Rotate the cant about the camera's forward axis, independent of world heading.
+    self.api.Scene.SetRotation(self.viewmodel,pitch+tilt+roll*f.x,yaw,roll*f.z)
+    local scale=self:IsScoped() and 0 or 1
+    self.api.Scene.SetScale(self.viewmodel,scale,scale,scale)
 end
 
 function WeaponSystem:SpawnRemoteShot(ownerEntity,weaponID,ox,oy,oz,dx,dy,dz)
@@ -226,6 +247,7 @@ function WeaponSystem:Fire(ownerEntity, cameraEntity)
     self.triggerHeld=true
     item.ammo=item.ammo-1
     self.cooldown=def.fireInterval
+    self.boltTimer=def.boltTime or 0
     self.kick=math.min(def.viewKick*1.35,self.kick+def.viewKick)
     self.recoilTarget=math.min(def.cameraKick*1.5,self.recoilTarget+def.cameraKick)
     self.api.Audio.PlaySFX(def.fireSound,def.id=="shotgun" and 1.0 or .9)
